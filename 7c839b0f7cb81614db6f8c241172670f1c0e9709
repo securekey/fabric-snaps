@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a2585a7_b6ff49aa",
+        "filename": "config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-06-15T20:36:09Z",
+      "side": 1,
+      "message": "Duplicate license",
+      "revId": "7c839b0f7cb81614db6f8c241172670f1c0e9709",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a2585a7_16f97dc8",
         "filename": "config/config.go",
         "patchSetId": 1
