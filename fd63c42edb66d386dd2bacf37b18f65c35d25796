@@ -22,6 +22,23 @@
       "revId": "fd63c42edb66d386dd2bacf37b18f65c35d25796",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_96d32d38",
+        "filename": "snaps/snapdispatcher/snapdispatcher_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-06-15T20:36:09Z",
+      "side": 1,
+      "message": "Is adapter necessary?",
+      "revId": "fd63c42edb66d386dd2bacf37b18f65c35d25796",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
