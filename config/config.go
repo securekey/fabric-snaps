@@ -148,14 +148,14 @@ func Init(configPathOverride string) error {
 			logger.Debug("Snap count after initializing following yaml update:", len(Snaps))
 		})
 	}()
-
+	
 	return nil
 }
 
 func initializeLogging() error {
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, logFormat)
-	level, err := logging.LogLevel(viper.GetString("snapDaemon.loglevel"))
+	level, err := logging.LogLevel(viper.GetString("snap.daemon.loglevel"))
 
 	if err != nil {
 		return fmt.Errorf("Error initializing log level: %s", err)
@@ -224,6 +224,26 @@ func GetTLSKeyPath() string {
 // GetSnapServerPort returns snap server port
 func GetSnapServerPort() string {
 	return viper.GetString("snap.server.port")
+}
+
+//IsPeerTLSEnabled will return true if the peer tls is enabled
+func IsPeerTLSEnabled() bool {
+	return peerConfig.GetBool("peer.tls.enabled")
+}
+
+// GetPeerRootCertFileName returns the peer root cert file
+func GetPeerRootCertFile() string {
+	return peerConfig.GetString("peer.tls.rootcert.file")
+}
+
+// GetPeerAddress returns the peer address
+func GetPeerAddress() string {
+	return peerConfig.GetString("peer.address")
+}
+
+// GetPeerTlsServerHostOverride returns the peer's TLS server host override address
+func GetPeerTlsServerHostOverride() string {
+	return peerConfig.GetString("peer.tls.serverhostoverride")
 }
 
 //GetSnapConfig

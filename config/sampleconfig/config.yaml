@@ -1,11 +1,8 @@
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-# Configurations for Snaps Daemon
-snapDaemon:
-  loglevel: debug
-
+#############################################################
+# Configurations for Snaps
 snaps:
   - name: "examplesnap"
     enabled: true
@@ -22,8 +19,13 @@ snaps:
     snapUrl: "remote.url.address:8009"
     initArgsStr:
       - "Hellow world remotely"
-# Configurations for SNAP server
+
 snap:
+  # Configuration for SNAP daemon
+  daemon:
+    loglevel: debug
+
+  # Configurations for SNAP server
   server:
     port: 8089
     # TLS Settings for p2p communications
@@ -39,6 +41,6 @@ snap:
     # establishing TLS connection
     rootcert:
       file: tls/ca-cert.pem
-    loglevel: debug       
+    loglevel: debug
 
 
