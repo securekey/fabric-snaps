@@ -1,0 +1,17 @@
+# Configurations for Snaps Daemon
+snapDaemon:
+  loglevel: debug
+
+snaps:
+  - name: "examplesnap"
+    enabled: true
+    snapPath: "/github.com/securekey/fabric-snaps/snaps/example/examplesnap.go"
+    initArgsStr:
+      - "example snap init arg"
+      - "second argument"
+  - name: "HelloWorldSnap"
+    enabled: true
+    snapPath: "/github.com/securekey/fabric-snaps/snaps/example/HelloWorldSnap.go"
+    initArgsStr:
+      - "Hello World is initialized first arg"
+      - "second arg"
