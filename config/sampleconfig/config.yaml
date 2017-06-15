@@ -1,3 +1,7 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Configurations for Snaps Daemon
 snapDaemon:
   loglevel: debug
@@ -5,13 +9,18 @@ snapDaemon:
 snaps:
   - name: "examplesnap"
     enabled: true
-    snapPath: "/github.com/securekey/fabric-snaps/snaps/example/examplesnap.go"
     initArgsStr:
       - "example snap init arg"
       - "second argument"
   - name: "HelloWorldSnap"
     enabled: true
-    snapPath: "/github.com/securekey/fabric-snaps/snaps/example/HelloWorldSnap.go"
     initArgsStr:
       - "Hello World is initialized first arg"
       - "second arg"
+  - name: "HelloWorldRemote"
+    enabled: true
+    snapUrl: "remote.url.address:8009"
+    initArgsStr:
+      - "Hellow world remotely"
+
+
