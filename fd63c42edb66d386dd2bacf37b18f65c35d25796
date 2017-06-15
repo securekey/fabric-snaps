@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_5626e569",
+        "filename": "snaps/protos/snap.proto",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-06-15T20:21:16Z",
+      "side": 1,
+      "message": "wrong copyright header",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 2
+      },
+      "revId": "fd63c42edb66d386dd2bacf37b18f65c35d25796",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
