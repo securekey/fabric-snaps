@@ -36,6 +36,29 @@
     },
     {
       "key": {
+        "uuid": "5a2585a7_f66ef195",
+        "filename": "config/sampleconfig/core.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-15T21:10:42Z",
+      "side": 1,
+      "message": "remove unnecessary comments if not needed.",
+      "range": {
+        "startLine": 361,
+        "startChar": 8,
+        "endLine": 364,
+        "endChar": 49
+      },
+      "revId": "7c839b0f7cb81614db6f8c241172670f1c0e9709",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a2585a7_361479f4",
         "filename": "snaps/interfaces/interfaces.go",
         "patchSetId": 1
@@ -64,6 +87,29 @@
       "writtenOn": "2017-06-15T19:57:23Z",
       "side": 1,
       "message": "I would suggest to add the args as a parameter to NewSnapStub(args) and get rid of SetArgs. A snap should have read-only access to the stub.",
+      "revId": "7c839b0f7cb81614db6f8c241172670f1c0e9709",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_b6686988",
+        "filename": "snaps/protos/snap.proto",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-15T21:10:42Z",
+      "side": 1,
+      "message": "is this the right licence text?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 2
+      },
       "revId": "7c839b0f7cb81614db6f8c241172670f1c0e9709",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
