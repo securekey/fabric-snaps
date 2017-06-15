@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a2585a7_b619897b",
+        "filename": "config/config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-15T17:12:41Z",
+      "side": 1,
+      "message": "Should use \u0027defer mutex.Unlock()\u0027 right after mutext.Lock() to ensure that the mutex is unlocked before the function returns.",
+      "revId": "da71ff342161558d1e2f26212cf47a25937a61ed",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a2585a7_96268db9",
         "filename": "config/config.go",
         "patchSetId": 3
@@ -13,6 +30,23 @@
       "writtenOn": "2017-06-15T17:12:16Z",
       "side": 1,
       "message": "mutex.Unlock()?",
+      "revId": "da71ff342161558d1e2f26212cf47a25937a61ed",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_5620259b",
+        "filename": "config/config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-15T17:12:41Z",
+      "side": 1,
+      "message": "Should be replaced with defer mutex.Unlock()",
       "revId": "da71ff342161558d1e2f26212cf47a25937a61ed",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
