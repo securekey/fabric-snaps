@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_16e73d14",
+        "filename": "config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-15T21:10:42Z",
+      "side": 1,
+      "message": "please remove this declaration. mutex is already defined above.",
+      "range": {
+        "startLine": 231,
+        "startChar": 1,
+        "endLine": 231,
+        "endChar": 26
+      },
+      "revId": "9fcafae48a50ee2f39400c9e59f72b6bbe2a48f3",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
