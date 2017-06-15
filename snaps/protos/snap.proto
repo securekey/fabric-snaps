@@ -1,0 +1,29 @@
+/*
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without written permission from SecureKey.
+*/
+
+syntax = "proto3";
+
+option go_package = "github.com/securekey/fabric-snaps/snaps/protos";
+
+
+package snapprotos;
+
+
+message Request{
+    string snapName=1;
+    repeated bytes args=2;
+}
+
+message Response{
+    string error=1;
+    repeated bytes payload=2;
+}
+
+
+service Snap {
+	rpc Invoke(Request) returns (Response) {}
+}
+

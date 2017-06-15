@@ -9,21 +9,28 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
-	logging "github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/snaps/interfaces"
-	"github.com/securekey/fabric-snaps/snaps/example"
-	"github.com/spf13/viper"
-	"strings"
-	"github.com/fsnotify/fsnotify"
+	"strings" /*
+		Copyright [COPYRIGHT OWNER]. All Rights Reserved.
+
+		SPDX-License-Identifier: Apache-2.0
+	*/
+
 	"sync"
+
+	"github.com/fsnotify/fsnotify"
+	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/snaps/examples/examplesnap"
+	"github.com/securekey/fabric-snaps/snaps/interfaces"
+	"github.com/spf13/viper"
 )
 
 const (
-	configFileName = "config"
+	configFileName     = "config"
 	peerConfigFileName = "core"
-	cmdRootPrefix  = "core"
-	devConfigPath  = "$GOPATH/src/github.com/securekey/fabric-snaps/config/sampleconfig"
+	cmdRootPrefix      = "core"
+	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/config/sampleconfig"
 )
 
 var peerConfig = viper.New()
@@ -68,12 +75,11 @@ type SnapConfigArray struct {
 var Snaps = []*SnapConfig{
 	{
 		Enabled:  true,
-		Name:     "examplesnamp",
+		Name:     "example",
 		InitArgs: [][]byte{[]byte("")},
-		Snap:     &example.SampleSnap{},
+		Snap:     &examplesnap.SnapImpl{},
 		isRemote: false,
 	},
-
 }
 
 // Init configuration and logging for SnapConfigs. By default, we look for
@@ -127,7 +133,7 @@ func Init(configPathOverride string) error {
 		return fmt.Errorf("Error initializing snaps: %s", err)
 	}
 
-	logger.Debug("Snaps are ready to be used.",len(Snaps),"snaps configs are added from the config.")
+	logger.Debug("Snaps are ready to be used.", len(Snaps), "snaps configs are added from the config.")
 
 	//keep monitoring configs for any changes
 	go func() {
@@ -166,7 +172,7 @@ func initializeLogging() error {
 	return nil
 }
 
-func initializeSnapConfigs() (error) {
+func initializeSnapConfigs() error {
 	snapConfig := &SnapConfigArray{}
 	err := viper.UnmarshalKey("snaps", &snapConfig.SnapConfigs)
 
@@ -182,14 +188,14 @@ func initializeSnapConfigs() (error) {
 		if len(snapMetaData.SnapUrl) > 0 {
 			snapMetaData.isRemote = true
 		}
-		logger.Debug("Adding Snap config:", snapMetaData.Name," Remote?",snapMetaData.isRemote)
+		logger.Debug("Adding Snap config:", snapMetaData.Name, " Remote?", snapMetaData.isRemote)
 		Snaps = append(Snaps, &snapMetaData)
 	}
 
 	return nil
 }
 
-func resolveSnapInitAndImplementation(sp *SnapConfig) (SnapConfig) {
+func resolveSnapInitAndImplementation(sp *SnapConfig) SnapConfig {
 	for _, initArgVal := range sp.InitArgsStr {
 		logger.Debugf("Appending init arg: %s, concatenating as a byte array: %s\n", initArgVal, []byte(initArgVal))
 		sp.InitArgs = append(sp.InitArgs, []byte(initArgVal))
@@ -197,4 +203,48 @@ func resolveSnapInitAndImplementation(sp *SnapConfig) (SnapConfig) {
 	logger.Debug(len(sp.InitArgs), "InitArgs for snap", sp.Name, "configured.")
 
 	return *sp
+}
+
+// IsTLSEnabled is TLS enabled?
+func IsTLSEnabled() bool {
+	return peerConfig.GetBool("snap.server.tls.enabled")
+}
+
+// GetTLSRootCertPath returns absolute path to the TLS root certificate
+func GetTLSRootCertPath() string {
+	return GetConfigPath(peerConfig.GetString("snap.server.tls.rootcert.file"))
+}
+
+// GetTLSCertPath returns absolute path to the TLS certificate
+func GetTLSCertPath() string {
+	return GetConfigPath(peerConfig.GetString("snap.server.tls.cert.file"))
+}
+
+// GetTLSKeyPath returns absolute path to the TLS key
+func GetTLSKeyPath() string {
+	return GetConfigPath(peerConfig.GetString("snap.server.tls.key.file"))
+}
+
+// GetSnapServerPort returns snap server port
+func GetSnapServerPort() string {
+	return viper.GetString("snap.server.port")
+}
+
+// GetSnapServerPort returns snap server port
+func GetSnapArray() []*SnapConfig {
+	return Snaps
+}
+
+// GetConfigPath returns the absolute value of the given path that is
+// relative to the config file
+// For example, if the config file is at /etc/hyperledger/config.yaml,
+// calling GetConfigPath("tls/cert") will return /etc/hyperledger/tls/cert
+func GetConfigPath(path string) string {
+	basePath := filepath.Dir(viper.ConfigFileUsed())
+
+	if filepath.IsAbs(path) {
+		return path
+	}
+
+	return filepath.Join(basePath, path)
 }
