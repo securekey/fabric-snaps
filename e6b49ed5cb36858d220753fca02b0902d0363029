@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_d619b523",
+        "filename": "config/config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-15T20:29:27Z",
+      "side": 1,
+      "message": "This won\u0027t work since you\u0027re creating a new mutex every time. You need to use the mutex that\u0027s already declared in this file (mutex).",
+      "revId": "e6b49ed5cb36858d220753fca02b0902d0363029",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
