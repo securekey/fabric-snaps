@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_76044115",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-06-15T17:04:30Z",
+      "side": 1,
+      "message": "should be surrounded by [] ... as in [SNAPS-1]",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 7
+      },
+      "revId": "94e5751109e60394a49fc487f4dca5cbe498e7cc",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
