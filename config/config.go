@@ -1,16 +1,8 @@
-/* Copyright SecureKey Technologies Inc.
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.*/
+SPDX-License-Identifier: Apache-2.0
+*/
 
 package config
 
@@ -24,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 	"github.com/fsnotify/fsnotify"
+	"sync"
 )
 
 const (
@@ -38,19 +31,18 @@ var logger = logging.MustGetLogger("snap-config")
 var logFormat = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
+var mutex = &sync.Mutex{}
+
 // SnapConfig defines the metadata needed to initialize the code
 // when the fabric comes up. SnapConfigs are installed by adding an
 // entry in config.yaml and creating the new SnapConfig implementation
 type SnapConfig struct {
-	// Enabled a convenient switch to enable/disable SnapConfig chaincode without
-	// having to remove entry from importsysccs.go
+	// Enabled a convenient switch to enable/disable SnapConfig without
+	// having to remove entry from Snaps array below
 	Enabled bool
 
 	//Unique name of the snap code, it should match the SnapConfig implementation class name
 	Name string
-
-	//Path to the snap code; currently not used
-	Path string
 
 	//String representation for InitArgs read by yaml
 	InitArgsStr []string
@@ -60,6 +52,12 @@ type SnapConfig struct {
 
 	// SnapConfig is the actual SnapConfig object
 	Snap interfaces.Snap
+
+	// SnapUrl to locate remote Snaps
+	SnapUrl string
+
+	// to identify if the snap is remote or local
+	isRemote bool
 }
 
 // SnapConfigArray represents the list of snaps configurations from YAML
@@ -71,9 +69,9 @@ var Snaps = []*SnapConfig{
 	{
 		Enabled:  true,
 		Name:     "examplesnamp",
-		Path:     "github.com/securekey/fabric-SnapConfigs/SnapConfigs/example",
 		InitArgs: [][]byte{[]byte("")},
 		Snap:     &example.SampleSnap{},
+		isRemote: false,
 	},
 
 }
@@ -132,18 +130,20 @@ func Init(configPathOverride string) error {
 	logger.Debug("Snaps are ready to be used.",len(Snaps),"snaps configs are added from the config.")
 
 	//keep monitoring configs for any changes
-	//yamlUpdateEvent := make(chan fsnotify.Event)
 	go func() {
 		viper.WatchConfig()
 		viper.OnConfigChange(func(e fsnotify.Event) {
 			logger.Info("Config file changed:", e.Name, " re initializing snaps..")
-			Snaps = Snaps[:1] // resetting snaps
+			// access Snaps from the routine should be locked
+			mutex.Lock()
+			defer mutex.Unlock()
+			Snaps = Snaps[:1] // resetting snaps, increase the slice if hard coding new snaps in the array definition above
 			err = initializeSnapConfigs()
 			if err != nil {
-				logger.Errorf("Error initializing snaps: %s", err)
+				logger.Errorf("Error initializing snaps following yaml update: %s", err)
 				return
 			}
-			logger.Debug("Sanp count after initializing:", len(Snaps))
+			logger.Debug("Snap count after initializing following yaml update:", len(Snaps))
 		})
 	}()
 
@@ -179,7 +179,10 @@ func initializeSnapConfigs() (error) {
 	// append snaps to snapsArray
 	for _, snapConfigCopy := range snapConfig.SnapConfigs {
 		var snapMetaData SnapConfig = resolveSnapInitAndImplementation(&snapConfigCopy)
-		logger.Debug("Adding Snap config:", snapMetaData.Name)
+		if len(snapMetaData.SnapUrl) > 0 {
+			snapMetaData.isRemote = true
+		}
+		logger.Debug("Adding Snap config:", snapMetaData.Name," Remote?",snapMetaData.isRemote)
 		Snaps = append(Snaps, &snapMetaData)
 	}
 
