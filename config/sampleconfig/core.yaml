@@ -357,13 +357,9 @@ chaincode:
         escc: enable
         vscc: enable
         qscc: enable
-        kevlarscc: enable
 
         # system chaincode cofigurations. Add additional configurations
         # required by system chaincodes
-        config:
-          kevlarscc:
-            kevlarInvokePort: 8087
 
     # logging section for the chaincode container
     logLevel: warning

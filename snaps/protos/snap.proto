@@ -1,0 +1,29 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+syntax = "proto3";
+
+option go_package = "github.com/securekey/fabric-snaps/snaps/protos";
+
+
+package snapprotos;
+
+
+message Request{
+    string snapName=1;
+    repeated bytes args=2;
+}
+
+message Response{
+    string error=1;
+    repeated bytes payload=2;
+}
+
+
+service Snap {
+	rpc Invoke(Request) returns (Response) {}
+}
+
