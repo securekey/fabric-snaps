@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_22179453",
+        "filename": "config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000036
+      },
+      "writtenOn": "2017-06-15T16:58:14Z",
+      "side": 1,
+      "message": "license",
+      "revId": "976e209f0cf7fe430c1804f4890fa055ede959f8",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
