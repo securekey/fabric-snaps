@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_c257b025",
+        "filename": "config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-15T15:06:24Z",
+      "side": 1,
+      "message": "Comments are referring to chaincode.",
+      "revId": "2b92113f17553cc4098b2ca03e58e7966c2cff69",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_a254a421",
+        "filename": "config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-15T15:06:24Z",
+      "side": 1,
+      "message": "Access to Snaps should be synchronized using mutex",
+      "revId": "2b92113f17553cc4098b2ca03e58e7966c2cff69",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
