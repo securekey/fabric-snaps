@@ -84,7 +84,27 @@ func TestRequiredConfigFieldsOnSnap(t *testing.T) {
 	//invoke snap server
 	_, err = client.Invoke(context.Background(), &irequest)
 	if err == nil {
-		t.Fatalf("Expected error for non registered snap: ")
+		t.Fatalf("Expected error for non registered snap ")
+	}
+
+}
+
+func TestNoNameSnap(t *testing.T) {
+
+	conn, err := connectToSnapServer()
+	if err != nil {
+		t.Fatalf("Connect to SNAP server returned an error: %v", err)
+	}
+	defer conn.Close()
+	//instatnitate client
+	client := snap_protos.NewSnapClient(conn)
+	payload := [][]byte{[]byte("testChain"), []byte("example")}
+	//registered sanp - does not have receiver interface
+	irequest := snap_protos.Request{SnapName: "", Args: payload}
+	//invoke snap server
+	_, err = client.Invoke(context.Background(), &irequest)
+	if err == nil {
+		t.Fatalf("Expected error for name less snap ")
 	}
 
 }
