@@ -26,7 +26,7 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 		t.Fatalf("Connect to SNAP server returned an error: %v", err)
 	}
 	defer conn.Close()
-	//instatnitate client
+	//instantiate client
 	client := snap_protos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
 	//use registered snap
@@ -56,7 +56,7 @@ func TestInvokeOnNonRegisteredSnap(t *testing.T) {
 		t.Fatalf("Connect to SNAP server returned an error: %v", err)
 	}
 	defer conn.Close()
-	//instatnitate client
+	//instantiate client
 	client := snap_protos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
 	//use non registered snap
@@ -76,15 +76,35 @@ func TestRequiredConfigFieldsOnSnap(t *testing.T) {
 		t.Fatalf("Connect to SNAP server returned an error: %v", err)
 	}
 	defer conn.Close()
-	//instatnitate client
+	//instantiate client
 	client := snap_protos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
-	//registered sanp - does not have receiver interface
+	//registered snap - does not have receiver interface
 	irequest := snap_protos.Request{SnapName: "invalidConfig", Args: payload}
 	//invoke snap server
 	_, err = client.Invoke(context.Background(), &irequest)
 	if err == nil {
-		t.Fatalf("Expected error for non registered snap: ")
+		t.Fatalf("Expected error for non registered snap ")
+	}
+
+}
+
+func TestNoNameSnap(t *testing.T) {
+
+	conn, err := connectToSnapServer()
+	if err != nil {
+		t.Fatalf("Connect to SNAP server returned an error: %v", err)
+	}
+	defer conn.Close()
+	//instantiate client
+	client := snap_protos.NewSnapClient(conn)
+	payload := [][]byte{[]byte("testChain"), []byte("example")}
+	//registered snap - does not have receiver interface
+	irequest := snap_protos.Request{SnapName: "", Args: payload}
+	//invoke snap server
+	_, err = client.Invoke(context.Background(), &irequest)
+	if err == nil {
+		t.Fatalf("Expected error for name less snap ")
 	}
 
 }
@@ -100,9 +120,7 @@ func connectToSnapServer() (*grpc.ClientConn, error) {
 		logger.Infof("Snap server port was not set. ")
 		return nil, fmt.Errorf("Error detecting snap server port")
 	}
-	//TODO add TLS here
 	opts = append(opts, grpc.WithInsecure())
-
 	snapServerAddress := address + ":" + snapServerPort
 	logger.Infof("Dialing snap server on: %s", snapServerAddress)
 	//grpc to snap peer
