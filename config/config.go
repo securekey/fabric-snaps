@@ -24,12 +24,10 @@ import (
 
 const (
 	configFileName     = "config"
-	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
 	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/config/sampleconfig"
 )
 
-var peerConfig = viper.New()
 var logger = logging.MustGetLogger("snap-config")
 var logFormat = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
@@ -91,32 +89,20 @@ func Init(configPathOverride string) error {
 
 	if configPath != "" {
 		viper.AddConfigPath(configPath)
-		peerConfig.AddConfigPath(configPath)
 	} else {
 		if configPathOverride == "" {
 			configPathOverride = devConfigPath
 		}
 		viper.AddConfigPath(configPathOverride)
-		peerConfig.AddConfigPath(configPathOverride)
 	}
 	viper.SetConfigName(configFileName)
 	viper.SetEnvPrefix(cmdRootPrefix)
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(replacer)
 
-	peerConfig.SetConfigName(peerConfigFileName)
-	peerConfig.SetEnvPrefix(cmdRootPrefix)
-	peerConfig.AutomaticEnv()
-	peerConfig.SetEnvKeyReplacer(replacer)
-
 	err := viper.ReadInConfig()
 	if err != nil {
 		return fmt.Errorf("Fatal error reading snap config file: %s", err)
-	}
-
-	err = peerConfig.ReadInConfig()
-	if err != nil {
-		return fmt.Errorf("Fatal error reading peer config file: %s", err)
 	}
 
 	err = initializeLogging()
@@ -131,11 +117,11 @@ func Init(configPathOverride string) error {
 
 	logger.Debug("Snaps are ready to be used.", len(Snaps), "snaps configs are added from the config.")
 
-	//keep monitoring configs for any changes
+	//keep monitoring Snap configs for any changes
 	go func() {
 		viper.WatchConfig()
 		viper.OnConfigChange(func(e fsnotify.Event) {
-			logger.Info("Config file changed:", e.Name, " re initializing snaps..")
+			logger.Info("Snap Config file changed:", e.Name, " re initializing snaps..")
 			// access Snaps from the routine should be locked
 			mutex.Lock()
 			defer mutex.Unlock()
@@ -203,22 +189,22 @@ func resolveSnapInitAndImplementation(sp *SnapConfig) SnapConfig {
 
 // IsTLSEnabled is TLS enabled?
 func IsTLSEnabled() bool {
-	return peerConfig.GetBool("snap.server.tls.enabled")
+	return viper.GetBool("snap.server.tls.enabled")
 }
 
 // GetTLSRootCertPath returns absolute path to the TLS root certificate
 func GetTLSRootCertPath() string {
-	return GetConfigPath(peerConfig.GetString("snap.server.tls.rootcert.file"))
+	return GetConfigPath(viper.GetString("snap.server.tls.rootcert.file"))
 }
 
 // GetTLSCertPath returns absolute path to the TLS certificate
 func GetTLSCertPath() string {
-	return GetConfigPath(peerConfig.GetString("snap.server.tls.cert.file"))
+	return GetConfigPath(viper.GetString("snap.server.tls.cert.file"))
 }
 
 // GetTLSKeyPath returns absolute path to the TLS key
 func GetTLSKeyPath() string {
-	return GetConfigPath(peerConfig.GetString("snap.server.tls.key.file"))
+	return GetConfigPath(viper.GetString("snap.server.tls.key.file"))
 }
 
 // GetSnapServerPort returns snap server port
