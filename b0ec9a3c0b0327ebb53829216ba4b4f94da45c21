@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_56e8257c",
+        "filename": "snaps/snapdispatcher/snapdispatcher_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-16T15:27:34Z",
+      "side": 1,
+      "message": "instantiate not instatnitate",
+      "range": {
+        "startLine": 99,
+        "startChar": 3,
+        "endLine": 99,
+        "endChar": 15
+      },
+      "revId": "b0ec9a3c0b0327ebb53829216ba4b4f94da45c21",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_96ee8d8a",
+        "filename": "snaps/snapdispatcher/snapdispatcher_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-16T15:27:34Z",
+      "side": 1,
+      "message": "I made the same mistake in the comments, it\u0027s snap, not sanp :)",
+      "range": {
+        "startLine": 102,
+        "startChar": 14,
+        "endLine": 102,
+        "endChar": 18
+      },
+      "revId": "b0ec9a3c0b0327ebb53829216ba4b4f94da45c21",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a2585a7_76f32174",
+        "filename": "snaps/snapdispatcher/snapdispatcher_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-06-16T15:27:34Z",
+      "side": 1,
+      "message": "same comment as above :)",
+      "range": {
+        "startLine": 104,
+        "startChar": 10,
+        "endLine": 104,
+        "endChar": 14
+      },
+      "revId": "b0ec9a3c0b0327ebb53829216ba4b4f94da45c21",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
