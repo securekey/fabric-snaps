@@ -30,7 +30,7 @@ snap:
     port: 8089
     # TLS Settings for p2p communications
     tls:
-      enabled: false
+      enabled: true
       cert:
         file: tls/cert.pem
       key:
@@ -41,6 +41,7 @@ snap:
       # establishing TLS connection.
       rootcert:
         file: tls/ca-cert.pem
+
     loglevel: debug
 
 

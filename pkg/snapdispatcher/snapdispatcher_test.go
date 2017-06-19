@@ -16,6 +16,7 @@ import (
 	snap_protos "github.com/securekey/fabric-snaps/api/protos"
 	"github.com/securekey/fabric-snaps/cmd/config"
 	"google.golang.org/grpc"
+	"github.com/spf13/viper"
 )
 
 const address = "localhost"
@@ -255,7 +256,11 @@ func connectToSnapServer() (*grpc.ClientConn, error) {
 		logger.Infof("Snap server port was not set. ")
 		return nil, fmt.Errorf("Error detecting snap server port")
 	}
+
+	// override tls enabled to false in config.yaml for unit testing
+	viper.Set("snap.server.tls.enabled", false)
 	opts = append(opts, grpc.WithInsecure())
+
 	snapServerAddress := address + ":" + snapServerPort
 	logger.Infof("Dialing snap server on: %s", snapServerAddress)
 	//grpc to snap peer
@@ -287,3 +292,4 @@ func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
+
