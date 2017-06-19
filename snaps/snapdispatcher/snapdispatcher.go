@@ -59,7 +59,6 @@ func getRegisteredSnapHandler(snapName string) (bool, snap_interfaces.Snap) {
 	if registeredSnap != nil {
 		return true, registeredSnap.Snap
 	}
-
 	return false, nil
 }
 
