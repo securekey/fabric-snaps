@@ -7,7 +7,7 @@ package examplesnap
 
 import (
 	pb "github.com/hyperledger/fabric/protos/peer"
-	snap_interfaces "github.com/securekey/fabric-snaps/snaps/interfaces"
+	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
 )
 
 //SnapImpl ...

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/securekey/fabric-snaps/config"
-	snap_protos "github.com/securekey/fabric-snaps/snaps/protos"
+	snap_protos "github.com/securekey/fabric-snaps/api/protos"
+	"github.com/securekey/fabric-snaps/cmd/config"
 	"google.golang.org/grpc"
 )
 

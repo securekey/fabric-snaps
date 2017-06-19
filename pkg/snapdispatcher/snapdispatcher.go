@@ -15,10 +15,10 @@ import (
 	"strings"
 
 	logging "github.com/op/go-logging"
-	config "github.com/securekey/fabric-snaps/config"
-	snap_interfaces "github.com/securekey/fabric-snaps/snaps/interfaces"
-	snap_protos "github.com/securekey/fabric-snaps/snaps/protos"
-	"google.golang.org/grpc"
+	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
+	snap_protos "github.com/securekey/fabric-snaps/api/protos"
+	config "github.com/securekey/fabric-snaps/cmd/config"
+	grpc "google.golang.org/grpc"
 
 	cred "google.golang.org/grpc/credentials"
 )

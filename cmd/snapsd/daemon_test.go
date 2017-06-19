@@ -8,7 +8,8 @@ package main
 
 import (
 	"testing"
-	"github.com/securekey/fabric-snaps/config"
+
+	"github.com/securekey/fabric-snaps/cmd/config"
 )
 
 func TestConfigInit(t *testing.T) {
