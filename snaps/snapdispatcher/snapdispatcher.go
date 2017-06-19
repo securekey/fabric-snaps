@@ -70,23 +70,24 @@ func StartSnapServer() error {
 	}
 	lis, err := net.Listen("tcp", ":"+config.GetSnapServerPort())
 	if err != nil {
-		return fmt.Errorf("Snap invoke server error failed to listen: %v", err)
+		return fmt.Errorf("Snap Server error failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	if config.IsTLSEnabled() {
 		creds, err := cred.NewServerTLSFromFile(config.GetTLSCertPath(), config.GetTLSKeyPath())
 		if err != nil {
-			return fmt.Errorf("Snap invoke server error Failed to generate Tls credentials %v", err)
-
+			return fmt.Errorf("Snap Server error failed to generate Tls credentials %v", err)
+		} else {
+			logger.Info("Snap Server TLS credentials successfully loaded")
 		}
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 	s := grpc.NewServer(opts...)
 	snap_protos.RegisterSnapServer(s, &snapServer{})
 	if config.IsTLSEnabled() {
-		logger.Infof("Start snap invoke server grpc with tls on port:%s\n", config.GetSnapServerPort())
+		logger.Infof("Start Snap Server grpc with tls on port:%s\n", config.GetSnapServerPort())
 	} else {
-		logger.Infof("Start snap invoke server on port:%s\n", config.GetSnapServerPort())
+		logger.Infof("Start Snap Server on port:%s\n", config.GetSnapServerPort())
 	}
 	go s.Serve(lis)
 	return nil
