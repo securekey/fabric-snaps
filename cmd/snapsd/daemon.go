@@ -9,12 +9,13 @@ package main
 import (
 	"os"
 
-	"github.com/securekey/fabric-snaps/config"
-	"github.com/op/go-logging"
 	"os/signal"
 	"syscall"
 	"time"
-	"github.com/securekey/fabric-snaps/snaps/snapdispatcher"
+
+	"github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/cmd/config"
+	"github.com/securekey/fabric-snaps/pkg/snapdispatcher"
 )
 
 var logger = logging.MustGetLogger("snap-daemon")
@@ -45,15 +46,13 @@ func main() {
 		if err != nil {
 			logger.Errorf("Error Starting Snap Server: %s.", err)
 		} else {
-			logger.Info ("Snap Server Started successfully.")
+			logger.Info("Snap Server Started successfully.")
 		}
 
 	case <-time.After(15 * time.Second):
 		logger.Error("Timed out from Start Snap Server")
 
 	}
-
-
 
 	done := make(chan error)
 	signals := make(chan os.Signal, 1)

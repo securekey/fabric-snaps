@@ -17,15 +17,15 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	logging "github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/snaps/examples/examplesnap"
-	"github.com/securekey/fabric-snaps/snaps/interfaces"
+	"github.com/securekey/fabric-snaps/api/interfaces"
+	"github.com/securekey/fabric-snaps/pkg/examples/examplesnap"
 	"github.com/spf13/viper"
 )
 
 const (
-	configFileName     = "config"
-	cmdRootPrefix      = "core"
-	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/config/sampleconfig"
+	configFileName = "config"
+	cmdRootPrefix  = "core"
+	devConfigPath  = "$GOPATH/src/github.com/securekey/fabric-snaps/cmd/config/sampleconfig"
 )
 
 var logger = logging.MustGetLogger("snap-config")
@@ -134,7 +134,7 @@ func Init(configPathOverride string) error {
 			logger.Debug("Snap count after initializing following yaml update:", len(Snaps))
 		})
 	}()
-	
+
 	return nil
 }
 
