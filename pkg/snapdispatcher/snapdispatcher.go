@@ -14,12 +14,12 @@ import (
 	"net"
 	"strings"
 
+	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	logging "github.com/op/go-logging"
 	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
 	snap_protos "github.com/securekey/fabric-snaps/api/protos"
 	config "github.com/securekey/fabric-snaps/cmd/config"
 	grpc "google.golang.org/grpc"
-
 	cred "google.golang.org/grpc/credentials"
 )
 
@@ -54,7 +54,7 @@ func (ss *snapServer) Invoke(ctx context.Context, ireq *snap_protos.Request) (*s
 }
 
 //getRegisteredSnapHandler retrurns registration status and invoke interface
-func getRegisteredSnapHandler(snapName string) (bool, snap_interfaces.Snap) {
+func getRegisteredSnapHandler(snapName string) (bool, shim.Chaincode) {
 	registeredSnap := config.GetSnapConfig(snapName)
 	if registeredSnap != nil {
 		return true, registeredSnap.Snap
@@ -77,9 +77,8 @@ func StartSnapServer() error {
 		creds, err := cred.NewServerTLSFromFile(config.GetTLSCertPath(), config.GetTLSKeyPath())
 		if err != nil {
 			return fmt.Errorf("Snap Server error failed to generate Tls credentials %v", err)
-		} else {
-			logger.Info("Snap Server TLS credentials successfully loaded")
 		}
+		logger.Info("Snap Server TLS credentials successfully loaded")
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 	s := grpc.NewServer(opts...)
