@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a2585a7_ec1cde15",
+        "filename": "api/interfaces/snapstub.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-06-20T16:23:43Z",
+      "side": 1,
+      "message": "I think we should return an error indicating that this method is not implemented. Same for the other methods that return an error.",
+      "revId": "f6fcae842715403841fe97134bfca27d55012e83",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
