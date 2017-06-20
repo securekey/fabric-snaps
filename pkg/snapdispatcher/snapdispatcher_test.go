@@ -12,12 +12,15 @@ import (
 	"testing"
 	"time"
 
+	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
 	snap_protos "github.com/securekey/fabric-snaps/api/protos"
 	"github.com/securekey/fabric-snaps/cmd/config"
 	"google.golang.org/grpc"
 )
 
 const address = "localhost"
+
+var notImplemented = "Required functionality was not implemented"
 
 func TestInvokeOnRegisteredSnap(t *testing.T) {
 
@@ -28,7 +31,7 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 	defer conn.Close()
 	//instantiate client
 	client := snap_protos.NewSnapClient(conn)
-	payload := [][]byte{[]byte("testChain"), []byte("example")}
+	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
 	//use registered snap
 	irequest := snap_protos.Request{SnapName: "example", Args: payload}
 	//invoke snap server
@@ -47,6 +50,138 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 		t.Fatalf("Expected hello, received %s ", responseMsg)
 	}
 	fmt.Printf("Received response from snap invoke %s\n", responseMsg)
+}
+
+func TestImplementedSnapMethods(t *testing.T) {
+	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
+	//use registered snap
+	irequest := snap_protos.Request{SnapName: "example", Args: payload}
+
+	//Create snap stub and pass it in
+	snapStub := snap_interfaces.NewSnapStub(irequest.Args)
+	args := snapStub.GetArgs()
+	if len(args) == 0 {
+		t.Fatalf("Function GetArgs was implemented. Expected length of 2; got  %v", len(args))
+	}
+	fmt.Println("Returned args ", args)
+
+	function, parameters := snapStub.GetFunctionAndParameters()
+	if function == "" {
+		t.Fatalf("Expected function name, but it was not set")
+	}
+	if len(parameters) == 0 {
+		t.Fatalf("GetFunctionAndParameters should return parameter")
+	}
+
+	//GetStringArgs
+	stringArgs := snapStub.GetStringArgs()
+	if len(stringArgs) == 0 {
+		t.Fatalf("GetStringArgs shoud return value")
+	}
+
+}
+
+func TestUnimplementedSnapMethods(t *testing.T) {
+
+	//use registered snap
+	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
+	//use example snap
+	irequest := snap_protos.Request{SnapName: "example", Args: payload}
+	//Create snap stub and pass it in
+	snapStub := snap_interfaces.NewSnapStub(irequest.Args)
+	//test snapStub methods
+	//GetTxID ...
+
+	txID := snapStub.GetTxID()
+	if txID != notImplemented {
+		t.Fatalf("GetTxID was not implemented.")
+	}
+
+	_, err := snapStub.GetState("abc")
+	if err.Error() != notImplemented {
+		t.Fatalf("GetState was not implemented.")
+	}
+
+	err = snapStub.PutState("abc", nil)
+	if err.Error() != notImplemented {
+		t.Fatalf("PutState was not implemented.")
+
+	}
+
+	err = snapStub.DelState("abc")
+	if err.Error() != notImplemented {
+		t.Fatalf("DelState was not implemented.")
+
+	}
+
+	_, err = snapStub.GetStateByRange("abc", "def")
+	if err.Error() != notImplemented {
+		t.Fatalf("GetStateByRange was not implemented.")
+	}
+
+	_, err = snapStub.GetStateByPartialCompositeKey("abc", []string{"def"})
+	if err.Error() != notImplemented {
+		t.Fatalf("GetStateByPartialCompositeKey was not implemented.")
+	}
+
+	_, err = snapStub.CreateCompositeKey("abc", []string{"def"})
+	if err.Error() != notImplemented {
+		t.Fatalf("CreateCompositeKey was not implemented.")
+	}
+
+	_, _, err = snapStub.SplitCompositeKey("abc")
+	if err.Error() != notImplemented {
+		t.Fatalf("SplitCompositeKey was not implemented.")
+	}
+
+	_, err = snapStub.GetQueryResult("abc")
+	if err.Error() != notImplemented {
+		t.Fatalf("GetQueryResult was not implemented.")
+	}
+
+	_, err = snapStub.GetHistoryForKey("abc")
+	if err.Error() != notImplemented {
+		t.Fatalf("GetHistoryForKey was not implemented.")
+	}
+
+	_, err = snapStub.GetCreator()
+	if err.Error() != notImplemented {
+		t.Fatalf("GetCreator was not implemented.")
+	}
+
+	_, err = snapStub.GetTransient()
+	if err.Error() != notImplemented {
+		t.Fatalf("GetTransient was not implemented.")
+	}
+
+	_, err = snapStub.GetBinding()
+	if err.Error() != notImplemented {
+		t.Fatalf("GetBinding was not implemented.")
+	}
+
+	_, err = snapStub.GetArgsSlice()
+	if err.Error() != notImplemented {
+		t.Fatalf("GetArgsSlice was not implemented.")
+	}
+
+	_, err = snapStub.GetTxTimestamp()
+	if err.Error() != notImplemented {
+		t.Fatalf("GetTxTimestamp was not implemented.")
+	}
+
+	err = snapStub.SetEvent("abc", nil)
+	if err.Error() != notImplemented {
+		t.Fatalf("SetEvent was not implemented. ")
+
+	}
+	response := snapStub.InvokeChaincode("abc", nil, "channel")
+	if response.Message != notImplemented {
+		t.Fatalf("InvokeChaincode was not implemented. ")
+	}
+	if response.Payload != nil {
+		t.Fatalf("InvokeChaincode was not implemented.")
+	}
+
 }
 
 func TestInvokeOnNonRegisteredSnap(t *testing.T) {
