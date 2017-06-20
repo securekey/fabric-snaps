@@ -6,28 +6,32 @@ SPDX-License-Identifier: Apache-2.0
 package examplesnap
 
 import (
+	"fmt"
+
+	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
 )
 
 //SnapImpl ...
-type SnapImpl struct {
+type CCSnapImpl struct {
 }
 
 // NewSnap - create new instance of snap
-func NewSnap() snap_interfaces.Snap {
-	return &SnapImpl{}
+func NewSnap() shim.Chaincode {
+	return &CCSnapImpl{}
 }
 
 // Invoke snap
-func (es *SnapImpl) Invoke(stub snap_interfaces.SnapStubInterface) pb.Response {
-	responsePayload := []byte("Hello from invoke")
-	response := pb.Response{Payload: responsePayload}
+func (es *CCSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+	args := stub.GetArgs()
+	fmt.Println(args)
+	//responsePayload := []byte("Hello from invoke")
+	response := pb.Response{Payload: args[0]}
 	return response
 }
 
 // Init snap
-func (es *SnapImpl) Init(stub snap_interfaces.SnapStubInterface) pb.Response {
+func (es *CCSnapImpl) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	responsePayload := []byte("Hello from Init")
 	response := pb.Response{Payload: responsePayload}
 	return response

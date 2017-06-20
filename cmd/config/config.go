@@ -16,8 +16,8 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
+	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	logging "github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/api/interfaces"
 	"github.com/securekey/fabric-snaps/pkg/examples/examplesnap"
 	"github.com/spf13/viper"
 )
@@ -52,7 +52,7 @@ type SnapConfig struct {
 	InitArgs [][]byte
 
 	// SnapConfig is the actual SnapConfig object
-	Snap interfaces.Snap
+	Snap shim.Chaincode
 
 	// SnapUrl to locate remote Snaps
 	SnapUrl string
@@ -71,7 +71,7 @@ var Snaps = []*SnapConfig{
 		Enabled:  true,
 		Name:     "example",
 		InitArgs: [][]byte{[]byte("")},
-		Snap:     &examplesnap.SnapImpl{},
+		Snap:     &examplesnap.CCSnapImpl{},
 		isRemote: false,
 	},
 }
