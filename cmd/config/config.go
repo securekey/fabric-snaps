@@ -141,7 +141,7 @@ func Init(configPathOverride string) error {
 func initializeLogging() error {
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, logFormat)
-	level, err := logging.LogLevel(viper.GetString("snap.daemon.loglevel"))
+	level, err := logging.LogLevel(viper.GetString("snap.snapsd.loglevel"))
 
 	if err != nil {
 		return fmt.Errorf("Error initializing log level: %s", err)

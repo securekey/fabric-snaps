@@ -16,11 +16,13 @@ import (
 	"github.com/op/go-logging"
 	"github.com/securekey/fabric-snaps/cmd/config"
 	"github.com/securekey/fabric-snaps/pkg/snapdispatcher"
+	"fmt"
 )
 
-var logger = logging.MustGetLogger("snap-daemon")
+var logger = logging.MustGetLogger("snap-snapsd")
 
 func main() {
+	fmt.Println("***** Daemon is getting call, in snapsd *****")
 	err := config.Init("")
 	if err != nil {
 		logger.Errorf("Error initializing Snap configs: %s \n", err)

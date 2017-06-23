@@ -22,7 +22,7 @@ snaps:
 
 snap:
   # Configuration for SNAP daemon
-  daemon:
+  snapsd:
     loglevel: debug
 
   # Configurations for SNAP server
