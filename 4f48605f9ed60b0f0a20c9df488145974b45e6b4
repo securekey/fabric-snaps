@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3a3291f1_8c19e77b",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-06-26T14:40:32Z",
+      "side": 1,
+      "message": "Should be under Apache2 license",
+      "revId": "4f48605f9ed60b0f0a20c9df488145974b45e6b4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a3291f1_cc0fef2d",
         "filename": "image/Dockerfile",
         "patchSetId": 1
