@@ -9,7 +9,7 @@ COPY ./payload/snapsd /usr/local/bin/
 
 ADD payload/sampleconfig $FABRIC_CFG_PATH
 
-EXPOSE 7051 7050
+EXPOSE 7051 7053
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/usr/local/bin/entrypoint.sh"]
