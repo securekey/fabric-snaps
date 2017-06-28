@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
-	snap_protos "github.com/securekey/fabric-snaps/api/protos"
+	snapInterfaces "github.com/securekey/fabric-snaps/api/interfaces"
+	snapProtos "github.com/securekey/fabric-snaps/api/protos"
 	"github.com/securekey/fabric-snaps/cmd/config"
 	"google.golang.org/grpc"
 )
@@ -30,10 +30,10 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 	}
 	defer conn.Close()
 	//instantiate client
-	client := snap_protos.NewSnapClient(conn)
+	client := snapProtos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
 	//use registered snap
-	irequest := snap_protos.Request{SnapName: "example", Args: payload}
+	irequest := snapProtos.Request{SnapName: "example", Args: payload}
 	//invoke snap server
 	iresponse, err := client.Invoke(context.Background(), &irequest)
 
@@ -55,15 +55,14 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 func TestImplementedSnapMethods(t *testing.T) {
 	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
 	//use registered snap
-	irequest := snap_protos.Request{SnapName: "example", Args: payload}
+	irequest := snapProtos.Request{SnapName: "example", Args: payload}
 
 	//Create snap stub and pass it in
-	snapStub := snap_interfaces.NewSnapStub(irequest.Args)
+	snapStub := snapInterfaces.NewSnapStub(irequest.Args)
 	args := snapStub.GetArgs()
 	if len(args) == 0 {
 		t.Fatalf("Function GetArgs was implemented. Expected length of 2; got  %v", len(args))
 	}
-	fmt.Println("Returned args ", args)
 
 	function, parameters := snapStub.GetFunctionAndParameters()
 	if function == "" {
@@ -86,9 +85,9 @@ func TestUnimplementedSnapMethods(t *testing.T) {
 	//use registered snap
 	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
 	//use example snap
-	irequest := snap_protos.Request{SnapName: "example", Args: payload}
+	irequest := snapProtos.Request{SnapName: "example", Args: payload}
 	//Create snap stub and pass it in
-	snapStub := snap_interfaces.NewSnapStub(irequest.Args)
+	snapStub := snapInterfaces.NewSnapStub(irequest.Args)
 	//test snapStub methods
 	//GetTxID ...
 
@@ -192,10 +191,10 @@ func TestInvokeOnNonRegisteredSnap(t *testing.T) {
 	}
 	defer conn.Close()
 	//instantiate client
-	client := snap_protos.NewSnapClient(conn)
+	client := snapProtos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
 	//use non registered snap
-	irequest := snap_protos.Request{SnapName: "thisSnapWasNotRegistered", Args: payload}
+	irequest := snapProtos.Request{SnapName: "thisSnapWasNotRegistered", Args: payload}
 	//invoke snap server
 	_, err = client.Invoke(context.Background(), &irequest)
 	if err == nil {
@@ -212,10 +211,10 @@ func TestRequiredConfigFieldsOnSnap(t *testing.T) {
 	}
 	defer conn.Close()
 	//instantiate client
-	client := snap_protos.NewSnapClient(conn)
+	client := snapProtos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
 	//registered snap - does not have receiver interface
-	irequest := snap_protos.Request{SnapName: "invalidConfig", Args: payload}
+	irequest := snapProtos.Request{SnapName: "invalidConfig", Args: payload}
 	//invoke snap server
 	_, err = client.Invoke(context.Background(), &irequest)
 	if err == nil {
@@ -232,10 +231,10 @@ func TestNoNameSnap(t *testing.T) {
 	}
 	defer conn.Close()
 	//instantiate client
-	client := snap_protos.NewSnapClient(conn)
+	client := snapProtos.NewSnapClient(conn)
 	payload := [][]byte{[]byte("testChain"), []byte("example")}
 	//registered snap - does not have receiver interface
-	irequest := snap_protos.Request{SnapName: "", Args: payload}
+	irequest := snapProtos.Request{SnapName: "", Args: payload}
 	//invoke snap server
 	_, err = client.Invoke(context.Background(), &irequest)
 	if err == nil {

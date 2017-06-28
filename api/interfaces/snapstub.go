@@ -13,7 +13,8 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-const notImplemented string = "Required functionality was not implemented"
+var notImplemented = "Required functionality was not implemented"
+var errNotImplemented = errors.New(notImplemented)
 
 //SnapStub Implementation of the snap stub interface
 type SnapStub struct {
@@ -55,84 +56,89 @@ func (sc *SnapStub) GetTxID() string {
 
 // GetState not supported for Snap
 func (sc *SnapStub) GetState(key string) ([]byte, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // PutState not supported for Snap
 func (sc *SnapStub) PutState(key string, value []byte) error {
-	return errors.New(notImplemented)
+	return errNotImplemented
 }
 
 // DelState not supported for Snap
 func (sc *SnapStub) DelState(key string) error {
-	return errors.New(notImplemented)
+	return errNotImplemented
 }
 
 // GetStateByRange not supported for Snap
 func (sc *SnapStub) GetStateByRange(startKey, endKey string) (shim.StateQueryIteratorInterface, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 //GetStateByPartialCompositeKey not supported for Snap
 func (sc *SnapStub) GetStateByPartialCompositeKey(objectType string, keys []string) (shim.StateQueryIteratorInterface, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 
 }
 
 //CreateCompositeKey not supported for Snap
 func (sc *SnapStub) CreateCompositeKey(objectType string, attributes []string) (string, error) {
-	return "", errors.New(notImplemented)
+	return "", errNotImplemented
 }
 
 //SplitCompositeKey not supported for Snap
 func (sc *SnapStub) SplitCompositeKey(compositeKey string) (string, []string, error) {
-	return "", nil, errors.New(notImplemented)
+	return "", nil, errNotImplemented
 }
 
 //GetQueryResult not supported for Snap
 func (sc *SnapStub) GetQueryResult(query string) (shim.StateQueryIteratorInterface, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // GetHistoryForKey not supported for Snap
-func (sc *SnapStub) GetHistoryForKey(key string) (shim.StateQueryIteratorInterface, error) {
-	return nil, errors.New(notImplemented)
+func (sc *SnapStub) GetHistoryForKey(key string) (shim.HistoryQueryIteratorInterface, error) {
+	return nil, errNotImplemented
 }
 
 // GetCreator not supported for Snap
 func (sc *SnapStub) GetCreator() ([]byte, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // GetTransient not supported for Snap
 func (sc *SnapStub) GetTransient() (map[string][]byte, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // GetBinding not supported for Snap
 func (sc *SnapStub) GetBinding() ([]byte, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // GetArgsSlice not supported for Snap
 func (sc *SnapStub) GetArgsSlice() ([]byte, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // GetTxTimestamp not supported for Snap
 func (sc *SnapStub) GetTxTimestamp() (*timestamp.Timestamp, error) {
-	return nil, errors.New(notImplemented)
+	return nil, errNotImplemented
 }
 
 // SetEvent saves the event to be sent when a transaction is made part of a block
 func (sc *SnapStub) SetEvent(name string, payload []byte) error {
-	return errors.New(notImplemented)
+	return errNotImplemented
 }
 
 // InvokeChaincode not supported for Snap.
 func (sc *SnapStub) InvokeChaincode(chaincodeName string, args [][]byte, channel string) pb.Response {
 	response := pb.Response{Message: notImplemented}
 	return response
+}
+
+//GetSignedProposal not supported for Snap
+func (sc *SnapStub) GetSignedProposal() (*pb.SignedProposal, error) {
+	return nil, errNotImplemented
 }
 
 //NewSnapStub ...
