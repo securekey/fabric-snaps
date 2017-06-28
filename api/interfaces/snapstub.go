@@ -95,7 +95,7 @@ func (sc *SnapStub) GetQueryResult(query string) (shim.StateQueryIteratorInterfa
 }
 
 // GetHistoryForKey not supported for Snap
-func (sc *SnapStub) GetHistoryForKey(key string) (shim.StateQueryIteratorInterface, error) {
+func (sc *SnapStub) GetHistoryForKey(key string) (shim.HistoryQueryIteratorInterface, error) {
 	return nil, errors.New(notImplemented)
 }
 
@@ -133,6 +133,10 @@ func (sc *SnapStub) SetEvent(name string, payload []byte) error {
 func (sc *SnapStub) InvokeChaincode(chaincodeName string, args [][]byte, channel string) pb.Response {
 	response := pb.Response{Message: notImplemented}
 	return response
+}
+
+func (sc *SnapStub) GetSignedProposal() (*pb.SignedProposal, error) {
+	return nil, errors.New(notImplemented)
 }
 
 //NewSnapStub ...

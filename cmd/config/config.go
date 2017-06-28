@@ -10,16 +10,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
 	"strings"
+
+	logging "github.com/op/go-logging"
+	"github.com/spf13/viper"
 
 	"sync"
 
-	"github.com/fsnotify/fsnotify"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
-	logging "github.com/op/go-logging"
 	"github.com/securekey/fabric-snaps/pkg/examples/examplesnap"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -54,8 +53,8 @@ type SnapConfig struct {
 	// SnapConfig is the actual SnapConfig object
 	Snap shim.Chaincode
 
-	// SnapUrl to locate remote Snaps
-	SnapUrl string
+	// SnapURL to locate remote Snaps
+	SnapURL string
 
 	// to identify if the snap is remote or local
 	isRemote bool
@@ -66,6 +65,7 @@ type SnapConfigArray struct {
 	SnapConfigs []SnapConfig
 }
 
+//Snaps ...
 var Snaps = []*SnapConfig{
 	{
 		Enabled:  true,
@@ -117,24 +117,6 @@ func Init(configPathOverride string) error {
 
 	logger.Debug("Snaps are ready to be used.", len(Snaps), "snaps configs are added from the config.")
 
-	//keep monitoring Snap configs for any changes
-	go func() {
-		viper.WatchConfig()
-		viper.OnConfigChange(func(e fsnotify.Event) {
-			logger.Info("Snap Config file changed:", e.Name, " re initializing snaps..")
-			// access Snaps from the routine should be locked
-			mutex.Lock()
-			defer mutex.Unlock()
-			Snaps = Snaps[:1] // resetting snaps, increase the slice if hard coding new snaps in the array definition above
-			err = initializeSnapConfigs()
-			if err != nil {
-				logger.Errorf("Error initializing snaps following yaml update: %s", err)
-				return
-			}
-			logger.Debug("Snap count after initializing following yaml update:", len(Snaps))
-		})
-	}()
-
 	return nil
 }
 
@@ -166,8 +148,8 @@ func initializeSnapConfigs() error {
 
 	// append snaps to snapsArray
 	for _, snapConfigCopy := range snapConfig.SnapConfigs {
-		var snapMetaData SnapConfig = resolveSnapInitAndImplementation(&snapConfigCopy)
-		if len(snapMetaData.SnapUrl) > 0 {
+		var snapMetaData = resolveSnapInitAndImplementation(&snapConfigCopy)
+		if len(snapMetaData.SnapURL) > 0 {
 			snapMetaData.isRemote = true
 		}
 		logger.Debug("Adding Snap config:", snapMetaData.Name, " Remote?", snapMetaData.isRemote)
@@ -212,7 +194,7 @@ func GetSnapServerPort() string {
 	return viper.GetString("snap.server.port")
 }
 
-//GetSnapConfig
+//GetSnapConfig ...
 func GetSnapConfig(snapName string) *SnapConfig {
 
 	mutex.Lock()
