@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a3291f1_4fa091f4",
+        "filename": "cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-06-28T16:39:57Z",
+      "side": 1,
+      "message": "We should have proper comment.",
+      "revId": "224990e450e8c0b7b9a051a2ac39f2037c7f6f4d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a3291f1_2fa54504",
+        "filename": "cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-06-28T16:39:57Z",
+      "side": 1,
+      "message": "We should have proper comment.",
+      "revId": "224990e450e8c0b7b9a051a2ac39f2037c7f6f4d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
