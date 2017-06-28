@@ -16,8 +16,8 @@ import (
 
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	logging "github.com/op/go-logging"
-	snap_interfaces "github.com/securekey/fabric-snaps/api/interfaces"
-	snap_protos "github.com/securekey/fabric-snaps/api/protos"
+	snapInterfaces "github.com/securekey/fabric-snaps/api/interfaces"
+	snapProtos "github.com/securekey/fabric-snaps/api/protos"
 	config "github.com/securekey/fabric-snaps/cmd/config"
 	grpc "google.golang.org/grpc"
 	cred "google.golang.org/grpc/credentials"
@@ -30,7 +30,7 @@ type snapServer struct {
 
 //SnapServer Invoke...
 
-func (ss *snapServer) Invoke(ctx context.Context, ireq *snap_protos.Request) (*snap_protos.Response, error) {
+func (ss *snapServer) Invoke(ctx context.Context, ireq *snapProtos.Request) (*snapProtos.Response, error) {
 	//Snap name - required
 	snapName := ireq.SnapName
 	logger.Debugf("Invoking snap %s ", snapName)
@@ -44,12 +44,12 @@ func (ss *snapServer) Invoke(ctx context.Context, ireq *snap_protos.Request) (*s
 	}
 
 	//Create snap stub and pass it in
-	snapStub := snap_interfaces.NewSnapStub(ireq.Args)
+	snapStub := snapInterfaces.NewSnapStub(ireq.Args)
 	//invoke snap
 	invokeResponse := handler.Invoke(snapStub)
 	//response from invoke
 	irPayload := [][]byte{invokeResponse.Payload}
-	ir := snap_protos.Response{Payload: irPayload}
+	ir := snapProtos.Response{Payload: irPayload}
 	return &ir, nil
 }
 
@@ -82,7 +82,7 @@ func StartSnapServer() error {
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 	s := grpc.NewServer(opts...)
-	snap_protos.RegisterSnapServer(s, &snapServer{})
+	snapProtos.RegisterSnapServer(s, &snapServer{})
 	if config.IsTLSEnabled() {
 		logger.Infof("Start Snap Server grpc with tls on port:%s\n", config.GetSnapServerPort())
 	} else {
