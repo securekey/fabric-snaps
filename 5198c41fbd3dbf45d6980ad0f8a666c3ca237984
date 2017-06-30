@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a3291f1_8f7d59b4",
+        "filename": "pkg/snaps/httpsnap/httpsnap.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-06-30T17:41:54Z",
+      "side": 1,
+      "message": "Document expected and optional args?",
+      "revId": "5198c41fbd3dbf45d6980ad0f8a666c3ca237984",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
