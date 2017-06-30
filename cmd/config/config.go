@@ -76,6 +76,20 @@ var Snaps = []*SnapConfig{
 	},
 }
 
+var schemaMap map[string]SchemaConfig
+
+// SchemaConfig defines request and response schemas for content type
+type SchemaConfig struct {
+	// Content type
+	Type string
+
+	// Request schema
+	Request string
+
+	// Response schema
+	Response string
+}
+
 // Init configuration and logging for SnapConfigs. By default, we look for
 // configuration files at a path described by the environment variable
 // "FABRIC_CFG_PATH". This is where the configuration is expected to be set in
@@ -117,6 +131,11 @@ func Init(configPathOverride string) error {
 
 	logger.Debug("Snaps are ready to be used.", len(Snaps), "snaps configs are added from the config.")
 
+	err = initializeSchemaMap()
+	if err != nil {
+		return fmt.Errorf("Error initializing httpsnap.schemas: %s", err)
+	}
+
 	return nil
 }
 
@@ -132,6 +151,25 @@ func initializeLogging() error {
 	logging.SetBackend(backendFormatter).SetLevel(level, "")
 
 	logger.Debugf("SnapConfigs Logger initialized. Log level: %s", logging.GetLevel(""))
+
+	return nil
+}
+
+func initializeSchemaMap() error {
+
+	var schemaConfigs []SchemaConfig
+	err := viper.UnmarshalKey("httpsnap.schemas", &schemaConfigs)
+	if err != nil {
+		return err
+	}
+
+	schemaMap = make(map[string]SchemaConfig)
+
+	for _, config := range schemaConfigs {
+		config.Request = GetConfigPath(config.Request)
+		config.Response = GetConfigPath(config.Response)
+		schemaMap[config.Type] = config
+	}
 
 	return nil
 }
@@ -192,6 +230,52 @@ func GetTLSKeyPath() string {
 // GetSnapServerPort returns snap server port
 func GetSnapServerPort() string {
 	return viper.GetString("snap.server.port")
+}
+
+// HTTPSnapCertPath returns absolute path to the client cert
+func HTTPSnapCertPath() string {
+	return GetConfigPath(viper.GetString("httpsnap.tls.clientCert"))
+}
+
+// HTTPSnapKeyPath returns absolute path to the clietn key
+func HTTPSnapKeyPath() string {
+	return GetConfigPath(viper.GetString("httpsnap.tls.clientKey"))
+}
+
+// HTTPSnapCaCerts returns the list of ca certs
+func HTTPSnapCaCerts() []string {
+
+	caCerts := viper.GetStringSlice("httpsnap.tls.caCerts")
+	absoluteCaCerts := make([]string, 0, len(caCerts))
+
+	for _, v := range caCerts {
+		absoluteCaCerts = append(absoluteCaCerts, GetConfigPath(v))
+	}
+
+	return absoluteCaCerts
+}
+
+// HTTPSnapNamedClientOverridePath returns absolute path to client override folder
+func HTTPSnapNamedClientOverridePath() string {
+	return GetConfigPath(viper.GetString("httpsnap.tls.namedClientOverridePath"))
+}
+
+// HTTPSnapRequestSchema returns absolute path to request schema
+func HTTPSnapRequestSchema(contentType string) string {
+	schemaConfig := schemaMap[contentType]
+	if &schemaConfig != nil {
+		return schemaConfig.Request
+	}
+	return ""
+}
+
+// HTTPSnapResponseSchema returns absolute path to request schema
+func HTTPSnapResponseSchema(contentType string) string {
+	schemaConfig := schemaMap[contentType]
+	if &schemaConfig != nil {
+		return schemaConfig.Response
+	}
+	return ""
 }
 
 //GetSnapConfig returns snaps configuration

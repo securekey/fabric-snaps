@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Response Schema",
+    "description": "Some description",
+    "type": "object",
+    "properties": {
+        "response": {
+            "description": "Response description",
+            "type": "string"
+        }
+    },
+    "required": ["description"]
+}
