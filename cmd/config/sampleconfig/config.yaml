@@ -19,6 +19,8 @@ snaps:
     snapUrl: "remote.url.address:8009"
     initArgsStr:
       - "Hellow world remotely"
+  - name: "httpsnap"
+    enabled: true
 
 snap:
   # Configuration for SNAP daemon
@@ -44,4 +46,15 @@ snap:
 
     loglevel: debug
 
-
+httpsnap:
+ tls:
+  caCerts:
+  - httpsnap/tls/test-ca.crt
+  - httpsnap/tls/abc-ca.crt
+  clientCert: httpsnap/tls/test-client.crt
+  clientKey: httpsnap/tls/test-client.key
+  namedClientOverridePath: httpsnap/tls/override
+ schemas:
+  - type: application/json
+    request: httpsnap/schema/request.json
+    response: httpsnap/schema/response.json
