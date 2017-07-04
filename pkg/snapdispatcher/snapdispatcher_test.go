@@ -12,11 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/securekey/fabric-snaps/api/config"
 	snapInterfaces "github.com/securekey/fabric-snaps/api/interfaces"
 	snapProtos "github.com/securekey/fabric-snaps/api/protos"
-	"github.com/securekey/fabric-snaps/cmd/config"
-	"google.golang.org/grpc"
+	"github.com/securekey/fabric-snaps/pkg/snapdispatcher/registry"
+	"github.com/securekey/fabric-snaps/pkg/snaps/examplesnap"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 const address = "localhost"
@@ -24,7 +27,6 @@ const address = "localhost"
 var notImplemented = "Required functionality was not implemented"
 
 func TestInvokeOnRegisteredSnap(t *testing.T) {
-
 	conn, err := connectToSnapServer()
 	if err != nil {
 		t.Fatalf("Connect to SNAP server returned an error: %v", err)
@@ -32,9 +34,10 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 	defer conn.Close()
 	//instantiate client
 	client := snapProtos.NewSnapClient(conn)
-	payload := [][]byte{[]byte("Hello from invoke"), []byte("example")}
+	arg := "Hello from invoke"
+	payload := [][]byte{[]byte(arg), []byte("example")}
 	//use registered snap
-	irequest := snapProtos.Request{SnapName: "example", Args: payload}
+	irequest := snapProtos.Request{SnapName: "examplesnap", Args: payload}
 	//invoke snap server
 	iresponse, err := client.Invoke(context.Background(), &irequest)
 
@@ -45,10 +48,15 @@ func TestInvokeOnRegisteredSnap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Connect to SNAP return error: %v", err)
 	}
+
+	if iresponse.Status != shim.OK {
+		t.Fatalf("Expected status of OK, received %d ", iresponse.Status)
+	}
+
 	//for now assume that Invoke snap will return payload[0]
 	responseMsg := string(iresponse.Payload[0])
-	if responseMsg != "Hello from invoke" {
-		t.Fatalf("Expected hello, received %s ", responseMsg)
+	if responseMsg != arg {
+		t.Fatalf("Expected %s, received %s ", arg, responseMsg)
 	}
 	fmt.Printf("Received response from snap invoke %s\n", responseMsg)
 }
@@ -280,15 +288,22 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 	//Add snap used for testing
-	testSnaps := config.SnapConfig{
-		Enabled:  true,
-		Name:     "invalidConfig",
-		InitArgs: [][]byte{[]byte("")},
-	}
-	config.Snaps = append(config.Snaps, &testSnaps)
+	var snaps []*config.SnapConfig
 
-	go StartSnapServer()
+	snaps = append(snaps, &config.SnapConfig{
+		Name: "examplesnap",
+		Snap: &examplesnap.ExampleSnap{},
+	})
+	snaps = append(snaps, &config.SnapConfig{
+		Name: "invalidConfig",
+	})
+
+	snapsRegistry := registry.NewSnapsRegistry(snaps)
+	if err := snapsRegistry.Initialize(); err != nil {
+		panic(fmt.Sprintf("Error initializing Snaps Registry: %s", err))
+	}
+
+	go startSnapServer(snapsRegistry)
 
 	os.Exit(m.Run())
 }
-

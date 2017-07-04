@@ -8,9 +8,8 @@ package httpsnap
 import (
 	"fmt"
 
+	"github.com/securekey/fabric-snaps/api/config"
 	"github.com/spf13/viper"
-
-	config "github.com/securekey/fabric-snaps/cmd/config"
 )
 
 // SchemaConfig defines request and response schemas for content type

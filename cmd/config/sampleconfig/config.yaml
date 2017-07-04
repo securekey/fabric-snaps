@@ -9,16 +9,13 @@ snaps:
     initArgsStr:
       - "example snap init arg"
       - "second argument"
-  - name: "HelloWorldSnap"
-    enabled: true
-    initArgsStr:
-      - "Hello World is initialized first arg"
-      - "second arg"
-  - name: "HelloWorldRemote"
+
+  - name: "exampleremotesnap"
     enabled: true
     snapUrl: "remote.url.address:8009"
-    initArgsStr:
-      - "Hellow world remotely"
+    tlsEnabled: true
+    tlsRootCertFile: /etc/hyperledger/msp/snaps/remote.url.address/cacerts/ca-cert.pem
+
   - name: "httpsnap"
     enabled: true
 

@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/securekey/fabric-snaps/api/config"
 	"github.com/spf13/viper"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/securekey/fabric-snaps/cmd/config"
 )
 
 var testHost = "0.0.0.0"

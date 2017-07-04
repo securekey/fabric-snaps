@@ -15,10 +15,7 @@ import (
 	logging "github.com/op/go-logging"
 	"github.com/spf13/viper"
 
-	"sync"
-
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/securekey/fabric-snaps/pkg/examples/examplesnap"
 )
 
 const (
@@ -31,7 +28,6 @@ var logger = logging.MustGetLogger("snap-config")
 var logFormat = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
-var mutex = &sync.Mutex{}
 
 // SnapConfig defines the metadata needed to initialize the code
 // when the fabric comes up. SnapConfigs are installed by adding an
@@ -56,24 +52,16 @@ type SnapConfig struct {
 	// SnapURL to locate remote Snaps
 	SnapURL string
 
-	// to identify if the snap is remote or local
-	isRemote bool
+	// TLSEnabled indicates whether TLS is used when invoking remote snaps
+	TLSEnabled bool
+
+	// TLSRootCertFile is the root certificate fil (only applicable if TLSEnabled=true)
+	TLSRootCertFile string
 }
 
 // SnapConfigArray represents the list of snaps configurations from YAML
 type SnapConfigArray struct {
 	SnapConfigs []SnapConfig
-}
-
-//Snaps array of snap configs. Each config represents snap metadata defined either in config file or at runtime
-var Snaps = []*SnapConfig{
-	{
-		Enabled:  true,
-		Name:     "example",
-		InitArgs: [][]byte{[]byte("")},
-		Snap:     &examplesnap.CCSnapImpl{},
-		isRemote: false,
-	},
 }
 
 // Init configuration and logging for SnapConfigs. By default, we look for
@@ -102,20 +90,15 @@ func Init(configPathOverride string) error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
+		logger.Criticalf("Fatal error reading snap config file: %s", err)
 		return fmt.Errorf("Fatal error reading snap config file: %s", err)
 	}
 
 	err = initializeLogging()
 	if err != nil {
+		logger.Criticalf("Error initializing logging: %s", err)
 		return fmt.Errorf("Error initializing logging: %s", err)
 	}
-
-	err = initializeSnapConfigs()
-	if err != nil {
-		return fmt.Errorf("Error initializing snaps: %s", err)
-	}
-
-	logger.Debug("Snaps are ready to be used.", len(Snaps), "snaps configs are added from the config.")
 
 	return nil
 }
@@ -134,39 +117,6 @@ func initializeLogging() error {
 	logger.Debugf("SnapConfigs Logger initialized. Log level: %s", logging.GetLevel(""))
 
 	return nil
-}
-
-func initializeSnapConfigs() error {
-	snapConfig := &SnapConfigArray{}
-	err := viper.UnmarshalKey("snaps", &snapConfig.SnapConfigs)
-
-	if err != nil {
-		return err
-	}
-
-	logger.Debug("Found", len(snapConfig.SnapConfigs), "snaps config(s) in yaml file.")
-
-	// append snaps to snapsArray
-	for _, snapConfigCopy := range snapConfig.SnapConfigs {
-		var snapMetaData = resolveSnapInitAndImplementation(&snapConfigCopy)
-		if len(snapMetaData.SnapURL) > 0 {
-			snapMetaData.isRemote = true
-		}
-		logger.Debug("Adding Snap config:", snapMetaData.Name, " Remote?", snapMetaData.isRemote)
-		Snaps = append(Snaps, &snapMetaData)
-	}
-
-	return nil
-}
-
-func resolveSnapInitAndImplementation(sp *SnapConfig) SnapConfig {
-	for _, initArgVal := range sp.InitArgsStr {
-		logger.Debugf("Appending init arg: %s, concatenating as a byte array: %s\n", initArgVal, []byte(initArgVal))
-		sp.InitArgs = append(sp.InitArgs, []byte(initArgVal))
-	}
-	logger.Debug(len(sp.InitArgs), "InitArgs for snap", sp.Name, "configured.")
-
-	return *sp
 }
 
 // IsTLSEnabled is TLS enabled?
@@ -192,22 +142,6 @@ func GetTLSKeyPath() string {
 // GetSnapServerPort returns snap server port
 func GetSnapServerPort() string {
 	return viper.GetString("snap.server.port")
-}
-
-//GetSnapConfig returns snaps configuration
-func GetSnapConfig(snapName string) *SnapConfig {
-
-	mutex.Lock()
-	defer mutex.Unlock()
-	//registeredSnaps := config.GetSnapArray()
-	for _, registeredSnap := range Snaps {
-		if registeredSnap.Name == snapName {
-			logger.Debugf("Found registered snap %s", registeredSnap.Name)
-			return registeredSnap
-		}
-	}
-
-	return nil
 }
 
 // GetConfigPath returns the absolute value of the given path that is

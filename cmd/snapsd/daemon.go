@@ -9,63 +9,40 @@ package main
 import (
 	"os"
 
-	"os/signal"
-	"syscall"
-	"time"
+	"fmt"
 
 	"github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/cmd/config"
+	"github.com/securekey/fabric-snaps/api/config"
 	"github.com/securekey/fabric-snaps/pkg/snapdispatcher"
-	"fmt"
+	"github.com/securekey/fabric-snaps/pkg/snaps/examplesnap"
+	"github.com/securekey/fabric-snaps/pkg/snaps/httpsnap"
 )
 
 var logger = logging.MustGetLogger("snap-snapsd")
 
+// snaps contains an array of local Snap implementations for this Snaps container
+var snaps = []*config.SnapConfig{
+	// Example
+	{
+		Name: "examplesnap",
+		Snap: &examplesnap.ExampleSnap{},
+	},
+	{
+		Name: "httpsnap",
+		Snap: &httpsnap.CCSnapImpl{},
+	},
+}
+
 func main() {
 	fmt.Println("***** Daemon is getting call, in snapsd *****")
-	err := config.Init("")
-	if err != nil {
-		logger.Errorf("Error initializing Snap configs: %s \n", err)
-		logger.Error("Snap Configs daemon will not start")
+	snapsDaemon := snapdispatcher.NewSnapsDaemon()
+
+	if err := snapsDaemon.Initialize(snaps); err != nil {
+		logger.Errorf("Error initializing Snap Daemon: %s\n", err)
 		os.Exit(2)
-	} else {
-		logger.Info("Snap configs are now loaded.")
 	}
 
-	//start Snap server
-	SnapServerError := make(chan error)
-
-	go func() {
-		err := snapdispatcher.StartSnapServer()
-		if err != nil {
-			SnapServerError <- err
-		}
-		SnapServerError <- nil
-	}()
-
-	select {
-	case err := <-SnapServerError:
-		if err != nil {
-			logger.Errorf("Error Starting Snap Server: %s.", err)
-		} else {
-			logger.Info("Snap Server Started successfully.")
-		}
-
-	case <-time.After(15 * time.Second):
-		logger.Error("Timed out from Start Snap Server")
-
+	if err := snapsDaemon.Start(); err != nil {
+		logger.Errorf("Error starting Snap Daemon: %s\n", err)
 	}
-
-	done := make(chan error)
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-signals
-		logger.Infof("Got signal: %s \n", sig)
-		logger.Info("Snaps daemon is exiting")
-		done <- nil
-	}()
-
-	<-done
-	return
 }

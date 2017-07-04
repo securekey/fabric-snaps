@@ -1,4 +1,4 @@
-FROM hyperledger/fabric-peer:x86_64-1.0.0-beta
+FROM hyperledger/fabric-peer:x86_64-1.0.0-rc1
 
 ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
 RUN mkdir -p $FABRIC_CFG_PATH
