@@ -36,7 +36,7 @@ type snapsClient struct {
 	mutex              sync.RWMutex
 }
 
-// NewSnapsClient creates a new SNaps client
+// NewSnapsClient creates a new Snaps client
 func NewSnapsClient(url string, tlsEnabled bool, tlsCertFile string, serverHostOverride string) SnapsClient {
 	return &snapsClient{
 		url:                url,

@@ -40,10 +40,13 @@ func TestInit(t *testing.T) {
 	}
 }
 func TestInvoke(t *testing.T) {
+	expectedResponse := "some response"
+
 	snap := newSnap(func(url string) SnapsClient {
 		return &mockSnapsClient{
-			url:    url,
-			status: shim.OK,
+			url:     url,
+			status:  shim.OK,
+			payload: [][]byte{[]byte(expectedResponse)},
 		}
 	})
 
@@ -56,10 +59,16 @@ func TestInvoke(t *testing.T) {
 	args = append(args, []byte(snapName))
 	args = append(args, []byte(snapURL))
 
-	response := stub.MockInit("TxID", args)
+	response := stub.MockInvoke("TxID", args)
 
 	if response.Status != shim.OK {
 		t.Fatalf("Expecting response status %d but got %d", shim.OK, response.Status)
+	}
+	if len(response.Payload) == 0 {
+		t.Fatalf("Expecting one response payload but got none")
+	}
+	if string(response.Payload) != expectedResponse {
+		t.Fatalf("Expecting %s in response payload but got %s", expectedResponse, string(response.Payload))
 	}
 }
 

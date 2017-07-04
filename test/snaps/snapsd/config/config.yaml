@@ -1,0 +1,57 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#############################################################
+# Configurations for Snaps
+snaps:
+  - name: "examplesnap"
+    enabled: true
+    initArgsStr:
+      - "example snap init arg"
+      - "second argument"
+
+  - name: "httpsnap"
+    enabled: true
+
+  - name: "snap2"
+    enabled: true
+    snapUrl: "snap2.org1.example.com:8089"
+    tlsEnabled: true
+    tlsRootCertFile: /etc/hyperledger/msp/snaps/snap2.org1.example.com/cacerts/ca-cert.pem
+
+snap:
+  # Configuration for SNAP daemon
+  snapsd:
+    loglevel: debug
+
+  # Configurations for SNAP server
+  server:
+    port: 8089
+    # TLS Settings for p2p communications
+    tls:
+      enabled: true
+      cert:
+        file: tls/cert.pem
+      key:
+        file: tls/key.pem
+      # Root cert file for selfsigned certificates
+      # This represents a self-signed x509 cert that was used to sign the cert.file,
+      # this is sent to client to validate the recived certificate from server when
+      # establishing TLS connection.
+      rootcert:
+        file: tls/ca-cert.pem
+
+    loglevel: debug
+
+httpsnap:
+ tls:
+  caCerts:
+  - httpsnap/tls/test-ca.crt
+  - httpsnap/tls/abc-ca.crt
+  clientCert: httpsnap/tls/test-client.crt
+  clientKey: httpsnap/tls/test-client.key
+  namedClientOverridePath: httpsnap/tls/override
+ schemas:
+  - type: application/json
+    request: httpsnap/schema/request.json
+    response: httpsnap/schema/response.json
