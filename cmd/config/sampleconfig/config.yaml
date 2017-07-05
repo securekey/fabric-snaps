@@ -20,7 +20,7 @@ snaps:
     enabled: true
 
 snap:
-  # Configuration for SNAP daemon
+  # Configuration for SNAP daemonInitialize
   snapsd:
     loglevel: debug
 
@@ -38,7 +38,7 @@ snap:
       # This represents a self-signed x509 cert that was used to sign the cert.file,
       # this is sent to client to validate the recived certificate from server when
       # establishing TLS connection.
-      rootcert:
+      rootcert:Initialize
         file: tls/ca-cert.pem
 
     loglevel: debug

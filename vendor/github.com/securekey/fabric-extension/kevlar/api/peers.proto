@@ -1,0 +1,23 @@
+/*
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without written permission from SecureKey.
+*/
+
+syntax = "proto3";
+
+option go_package = "github.com/securekey/fabric-extension/kevlar/api";
+
+package api;
+
+// PeerEndpoint contains the internal and external endpoint of a peer
+message PeerEndpoint {
+	string Endpoint = 1;
+	string InternalEndpoint = 2;
+    bytes MSPid = 3;
+}
+
+// PeerEndpoints contains a list of peer endpoints
+message PeerEndpoints {
+	repeated PeerEndpoint Endpoints = 1;
+}
