@@ -1,0 +1,50 @@
+#Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+#SPDX-License-Identifier: Apache-2.0
+#############################################################
+# Configurations for the fabric client
+client:
+ tls:
+  enabled: true
+
+ security:
+  enabled: true
+  hashAlgorithm: "SHA2"
+  level: 256
+
+ logging:
+  level: debug
+
+ keystore:
+  path: "/tmp/msp"
+
+ # network provides a static definition of a Hyperledger Fabric network
+ network:
+  # list of ordering service nodes
+  orderers:
+   # orderer name
+   orderer0:
+    host: "orderer.example.com"
+    port: 7050
+    tls:
+     # Certificate location absolute path
+     certificate: "tls/orderer-ca-cert.pem"
+     # For testing only: overrides the virtual host name of the authority
+     serverHostOverride: ""
+  # ap of member organizations forming the network
+  organizations:
+    # Org1 name
+    peerorg1:
+      # Membership Service Provider ID for this organization
+      mspID: "Org1MSP"
+      # CA config defines the fabric-ca instance that issues identities for this org
+      ca:
+       # TLS secured connections with the CA
+       tlsEnabled: false
+       # CA name
+       name: "ca-org1"
+       # CA URL. Note: https prefix required for TLS
+       serverURL: "http://localhost:7054"
+
+
+

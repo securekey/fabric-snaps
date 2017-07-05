@@ -1,0 +1,21 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+syntax = "proto3";
+
+option go_package = "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/protos";
+
+package protos;
+
+
+//arguments to transaction snap will be passed in form of SnapTransactionRequest
+message SnapTransactionRequest{
+    string channelID=1;
+    string chaincodeID=2;
+    map <string , bytes> transientMap=3;
+    repeated bytes endorserArgs=4;
+    repeated string additionalCCIDs=5;
+}
