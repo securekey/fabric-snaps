@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "982c6fd4_a41e9b84",
+        "filename": "pkg/snaps/transactionsnap/config/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-05T16:16:39Z",
+      "side": 1,
+      "message": "Question: HTTP Snap puts config in the global sample config file.\n\nShould we follow that convention here?",
+      "revId": "03e59e2c215d01329c80ae932890ce90941d303a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38d22abd_ecff69c5",
+        "filename": "pkg/snaps/transactionsnap/config/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-05T16:16:39Z",
+      "side": 1,
+      "message": "We should default this to info. fabric-sdk-go logs are very verbose and make reading them hard.",
+      "revId": "03e59e2c215d01329c80ae932890ce90941d303a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a33a7cdd_2845372b",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-05T16:16:39Z",
+      "side": 1,
+      "message": "Document optional and required parameters",
+      "revId": "03e59e2c215d01329c80ae932890ce90941d303a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ceb65d9_c7594f42",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-05T16:16:39Z",
+      "side": 1,
+      "message": "Typo: payload",
+      "revId": "03e59e2c215d01329c80ae932890ce90941d303a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
