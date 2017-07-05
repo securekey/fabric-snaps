@@ -55,3 +55,56 @@ httpsnap:
   - type: application/json
     request: httpsnap/schema/request.json
     response: httpsnap/schema/response.json
+ 
+# client configuration
+client:
+ tls:
+  enabled: true
+
+ security:
+  enabled: true
+  hashAlgorithm: "SHA2"
+  level: 256
+
+ logging:
+  level: debug
+
+ keystore:
+  path: "/tmp/msp"
+
+ # network provides a static definition of a Hyperledger Fabric network
+ network:
+  # list of ordering service nodes
+  orderers:
+   # orderer name
+   orderer0:
+    host: "127.0.0.1"
+    port: 7050
+    tls:
+     # Certificate location absolute path
+     certificate: "tls/orderer-ca-cert.pem"
+     # For testing only: overrides the virtual host name of the authority
+     serverHostOverride: ""
+  # ap of member organizations forming the network
+  organizations:
+    # Org1 name
+    peerorg1:
+      # Membership Service Provider ID for this organization
+      mspID: "Org1MSP"
+      # CA config defines the fabric-ca instance that issues identities for this org
+      ca:
+       # TLS secured connections with the CA
+       tlsEnabled: false
+       # CA name
+       name: "ca-org1"
+       # CA URL. Note: https prefix required for TLS
+       serverURL: "http://localhost:7054"
+
+kevlar:
+ enrolment:
+  cert:
+   file: testcerts/ecert/cert.pem
+  key:
+   file: testcerts/ecert/key.pem
+
+
