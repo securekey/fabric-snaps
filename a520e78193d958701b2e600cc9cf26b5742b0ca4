@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46f0d3f4_b888faea",
+        "filename": "pkg/snaps/transactionsnap/config/config.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T19:55:37Z",
+      "side": 1,
+      "message": "fmp reference.",
+      "revId": "a520e78193d958701b2e600cc9cf26b5742b0ca4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "055a9801_4f24cb8b",
+        "filename": "pkg/snaps/transactionsnap/config/config.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T19:55:37Z",
+      "side": 1,
+      "message": "HTTP Snap is using the snap framework viper instance. We should do the same here, if possible",
+      "revId": "a520e78193d958701b2e600cc9cf26b5742b0ca4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de729db8_46ff2201",
+        "filename": "pkg/snaps/transactionsnap/config/config.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T19:55:37Z",
+      "side": 1,
+      "message": "Should use snaps logger instance",
+      "revId": "a520e78193d958701b2e600cc9cf26b5742b0ca4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
