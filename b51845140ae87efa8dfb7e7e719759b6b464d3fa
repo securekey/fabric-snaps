@@ -33,6 +33,23 @@
       "revId": "b51845140ae87efa8dfb7e7e719759b6b464d3fa",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5a5bf1a_298e9a6c",
+        "filename": "pkg/snaps/transactionsnap/client/membership.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T17:42:07Z",
+      "side": 1,
+      "message": "kevlar import",
+      "revId": "b51845140ae87efa8dfb7e7e719759b6b464d3fa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
