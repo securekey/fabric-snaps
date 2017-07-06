@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb8112b5_79ed34d0",
+        "filename": "pkg/snaps/transactionsnap/client/client.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T17:41:14Z",
+      "side": 1,
+      "message": "kevlar reference",
+      "revId": "b51845140ae87efa8dfb7e7e719759b6b464d3fa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffe30218_3fc85cf1",
+        "filename": "pkg/snaps/transactionsnap/client/client.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-06T17:41:14Z",
+      "side": 1,
+      "message": "fmp reference",
+      "revId": "b51845140ae87efa8dfb7e7e719759b6b464d3fa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
