@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "bf9d790f_80df3eee",
+        "filename": "cmd/config/sampleconfig/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-06T17:48:27Z",
+      "side": 1,
+      "message": "kevlar reference",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 6
+      },
+      "revId": "b51845140ae87efa8dfb7e7e719759b6b464d3fa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cb8112b5_79ed34d0",
         "filename": "pkg/snaps/transactionsnap/client/client.go",
         "patchSetId": 5
