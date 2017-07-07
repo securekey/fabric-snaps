@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package proxysnap
+package client
 
 import (
 	"context"
@@ -13,10 +13,14 @@ import (
 
 	"sync"
 
+	logging "github.com/op/go-logging"
+	config "github.com/securekey/fabric-snaps/api/config"
 	"github.com/securekey/fabric-snaps/api/protos"
 	"google.golang.org/grpc"
 	creds "google.golang.org/grpc/credentials"
 )
+
+var logger = logging.MustGetLogger("snaps-client")
 
 // SnapsClient sends a request to a remote Snaps container
 type SnapsClient interface {
@@ -46,12 +50,21 @@ func NewSnapsClient(url string, tlsEnabled bool, tlsCertFile string, serverHostO
 	}
 }
 
+// DefaultSnapsClient creates a new Snaps client based on configuration
+func DefaultSnapsClient() SnapsClient {
+	return &snapsClient{
+		url:         config.SnapsClientDispatcher(),
+		tlsEnabled:  config.SnapsClientTLSEnabled(),
+		tlsCertFile: config.SnapsClientTLSRootCertPath(),
+	}
+}
+
 func (c *snapsClient) Send(request *protos.Request) protos.Response {
 	conn, err := c.connect()
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to connect to snaps dispatcher at %s. Error: %v", c.url, err)
 		logger.Errorf(errMsg)
-		return protos.Response{Error: err.Error()}
+		return protos.Response{Status: protos.Status_FAILED, Error: err.Error()}
 	}
 
 	// Invoke snap using snaps client
@@ -60,7 +73,7 @@ func (c *snapsClient) Send(request *protos.Request) protos.Response {
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to invoke snaps dispatcher. Error: %v", err)
 		logger.Warning(errMsg)
-		return protos.Response{Error: err.Error()}
+		return protos.Response{Status: protos.Status_FAILED, Error: err.Error()}
 	}
 
 	return protos.Response{Status: response.Status, Payload: response.Payload}

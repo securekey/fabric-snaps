@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/securekey/fabric-snaps/api/client"
 	"github.com/securekey/fabric-snaps/api/protos"
 )
 
@@ -42,7 +43,7 @@ func TestInit(t *testing.T) {
 func TestInvoke(t *testing.T) {
 	expectedResponse := "some response"
 
-	snap := newSnap(func(url string) SnapsClient {
+	snap := newSnap(func(url string) client.SnapsClient {
 		return &mockSnapsClient{
 			url:     url,
 			status:  shim.OK,

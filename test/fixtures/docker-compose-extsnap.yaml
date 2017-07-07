@@ -162,6 +162,9 @@ services:
       - CORE_SNAP_SERVER_TLS_CERT_FILE=/etc/hyperledger/msp/snaps/snap2.org1.example.com/signcerts/cert.pem
       - CORE_SNAP_SERVER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/snaps/snap2.org1.example.com/cacerts/ca-cert.pem
       - CORE_SNAP_SERVER_TLS_KEY_FILE=/etc/hyperledger/msp/snaps/snap2.org1.example.com/keystore/e308c1ea00cce4ccabb9236e0330eb78c6846c80b24a3a7187421b172c193fa5_sk
+      - CORE_SNAP_CLIENT_DISPATCHER=peer0.org1.example.com:8089
+      - CORE_SNAP_CLIENT_TLS_ENABLED=true
+      - CORE_SNAP_CLIENT_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/
@@ -173,6 +176,7 @@ services:
     volumes:
       - /var/run/:/host/var/run/
       - ./channel/crypto-config/peerOrganizations/org1.example.com/snaps/:/etc/hyperledger/msp/snaps
+      - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/msp/peer
     depends_on:
       - peer0.org1.example.com
       - builder

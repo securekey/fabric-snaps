@@ -182,13 +182,6 @@ func TestUnimplementedSnapMethods(t *testing.T) {
 		t.Fatalf("SetEvent was not implemented. ")
 
 	}
-	response := snapStub.InvokeChaincode("abc", nil, "channel")
-	if response.Message != notImplemented {
-		t.Fatalf("InvokeChaincode was not implemented. ")
-	}
-	if response.Payload != nil {
-		t.Fatalf("InvokeChaincode was not implemented.")
-	}
 
 }
 

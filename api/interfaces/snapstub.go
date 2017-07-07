@@ -11,6 +11,8 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	client "github.com/securekey/fabric-snaps/api/client"
+	"github.com/securekey/fabric-snaps/api/protos"
 )
 
 var notImplemented = "Required functionality was not implemented"
@@ -130,10 +132,18 @@ func (sc *SnapStub) SetEvent(name string, payload []byte) error {
 	return errNotImplemented
 }
 
-// InvokeChaincode not supported for Snap.
+// InvokeChaincode - call configured snaps dispatcher
 func (sc *SnapStub) InvokeChaincode(chaincodeName string, args [][]byte, channel string) pb.Response {
-	response := pb.Response{Message: notImplemented}
-	return response
+
+	snapsClient := client.DefaultSnapsClient()
+	defer snapsClient.Disconnect()
+
+	response := snapsClient.Send(&protos.Request{SnapName: chaincodeName, Args: args})
+	if response.Status != shim.OK {
+		return shim.Error(response.Error)
+	}
+
+	return shim.Success(response.Payload[0])
 }
 
 //GetSignedProposal not supported for Snap

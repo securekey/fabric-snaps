@@ -10,12 +10,13 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	logging "github.com/op/go-logging"
+	client "github.com/securekey/fabric-snaps/api/client"
 	"github.com/securekey/fabric-snaps/api/protos"
 )
 
 var logger = logging.MustGetLogger("proxy-snap")
 
-type snapsClientProvider func(url string) SnapsClient
+type snapsClientProvider func(url string) client.SnapsClient
 
 // proxySnap invokes a remote snap
 type proxySnap struct {
@@ -26,8 +27,8 @@ type proxySnap struct {
 
 // NewSnap - create new instance of ProxySnap
 func NewSnap(tlsEnabled bool, tlsRootCert string) shim.Chaincode {
-	return newSnap(func(url string) SnapsClient {
-		return NewSnapsClient(url, tlsEnabled, tlsRootCert, "")
+	return newSnap(func(url string) client.SnapsClient {
+		return client.NewSnapsClient(url, tlsEnabled, tlsRootCert, "")
 	})
 }
 

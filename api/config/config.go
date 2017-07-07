@@ -157,3 +157,18 @@ func GetConfigPath(path string) string {
 
 	return filepath.Join(basePath, path)
 }
+
+// SnapsClientTLSEnabled is TLS enabled?
+func SnapsClientTLSEnabled() bool {
+	return viper.GetBool("snap.client.tls.enabled")
+}
+
+// SnapsClientTLSRootCertPath returns absolute path to the TLS root certificate
+func SnapsClientTLSRootCertPath() string {
+	return GetConfigPath(viper.GetString("snap.client.tls.rootcert.file"))
+}
+
+// SnapsClientDispatcher returns dispatcher address to connect to
+func SnapsClientDispatcher() string {
+	return viper.GetString("snap.client.dispatcher")
+}

@@ -90,6 +90,9 @@ services:
       - CORE_SNAP_SERVER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/signcerts/peer0.org1.example.com-cert.pem
       - CORE_SNAP_SERVER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
       - CORE_SNAP_SERVER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/keystore/ecd9f80eb183352d5d4176eeb692e30bbfba4c38813ff9a0b6b799b546dda1d8_sk
+      - CORE_SNAP_CLIENT_DISPATCHER=peer0.org1.example.com:8089
+      - CORE_SNAP_CLIENT_TLS_ENABLED=true
+      - CORE_SNAP_CLIENT_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem      
 
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: entrypoint.sh
@@ -126,6 +129,10 @@ services:
       - CORE_SNAP_SERVER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/signcerts/peer0.org2.example.com-cert.pem
       - CORE_SNAP_SERVER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem
       - CORE_SNAP_SERVER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/keystore/81c71fd393054571c8d789f302a10390e0e83eb079b02a26a162ee26f02ff796_sk
+      - CORE_SNAP_CLIENT_DISPATCHER=peer0.org2.example.com:8089
+      - CORE_SNAP_CLIENT_TLS_ENABLED=true
+      - CORE_SNAP_CLIENT_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org2.example.com-cert.pem      
+
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
 #    command: peer node start
     command: entrypoint.sh
