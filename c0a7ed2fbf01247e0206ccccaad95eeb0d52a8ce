@@ -106,6 +106,29 @@
     },
     {
       "key": {
+        "uuid": "4a23d76d_9b22004b",
+        "filename": "pkg/snaps/transactionsnap/client/selection.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-07-14T20:11:45Z",
+      "side": 1,
+      "message": "Missing comment",
+      "range": {
+        "startLine": 217,
+        "startChar": 0,
+        "endLine": 217,
+        "endChar": 4
+      },
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de02e312_38aa25bd",
         "filename": "pkg/snaps/transactionsnap/config/config.go",
         "patchSetId": 1
