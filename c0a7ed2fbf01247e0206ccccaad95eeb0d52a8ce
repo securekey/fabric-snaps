@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b262b800_f57b1186",
+        "filename": "pkg/snaps/transactionsnap/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "FMP?",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "789d5464_03ef41cb",
+        "filename": "pkg/snaps/transactionsnap/client/pgresolver/groups_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Wrong copyright?",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc2bd71c_6e0778f5",
+        "filename": "pkg/snaps/transactionsnap/client/selection.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Missing comment",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "966e1163_251ea77d",
+        "filename": "pkg/snaps/transactionsnap/client/selection.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Missing comment",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de02e312_38aa25bd",
+        "filename": "pkg/snaps/transactionsnap/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Simplify?",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b37d762_e4eb750c",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Should be main package",
+      "range": {
+        "startLine": 6,
+        "startChar": 8,
+        "endLine": 6,
+        "endChar": 23
+      },
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0a968d5_6825164d",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-07-14T19:50:06Z",
+      "side": 1,
+      "message": "Spelling - Specified",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
