@@ -3,14 +3,13 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 package pgresolver
 
 import (
 	"fmt"
 	"reflect"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 )
 
 // NewGroupOfGroups returns a new group of groups

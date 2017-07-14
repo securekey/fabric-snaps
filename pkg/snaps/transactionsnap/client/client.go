@@ -11,21 +11,22 @@ import (
 	"sync"
 	"time"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+
 	"github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric/bccsp/factory"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	logging "github.com/op/go-logging"
-	sconfig "github.com/securekey/fabric-snaps/api/config"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 )
 
-var logger = logging.MustGetLogger("transaction-snap")
+var logger = logging.MustGetLogger("transaction-fabric-client")
 
 const (
-	snapUser = "Snap-User"
+	txnSnapUser = "Txn-Snap-User"
 )
 
 // Client is a wrapper interface around the fabric client
@@ -48,13 +49,13 @@ type Client interface {
 	// for a transaction with the given parameters
 	// @param {Channel} channel on which we want to transact
 	// @param {string} chaincodeID identifies the chaincode to invoke
-	// @param {[]string} args to pass to the chaincode
+	// @param {[]string} args to pass to the chaincode. Args[0] is the function name
 	// @param {[]Peer} (optional) targets for transaction
 	// @param {map[string][]byte} transientData map
 	// @returns {[]TransactionProposalResponse} responses from endorsers
 	// @returns {error} error, if any
 	EndorseTransaction(sdkApi.Channel, string, []string, map[string][]byte,
-		[]sdkApi.Peer) ([]*sdkApi.TransactionProposalResponse, error)
+		[]sdkApi.Peer) ([]*apitxn.TransactionProposalResponse, error)
 
 	// CommitTransaction submits the given endorsements on the specified channel for
 	// commit
@@ -62,7 +63,7 @@ type Client interface {
 	// @param {[]TransactionProposalResponse} responses from endorsers
 	// @param {bool} register for Tx event
 	// @returns {error} error, if any
-	CommitTransaction(sdkApi.Channel, []*sdkApi.TransactionProposalResponse, bool) error
+	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool) error
 
 	// QueryChannels joined by the given peer
 	// @param {Peer} The peer to query
@@ -77,7 +78,7 @@ type Client interface {
 	// GetSelectionService returns the SelectionService
 	GetSelectionService() SelectionService
 
-	//GetEventHub returns the EventHub
+	// GetEventHub returns the GetEventHub
 	// @returns {EventHub} EventHub
 	// @returns {error} error, if any
 	GetEventHub() (sdkApi.EventHub, error)
@@ -95,7 +96,11 @@ type Client interface {
 
 	// GetConfig get client config
 	// @returns {Config} config
-	GetConfig() sdkApi.Config
+	GetConfig() sdkConfigApi.Config
+
+	// GetUser returns the user from the client context
+	// @retruns {User} user
+	GetUser() sdkApi.User
 }
 
 type clientImpl struct {
@@ -119,17 +124,15 @@ func GetInstance() (Client, error) {
 	})
 
 	if err != nil {
-		fmt.Printf("Error in get instance on fabric client:%v", err)
 		return nil, err
 	}
 
 	return client, nil
 }
 
-//NewChannel creates new channel
 func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 	c.RLock()
-	chain := c.client.GetChannel(name)
+	chain := c.client.Channel(name)
 	c.RUnlock()
 
 	if chain != nil {
@@ -142,12 +145,12 @@ func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new channel: %s", err)
 	}
-	ordererConfig, err := c.client.GetConfig().RandomOrdererConfig()
+	ordererConfig, err := c.client.Config().RandomOrdererConfig()
 	if err != nil {
 		return nil, fmt.Errorf("GetRandomOrdererConfig return error: %s", err)
 	}
 	orderer, err := sdkFabApi.NewOrderer(fmt.Sprintf("%s:%d",
-		ordererConfig.Host, ordererConfig.Port), config.GetConfigPath(ordererConfig.TLS.Certificate), "", c.client.GetConfig())
+		ordererConfig.Host, ordererConfig.Port), config.GetConfigPath(ordererConfig.TLS.Certificate), "", c.client.Config())
 	if err != nil {
 		return nil, fmt.Errorf("Error adding orderer: %s", err)
 	}
@@ -156,12 +159,11 @@ func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 	return channel, nil
 }
 
-//GetChannel by name
 func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
 	c.RLock()
 	defer c.RUnlock()
 
-	channel := c.client.GetChannel(name)
+	channel := c.client.Channel(name)
 	if channel == nil {
 		return nil, fmt.Errorf("Channel %s has not been created", name)
 	}
@@ -169,11 +171,11 @@ func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
 	return channel, nil
 }
 
-//EndorseTransaction sends proposal to endorser
 func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID string,
 	args []string, transientData map[string][]byte, targets []sdkApi.Peer) (
-	[]*sdkApi.TransactionProposalResponse, error) {
+	[]*apitxn.TransactionProposalResponse, error) {
 	var peers []sdkApi.Peer
+	var processors []apitxn.ProposalProcessor
 	var err error
 
 	if targets == nil {
@@ -187,19 +189,31 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 		peers = targets
 	}
 
+	for _, peer := range peers {
+		logger.Debugf("Target peer %v", peer.URL())
+		processors = append(processors, apitxn.ProposalProcessor(peer))
+	}
+
 	c.RLock()
 	defer c.RUnlock()
 
 	logger.Debugf("Requesting endorsements from %s, on channel %s",
 		chaincodeID, channel.Name())
 
-	proposal, err := channel.CreateTransactionProposal(chaincodeID,
-		channel.Name(), args, true, transientData)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating transaction proposal: %s", err)
+	if len(args) == 0 {
+		return nil, fmt.Errorf(
+			"Args cannot be empty. Args[0] is expected to be the function name")
 	}
-	// TODO: Retry? Parameter is currently ignored by the client
-	responses, err := channel.SendTransactionProposal(proposal, 0, peers)
+
+	request := apitxn.ChaincodeInvokeRequest{
+		Targets:      processors,
+		Fcn:          args[0],
+		Args:         args[1:],
+		TransientMap: transientData,
+		ChaincodeID:  chaincodeID,
+	}
+
+	responses, _, err := channel.SendTransactionProposal(request)
 	if err != nil {
 		return nil, fmt.Errorf("Error sending transaction proposal: %s", err)
 	}
@@ -207,7 +221,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 	if len(responses) == 0 {
 		return nil, fmt.Errorf("Did not receive any endorsements")
 	}
-	var validResponses []*sdkApi.TransactionProposalResponse
+	var validResponses []*apitxn.TransactionProposalResponse
 	var errorCount int
 	var errorResponses []string
 	for _, response := range responses {
@@ -226,9 +240,8 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 	return validResponses, nil
 }
 
-//CommitTransaction  is called when transaction is commited
 func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
-	responses []*sdkApi.TransactionProposalResponse, registerTxEvent bool) error {
+	responses []*apitxn.TransactionProposalResponse, registerTxEvent bool) error {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -240,7 +253,7 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	}
 	done := make(chan bool)
 	fail := make(chan error)
-	txID := responses[0].Proposal.TransactionID
+	txID := transaction.Proposal.TxnID
 	if registerTxEvent {
 		peer, err := c.selectionService.GetPeerForEvents(channel.Name())
 		if err != nil {
@@ -250,47 +263,38 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 		if err != nil {
 			return fmt.Errorf("Failed sdkFabricTxn.GetDefaultImplEventHub() [%v]", err)
 		}
-		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", peer.EventHost,
-			peer.EventPort), config.GetTLSRootCertPath(), "")
+		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", peer.EventHost, peer.EventPort), "", "")
 		if err := eventHub.Connect(); err != nil {
 			return fmt.Errorf("Failed eventHub.Connect() [%v]", err)
 		}
 		defer eventHub.Disconnect()
 		done, fail = c.registerTxEvent(txID, eventHub)
 	}
-	transactionResponses, err := channel.SendTransaction(transaction)
+	resp, err := channel.SendTransaction(transaction)
 	if err != nil {
 		return fmt.Errorf("Error sending transaction: %s", err)
 	}
 
-	var errorResponses []string
-	for _, transactionResponse := range transactionResponses {
-		if transactionResponse.Err != nil {
-			errorResponses = append(errorResponses, transactionResponse.Err.Error())
-		}
-	}
-
-	if len(errorResponses) > 0 {
-		return fmt.Errorf(strings.Join(errorResponses, "\n"))
+	if resp.Err != nil {
+		return fmt.Errorf("Error sending transaction: %s", resp.Err.Error())
 	}
 
 	if registerTxEvent {
 		select {
 		case <-done:
 		case <-fail:
-			return fmt.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID, fail)
+			return fmt.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID.ID, fail)
 		case <-time.After(time.Second * 30):
-			return fmt.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID)
+			return fmt.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID.ID)
 		}
 	}
 
 	return nil
 }
 
-//QueryChannels joined by the given peer
 func (c *clientImpl) QueryChannels(peer config.PeerConfig) ([]string, error) {
 	p, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peer.Host, peer.Port),
-		config.GetTLSRootCertPath(), "", c.client.GetConfig())
+		config.GetTLSRootCertPath(), "", c.client.Config())
 	if err != nil {
 		return nil, fmt.Errorf("Error creating peer: %s", err)
 	}
@@ -300,6 +304,7 @@ func (c *clientImpl) QueryChannels(peer config.PeerConfig) ([]string, error) {
 		return nil, fmt.Errorf("Error querying channels on peer %+v : %s", peer, err)
 	}
 	channels := []string{}
+
 	for _, response := range responses.GetChannels() {
 		channels = append(channels, response.ChannelId)
 	}
@@ -307,24 +312,20 @@ func (c *clientImpl) QueryChannels(peer config.PeerConfig) ([]string, error) {
 	return channels, nil
 }
 
-//SetSelectionService is used to inject a selection service for testing
 func (c *clientImpl) SetSelectionService(service SelectionService) {
 	c.Lock()
 	defer c.Unlock()
 	c.selectionService = service
 }
 
-//GetSelectionService is used to get a selection service for testing
 func (c *clientImpl) GetSelectionService() SelectionService {
 	return c.selectionService
 }
 
-//GetEventHub returns the EventHub
 func (c *clientImpl) GetEventHub() (sdkApi.EventHub, error) {
 	return sdkFabApi.NewEventHub(c.client)
 }
 
-//InitializeChannel initializes the given channel
 func (c *clientImpl) InitializeChannel(channel sdkApi.Channel) error {
 	c.RLock()
 	isInitialized := channel.IsInitialized()
@@ -340,45 +341,58 @@ func (c *clientImpl) InitializeChannel(channel sdkApi.Channel) error {
 	if err != nil {
 		return fmt.Errorf("Error initializing new channel: %s", err)
 	}
+	// Channel initialized. Add MSP roots to TLS cert pool.
+	c.initializeTLSPool(channel)
 
 	return nil
 }
 
-func (c *clientImpl) initialize() error {
-	sconfig.Init("")
-	clientConfig, err := sdkFabApi.NewConfig(sconfig.GetConfigPath("") + "/config.yaml")
-	logger.Debug("clientConfig path", clientConfig)
+func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
+	globalCertPool, err := c.client.Config().TLSCACertPool("")
+	if err != nil {
+		return err
+	}
 
+	mspMap, err := channel.MSPManager().GetMSPs()
+	if err != nil {
+		return fmt.Errorf("Error getting MSPs for channel %s: %s",
+			channel.Name(), err)
+	}
+
+	for _, msp := range mspMap {
+		for _, cert := range msp.GetTLSRootCerts() {
+			globalCertPool.AppendCertsFromPEM(cert)
+		}
+
+		for _, cert := range msp.GetTLSIntermediateCerts() {
+			globalCertPool.AppendCertsFromPEM(cert)
+		}
+	}
+
+	c.client.Config().SetTLSCACertPool(globalCertPool)
+	return nil
+}
+
+func (c *clientImpl) initialize() error {
+
+	clientConfig, err := sdkFabApi.NewConfigManager(config.GetConfigPath("") + "/config.yaml")
 	if err != nil {
 		return fmt.Errorf("Error initializaing config: %s", err)
 	}
+
 	clientConfig.CSPConfig()
-	err = factory.InitFactories(&factory.FactoryOpts{
-		ProviderName: "SW",
-		SwOpts: &factory.SwOpts{
-			HashFamily: clientConfig.SecurityAlgorithm(),
-			SecLevel:   clientConfig.SecurityLevel(),
-			FileKeystore: &factory.FileKeystoreOpts{
-				KeyStorePath: clientConfig.KeyStorePath(),
-			},
-			Ephemeral: true,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("Failed getting ephemeral software-based BCCSP [%s]", err)
-	}
-	config.Init("")
 	localPeer, err := config.GetLocalPeer()
 	if err != nil {
 		return fmt.Errorf("GetLocalPeer return error [%v]", err)
 	}
 	cryptoSuite := bccspFactory.GetDefault()
 	user, err := sdkFabApi.NewPreEnrolledUser(clientConfig,
-		config.GetEnrolmentKeyPath(), config.GetEnrolmentCertPath(), snapUser, string(localPeer.MSPid), cryptoSuite)
+		config.GetEnrolmentKeyPath(), config.GetEnrolmentCertPath(), txnSnapUser, string(localPeer.MSPid), cryptoSuite)
 	if err != nil {
 		return fmt.Errorf("Failed NewClientWithPreEnrolledUser() [%s]", err)
 	}
-	client, err := sdkFabApi.NewClient(user, true, "", clientConfig)
+
+	client, err := sdkFabApi.NewClient(user, true, "", cryptoSuite, clientConfig)
 	if err != nil {
 		return fmt.Errorf("Failed NewClient() [%s]", err)
 	}
@@ -387,20 +401,22 @@ func (c *clientImpl) initialize() error {
 	return nil
 }
 
-//Hash calculates hash of message
 func (c *clientImpl) Hash(message []byte) (hash []byte, err error) {
-	return c.client.GetCryptoSuite().Hash(message, &bccsp.SHAOpts{})
+	return c.client.CryptoSuite().Hash(message, &bccsp.SHAOpts{})
 }
 
-//GetConfig get client config
-func (c *clientImpl) GetConfig() sdkApi.Config {
-	return c.client.GetConfig()
+func (c *clientImpl) GetConfig() sdkConfigApi.Config {
+	return c.client.Config()
+}
+
+func (c *clientImpl) GetUser() sdkApi.User {
+	return c.client.UserContext()
 }
 
 // RegisterTxEvent registers on the given eventhub for the give transaction
 // returns a boolean channel which receives true when the event is complete
 // and an error channel for errors
-func (c *clientImpl) registerTxEvent(txID string, eventHub sdkApi.EventHub) (chan bool, chan error) {
+func (c *clientImpl) registerTxEvent(txID apitxn.TransactionID, eventHub sdkApi.EventHub) (chan bool, chan error) {
 	done := make(chan bool)
 	fail := make(chan error)
 

@@ -3,14 +3,13 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 package pgresolver
 
 import (
 	"fmt"
 	"testing"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/hyperledger/fabric/protos/common"

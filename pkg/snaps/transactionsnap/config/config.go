@@ -3,7 +3,6 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 package config
 
 import (
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	logging "github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
 
@@ -21,46 +21,66 @@ const (
 	configFileName     = "config"
 	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
-	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/cmd/config/sampleconfig"
+	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/sampleconfig"
 )
 
 var peerConfig = viper.New()
+var logger = logging.MustGetLogger("txn-snap-config")
+var logFormat = logging.MustStringFormatter(
+	`%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+)
 
-// Init configuration and logging for Snaps. By default, the we look for
+// Init configuration and logging for txn snap. By default, the we look for
 // configuration files at a path described by the environment variable
 // "FABRIC_CFG_PATH". This is where the configuration is expected to be set in
-// a production Snaps image. For testing and development, a GOPATH, project
+// a production image. For testing and development, a GOPATH, project
 // relative path is used. Optionally, a path override parameter can be passed in
 // @param {string} [OPTIONAL] configPathOverride
 // @returns {error} error, if any
 func Init(configPathOverride string) error {
-	var configPath = os.Getenv("FABRIC_CFG_PATH")
+	var envConfigPath = os.Getenv("FABRIC_CFG_PATH")
 	replacer := strings.NewReplacer(".", "_")
 
-	if configPath != "" {
-		peerConfig.AddConfigPath(configPath)
-	} else {
-		if configPathOverride == "" {
-			configPathOverride = devConfigPath
-		}
-		peerConfig.AddConfigPath(configPathOverride)
+	configPath := devConfigPath
+	if envConfigPath != "" {
+		configPath = envConfigPath
+	} else if configPathOverride != "" {
+		configPath = configPathOverride
 	}
+	//txnSnap Config
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName(configFileName)
+	viper.SetEnvPrefix(cmdRootPrefix)
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(replacer)
 
+	//peer Config
+	peerConfig.AddConfigPath(configPath)
 	peerConfig.SetConfigName(peerConfigFileName)
 	peerConfig.SetEnvPrefix(cmdRootPrefix)
 	peerConfig.AutomaticEnv()
 	peerConfig.SetEnvKeyReplacer(replacer)
 
-	err := peerConfig.ReadInConfig()
+	err := viper.ReadInConfig()
 	if err != nil {
 		return fmt.Errorf("Fatal error reading config file: %s", err)
+	}
+
+	err = peerConfig.ReadInConfig()
+	if err != nil {
+		return fmt.Errorf("Fatal error reading config file: %s", err)
+	}
+
+	err = initializeLogging()
+	if err != nil {
+		return fmt.Errorf("Error initializing logging: %s", err)
 	}
 
 	return nil
 }
 
 // GetLocalPeer returns address and ports for the peer running inside the
-// snap container
+// txn snap container
 func GetLocalPeer() (*PeerConfig, error) {
 	var peer = &PeerConfig{}
 	var err error
@@ -84,7 +104,7 @@ func GetLocalPeer() (*PeerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	peer.MSPid = []byte(peerConfig.GetString("peer.localMspId"))
+	peer.MSPid = []byte(GetMspID())
 	if peer.MSPid == nil || string(peer.MSPid) == "" {
 		return nil, fmt.Errorf("Peer localMspId not found in config")
 	}
@@ -97,7 +117,12 @@ func IsTLSEnabled() bool {
 	return peerConfig.GetBool("peer.tls.enabled")
 }
 
-//GetMspConfigPath get member service config path
+// GetMspID returns the MSP ID for the local peer
+func GetMspID() string {
+	return peerConfig.GetString("peer.localMspId")
+}
+
+// GetMspConfigPath returns the local MSP config path
 func GetMspConfigPath() string {
 	return GetConfigPath(peerConfig.GetString("peer.mspConfigPath"))
 }
@@ -119,17 +144,16 @@ func GetTLSKeyPath() string {
 
 // GetEnrolmentCertPath returns absolute path to the Enrolment cert
 func GetEnrolmentCertPath() string {
-	return GetConfigPath(viper.GetString("client.enrolment.cert.file"))
+	return GetConfigPath(viper.GetString("txnsnap.enrolment.cert.file"))
 }
 
 // GetEnrolmentKeyPath returns absolute path to the Enrolment key
 func GetEnrolmentKeyPath() string {
-	return GetConfigPath(viper.GetString("client.enrolment.key.file"))
+	return GetConfigPath(viper.GetString("txnsnap.enrolment.key.file"))
 }
 
-//GetMembershipPollInterval returns pool interval
 func GetMembershipPollInterval() time.Duration {
-	return viper.GetDuration("client.membership.pollinterval")
+	return viper.GetDuration("txnsnap.membership.pollinterval")
 }
 
 // GetConfigPath returns the absolute value of the given path that is
@@ -144,4 +168,19 @@ func GetConfigPath(path string) string {
 	}
 
 	return filepath.Join(basePath, path)
+}
+
+func initializeLogging() error {
+	backend := logging.NewLogBackend(os.Stdout, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, logFormat)
+	level, err := logging.LogLevel(viper.GetString("txnsnap.loglevel"))
+	if err != nil {
+		return fmt.Errorf("Error initializing log level: %s", err)
+	}
+
+	logging.SetBackend(backendFormatter).SetLevel(level, "")
+
+	logger.Debugf("txnsnap Logger initialized. Log level: %s", logging.GetLevel(""))
+
+	return nil
 }

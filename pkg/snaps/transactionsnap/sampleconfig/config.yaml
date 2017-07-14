@@ -1,0 +1,56 @@
+# Configurations for txn snap
+txnsnap:
+ loglevel: debug
+
+# Membership list polling interval
+ membership:
+  pollinterval: 3s
+ enrolment:
+  cert:
+   file: testcerts/ecert/cert.pem
+  key:
+   file: testcerts/ecert/key.pem
+   
+# Configurations for the fabric client
+client:
+ tls:
+  enabled: true
+
+ security:
+  enabled: true
+  hashAlgorithm: "SHA2"
+  level: 256
+
+ logging:
+  level: info
+
+ keystore:
+  path: "/tmp/msp"
+
+ # network provides a static definition of a Hyperledger Fabric network
+ network:
+  # list of ordering service nodes
+  orderers:
+   # orderer name
+   orderer0:
+    host: "orderer.example.com"
+    port: 7050
+    tls:
+     # Certificate location absolute path
+     certificate: "tls/orderer-ca-cert.pem"
+     # For testing only: overrides the virtual host name of the authority
+     serverHostOverride: ""
+  # ap of member organizations forming the network
+  organizations:
+    # Org1 name
+    peerorg1:
+      # Membership Service Provider ID for this organization
+      mspID: "Org1MSP"
+      # CA config defines the fabric-ca instance that issues identities for this org
+      ca:
+       # TLS secured connections with the CA
+       tlsEnabled: false
+       # CA name
+       name: "ca-org1"
+       # CA URL. Note: https prefix required for TLS
+       serverURL: "http://localhost:7054"

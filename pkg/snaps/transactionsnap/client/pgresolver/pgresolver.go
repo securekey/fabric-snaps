@@ -3,10 +3,11 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
+
 package pgresolver
 
 import (
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	common "github.com/hyperledger/fabric/protos/common"
 )
 
