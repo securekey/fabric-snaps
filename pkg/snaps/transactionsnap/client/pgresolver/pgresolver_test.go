@@ -1,7 +1,8 @@
 /*
-Copyright SecureKey Technologies Inc. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without
+	 written permission from SecureKey.
 */
 
 package pgresolver
@@ -10,7 +11,7 @@ import (
 	"fmt"
 	"testing"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/hyperledger/fabric/protos/common"

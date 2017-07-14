@@ -9,7 +9,7 @@ package mocks
 import (
 	"fmt"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 )
 

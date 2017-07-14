@@ -1,7 +1,8 @@
 /*
-Copyright SecureKey Technologies Inc. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without
+	 written permission from SecureKey.
 */
 
 package pgresolver
@@ -11,7 +12,7 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	common "github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric/protos/msp"
 	logging "github.com/op/go-logging"
@@ -70,7 +71,6 @@ func NewPeerGroupResolver(groupHierarchy GroupOfGroups, lbp LoadBalancePolicy) (
 	}, nil
 }
 
-//Resolve peer group
 func (c *peerGroupResolver) Resolve() PeerGroup {
 	peerGroups := c.getPeerGroups()
 
@@ -159,7 +159,6 @@ type signaturePolicyCompiler struct {
 	peerRetriever PeerRetriever
 }
 
-//Compile policy
 func (c *signaturePolicyCompiler) Compile(sigPolicyEnv *common.SignaturePolicyEnvelope) (GroupOfGroups, error) {
 	policFunc, err := c.compile(sigPolicyEnv.Rule, sigPolicyEnv.Identities)
 	if err != nil {

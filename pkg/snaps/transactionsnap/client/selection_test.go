@@ -1,20 +1,22 @@
 /*
-Copyright SecureKey Technologies Inc. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without
+	 written permission from SecureKey.
 */
+
 package client
 
 import (
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
+	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	clientConfig "github.com/hyperledger/fabric-sdk-go/pkg/config"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
@@ -57,43 +59,29 @@ const (
 	o5
 )
 
-var p1 = peer("peer1")
-var p2 = peer("peer2")
-var p3 = peer("peer3")
-var p4 = peer("peer4")
-var p5 = peer("peer5")
-var p6 = peer("peer6")
-var p7 = peer("peer7")
-var p8 = peer("peer8")
-var p9 = peer("peer9")
-var p10 = peer("peer10")
-var p11 = peer("peer11")
-var p12 = peer("peer12")
-
-var pc1 = peerConfig(p1, org1)
-var pc2 = peerConfig(p2, org1)
-var pc3 = peerConfig(p3, org2)
-var pc4 = peerConfig(p4, org2)
-var pc5 = peerConfig(p5, org3)
-var pc6 = peerConfig(p6, org3)
-var pc7 = peerConfig(p7, org3)
-var pc8 = peerConfig(p8, org4)
-var pc9 = peerConfig(p9, org4)
-var pc10 = peerConfig(p10, org4)
-var pc11 = peerConfig(p11, org5)
-var pc12 = peerConfig(p12, org5)
+var p1 = peer("peer1", org1)
+var p2 = peer("peer2", org1)
+var p3 = peer("peer3", org2)
+var p4 = peer("peer4", org2)
+var p5 = peer("peer5", org3)
+var p6 = peer("peer6", org3)
+var p7 = peer("peer7", org3)
+var p8 = peer("peer8", org4)
+var p9 = peer("peer9", org4)
+var p10 = peer("peer10", org4)
+var p11 = peer("peer11", org5)
+var p12 = peer("peer12", org5)
 
 func TestMain(m *testing.M) {
 	err := config.Init("")
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	fabricClient, err := GetInstance()
+	_, err = GetInstance()
 	if err != nil {
-
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
-	fabricClient.GetConfig().FabricClientViper().Set("client.tls.enabled", false)
+	clientConfig.FabricClientViper().Set("client.tls.enabled", false)
 
 	os.Exit(m.Run())
 }
@@ -101,7 +89,7 @@ func TestMain(m *testing.M) {
 func TestGetEndorsersForChaincodeOneCC(t *testing.T) {
 	service := newMockSelectionService(
 		newMockMembershipManager().
-			add(channel1, pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8),
+			add(channel1, p1, p2, p3, p4, p5, p6, p7, p8),
 		newMockCCDataProvider().
 			add(channel1, cc1, getPolicy1()),
 		pgresolver.NewRoundRobinLBP())
@@ -117,7 +105,7 @@ func TestGetEndorsersForChaincodeOneCC(t *testing.T) {
 func TestGetEndorsersForChaincodeTwoCCs(t *testing.T) {
 	service := newMockSelectionService(
 		newMockMembershipManager().
-			add(channel1, pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8),
+			add(channel1, p1, p2, p3, p4, p5, p6, p7, p8),
 		newMockCCDataProvider().
 			add(channel1, cc1, getPolicy1()).
 			add(channel1, cc2, getPolicy2()),
@@ -141,8 +129,8 @@ func TestGetEndorsersForChaincodeTwoCCs(t *testing.T) {
 func TestGetEndorsersForChaincodeTwoCCsTwoChannels(t *testing.T) {
 	service := newMockSelectionService(
 		newMockMembershipManager().
-			add(channel1, pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8).
-			add(channel2, pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8, pc9, pc10, pc11, pc12),
+			add(channel1, p1, p2, p3, p4, p5, p6, p7, p8).
+			add(channel2, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12),
 		newMockCCDataProvider().
 			add(channel1, cc1, getPolicy1()).
 			add(channel1, cc2, getPolicy2()).
@@ -202,7 +190,7 @@ func verify(t *testing.T, service SelectionService, expectedPeerGroups []pgresol
 
 }
 
-func containsPeerGroup(groups []pgresolver.PeerGroup, peers []sdkApi.Peer) bool {
+func containsPeerGroup(groups []pgresolver.PeerGroup, peers []apifabclient.Peer) bool {
 	for _, g := range groups {
 		if containsAllPeers(peers, g) {
 			return true
@@ -211,7 +199,7 @@ func containsPeerGroup(groups []pgresolver.PeerGroup, peers []sdkApi.Peer) bool 
 	return false
 }
 
-func containsAllPeers(peers []sdkApi.Peer, pg pgresolver.PeerGroup) bool {
+func containsAllPeers(peers []apifabclient.Peer, pg pgresolver.PeerGroup) bool {
 	if len(peers) != len(pg.Peers()) {
 		return false
 	}
@@ -223,7 +211,7 @@ func containsAllPeers(peers []sdkApi.Peer, pg pgresolver.PeerGroup) bool {
 	return true
 }
 
-func containsPeer(peers []sdkApi.Peer, peer sdkApi.Peer) bool {
+func containsPeer(peers []apifabclient.Peer, peer apifabclient.Peer) bool {
 	for _, p := range peers {
 		if p.URL() == peer.URL() {
 			return true
@@ -232,21 +220,21 @@ func containsPeer(peers []sdkApi.Peer, peer sdkApi.Peer) bool {
 	return false
 }
 
-func pg(peers ...sdkApi.Peer) pgresolver.PeerGroup {
+func pg(peers ...apifabclient.Peer) pgresolver.PeerGroup {
 	return pgresolver.NewPeerGroup(peers...)
 }
 
-func peer(name string) sdkApi.Peer {
+func peer(name string, mspID string) apifabclient.Peer {
 	peer, err := sdkFabApi.NewPeer(name+":7051", "", "", configImp)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
 	peer.SetName(name)
+	peer.SetMSPID(mspID)
 	return peer
 }
 
-func newMockSelectionService(membershipManager MembershipManager, ccDataProvider CCDataProvider,
-	lbp pgresolver.LoadBalancePolicy) SelectionService {
+func newMockSelectionService(membershipManager MembershipManager, ccDataProvider CCDataProvider, lbp pgresolver.LoadBalancePolicy) SelectionService {
 	return &selectionServiceImpl{
 		membershipManager: membershipManager,
 		ccDataProvider:    ccDataProvider,
@@ -256,7 +244,7 @@ func newMockSelectionService(membershipManager MembershipManager, ccDataProvider
 }
 
 type mockMembershipManager struct {
-	peerConfigs map[string]config.PeerConfigs
+	peerConfigs map[string][]sdkApi.Peer
 }
 
 func (m *mockMembershipManager) GetPeersOfChannel(channelID string, poll bool) ChannelMembership {
@@ -264,11 +252,11 @@ func (m *mockMembershipManager) GetPeersOfChannel(channelID string, poll bool) C
 }
 
 func newMockMembershipManager() *mockMembershipManager {
-	return &mockMembershipManager{peerConfigs: make(map[string]config.PeerConfigs)}
+	return &mockMembershipManager{peerConfigs: make(map[string][]sdkApi.Peer)}
 }
 
-func (m *mockMembershipManager) add(channelID string, peerConfigs ...config.PeerConfig) *mockMembershipManager {
-	m.peerConfigs[channelID] = peerConfigs
+func (m *mockMembershipManager) add(channelID string, peers ...sdkApi.Peer) *mockMembershipManager {
+	m.peerConfigs[channelID] = []sdkApi.Peer(peers)
 	return m
 }
 
@@ -350,16 +338,7 @@ func newCCData(sigPolicyEnv *common.SignaturePolicyEnvelope) *ccprovider.Chainco
 	return &ccprovider.ChaincodeData{Policy: policyBytes}
 }
 
-func peerConfig(peer sdkApi.Peer, mspID string) config.PeerConfig {
-	s := strings.Split(peer.URL(), ":")
-	port, err := strconv.Atoi(s[1])
-	if err != nil {
-		panic(err)
-	}
-	return config.PeerConfig{Host: s[0], Port: port, MSPid: []byte(mspID)}
-}
-
-func toString(peers []sdkApi.Peer) string {
+func toString(peers []apifabclient.Peer) string {
 	str := "["
 	for i, p := range peers {
 		str += p.URL()

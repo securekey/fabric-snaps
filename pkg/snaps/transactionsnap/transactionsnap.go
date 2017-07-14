@@ -10,17 +10,17 @@ import (
 	"errors"
 	"fmt"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
 	logging "github.com/op/go-logging"
 
+	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	client "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client"
 )
 
-// TxSnapImpl implements endorse transaction and commit transaction
-type TxSnapImpl struct {
+// TxnSnap implements endorse transaction and commit transaction
+type TxnSnap struct {
 }
 
 //SnapTransactionRequest type will be passed as argument to a transaction snap
@@ -36,14 +36,20 @@ type SnapTransactionRequest struct {
 var logger = logging.MustGetLogger("transaction-snap")
 var fcClient client.Client
 
-// NewSnap - create new instance of snap
-func NewSnap() shim.Chaincode {
-	return &TxSnapImpl{}
+// Init snap
+func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	//initialize fabric client
+	err := getInstanceOfFabricClient()
+	response := pb.Response{Status: shim.OK}
+	if err != nil {
+		response = pb.Response{Status: shim.ERROR, Message: fmt.Sprintf("getInstanceOfFabricClient return error %s", err.Error())}
+	}
+	return response
 }
 
 //Invoke transaction snap
 //required args are function name and SnapTransactionRequest
-func (es *TxSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	function, _ := stub.GetFunctionAndParameters()
 
 	switch function {
@@ -66,7 +72,7 @@ func (es *TxSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 //endorseTransaction returns []*sdkApi.TransactionProposalResponse
-func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*sdkApi.TransactionProposalResponse, error) {
+func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.TransactionProposalResponse, error) {
 
 	args := stub.GetArgs()
 	//first arg is function name; the second one is SnapTransactionRequest
@@ -81,13 +87,6 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*sdkApi.Transaction
 	}
 	if snapTxRequest.ChaincodeID == "" {
 		return nil, fmt.Errorf("ChaincodeID is mandatory field of the SnapTransactionRequest")
-	}
-
-	if fcClient == nil {
-		fcClient, err = GetInstanceOfFabricClient()
-		if err != nil {
-			return nil, fmt.Errorf("Cannot initialize client %v", err)
-		}
 	}
 	channel, err := fcClient.NewChannel(snapTxRequest.ChannelID)
 	if err != nil {
@@ -111,20 +110,19 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*sdkApi.Transaction
 	return tpxResponse, nil
 }
 
-// Init snap
-func (es *TxSnapImpl) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	//initialize fabric client
-	GetInstanceOfFabricClient()
-	response := pb.Response{Status: shim.OK}
-	return response
+//
+func getInstanceOfFabricClient() error {
+	var err error
+	fcClient, err = client.GetInstance()
+	if err != nil {
+		return fmt.Errorf("Cannot initialize client %v", err)
+	}
+	return nil
 }
 
-//
-func GetInstanceOfFabricClient() (client.Client, error) {
-	fabricClient, err := client.GetInstance()
+func main() {
+	err := shim.Start(new(TxnSnap))
 	if err != nil {
-		return nil, fmt.Errorf("Cannot initialize client %v", err)
+		fmt.Printf("Error starting Txn snap: %s", err)
 	}
-	fcClient = fabricClient
-	return fcClient, nil
 }

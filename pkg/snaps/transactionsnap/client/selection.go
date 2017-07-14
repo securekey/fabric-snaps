@@ -1,7 +1,8 @@
 /*
-Copyright SecureKey Technologies Inc. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without
+	 written permission from SecureKey.
 */
 
 package client
@@ -9,17 +10,17 @@ package client
 import (
 	"fmt"
 	"math/rand"
+	"net"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
-
 	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 )
@@ -60,7 +61,6 @@ func NewSelectionService() SelectionService {
 	}
 }
 
-//GetEndorsersForChaincode returns a set of peers that should satisfy the endorsement policies
 func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
 	chaincodeIDs ...string) ([]sdkApi.Peer, error) {
 
@@ -75,33 +75,37 @@ func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
 	return resolver.Resolve().Peers(), nil
 }
 
-//GetPeerForEvents returns a set of peers
 func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerConfig, error) {
+	peerConfig := &config.PeerConfig{}
 	channelMembership := s.membershipManager.GetPeersOfChannel(channelID, false)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
 		// Query error and there is no cached membership list
-		return &config.PeerConfig{}, channelMembership.QueryError
+		return peerConfig, channelMembership.QueryError
 	}
 
 	rs := rand.NewSource(time.Now().Unix())
 	r := rand.New(rs)
 	randomPeer := r.Intn(len(channelMembership.Peers))
 
-	return &channelMembership.Peers[randomPeer], nil
-}
-
-func parsePeerConfigs(peers config.PeerConfigs) ([]sdkApi.Peer, error) {
-	tlsCert := config.GetTLSRootCertPath()
-	var sdkPeers []sdkApi.Peer
-	for _, peer := range peers {
-		sdkPeer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peer.Host, peer.Port), tlsCert, "", client.GetConfig())
-		if err != nil {
-			return nil, fmt.Errorf("Error creating peer: %s", err)
-		}
-		sdkPeers = append(sdkPeers, sdkPeer)
+	// Membership Service does not know the event port. We assume it is the same
+	// as the local peer
+	localPeer, err := config.GetLocalPeer()
+	if err != nil {
+		return peerConfig, err
+	}
+	selectedPeer := channelMembership.Peers[randomPeer]
+	host, _, err := net.SplitHostPort(selectedPeer.URL())
+	if err != nil {
+		return peerConfig, err
 	}
 
-	return sdkPeers, nil
+	peerConfig = &config.PeerConfig{
+		EventHost: host,
+		EventPort: localPeer.EventPort,
+		MSPid:     []byte(selectedPeer.MSPID()),
+	}
+
+	return peerConfig, nil
 }
 
 func (s *selectionServiceImpl) getPeerGroupResolver(channelID string, chaincodeIDs []string) (pgresolver.PeerGroupResolver, error) {
@@ -181,18 +185,10 @@ func (s *selectionServiceImpl) getAvailablePeers(channelID string, mspID string)
 		logger.Errorf("unable to get membership for channel [%s]: %s", channelID, channelMembership.QueryError)
 		return nil
 	}
-
-	var peerConfigs config.PeerConfigs
-	for _, peerConfig := range channelMembership.Peers {
-		if string(peerConfig.MSPid) == mspID {
-			peerConfigs = append(peerConfigs, peerConfig)
+	for _, peer := range channelMembership.Peers {
+		if string(peer.MSPID()) == mspID {
+			peers = append(peers, peer)
 		}
-	}
-
-	peers, err := parsePeerConfigs(peerConfigs)
-	if err != nil {
-		logger.Errorf("Error parsing endorsing peers for channel [%s]: %s", channelID, err)
-		return nil
 	}
 
 	if logger.IsEnabledFor(logging.DEBUG) {
@@ -218,7 +214,6 @@ func newCCDataProvider() CCDataProvider {
 	return &ccDataProviderImpl{ccDataMap: make(map[string]*ccprovider.ChaincodeData)}
 }
 
-//QueryChaincodeData query for chain code data
 func (p *ccDataProviderImpl) QueryChaincodeData(channelID string, chaincodeID string) (*ccprovider.ChaincodeData, error) {
 	key := newResolverKey(channelID, chaincodeID)
 	var ccData *ccprovider.ChaincodeData
