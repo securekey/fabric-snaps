@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d0252ad1_4ba43523",
+        "filename": "pkg/snaps/transactionsnap/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-14T20:08:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b262b800_f57b1186",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "789d5464_03ef41cb",
         "filename": "pkg/snaps/transactionsnap/client/pgresolver/groups_test.go",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-14T19:50:06Z",
       "side": 1,
       "message": "Wrong copyright?",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4f61641_9460961c",
+        "filename": "pkg/snaps/transactionsnap/client/pgresolver/groups_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-14T20:08:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "789d5464_03ef41cb",
       "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "eaf4bdf8_b4203e63",
+        "filename": "pkg/snaps/transactionsnap/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-14T20:08:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de02e312_38aa25bd",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b37d762_e4eb750c",
         "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
         "patchSetId": 1
@@ -110,6 +164,30 @@
     },
     {
       "key": {
+        "uuid": "dd6e29dd_22267a51",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-14T20:08:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2b37d762_e4eb750c",
+      "range": {
+        "startLine": 6,
+        "startChar": 8,
+        "endLine": 6,
+        "endChar": 23
+      },
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0a968d5_6825164d",
         "filename": "pkg/snaps/transactionsnap/transactionsnap_test.go",
         "patchSetId": 1
@@ -121,6 +199,24 @@
       "writtenOn": "2017-07-14T19:50:06Z",
       "side": 1,
       "message": "Spelling - Specified",
+      "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b4e7f10_4a867482",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-07-14T20:08:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0a968d5_6825164d",
       "revId": "c0a7ed2fbf01247e0206ccccaad95eeb0d52a8ce",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
