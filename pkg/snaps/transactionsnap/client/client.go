@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -18,9 +19,12 @@ import (
 
 	"github.com/hyperledger/fabric/bccsp"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
+
 	logging "github.com/op/go-logging"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
+	utils "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/utils"
 )
 
 var logger = logging.MustGetLogger("transaction-fabric-client")
@@ -71,6 +75,12 @@ type Client interface {
 	// @returns {[]string} list of channels
 	// @returns {error} error, if any
 	QueryChannels(config.PeerConfig) ([]string, error)
+
+	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
+	// @param {Channel} Txn Proposal
+	// @param {[]byte} responses from endorsers
+	// @returns {error} error, if any
+	VerifyTxnProposalSignature(sdkApi.Channel, []byte) error
 
 	// SetSelectionService is used to inject a selection service for testing
 	// @param {SelectionService} SelectionService
@@ -311,6 +321,63 @@ func (c *clientImpl) QueryChannels(peer config.PeerConfig) ([]string, error) {
 	}
 
 	return channels, nil
+}
+
+// Verify Transaction Proposal signature
+func (c *clientImpl) VerifyTxnProposalSignature(channel sdkApi.Channel, proposalBytes []byte) error {
+	if channel.MSPManager() == nil {
+		return fmt.Errorf("Channel %s GetMSPManager is nil", channel.Name())
+	}
+	msps, err := channel.MSPManager().GetMSPs()
+	if err != nil {
+		return fmt.Errorf("GetMSPs return error:%v", err)
+	}
+	if len(msps) == 0 {
+		return fmt.Errorf("Channel %s MSPManager.GetMSPs is empty", channel.Name())
+	}
+
+	signedProposal := &pb.SignedProposal{}
+	if err := proto.Unmarshal(proposalBytes, signedProposal); err != nil {
+		return fmt.Errorf("Unmarshal clientProposalBytes error %v", err)
+	}
+
+	creatorBytes, err := utils.GetCreatorFromSignedProposal(signedProposal)
+	if err != nil {
+		return fmt.Errorf("GetCreatorFromSignedProposal return  error %v", err)
+	}
+
+	serializedIdentity := &protosMSP.SerializedIdentity{}
+	if err := proto.Unmarshal(creatorBytes, serializedIdentity); err != nil {
+		return fmt.Errorf("Unmarshal creatorBytes error %v", err)
+	}
+
+	msp := msps[serializedIdentity.Mspid]
+	if msp == nil {
+		return fmt.Errorf("MSP %s not found", serializedIdentity.Mspid)
+	}
+
+	creator, err := msp.DeserializeIdentity(creatorBytes)
+	if err != nil {
+		return fmt.Errorf("Failed to deserialize creator identity, err %s", err)
+	}
+	logger.Debugf("checkSignatureFromCreator info: creator is %s", creator.GetIdentifier())
+	// ensure that creator is a valid certificate
+	err = creator.Validate()
+	if err != nil {
+		return fmt.Errorf("The creator certificate is not valid, err %s", err)
+	}
+
+	logger.Debugf("verifyTPSignature info: creator is valid")
+
+	// validate the signature
+	err = creator.Verify(signedProposal.ProposalBytes, signedProposal.Signature)
+	if err != nil {
+		return fmt.Errorf("The creator's signature over the proposal is not valid, err %s", err)
+	}
+
+	logger.Debugf("verifyTPSignature exists successfully")
+
+	return nil
 }
 
 func (c *clientImpl) SetSelectionService(service SelectionService) {
