@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	logging "github.com/op/go-logging"
 
@@ -18,6 +19,11 @@ import (
 
 	client "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client"
 )
+
+// The newTxID is added so the unit test can access the new transaction id generated in transactionsnap
+var newTxID apitxn.TransactionID
+
+var registerTxEventTimeout time.Duration = 30
 
 // TxnSnap implements endorse transaction and commit transaction
 type TxnSnap struct {
@@ -31,6 +37,7 @@ type SnapTransactionRequest struct {
 	TransientMap    map[string][]byte
 	EndorserArgs    [][]byte
 	AdditionalCCIDs []string
+	RegisterTxEvent bool
 }
 
 var logger = logging.MustGetLogger("transaction-snap")
@@ -65,6 +72,12 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		}
 
 		return pb.Response{Payload: payload, Status: shim.OK}
+	case "commitTransaction":
+		err := CommitTransaction(stub)
+		if err != nil {
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+		}
+		return pb.Response{Payload: nil, Status: shim.OK}
 	default:
 		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
 	}
@@ -80,10 +93,9 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 		return nil, errors.New("Not enough arguments in call to endorse transaction")
 	}
 	//second argument is SnapTransactionRequest
-	var snapTxRequest SnapTransactionRequest
-	err := json.Unmarshal(args[1], &snapTxRequest)
+	snapTxRequest, err := getSnapTransactionRequest(args[1])
 	if err != nil {
-		return nil, fmt.Errorf("Cannot decode parameters from request to endorse transaction %v", err)
+		return nil, err
 	}
 	if snapTxRequest.ChaincodeID == "" {
 		return nil, fmt.Errorf("ChaincodeID is mandatory field of the SnapTransactionRequest")
@@ -110,7 +122,36 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 	return tpxResponse, nil
 }
 
-//
+//CommitTransaction returns error
+func CommitTransaction(stub shim.ChaincodeStubInterface) error {
+	args := stub.GetArgs()
+	//first arg is function name; the second one is SnapTransactionRequest
+	if len(args) < 2 {
+		return errors.New("Not enough arguments in call to commit transaction")
+	}
+	//second argument is SnapTransactionRequest
+	snapTxRequest, err := getSnapTransactionRequest(args[1])
+	if err != nil {
+		return err
+	}
+
+	tpxResponse, err := endorseTransaction(stub)
+	if err != nil {
+		return err
+	}
+	newTxID = tpxResponse[0].Proposal.TxnID
+
+	// Channel already checked in endorseTransaction
+	channel, _ := fcClient.NewChannel(snapTxRequest.ChannelID)
+	err = fcClient.CommitTransaction(channel, tpxResponse, snapTxRequest.RegisterTxEvent, registerTxEventTimeout)
+
+	if err != nil {
+		return fmt.Errorf("CommitTransaction returned error: %v", err)
+	}
+	return nil
+}
+
+// getInstanceOfFabricClient
 func getInstanceOfFabricClient() error {
 	var err error
 	fcClient, err = client.GetInstance()
@@ -118,6 +159,16 @@ func getInstanceOfFabricClient() error {
 		return fmt.Errorf("Cannot initialize client %v", err)
 	}
 	return nil
+}
+
+// getSnapTransactionRequest
+func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*SnapTransactionRequest, error) {
+	var snapTxRequest SnapTransactionRequest
+	err := json.Unmarshal(snapTransactionRequestbBytes, &snapTxRequest)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot decode parameters from request to Snap Transaction Request %v", err)
+	}
+	return &snapTxRequest, nil
 }
 
 func main() {

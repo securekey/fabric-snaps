@@ -62,8 +62,9 @@ type Client interface {
 	// @param {Channel} channel on which the transaction is taking place
 	// @param {[]TransactionProposalResponse} responses from endorsers
 	// @param {bool} register for Tx event
+	// @param {time.Duration} register for Tx event timeout in seconds
 	// @returns {error} error, if any
-	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool) error
+	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool, time.Duration) error
 
 	// QueryChannels joined by the given peer
 	// @param {Peer} The peer to query
@@ -241,7 +242,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 }
 
 func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
-	responses []*apitxn.TransactionProposalResponse, registerTxEvent bool) error {
+	responses []*apitxn.TransactionProposalResponse, registerTxEvent bool, registerTxEventTimeout time.Duration) error {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -284,7 +285,7 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 		case <-done:
 		case <-fail:
 			return fmt.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID.ID, fail)
-		case <-time.After(time.Second * 30):
+		case <-time.After(time.Second * registerTxEventTimeout):
 			return fmt.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID.ID)
 		}
 	}
