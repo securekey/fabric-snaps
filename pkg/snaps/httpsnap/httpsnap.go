@@ -3,7 +3,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-package httpsnap
+package main
 
 import (
 	"bytes"
@@ -25,50 +25,55 @@ import (
 
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	config "github.com/securekey/fabric-snaps/pkg/snaps/httpsnap/config"
 )
 
 var logger = logging.MustGetLogger("httpsnap")
 
-//CCSnapImpl implementation
-type CCSnapImpl struct {
-}
-
-// NewSnap - create new instance of snap
-func NewSnap() shim.Chaincode {
-	return &CCSnapImpl{}
+//HttpSnap implementation
+type HttpSnap struct {
 }
 
 // Init snap
-func (es *CCSnapImpl) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	// Nothing to do
+func (httpsnap *HttpSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+
+	err := config.Init("")
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
+		logger.Errorf(errMsg)
+		return shim.Error(errMsg)
+	}
+
+	logger.Info("Snap configuration loaded.")
 	return shim.Success(nil)
 }
 
-// Invoke should be called with 3 mandatory arguments (and 2 optional ones):
-// args[0] - URL
-// args[1] - Content-Type
-// args[2] - Request Body
-// args[3] - Named Client (optional)
-// args[4] - Pin set (optional)
-func (es *CCSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+// Invoke should be called with 4 mandatory arguments (and 2 optional ones):
+// args[0] - Function (currently not used)
+// args[1] - URL
+// args[2] - Content-Type
+// args[3] - Request Body
+// args[4] - Named Client (optional)
+// args[5] - Pin set (optional)
+func (httpsnap *HttpSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
-	args := stub.GetArgs()
+	_, args := stub.GetFunctionAndParameters()
 
 	if len(args) < 3 {
 		return shim.Error("Missing URL parameter, content type and/or request body")
 	}
 
-	requestURL := string(args[0])
+	requestURL := args[0]
 	if requestURL == "" {
 		return shim.Error("Missing URL parameter")
 	}
 
-	contentType := string(args[1])
+	contentType := args[1]
 	if contentType == "" {
 		return shim.Error("Missing content type")
 	}
 
-	requestBody := string(args[2])
+	requestBody := args[2]
 	if requestBody == "" {
 		return shim.Error("Missing request body")
 	}
@@ -81,8 +86,8 @@ func (es *CCSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	// Optional parameter: pin set(comma separated)
 	pins := []string{}
-	if len(args) >= 5 && args[4] != nil && len(args[4]) > 0 && strings.TrimSpace(string(args[4])) != "" {
-		pins = strings.Split(string(args[4]), ",")
+	if len(args) >= 5 && args[4] != "" && strings.TrimSpace(args[4]) != "" {
+		pins = strings.Split(args[4], ",")
 	}
 
 	// Validate URL
@@ -98,7 +103,7 @@ func (es *CCSnapImpl) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Error(fmt.Sprintf("Unsupported scheme: %s", uri.Scheme))
 	}
 
-	schemaConfig, err := getSchemaConfig(contentType)
+	schemaConfig, err := config.GetSchemaConfig(contentType)
 	if err != nil {
 		logger.Error(err)
 		return shim.Error(err.Error())
@@ -224,12 +229,12 @@ func GeneratePin(c *x509.Certificate) string {
 func getTLSConfig(client string) (*tls.Config, error) {
 
 	// Default values
-	clientCert := getClientCert()
-	clientKey := getClientKey()
-	caCerts := getCaCerts()
+	clientCert := config.GetClientCert()
+	clientKey := config.GetClientKey()
+	caCerts := config.GetCaCerts()
 
 	if client != "" {
-		overridePath := getNamedClientOverridePath()
+		overridePath := config.GetNamedClientOverridePath()
 		clientCert = fmt.Sprintf("%s/%s/%s.crt", overridePath, client, client)
 		clientKey = fmt.Sprintf("%s/%s/%s.key", overridePath, client, client)
 		caCerts = []string{fmt.Sprintf("%s/%s/%s-ca.crt", overridePath, client, client)}
@@ -290,4 +295,11 @@ func validateJSON(jsonSchema string, jsonStr string) error {
 
 	}
 	return nil
+}
+
+func main() {
+	err := shim.Start(new(HttpSnap))
+	if err != nil {
+		fmt.Printf("Error starting httpsnap: %s", err)
+	}
 }
