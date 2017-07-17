@@ -15,11 +15,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	clientConfig "github.com/hyperledger/fabric-sdk-go/pkg/config"
+	"github.com/hyperledger/fabric/bccsp"
+	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/protos/common"
+	protosUtils "github.com/hyperledger/fabric/protos/utils"
 
 	fcMocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -33,6 +38,22 @@ import (
 	"google.golang.org/grpc"
 )
 
+var validRootCA = `-----BEGIN CERTIFICATE-----
+MIICSDCCAe6gAwIBAgIRAPnKpS42wlgtHsddm6q+kYcwCgYIKoZIzj0EAwIwcDEL
+MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xGTAXBgNVBAMTEG9y
+ZzEuZXhhbXBsZS5jb20wHhcNMTcwNDIyMTIwMjU2WhcNMjcwNDIwMTIwMjU2WjBw
+MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2Fu
+IEZyYW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEZMBcGA1UEAxMQ
+b3JnMS5leGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLi5341r
+mriGFHCmVTLdgPGpDFRgwgmHSuLayMsGP0yEmsXh3hKAy24f1mjx/t8WT9G2sAdw
+ONsPsfKMSCKpaRqjaTBnMA4GA1UdDwEB/wQEAwIBpjAZBgNVHSUEEjAQBgRVHSUA
+BggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkGA1UdDgQiBCCiLa81ayqrV5Lq
+U+NfZvzO8dfxqis6K5Lb+/lqRI6iajAKBggqhkjOPQQDAgNIADBFAiEAr8LYCY2b
+q5kNqOUxgHwBa2KTi/zJBR9L3IsTRDjJo8ECICf1xiDgKqZKrAMh0OCebskYwf53
+dooG04HBoqBLvB8Q
+-----END CERTIFICATE-----
+`
 var mockEndorserServer *fcMocks.MockEndorserServer
 var mockBroadcastServer *fcMocks.MockBroadcastServer
 var mockEventServer *mocks.MockEventServer
@@ -76,8 +97,17 @@ func TestNotSpecifiedChannel(t *testing.T) {
 	var funcs []string
 	funcs = append(funcs, "endorseTransaction")
 	funcs = append(funcs, "commitTransaction")
+	funcs = append(funcs, "verifyTransactionProposalSignature")
 	for _, value := range funcs {
-		args := createTransactionSnapRequest(value, "ccid", "", false)
+		var args [][]byte
+		if value == "verifyTransactionProposalSignature" {
+			args = make([][]byte, 3)
+			args[0] = []byte(value)
+			args[1] = []byte("")
+			args[2] = nil
+		} else {
+			args = createTransactionSnapRequest(value, "ccid", "", false)
+		}
 		//invoke transaction snap
 		response := stub.MockInvoke("TxID", args)
 
@@ -127,6 +157,16 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 		if response.Message != errorMsg {
 			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 		}
+	}
+	var args [][]byte
+	args = append(args, []byte("verifyTransactionProposalSignature"))
+	response := stub.MockInvoke("TxID", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
+	}
+	errorMsg := "Not enough arguments in call to verify transaction proposal signature"
+	if response.Message != errorMsg {
+		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
 }
 
@@ -275,6 +315,75 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	}
 }
 
+func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T) {
+	mockEndorserServer.ProposalError = nil
+	mockEndorserServer.AddkvWrite = true
+	mockBroadcastServer.BroadcastInternalServerError = false
+	req := apitxn.ChaincodeInvokeRequest{
+		ChaincodeID: "ccID",
+		Args:        nil,
+		Fcn:         "fcn",
+	}
+	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetUser())
+	if err != nil {
+		t.Fatalf("Error creating transaction proposal: %s", err)
+	}
+
+	signedProposalBytes, err := proto.Marshal(txnProposal.SignedProposal)
+	if err != nil {
+		t.Fatalf("Error Marshal signedProposal: %v", err)
+	}
+
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := make([][]byte, 3)
+	args[0] = []byte("verifyTransactionProposalSignature")
+	args[1] = []byte("testChannel")
+	args[2] = signedProposalBytes
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID", args)
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+}
+
+func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testing.T) {
+	mockEndorserServer.ProposalError = nil
+	mockEndorserServer.AddkvWrite = true
+	mockBroadcastServer.BroadcastInternalServerError = false
+	req := apitxn.ChaincodeInvokeRequest{
+		ChaincodeID: "ccID",
+		Args:        nil,
+		Fcn:         "fcn",
+	}
+	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetUser())
+	if err != nil {
+		t.Fatalf("Error creating transaction proposal: %s", err)
+	}
+	txnProposal.SignedProposal.Signature = []byte("wrongSignature")
+
+	signedProposalBytes, err := proto.Marshal(txnProposal.SignedProposal)
+	if err != nil {
+		t.Fatalf("Error Marshal signedProposal: %v", err)
+	}
+
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := make([][]byte, 3)
+	args[0] = []byte("verifyTransactionProposalSignature")
+	args[1] = []byte("testChannel")
+	args[2] = signedProposalBytes
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+	errorMsg := "The creator's signature over the proposal is not valid"
+	if !strings.Contains(response.Message, errorMsg) {
+		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
+	}
+}
+
 func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, registerTxEvent bool) [][]byte {
 
 	transientMap := make(map[string][]byte)
@@ -352,8 +461,78 @@ func configureClient() client.Client {
 	return fabricClient
 }
 
+// newTransactionProposal creates a proposal for transaction. This involves assembling the proposal
+// with the data (chaincodeName, function to call, arguments, transient data, etc.) and signing it using the private key corresponding to the
+// ECert to sign.
+func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequest, user sdkApi.User) (*apitxn.TransactionProposal, error) {
+
+	// Add function name to arguments
+	argsArray := make([][]byte, len(request.Args)+1)
+	argsArray[0] = []byte(request.Fcn)
+	for i, arg := range request.Args {
+		argsArray[i+1] = []byte(arg)
+	}
+
+	// create invocation spec to target a chaincode with arguments
+	ccis := &pb.ChaincodeInvocationSpec{ChaincodeSpec: &pb.ChaincodeSpec{
+		Type: pb.ChaincodeSpec_GOLANG, ChaincodeId: &pb.ChaincodeID{Name: request.ChaincodeID},
+		Input: &pb.ChaincodeInput{Args: argsArray}}}
+
+	creator, err := user.Identity()
+	if err != nil {
+		return nil, fmt.Errorf("Error getting creator: %v", err)
+	}
+
+	proposal, _, err := protosUtils.CreateChaincodeProposalWithTxIDNonceAndTransient(request.TxnID.ID, common.HeaderType_ENDORSER_TRANSACTION, channelID, ccis, request.TxnID.Nonce, creator, request.TransientMap)
+	if err != nil {
+		return nil, fmt.Errorf("Could not create chaincode proposal, err %s", err)
+	}
+
+	// sign proposal bytes
+	proposalBytes, err := proto.Marshal(proposal)
+	if err != nil {
+		return nil, fmt.Errorf("Error marshalling proposal: %v", err)
+	}
+
+	if user == nil {
+		return nil, fmt.Errorf("Error getting user context: %s", err)
+	}
+
+	cryptoSuite := bccspFactory.GetDefault()
+	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
+		&bccsp.SHAOpts{}, nil, cryptoSuite)
+	if err != nil {
+		return nil, err
+	}
+
+	// construct the transaction proposal
+	signedProposal := pb.SignedProposal{ProposalBytes: proposalBytes, Signature: signature}
+	tp := apitxn.TransactionProposal{
+		TxnID:          request.TxnID,
+		SignedProposal: &signedProposal,
+		Proposal:       proposal,
+	}
+
+	return &tp, nil
+}
+
+// SignObjectWithKey will sign the given object with the given key,
+// hashOpts and signerOpts
+func signObjectWithKey(object []byte, key bccsp.Key,
+	hashOpts bccsp.HashOpts, signerOpts bccsp.SignerOpts, cryptoSuite bccsp.BCCSP) ([]byte, error) {
+	digest, err := cryptoSuite.Hash(object, hashOpts)
+	if err != nil {
+		return nil, err
+	}
+	signature, err := cryptoSuite.Sign(key, digest, signerOpts)
+	if err != nil {
+		return nil, err
+	}
+	return signature, nil
+}
+
 func TestMain(m *testing.M) {
-	err := config.Init("")
+	err := config.Init("./sampleconfig")
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
@@ -364,5 +543,27 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err.Error())
 	}
+	err = getInstanceOfFabricClient()
+	if err != nil {
+		panic(fmt.Sprintf("getInstanceOfFabricClient return error: %v", err))
+	}
+	testChannel, err := fcClient.NewChannel("testChannel")
+	if err != nil {
+		panic(fmt.Sprintf("NewChannel return error: %v", err))
+	}
+	builder := &fcMocks.MockConfigUpdateEnvelopeBuilder{
+		ChannelID: "testChannel",
+		MockConfigGroupBuilder: fcMocks.MockConfigGroupBuilder{
+			ModPolicy:      "Admins",
+			MSPNames:       []string{"Org1MSP"},
+			OrdererAddress: "localhost:8085",
+			RootCA:         validRootCA,
+		},
+	}
+	err = testChannel.Initialize(builder.BuildConfigUpdateBytes())
+	if err != nil {
+		panic(fmt.Sprintf("channel Initialize failed : %v", err))
+	}
+
 	os.Exit(m.Run())
 }
