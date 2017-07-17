@@ -73,7 +73,13 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
-		err := CommitTransaction(stub)
+		err := commitTransaction(stub)
+		if err != nil {
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+		}
+		return pb.Response{Payload: nil, Status: shim.OK}
+	case "verifyTransactionProposalSignature":
+		err := verifyTxnProposalSignature(stub)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -122,8 +128,8 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 	return tpxResponse, nil
 }
 
-//CommitTransaction returns error
-func CommitTransaction(stub shim.ChaincodeStubInterface) error {
+//commitTransaction returns error
+func commitTransaction(stub shim.ChaincodeStubInterface) error {
 	args := stub.GetArgs()
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
@@ -147,6 +153,24 @@ func CommitTransaction(stub shim.ChaincodeStubInterface) error {
 
 	if err != nil {
 		return fmt.Errorf("CommitTransaction returned error: %v", err)
+	}
+	return nil
+}
+
+//verifyTxnProposalSignature returns error
+func verifyTxnProposalSignature(stub shim.ChaincodeStubInterface) error {
+	args := stub.GetArgs()
+	//first arg is function name; the second one is channel name; the third one is TxnProposalBytes
+	if len(args) < 3 {
+		return errors.New("Not enough arguments in call to verify transaction proposal signature")
+	}
+	channel, err := fcClient.NewChannel(string(args[1]))
+	if err != nil {
+		return fmt.Errorf("Cannot create channel %v", err)
+	}
+	err = fcClient.VerifyTxnProposalSignature(channel, args[2])
+	if err != nil {
+		return fmt.Errorf("VerifyTxnProposalSignature returned error: %v", err)
 	}
 	return nil
 }

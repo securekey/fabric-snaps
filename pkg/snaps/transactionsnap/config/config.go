@@ -21,7 +21,6 @@ const (
 	configFileName     = "config"
 	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
-	devConfigPath      = "$GOPATH/src/github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/sampleconfig"
 )
 
 var peerConfig = viper.New()
@@ -38,13 +37,10 @@ var logFormat = logging.MustStringFormatter(
 // @param {string} [OPTIONAL] configPathOverride
 // @returns {error} error, if any
 func Init(configPathOverride string) error {
-	var envConfigPath = os.Getenv("FABRIC_CFG_PATH")
-	replacer := strings.NewReplacer(".", "_")
 
-	configPath := devConfigPath
-	if envConfigPath != "" {
-		configPath = envConfigPath
-	} else if configPathOverride != "" {
+	replacer := strings.NewReplacer(".", "_")
+	configPath := "./"
+	if configPathOverride != "" {
 		configPath = configPathOverride
 	}
 	//txnSnap Config
