@@ -91,12 +91,32 @@ func TestNotSupportedFunction(t *testing.T) {
 	}
 }
 
+func TestWrongRegisterTxEventValue(t *testing.T) {
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := make([][]byte, 4)
+	args[0] = []byte("commitTransaction")
+	args[1] = []byte("testChannel")
+	args[2] = nil
+	args[3] = []byte("false1")
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
+	}
+	errorMsg := `Cannot ParseBool the fourth arg to registerTxEvent strconv.ParseBool: parsing "false1": invalid syntax`
+	if response.Message != errorMsg {
+		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	}
+}
+
 func TestNotSpecifiedChannel(t *testing.T) {
 	snap := &TxnSnap{}
 	stub := shim.NewMockStub("transactionsnap", snap)
 	var funcs []string
 	funcs = append(funcs, "endorseTransaction")
 	funcs = append(funcs, "commitTransaction")
+	funcs = append(funcs, "endorseAndCommitTransaction")
 	funcs = append(funcs, "verifyTransactionProposalSignature")
 	for _, value := range funcs {
 		var args [][]byte
@@ -105,6 +125,12 @@ func TestNotSpecifiedChannel(t *testing.T) {
 			args[0] = []byte(value)
 			args[1] = []byte("")
 			args[2] = nil
+		} else if value == "commitTransaction" {
+			args = make([][]byte, 4)
+			args[0] = []byte(value)
+			args[1] = []byte("")
+			args[2] = nil
+			args[3] = nil
 		} else {
 			args = createTransactionSnapRequest(value, "ccid", "", false)
 		}
@@ -158,13 +184,24 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 		}
 	}
+
 	var args [][]byte
-	args = append(args, []byte("verifyTransactionProposalSignature"))
-	response := stub.MockInvoke("TxID", args)
+	args = append(args, []byte("endorseAndCommitTransaction"))
+	response := stub.MockInvoke("TxID1", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
-	errorMsg := "Not enough arguments in call to verify transaction proposal signature"
+	errorMsg := "Not enough arguments in call to endorse and commit transaction"
+	if response.Message != errorMsg {
+		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	}
+	args = args[:0]
+	args = append(args, []byte("verifyTransactionProposalSignature"))
+	response = stub.MockInvoke("TxID2", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
+	}
+	errorMsg = "Not enough arguments in call to verify transaction proposal signature"
 	if response.Message != errorMsg {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
@@ -176,7 +213,7 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 	stub := shim.NewMockStub("transactionsnap", snap)
 	var funcs []string
 	funcs = append(funcs, "endorseTransaction")
-	funcs = append(funcs, "commitTransaction")
+	funcs = append(funcs, "endorseAndCommitTransaction")
 	for _, value := range funcs {
 		var args [][]byte
 		args = append(args, []byte(value))
@@ -239,7 +276,7 @@ func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 	}
 }
 
-func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
+func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionSuccess(t *testing.T) {
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = false
@@ -247,17 +284,17 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	stub := shim.NewMockStub("transactionsnap", snap)
 
 	// registerTxEvent is false
-	args := createTransactionSnapRequest("commitTransaction", "ccid", "testChannel", false)
+	args := createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
-	response := stub.MockInvoke("TxID", args)
+	response := stub.MockInvoke("TxID1", args)
 	if response.Status != shim.OK {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
 
 	// registerTxEvent is true
-	args = createTransactionSnapRequest("commitTransaction", "ccid", "testChannel", true)
+	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	go func() {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 3)
 		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, newTxID.ID, "testChannel")
 		if err != nil {
 			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
@@ -267,22 +304,22 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	}()
 
 	//invoke transaction snap
-	response = stub.MockInvoke("TxID", args)
+	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.OK {
-		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
 	}
 }
 
-func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
+func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *testing.T) {
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = true
 
 	snap := &TxnSnap{}
 	stub := shim.NewMockStub("transactionsnap", snap)
-	args := createTransactionSnapRequest("commitTransaction", "ccid", "testChannel", false)
+	args := createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
-	response := stub.MockInvoke("TxID", args)
+	response := stub.MockInvoke("TxID1", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
@@ -293,9 +330,10 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	// registerTxEvent is true with wrongTxnID
 	mockBroadcastServer.BroadcastInternalServerError = false
 	registerTxEventTimeout = 5
-	args = createTransactionSnapRequest("commitTransaction", "ccid", "testChannel", true)
+	defer resetRegisterTxEventTimeout()
+	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	go func() {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 3)
 		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, "wrongTxnID", "testChannel")
 		if err != nil {
 			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
@@ -305,7 +343,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	}()
 
 	//invoke transaction snap
-	response = stub.MockInvoke("TxID", args)
+	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
@@ -313,6 +351,120 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
 	}
+}
+
+func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
+	mockEndorserServer.ProposalError = nil
+	mockEndorserServer.AddkvWrite = true
+	mockBroadcastServer.BroadcastInternalServerError = false
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID1", args)
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+	if len(response.GetPayload()) == 0 {
+		t.Fatalf("Received an empty payload")
+	}
+	var tpResponse []*apitxn.TransactionProposalResponse
+	err := json.Unmarshal(response.GetPayload(), &tpResponse)
+	if err != nil {
+		t.Fatalf("Cannot unmarshal transaction proposal response %v", err)
+	}
+	if len(tpResponse) == 0 {
+		t.Fatalf("Received an empty transaction proposal response")
+	}
+	if tpResponse[0].ProposalResponse.Response.Status != 200 {
+		t.Fatalf("Expected proposal response status: SUCCESS")
+	}
+	// Call commit transaction with registerTxEvent is false
+	args = make([][]byte, 4)
+	args[0] = []byte("commitTransaction")
+	args[1] = []byte("testChannel")
+	args[2] = response.GetPayload()
+	args[3] = []byte("false")
+	//invoke transaction snap
+	response = stub.MockInvoke("TxID2", args)
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
+	}
+	go func() {
+		time.Sleep(time.Second * 3)
+		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, tpResponse[0].Proposal.TxnID.ID, "testChannel")
+		if err != nil {
+			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
+			return
+		}
+		mockEventServer.SendMockEvent(&pb.Event{Event: &pb.Event_Block{Block: mockBlock}})
+	}()
+	// Call commit transaction with registerTxEvent is true
+	args[3] = []byte("true")
+	response = stub.MockInvoke("TxID3", args)
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+
+}
+
+func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
+	mockEndorserServer.ProposalError = nil
+	mockEndorserServer.AddkvWrite = true
+	mockBroadcastServer.BroadcastInternalServerError = true
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID1", args)
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+	if len(response.GetPayload()) == 0 {
+		t.Fatalf("Received an empty payload")
+	}
+	var tpResponse []*apitxn.TransactionProposalResponse
+	err := json.Unmarshal(response.GetPayload(), &tpResponse)
+	if err != nil {
+		t.Fatalf("Cannot unmarshal transaction proposal response %v", err)
+	}
+	if len(tpResponse) == 0 {
+		t.Fatalf("Received an empty transaction proposal response")
+	}
+	if tpResponse[0].ProposalResponse.Response.Status != 200 {
+		t.Fatalf("Expected proposal response status: SUCCESS")
+	}
+	// Call commit transaction with registerTxEvent is false
+	args = make([][]byte, 4)
+	args[0] = []byte("commitTransaction")
+	args[1] = []byte("testChannel")
+	args[2] = response.GetPayload()
+	args[3] = []byte("false")
+	//invoke transaction snap
+	response = stub.MockInvoke("TxID2", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+	errorMsg := "broadcast response is not success : INTERNAL_SERVER_ERROR"
+	if !strings.Contains(response.Message, errorMsg) {
+		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
+	}
+
+	// registerTxEvent is true
+	mockBroadcastServer.BroadcastInternalServerError = false
+	registerTxEventTimeout = 5
+	defer resetRegisterTxEventTimeout()
+	args[3] = []byte("true")
+	//invoke transaction snap
+	response = stub.MockInvoke("TxID3", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+	errorMsg = "SendTransaction Didn't receive tx event for txid"
+	if !strings.Contains(response.Message, errorMsg) {
+		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
+	}
+
 }
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T) {
@@ -394,13 +546,13 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	endorserArgs[2] = []byte("a")
 	endorserArgs[3] = []byte("b")
 	endorserArgs[4] = []byte("1")
-	additionalCCIDs := []string{"additionalccid"}
+	endorsersForCCIDs := []string{chaincodeID, "additionalccid"}
 	snapTxReq := SnapTransactionRequest{ChannelID: chnlID,
-		ChaincodeID:     chaincodeID,
-		TransientMap:    transientMap,
-		EndorserArgs:    endorserArgs,
-		AdditionalCCIDs: additionalCCIDs,
-		RegisterTxEvent: registerTxEvent}
+		ChaincodeID:       chaincodeID,
+		TransientMap:      transientMap,
+		EndorserArgs:      endorserArgs,
+		EndorsersForCCIDs: endorsersForCCIDs,
+		RegisterTxEvent:   registerTxEvent}
 	snapTxReqB, err := json.Marshal(snapTxReq)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
@@ -529,6 +681,10 @@ func signObjectWithKey(object []byte, key bccsp.Key,
 		return nil, err
 	}
 	return signature, nil
+}
+
+func resetRegisterTxEventTimeout() {
+	registerTxEventTimeout = 30
 }
 
 func TestMain(m *testing.M) {
