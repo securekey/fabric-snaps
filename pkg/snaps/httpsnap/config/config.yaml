@@ -1,0 +1,21 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#############################################################
+
+
+# Test configuration for config
+
+logging:
+  level: debug
+tls:
+  caCerts:
+  - /ca1.crt
+  - /ca2.crt
+  clientCert: /test.crt
+  clientKey: /test.key
+  namedClientOverridePath: /override
+schemas:
+  - type: application/json
+    request: /schema/request.json
+    response: /schema/response.json

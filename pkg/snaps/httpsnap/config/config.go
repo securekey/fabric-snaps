@@ -3,7 +3,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-package httpsnap
+package config
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ const (
 	configFileName = "config"
 )
 
-var logger = logging.MustGetLogger("httpsnapconfig")
+var logger = logging.MustGetLogger("httpsnap-config")
 var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var defaultLogLevel = "info"
 
@@ -52,13 +52,11 @@ func Init(configPathOverride string) error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		logger.Criticalf("Error reading snap config file: %s", err)
 		return fmt.Errorf("Error reading snap config file: %s", err)
 	}
 
 	err = initializeLogging()
 	if err != nil {
-		logger.Criticalf("Failed to initialize logging: %s", err)
 		return fmt.Errorf("Error initializing logging: %s", err)
 	}
 
@@ -68,12 +66,12 @@ func Init(configPathOverride string) error {
 // Helper function to initialize logging
 func initializeLogging() error {
 
-	logFormat := viper.GetString("httpsnap.logging.format")
+	logFormat := viper.GetString("logging.format")
 	if logFormat == "" {
 		logFormat = defaultLogFormat
 	}
 
-	logLevel := viper.GetString("httpsnap.logging.level")
+	logLevel := viper.GetString("logging.level")
 	if logLevel == "" {
 		logLevel = defaultLogLevel
 	}
@@ -107,7 +105,7 @@ func GetConfigPath(path string) string {
 // GetCaCerts returns the list of ca certs
 func GetCaCerts() []string {
 
-	caCerts := viper.GetStringSlice("httpsnap.tls.caCerts")
+	caCerts := viper.GetStringSlice("tls.caCerts")
 	absoluteCaCerts := make([]string, 0, len(caCerts))
 
 	for _, v := range caCerts {
@@ -121,12 +119,12 @@ func GetCaCerts() []string {
 func getSchemaMap() (schemaMap map[string]*SchemaConfig, err error) {
 
 	var schemaConfigs []SchemaConfig
-	err = viper.UnmarshalKey("httpsnap.schemas", &schemaConfigs)
+	err = viper.UnmarshalKey("schemas", &schemaConfigs)
 	if err != nil {
 		return nil, err
 	}
 
-	schemaMap = make(map[string]*SchemaConfig)
+	schemaMap = make(map[string]*SchemaConfig, len(schemaConfigs))
 
 	for _, sc := range schemaConfigs {
 		sc.Request = GetConfigPath(sc.Request)
@@ -139,17 +137,17 @@ func getSchemaMap() (schemaMap map[string]*SchemaConfig, err error) {
 
 // GetClientCert returns client cert
 func GetClientCert() string {
-	return GetConfigPath(viper.GetString("httpsnap.tls.clientCert"))
+	return GetConfigPath(viper.GetString("tls.clientCert"))
 }
 
 // GetClientKey returns client key
 func GetClientKey() string {
-	return GetConfigPath(viper.GetString("httpsnap.tls.clientKey"))
+	return GetConfigPath(viper.GetString("tls.clientKey"))
 }
 
 // GetNamedClientOverridePath returns overide path
 func GetNamedClientOverridePath() string {
-	return GetConfigPath(viper.GetString("httpsnap.tls.namedClientOverridePath"))
+	return GetConfigPath(viper.GetString("tls.namedClientOverridePath"))
 }
 
 // GetSchemaConfig return schema configuration based on content type
@@ -160,6 +158,7 @@ func GetSchemaConfig(contentType string) (*SchemaConfig, error) {
 	}
 
 	schemaConfig := schemaMap[contentType]
+	logger.Debugf("Schema config: %s", schemaConfig)
 	if schemaConfig == nil {
 		return nil, fmt.Errorf("Schema configuration for content-type: %s not found", contentType)
 	}

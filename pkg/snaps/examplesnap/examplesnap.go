@@ -1,51 +1,65 @@
 /*
-Copyright SecureKey Technologies Inc. All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
+   Copyright SecureKey Technologies Inc.
+   This file contains software code that is the intellectual property of SecureKey.
+   SecureKey reserves all rights in the code and you may not use it without
+	 written permission from SecureKey.
 */
-package examplesnap
+
+package main
 
 import (
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"fmt"
+
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	logging "github.com/op/go-logging"
+	config "github.com/securekey/fabric-snaps/pkg/snaps/examplesnap/config"
 )
 
-var logger = logging.MustGetLogger("example-snap")
+var logger = logging.MustGetLogger("examplesnap")
 
 // ExampleSnap is a sample Snap that simply echos the supplied argument in the response
 type ExampleSnap struct {
-	name string
 }
 
-// NewSnap - create new instance of snap
-func NewSnap() shim.Chaincode {
-	return &ExampleSnap{}
+// Init - read configuration
+func (t *ExampleSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	err := config.Init("")
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
+		logger.Errorf(errMsg)
+		return shim.Error(errMsg)
+	}
+
+	logger.Info("Example snap configuration loaded.")
+	return shim.Success(nil)
 }
 
 // Invoke snap
-// arg[0] - Some message (optional)
-func (es *ExampleSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Infof("Snap[%s] - Invoked", es.name)
+// arg[0] - Function (currently not used)
+// arg[1] - Some message (optional)
+func (t *ExampleSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
-	args := stub.GetArgs()
+	fn, args := stub.GetFunctionAndParameters()
+
+	if fn == "" {
+		return shim.Error("Missing function name")
+	}
+
+	logger.Infof("Example snap invoked. Args=%v", args)
 	if len(args) > 0 {
 		return shim.Success([]byte(args[0]))
 	}
-	return shim.Success([]byte("Example snap invoked!"))
+
+	// message not provided - return default greeting
+	configGreeting := config.GetGreeting()
+
+	return shim.Success([]byte(configGreeting))
 }
 
-// Init initializes the snap
-// arg[0] - Snap name
-func (es *ExampleSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	args := stub.GetStringArgs()
-	if len(args) == 0 {
-		return shim.Error("Expecting snap name as first arg")
+func main() {
+	err := shim.Start(new(ExampleSnap))
+	if err != nil {
+		fmt.Printf("Error starting Example snap: %s", err)
 	}
-
-	es.name = args[0]
-
-	logger.Infof("Snap[%s] - Initialized", es.name)
-
-	return shim.Success(nil)
 }
