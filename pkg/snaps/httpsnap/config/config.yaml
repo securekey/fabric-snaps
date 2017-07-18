@@ -1,0 +1,21 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#############################################################
+
+
+# Configuration for HTTP Snap
+
+logging:
+  level: debug
+tls:
+  caCerts:
+  - /tls/test-ca.crt
+  - /tls/abc-ca.crt
+  clientCert: /tls/test-client.crt
+  clientKey: /tls/test-client.key
+  namedClientOverridePath: /tls/override
+schemas:
+  - type: application/json
+    request: /schema/request.json
+    response: /schema/response.json

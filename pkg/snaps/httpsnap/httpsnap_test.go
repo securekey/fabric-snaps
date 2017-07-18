@@ -178,12 +178,12 @@ func TestPost(t *testing.T) {
 	}
 
 	// Failed path: invalid ca
-	viper.Set("httpsnap.tls.caCerts", []string{"cert1", "cert2"})
+	viper.Set("tls.caCerts", []string{"cert1", "cert2"})
 	args = [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed due to invalid ca cert pool")
 
 	// Failed path: invalid client key or cert
-	viper.Set("httpsnap.tls.clientCert", "invalid.crt")
+	viper.Set("tls.clientCert", "invalid.crt")
 	args = [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed due to invalid client cert")
 

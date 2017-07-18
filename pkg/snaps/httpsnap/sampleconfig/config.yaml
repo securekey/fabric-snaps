@@ -5,17 +5,17 @@
 
 
 # Configuration for HTTP Snap
-httpsnap:
- logging:
+
+logging:
   level: debug
- tls:
+tls:
   caCerts:
   - tls/test-ca.crt
   - tls/abc-ca.crt
   clientCert: tls/test-client.crt
   clientKey: tls/test-client.key
   namedClientOverridePath: tls/override
- schemas:
+schemas:
   - type: application/json
     request: schema/request.json
     response: schema/response.json
