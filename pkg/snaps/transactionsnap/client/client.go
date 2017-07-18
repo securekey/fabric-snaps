@@ -56,10 +56,11 @@ type Client interface {
 	// @param {[]string} args to pass to the chaincode. Args[0] is the function name
 	// @param {[]Peer} (optional) targets for transaction
 	// @param {map[string][]byte} transientData map
+	// @param {[]string} ccIDs For Endorsement selection
 	// @returns {[]TransactionProposalResponse} responses from endorsers
 	// @returns {error} error, if any
 	EndorseTransaction(sdkApi.Channel, string, []string, map[string][]byte,
-		[]sdkApi.Peer) ([]*apitxn.TransactionProposalResponse, error)
+		[]sdkApi.Peer, []string) ([]*apitxn.TransactionProposalResponse, error)
 
 	// CommitTransaction submits the given endorsements on the specified channel for
 	// commit
@@ -183,16 +184,19 @@ func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
 }
 
 func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID string,
-	args []string, transientData map[string][]byte, targets []sdkApi.Peer) (
+	args []string, transientData map[string][]byte, targets []sdkApi.Peer, ccIDsForEndorsement []string) (
 	[]*apitxn.TransactionProposalResponse, error) {
 	var peers []sdkApi.Peer
 	var processors []apitxn.ProposalProcessor
 	var err error
 
 	if targets == nil {
+		if len(ccIDsForEndorsement) == 0 {
+			ccIDsForEndorsement = append(ccIDsForEndorsement, chaincodeID)
+		}
 		// Select endorsers
 		peers, err = c.selectionService.GetEndorsersForChaincode(channel.Name(),
-			chaincodeID)
+			endorsersForCCIDs...)
 		if err != nil {
 			return nil, fmt.Errorf("Error selecting endorsers: %s", err)
 		}

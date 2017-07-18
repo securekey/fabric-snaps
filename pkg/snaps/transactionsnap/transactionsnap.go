@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -32,12 +33,12 @@ type TxnSnap struct {
 //SnapTransactionRequest type will be passed as argument to a transaction snap
 //ChannelID and ChaincodeID are mandatory fields
 type SnapTransactionRequest struct {
-	ChannelID       string
-	ChaincodeID     string
-	TransientMap    map[string][]byte
-	EndorserArgs    [][]byte
-	AdditionalCCIDs []string
-	RegisterTxEvent bool
+	ChannelID           string            // required channel ID
+	ChaincodeID         string            // required chaincode ID
+	TransientMap        map[string][]byte // optional transient Map
+	EndorserArgs        [][]byte          // optional args for endorsement
+	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
+	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
 
 var logger = logging.MustGetLogger("transaction-snap")
@@ -62,11 +63,11 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	switch function {
 	case "endorseTransaction":
 
-		tpResponse, err := endorseTransaction(stub)
+		tpResponses, err := endorseTransaction(stub)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
-		payload, err := json.Marshal(tpResponse)
+		payload, err := json.Marshal(tpResponses)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -74,6 +75,12 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
 		err := commitTransaction(stub)
+		if err != nil {
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+		}
+		return pb.Response{Payload: nil, Status: shim.OK}
+	case "endorseAndCommitTransaction":
+		err := endorseAndCommitTransaction(stub)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -120,7 +127,7 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 	logger.Debug("Endorser args:", ccargs)
 
 	tpxResponse, err := fcClient.EndorseTransaction(channel, snapTxRequest.ChaincodeID,
-		ccargs, snapTxRequest.TransientMap, nil)
+		ccargs, snapTxRequest.TransientMap, nil, snapTxRequest.CCIDsForEndorsement)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +138,36 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 //commitTransaction returns error
 func commitTransaction(stub shim.ChaincodeStubInterface) error {
 	args := stub.GetArgs()
+	//first arg is function name; the second one is channel name; the third one is tpResponses;
+	//the fourth one is registerTxEvent
+	if len(args) < 4 {
+		return errors.New("Not enough arguments in call to commit transaction")
+	}
+
+	channel, err := fcClient.NewChannel(string(args[1]))
+	if err != nil {
+		return fmt.Errorf("Cannot create channel %v", err)
+	}
+	var tpResponses []*apitxn.TransactionProposalResponse
+	json.Unmarshal(args[2], &tpResponses)
+	registerTxEvent, err := strconv.ParseBool(string(args[3]))
+	if err != nil {
+		return fmt.Errorf("Cannot ParseBool the fourth arg to registerTxEvent %v", err)
+	}
+	err = fcClient.CommitTransaction(channel, tpResponses, registerTxEvent, registerTxEventTimeout)
+
+	if err != nil {
+		return fmt.Errorf("CommitTransaction returned error: %v", err)
+	}
+	return nil
+}
+
+//endorseAndCommitTransaction returns error
+func endorseAndCommitTransaction(stub shim.ChaincodeStubInterface) error {
+	args := stub.GetArgs()
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
-		return errors.New("Not enough arguments in call to commit transaction")
+		return errors.New("Not enough arguments in call to endorse and commit transaction")
 	}
 	//second argument is SnapTransactionRequest
 	snapTxRequest, err := getSnapTransactionRequest(args[1])
