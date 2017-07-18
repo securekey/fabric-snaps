@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "debb4d1c_e3dbbaa9",
+        "filename": "pkg/snaps/transactionsnap/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-07-18T20:17:22Z",
+      "side": 1,
+      "message": "Document this optional parameter? It\u0027s very difficult to understand if you don\u0027t know what this does.",
+      "revId": "3840ecb53897c6abfff8f1821422df1aabbc3000",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
