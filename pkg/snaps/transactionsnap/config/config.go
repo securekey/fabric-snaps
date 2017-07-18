@@ -118,11 +118,6 @@ func GetMspID() string {
 	return peerConfig.GetString("peer.localMspId")
 }
 
-// GetMspConfigPath returns the local MSP config path
-func GetMspConfigPath() string {
-	return GetConfigPath(peerConfig.GetString("peer.mspConfigPath"))
-}
-
 // GetTLSRootCertPath returns absolute path to the TLS root certificate
 func GetTLSRootCertPath() string {
 	return GetConfigPath(peerConfig.GetString("peer.tls.rootcert.file"))

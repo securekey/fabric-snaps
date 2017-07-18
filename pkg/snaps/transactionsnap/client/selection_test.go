@@ -72,7 +72,7 @@ var p11 = peer("peer11", org5)
 var p12 = peer("peer12", org5)
 
 func TestMain(m *testing.M) {
-	err := config.Init("")
+	err := config.Init("../sampleconfig")
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
