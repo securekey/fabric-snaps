@@ -1,4 +1,4 @@
-// Copyright © 2016 Steve Francia <spf@spf13.com>.
+// Copyright © 2014 Steve Francia <spf@spf13.com>.
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sync/atomic"
 )
 
 // Level describes the chosen log level between
@@ -19,33 +18,10 @@ import (
 type Level int
 
 type NotePad struct {
-	Handle  io.Writer
-	Level   Level
-	Prefix  string
-	Logger  **log.Logger
-	counter uint64
-}
-
-func (n *NotePad) incr() {
-	atomic.AddUint64(&n.counter, 1)
-}
-
-func (n *NotePad) resetCounter() {
-	atomic.StoreUint64(&n.counter, 0)
-}
-
-func (n *NotePad) getCount() uint64 {
-	return atomic.LoadUint64(&n.counter)
-}
-
-type countingWriter struct {
-	incrFunc func()
-}
-
-func (cw *countingWriter) Write(p []byte) (n int, err error) {
-	cw.incrFunc()
-
-	return 0, nil
+	Handle io.Writer
+	Level  Level
+	Prefix string
+	Logger **log.Logger
 }
 
 // Feedback is special. It writes plainly to the output while
@@ -91,16 +67,6 @@ var (
 	outputThreshold Level    = DefaultStdoutThreshold
 )
 
-const (
-	DATE  = log.Ldate
-	TIME  = log.Ltime
-	SFILE = log.Lshortfile
-	LFILE = log.Llongfile
-	MSEC  = log.Lmicroseconds
-)
-
-var logFlags = DATE | TIME | SFILE
-
 func init() {
 	SetStdoutThreshold(DefaultStdoutThreshold)
 }
@@ -125,19 +91,12 @@ func initialize() {
 	}
 
 	for _, n := range NotePads {
-		n.Handle = io.MultiWriter(n.Handle, &countingWriter{n.incr})
-		*n.Logger = log.New(n.Handle, n.Prefix, logFlags)
+		*n.Logger = log.New(n.Handle, n.Prefix, log.Ldate)
 	}
 
 	LOG = log.New(LogHandle,
 		"LOG:   ",
-		logFlags)
-}
-
-// Set the log Flags (Available flag: DATE, TIME, SFILE, LFILE and MSEC)
-func SetLogFlag(flags int) {
-	logFlags = flags
-	initialize()
+		log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 // Level returns the current global log threshold.
@@ -182,8 +141,7 @@ func SetLogFile(path string) {
 		CRITICAL.Println("Failed to open log file:", path, err)
 		os.Exit(-1)
 	}
-
-	INFO.Println("Logging to", file.Name())
+        fmt.Println("Logging to", file.Name())
 
 	LogHandle = file
 	initialize()
@@ -196,39 +154,10 @@ func UseTempLogFile(prefix string) {
 		CRITICAL.Println(err)
 	}
 
-	INFO.Println("Logging to", file.Name())
+	fmt.Println("Logging to", file.Name())
 
 	LogHandle = file
 	initialize()
-}
-
-// LogCountForLevel returns the number of log invocations for a given level.
-func LogCountForLevel(l Level) uint64 {
-	for _, np := range NotePads {
-		if np.Level == l {
-			return np.getCount()
-		}
-	}
-	return 0
-}
-
-// LogCountForLevelsGreaterThanorEqualTo returns the number of log invocations
-// greater than or equal to a given level threshold.
-func LogCountForLevelsGreaterThanorEqualTo(threshold Level) uint64 {
-	var cnt uint64
-	for _, np := range NotePads {
-		if np.Level >= threshold {
-			cnt += np.getCount()
-		}
-	}
-	return cnt
-}
-
-// ResetLogCounters resets the invocation counters for all levels.
-func ResetLogCounters() {
-	for _, np := range NotePads {
-		np.resetCounter()
-	}
 }
 
 // Disables logging for the entire JWW system
@@ -241,16 +170,14 @@ func DiscardLogging() {
 // logging with the standard extra information (date, file, etc)
 // Only Println and Printf are currently provided for this
 func (fb *Feedback) Println(v ...interface{}) {
-	s := fmt.Sprintln(v...)
-	fmt.Print(s)
-	LOG.Output(2, s)
+	fmt.Println(v...)
+	LOG.Println(v...)
 }
 
 // Feedback is special. It writes plainly to the output while
 // logging with the standard extra information (date, file, etc)
 // Only Println and Printf are currently provided for this
 func (fb *Feedback) Printf(format string, v ...interface{}) {
-	s := fmt.Sprintf(format, v...)
-	fmt.Print(s)
-	LOG.Output(2, s)
+	fmt.Printf(format, v...)
+	LOG.Printf(format, v...)
 }
