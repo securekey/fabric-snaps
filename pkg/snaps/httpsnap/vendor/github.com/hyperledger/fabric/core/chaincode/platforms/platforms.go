@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"strings"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/platforms/car"
 	"github.com/hyperledger/fabric/core/chaincode/platforms/golang"
 	"github.com/hyperledger/fabric/core/chaincode/platforms/java"
+	"github.com/hyperledger/fabric/core/chaincode/platforms/util"
 	"github.com/hyperledger/fabric/core/config"
 	cutil "github.com/hyperledger/fabric/core/container/util"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -166,6 +168,61 @@ func generateDockerBuild(platform Platform, cds *pb.ChaincodeDeploymentSpec, inp
 	}
 
 	return nil
+}
+
+func GenerateBuild(cds *pb.ChaincodeDeploymentSpec) (io.Reader, error) {
+	if cds.ExecEnv == pb.ChaincodeDeploymentSpec_DOCKER {
+		return GenerateDockerBuild(cds)
+	} else if cds.ExecEnv == pb.ChaincodeDeploymentSpec_SYSTEM_EXT {
+		return GenerateExtBuild(cds)
+	} else {
+		return nil, fmt.Errorf("Failed to generate platform-specific build: execution environment is not supported: %s", pb.ChaincodeDeploymentSpec_ExecutionEnvironment_name[int32(cds.ExecEnv)])
+	}
+}
+
+// GenerateExtBuild takes a chaincode deployment spec, builds the chaincode
+// source by using a Docker container, and then extracts the chaincode binary
+// so that it can be used for execution within a process or Docker container
+func GenerateExtBuild(cds *pb.ChaincodeDeploymentSpec) (io.Reader, error) {
+	curDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("Error getting current directory: %v", err)
+	}
+
+	builder := func() (io.Reader, error) { return GenerateDockerBuild(cds) }
+
+	reader, err := builder()
+	if err != nil {
+		return nil, fmt.Errorf("Error building chaincode in Docker container: %v", err)
+	}
+
+	gr, err := gzip.NewReader(reader)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening gzip reader for code package: %v", err)
+	}
+
+	binPkgOutputPath := filepath.Join(curDir, "/binpackage.tar")
+
+	err = util.ExtractFileFromTar(gr, "binpackage.tar", binPkgOutputPath)
+	gr.Close()
+	if err != nil {
+		return nil, fmt.Errorf("Error extracting binpackage.tar from code package: %v", err)
+	}
+
+	binPkgTarFile, err := os.Open(binPkgOutputPath)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening binpackage.tar: %v", err)
+	}
+
+	ccBinOutPath := filepath.Join(curDir, "/", cds.ChaincodeSpec.ChaincodeId.Name)
+
+	err = util.ExtractFileFromTar(binPkgTarFile, "./chaincode", ccBinOutPath)
+	binPkgTarFile.Close()
+	if err != nil {
+		return nil, fmt.Errorf("Error extracting chaincode binary from binpackage.tar: %v", err)
+	}
+
+	return strings.NewReader(ccBinOutPath), nil
 }
 
 func GenerateDockerBuild(cds *pb.ChaincodeDeploymentSpec) (io.Reader, error) {

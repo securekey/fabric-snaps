@@ -1,4 +1,4 @@
-// Copyright 2016 Frank Schroeder. All rights reserved.
+// Copyright 2013-2014 Frank Schroeder. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -26,11 +26,7 @@ type ErrorHandlerFunc func(error)
 
 // ErrorHandler is the function which handles failures of the MustXXX()
 // functions. The default is LogFatalHandler.
-var ErrorHandler ErrorHandlerFunc = LogFatalHandler
-
-type LogHandlerFunc func(fmt string, args ...interface{})
-
-var LogPrintf LogHandlerFunc = log.Printf
+var ErrorHandler = LogFatalHandler
 
 // LogFatalHandler handles the error by logging a fatal error and exiting.
 func LogFatalHandler(err error) {
@@ -185,14 +181,10 @@ func (p *Properties) MustGetBool(key string) bool {
 
 func (p *Properties) getBool(key string) (value bool, err error) {
 	if v, ok := p.Get(key); ok {
-		return boolVal(v), nil
+		v = strings.ToLower(v)
+		return v == "1" || v == "true" || v == "yes" || v == "on", nil
 	}
 	return false, invalidKeyError(key)
-}
-
-func boolVal(v string) bool {
-	v = strings.ToLower(v)
-	return v == "1" || v == "true" || v == "yes" || v == "on"
 }
 
 // ----------------------------------------------------------------------------
@@ -450,26 +442,13 @@ func (p *Properties) FilterRegexp(re *regexp.Regexp) *Properties {
 	return pp
 }
 
-// FilterPrefix returns a new properties object with a subset of all keys
-// with the given prefix.
+// FilterPrefix returns a new properties object which contains all properties
+// for which the key starts with the prefix.
 func (p *Properties) FilterPrefix(prefix string) *Properties {
 	pp := NewProperties()
 	for _, k := range p.k {
 		if strings.HasPrefix(k, prefix) {
 			pp.Set(k, p.m[k])
-		}
-	}
-	return pp
-}
-
-// FilterStripPrefix returns a new properties object with a subset of all keys
-// with the given prefix and the prefix removed from the keys.
-func (p *Properties) FilterStripPrefix(prefix string) *Properties {
-	pp := NewProperties()
-	n := len(prefix)
-	for _, k := range p.k {
-		if len(k) > len(prefix) && strings.HasPrefix(k, prefix) {
-			pp.Set(k[n:], p.m[k])
 		}
 	}
 	return pp
@@ -628,26 +607,6 @@ func (p *Properties) Delete(key string) {
 		}
 	}
 	p.k = newKeys
-}
-
-// Merge merges properties, comments and keys from other *Properties into p
-func (p *Properties) Merge(other *Properties) {
-	for k,v := range other.m {
-		p.m[k] = v
-	}
-	for k,v := range other.c {
-		p.c[k] = v
-	}
-
-	outer:
-	for _, otherKey := range other.k {
-		for _, key := range p.k {
-			if otherKey == key {
-				continue outer
-			}
-		}
-		p.k = append(p.k, otherKey)
-	}
 }
 
 // ----------------------------------------------------------------------------

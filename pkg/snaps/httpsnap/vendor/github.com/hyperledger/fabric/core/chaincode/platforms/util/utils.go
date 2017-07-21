@@ -109,6 +109,40 @@ func IsCodeExist(tmppath string) error {
 	return nil
 }
 
+// ExtractFileFromTar takes an io.Reader that is reading a tar file, and extracts
+// the file with header fileHeaderName into the outputFilePath
+func ExtractFileFromTar(fileReader io.Reader, fileHeaderName string, outputFilePath string) error {
+	tr := tar.NewReader(fileReader)
+
+	for {
+		header, err := tr.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if header.Name == fileHeaderName {
+			f, err := os.OpenFile(outputFilePath, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				return err
+			}
+
+			// copy over contents
+			if _, err := io.Copy(f, tr); err != nil {
+				return err
+			}
+			f.Close()
+			break
+		}
+	}
+
+	return nil
+}
+
 type DockerBuildOptions struct {
 	Image        string
 	Env          []string
