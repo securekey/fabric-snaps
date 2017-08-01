@@ -13,12 +13,15 @@ import (
 	"time"
 
 	logging "github.com/op/go-logging"
+	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	client "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client"
+
+	protosPeer "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/protos/peer"
 )
 
 // The newTxID is added so the unit test can access the new transaction id generated in transactionsnap
@@ -47,18 +50,24 @@ var fcClient client.Client
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	//initialize fabric client
-	err := getInstanceOfFabricClient()
-	response := pb.Response{Status: shim.OK}
+
+	err := config.Init("")
 	if err != nil {
-		response = pb.Response{Status: shim.ERROR, Message: fmt.Sprintf("getInstanceOfFabricClient return error %s", err.Error())}
+		return shim.Error(fmt.Sprintf("Failed to initialize config: %s", err))
 	}
-	return response
+
+	if err := getInstanceOfFabricClient(); err != nil {
+		logger.Errorf("Init failed: %s", err)
+		return shim.Error(fmt.Sprintf("getInstanceOfFabricClient return error %s", err.Error()))
+	}
+
+	return shim.Success(nil)
 }
 
 //Invoke transaction snap
 //required args are function name and SnapTransactionRequest
 func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	function, _ := stub.GetFunctionAndParameters()
+	function, args := stub.GetFunctionAndParameters()
 
 	switch function {
 	case "endorseTransaction":
@@ -91,10 +100,57 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
+	case "getPeersOfChannel":
+		payload, err := getPeersOfChannel(args)
+		if err != nil {
+			logger.Errorf("getPeersOfChannel error: %s", err.Error())
+			return shim.Error(err.Error())
+		}
+
+		logger.Debugf("getPeersOfChannel payload: %s", string(payload))
+		return shim.Success(payload)
 	default:
 		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
 	}
 
+}
+
+// getPeersOfChannel returns peers that are available for that channel
+func getPeersOfChannel(args []string) ([]byte, error) {
+
+	if len(args) < 1 || args[0] == "" {
+		return nil, fmt.Errorf("Channel must be provided")
+	}
+
+	// First argument is channel
+	channel := args[0]
+	logger.Debugf("Retrieving peers on channel: %s", channel)
+
+	membership := client.GetMembershipInstance()
+	channelMembership := membership.GetPeersOfChannel(channel, true)
+	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
+		return nil, fmt.Errorf("Could not get peers from channel %s: %s", channel, channelMembership.QueryError)
+	}
+	if channelMembership.QueryError != nil && channelMembership.Peers != nil {
+		logger.Warningf(
+			"Error polling peers on channel %s, using last known configuration. Error: %s",
+			channelMembership.QueryError)
+	}
+
+	logger.Debugf("Peers on channel(%s): %s", channel, channelMembership.Peers)
+
+	// Construct list of endpoints
+	endpoints := make([]protosPeer.PeerEndpoint, 0, len(channelMembership.Peers))
+	for _, peer := range channelMembership.Peers {
+		endpoints = append(endpoints, protosPeer.PeerEndpoint{Endpoint: peer.URL(), MSPid: []byte(peer.MSPID())})
+	}
+
+	peerBytes, err := json.Marshal(endpoints)
+	if err != nil {
+		return nil, err
+	}
+
+	return peerBytes, nil
 }
 
 //endorseTransaction returns []*sdkApi.TransactionProposalResponse
