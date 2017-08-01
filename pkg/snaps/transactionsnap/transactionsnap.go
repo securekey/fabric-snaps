@@ -13,6 +13,7 @@ import (
 	"time"
 
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/api"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -31,17 +32,6 @@ var registerTxEventTimeout time.Duration = 30
 
 // TxnSnap implements endorse transaction and commit transaction
 type TxnSnap struct {
-}
-
-//SnapTransactionRequest type will be passed as argument to a transaction snap
-//ChannelID and ChaincodeID are mandatory fields
-type SnapTransactionRequest struct {
-	ChannelID           string            // required channel ID
-	ChaincodeID         string            // required chaincode ID
-	TransientMap        map[string][]byte // optional transient Map
-	EndorserArgs        [][]byte          // optional args for endorsement
-	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
-	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
 
 var logger = logging.MustGetLogger("transaction-snap")
@@ -276,8 +266,8 @@ func getInstanceOfFabricClient() error {
 }
 
 // getSnapTransactionRequest
-func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*SnapTransactionRequest, error) {
-	var snapTxRequest SnapTransactionRequest
+func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTransactionRequest, error) {
+	var snapTxRequest api.SnapTransactionRequest
 	err := json.Unmarshal(snapTransactionRequestbBytes, &snapTxRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot decode parameters from request to Snap Transaction Request %v", err)

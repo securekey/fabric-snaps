@@ -31,6 +31,7 @@ import (
 	ab "github.com/hyperledger/fabric/protos/orderer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
+	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
 	mocks "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/mocks"
@@ -547,7 +548,7 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	endorserArgs[3] = []byte("b")
 	endorserArgs[4] = []byte("1")
 	ccIDsForEndorsement := []string{chaincodeID, "additionalccid"}
-	snapTxReq := SnapTransactionRequest{ChannelID: chnlID,
+	snapTxReq := api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
 		TransientMap:        transientMap,
 		EndorserArgs:        endorserArgs,
