@@ -36,11 +36,12 @@ type TxnSnap struct {
 
 var logger = logging.MustGetLogger("transaction-snap")
 var fcClient client.Client
+var membership client.MembershipManager
 
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	//initialize fabric client
 
+	//initialize fabric client
 	err := config.Init("")
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to initialize config: %s", err))
@@ -50,6 +51,9 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 		logger.Errorf("Init failed: %s", err)
 		return shim.Error(fmt.Sprintf("getInstanceOfFabricClient return error %s", err.Error()))
 	}
+
+	// membership mananger
+	membership = client.GetMembershipInstance()
 
 	return shim.Success(nil)
 }
@@ -109,17 +113,16 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func getPeersOfChannel(args []string) ([]byte, error) {
 
 	if len(args) < 1 || args[0] == "" {
-		return nil, fmt.Errorf("Channel must be provided")
+		return nil, fmt.Errorf("Channel name must be provided")
 	}
 
 	// First argument is channel
 	channel := args[0]
 	logger.Debugf("Retrieving peers on channel: %s", channel)
 
-	membership := client.GetMembershipInstance()
 	channelMembership := membership.GetPeersOfChannel(channel, true)
 	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
-		return nil, fmt.Errorf("Could not get peers from channel %s: %s", channel, channelMembership.QueryError)
+		return nil, fmt.Errorf("Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
 	}
 	if channelMembership.QueryError != nil && channelMembership.Peers != nil {
 		logger.Warningf(

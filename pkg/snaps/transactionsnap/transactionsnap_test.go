@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -31,6 +32,7 @@ import (
 	ab "github.com/hyperledger/fabric/protos/orderer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
+	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/client"
 	config "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap/config"
@@ -65,6 +67,16 @@ var endorserTestEventPort = 17564
 var broadcastTestHost = "127.0.0.1"
 var broadcastTestPort = 7041
 
+var configImp = clientmocks.NewMockConfig()
+
+const (
+	org1 = "Org1MSP"
+	org2 = "Org2MSP"
+)
+
+var p1 = peer("peer1", org1)
+var p2 = peer("peer2", org1)
+
 func TestTransactionSnapInit(t *testing.T) {
 	snap := &TxnSnap{}
 	stub := shim.NewMockStub("transactionsnap", snap)
@@ -89,6 +101,67 @@ func TestNotSupportedFunction(t *testing.T) {
 	errorMsg := "Function notSupportedFunction is not supported"
 	if response.Message != errorMsg {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	}
+}
+
+func TestGetPeersOfChannel(t *testing.T) {
+
+	membership = mocks.NewMockMembershipManager(nil).Add("testChannel", p1, p2)
+
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+
+	//invoke transaction snap
+	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
+	response := stub.MockInvoke("TxID", args)
+
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+
+	if !strings.Contains(string(response.Payload), "peer1:7051") || !strings.Contains(string(response.Payload), "peer2:7051") {
+		t.Fatalf("Expected response to contain peer1:7051 and peer2:7051 but got %s", response.Payload)
+	}
+
+}
+
+func TestGetPeersOfChannelQueryErrorWarning(t *testing.T) {
+
+	membership = mocks.NewMockMembershipManager(errors.New("Query Error")).Add("testChannel", p1, p2)
+
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+
+	//invoke transaction snap
+	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
+	response := stub.MockInvoke("TxID", args)
+
+	if response.Status != shim.OK {
+		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+	}
+
+	if !strings.Contains(string(response.Payload), "peer1:7051") || !strings.Contains(string(response.Payload), "peer2:7051") {
+		t.Fatalf("Expected response to contain peer1:7051 and peer2:7051 but got %s", response.Payload)
+	}
+}
+
+func TestGetPeersOfChannelQueryErrorNoPeers(t *testing.T) {
+
+	membership = mocks.NewMockMembershipManager(errors.New("Query Error"))
+
+	snap := &TxnSnap{}
+	stub := shim.NewMockStub("transactionsnap", snap)
+
+	//invoke transaction snap
+	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
+	response := stub.MockInvoke("TxID", args)
+
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
+	}
+
+	if !strings.Contains(string(response.Message), "Could not get peers on channel") {
+		t.Fatalf("Expected response to contain \"Could not get peers on channel\" but got %s", response.Payload)
 	}
 }
 
@@ -206,6 +279,18 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 	if response.Message != errorMsg {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
+
+	args = args[:0]
+	args = append(args, []byte("getPeersOfChannel"))
+	response = stub.MockInvoke("TxID1", args)
+	if response.Status != shim.ERROR {
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
+	}
+	errorMsg = "Channel name must be provided"
+	if response.Message != errorMsg {
+		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	}
+
 }
 
 func TestSupportedFunctionWithNilRequest(t *testing.T) {
@@ -723,4 +808,14 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
+}
+
+func peer(name string, mspID string) sdkApi.Peer {
+	peer, err := sdkFabApi.NewPeer(name+":7051", "", "", configImp)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create peer: %v)", err))
+	}
+	peer.SetName(name)
+	peer.SetMSPID(mspID)
+	return peer
 }
