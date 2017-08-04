@@ -24,8 +24,13 @@ const (
 	cmdRootPrefix      = "core"
 )
 
-// MembershipPeers provides a static definition of a Hyperledger Fabric peers
-type MembershipPeers struct {
+// MembershipChannelPeers provides a static definition of a Hyperledger Fabric peers
+type MembershipChannelPeers struct {
+	Peers map[string]*Peer
+}
+
+// Peer provides a endpoints for peer
+type Peer struct {
 	Host  string
 	Port  int
 	MspID string
@@ -156,15 +161,14 @@ func GetMembershipPollInterval() time.Duration {
 	return viper.GetDuration("txnsnap.membership.pollinterval")
 }
 
-// GetMembershipPeers get membership peers
-func GetMembershipPeers() (map[string]*MembershipPeers, error) {
-	var membershipPeers map[string]*MembershipPeers
-	err := viper.UnmarshalKey("txnsnap.membership.peers", &membershipPeers)
+// GetMembershipChannelPeers get membership peers
+func GetMembershipChannelPeers(channelID string) (map[string]*Peer, error) {
+	var membershipChannelsPeers map[string]*MembershipChannelPeers
+	err := viper.UnmarshalKey("txnsnap.membership.channels", &membershipChannelsPeers)
 	if err != nil {
 		return nil, err
 	}
-
-	return membershipPeers, nil
+	return membershipChannelsPeers[channelID].Peers, nil
 }
 
 // GetConfigPath returns the absolute value of the given path that is

@@ -5,12 +5,15 @@ txnsnap:
 # Membership list polling interval
  membership:
   pollinterval: 3s
-  peers:
-   # Peer name
-   peer0:
-    host: "localhost"
-    port: 7051
-    mspID: "mspID"
+  channels:
+   # Channel Name
+   channel0:
+    peers:
+    # Peer name
+     peer0:
+      host: "localhost"
+      port: 7051
+      mspID: "mspID"
  enrolment:
   cert:
    file: testcerts/ecert/cert.pem

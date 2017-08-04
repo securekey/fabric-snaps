@@ -78,26 +78,27 @@ func TestGetMembershipPollInterval(t *testing.T) {
 	}
 }
 
-func TestGetMembershipPeers(t *testing.T) {
-	membershipPeers, err := GetMembershipPeers()
+func TestGetMembershipChannelPeers(t *testing.T) {
+	membershipChannelPeers, err := GetMembershipChannelPeers("channel0")
 	if err != nil {
 		t.Fatalf("GetMembershipPeers return error %v", err)
 	}
-	var expectedMembershipPeers map[string]*MembershipPeers
-	txnSnapConfig.UnmarshalKey("txnsnap.membership.peers", &expectedMembershipPeers)
+	var expectedMembershipChannelsPeers map[string]*MembershipChannelPeers
+	txnSnapConfig.UnmarshalKey("txnsnap.membership.channels", &expectedMembershipChannelsPeers)
+	expectedMembershipChannelPeers := expectedMembershipChannelsPeers["channel0"].Peers
 
-	for key, value := range membershipPeers {
-		if value.Host != expectedMembershipPeers[key].Host {
-			t.Fatalf("Expected GetMembershipPeers() Host return value %v but got %v",
-				expectedMembershipPeers[key].Host, value.Host)
+	for key, value := range membershipChannelPeers {
+		if value.Host != expectedMembershipChannelPeers[key].Host {
+			t.Fatalf("Expected GetMembershipChannelPeers() Host return value %v but got %v",
+				expectedMembershipChannelPeers[key].Host, value.Host)
 		}
-		if value.Port != expectedMembershipPeers[key].Port {
-			t.Fatalf("Expected GetMembershipPeers() Port return value %v but got %v",
-				expectedMembershipPeers[key].Port, value.Port)
+		if value.Port != expectedMembershipChannelPeers[key].Port {
+			t.Fatalf("Expected GetMembershipChannelPeers() Port return value %v but got %v",
+				expectedMembershipChannelPeers[key].Port, value.Port)
 		}
-		if value.MspID != expectedMembershipPeers[key].MspID {
-			t.Fatalf("Expected GetMembershipPeers() MspID return value %v but got %v",
-				expectedMembershipPeers[key].MspID, value.MspID)
+		if value.MspID != expectedMembershipChannelPeers[key].MspID {
+			t.Fatalf("Expected GetMembershipChannelPeers() MspID return value %v but got %v",
+				expectedMembershipChannelPeers[key].MspID, value.MspID)
 		}
 	}
 

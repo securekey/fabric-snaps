@@ -121,12 +121,12 @@ func queryPeersOfChannel(channel string) ([]sdkApi.Peer, error) {
 		return nil, err
 	}
 
-	membershipPeers, err := config.GetMembershipPeers()
+	membershipChannelPeers, err := config.GetMembershipChannelPeers(channel)
 	if err != nil {
 		return nil, fmt.Errorf("config.GetMembershipPeers() return error %v", err)
 	}
 
-	for _, value := range membershipPeers {
+	for _, value := range membershipChannelPeers {
 		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", value.Host, value.Port), "", "", clientInstance.GetConfig())
 		if err != nil {
 			return nil, fmt.Errorf("Error creating new peer: %s", err)
