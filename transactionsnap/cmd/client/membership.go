@@ -113,15 +113,23 @@ func (m *membershipManagerImpl) pollPeersOfChannel() {
 	}
 }
 
-func queryPeersOfChannel(channel string) ([]sdkApi.Peer, error) {
+func queryPeersOfChannel(channelID string) ([]sdkApi.Peer, error) {
 
 	peers := []sdkApi.Peer{}
 	clientInstance, err := GetInstance()
 	if err != nil {
 		return nil, err
 	}
+	channel, err := client.NewChannel(channelID)
+	if err != nil {
+		return nil, formatQueryError(channelID, err)
+	}
+	err = client.InitializeChannel(channel)
+	if err != nil {
+		return nil, formatQueryError(channelID, err)
+	}
 
-	membershipChannelPeers, err := config.GetMembershipChannelPeers(channel)
+	membershipChannelPeers, err := config.GetMembershipChannelPeers(channelID)
 	if err != nil {
 		return nil, fmt.Errorf("config.GetMembershipPeers() return error %v", err)
 	}
