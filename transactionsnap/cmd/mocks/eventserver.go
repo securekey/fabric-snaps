@@ -1,8 +1,7 @@
 /*
-   Copyright SecureKey Technologies Inc.
-   This file contains software code that is the intellectual property of SecureKey.
-   SecureKey reserves all rights in the code and you may not use it without
-	 written permission from SecureKey.
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
 */
 
 package mocks
@@ -16,12 +15,14 @@ import (
 	"google.golang.org/grpc"
 )
 
+// MockEventServer ...
 type MockEventServer struct {
 	server     peer.Events_ChatServer
 	grpcServer *grpc.Server
 	channel    chan *peer.Event
 }
 
+// StartMockEventServer will start server
 func StartMockEventServer(testAddress string) (*MockEventServer, error) {
 	grpcServer := grpc.NewServer()
 	grpcServer.GetServiceInfo()
@@ -37,6 +38,7 @@ func StartMockEventServer(testAddress string) (*MockEventServer, error) {
 	return eventServer, nil
 }
 
+// Chat ...
 func (m *MockEventServer) Chat(srv peer.Events_ChatServer) error {
 	m.server = srv
 	m.channel = make(chan *peer.Event)
@@ -56,10 +58,12 @@ func (m *MockEventServer) Chat(srv peer.Events_ChatServer) error {
 	}
 }
 
+// SendMockEvent ...
 func (m *MockEventServer) SendMockEvent(event *peer.Event) {
 	m.channel <- event
 }
 
+// Stop mock event
 func (m *MockEventServer) Stop() {
 	m.grpcServer.Stop()
 }
