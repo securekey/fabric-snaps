@@ -1,8 +1,7 @@
 /*
-   Copyright SecureKey Technologies Inc.
-   This file contains software code that is the intellectual property of SecureKey.
-   SecureKey reserves all rights in the code and you may not use it without
-	 written permission from SecureKey.
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
 */
 
 package utils
@@ -14,7 +13,7 @@ import (
 	protos_utils "github.com/hyperledger/fabric/protos/utils"
 )
 
-// Get the Creator from a Signed Proposal
+// GetCreatorFromSignedProposal ...
 func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, error) {
 
 	// check ProposalBytes if nil

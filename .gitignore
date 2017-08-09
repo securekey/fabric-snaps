@@ -18,3 +18,5 @@ build
 
 # Test coverage report
 report.xml
+integration-report.xml
+extsysccs

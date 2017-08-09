@@ -33,7 +33,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"

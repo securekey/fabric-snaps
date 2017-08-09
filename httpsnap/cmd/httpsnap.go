@@ -30,12 +30,12 @@ import (
 
 var logger = logging.MustGetLogger("httpsnap")
 
-//HttpSnap implementation
-type HttpSnap struct {
+//HTTPSnap implementation
+type HTTPSnap struct {
 }
 
 // Init snap
-func (httpsnap *HttpSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 	err := config.Init("")
 	if err != nil {
@@ -55,7 +55,7 @@ func (httpsnap *HttpSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 // args[3] - Request Body
 // args[4] - Named Client (optional)
 // args[5] - Pin set (optional)
-func (httpsnap *HttpSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	_, args := stub.GetFunctionAndParameters()
 
@@ -298,7 +298,7 @@ func validateJSON(jsonSchema string, jsonStr string) error {
 }
 
 func main() {
-	err := shim.Start(new(HttpSnap))
+	err := shim.Start(new(HTTPSnap))
 	if err != nil {
 		fmt.Printf("Error starting httpsnap: %s", err)
 	}
