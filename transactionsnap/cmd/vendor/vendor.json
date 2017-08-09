@@ -928,6 +928,18 @@
 			"revisionTime": "2017-07-18T17:30:52Z"
 		},
 		{
+			"checksumSHA1": "KWI2gqV4HsE499GYhSHvjIHJpGo=",
+			"path": "github.com/securekey/fabric-snaps/transactionsnap/api",
+			"revision": "742168445f2ffdd52d2f385b6e7f0641f994f0e4",
+			"revisionTime": "2017-08-09T19:23:22Z"
+		},
+		{
+			"checksumSHA1": "HkmiprsAHVijNcnC8X+dbPeXgKM=",
+			"path": "github.com/securekey/fabric-snaps/transactionsnap/api/membership",
+			"revision": "742168445f2ffdd52d2f385b6e7f0641f994f0e4",
+			"revisionTime": "2017-08-09T19:23:22Z"
+		},
+		{
 			"checksumSHA1": "NDSnw8vnCScWoKlqqooqgM8Nq4s=",
 			"origin": "github.com/hyperledger/fabric/vendor/github.com/spf13/cast",
 			"path": "github.com/spf13/cast",
@@ -1180,5 +1192,5 @@
 			"revisionTime": "2017-07-21T16:18:57Z"
 		}
 	],
-	"rootPath": "github.com/securekey/fabric-snaps/pkg/snaps/transactionsnap"
+	"rootPath": "github.com/securekey/fabric-snaps/transactionsnap/cmd"
 }
