@@ -11,6 +11,6 @@ import (
 )
 
 func newMockStub() *shim.MockStub {
-	snap := new(HttpSnap)
+	snap := new(HTTPSnap)
 	return shim.NewMockStub("httpsnap", snap)
 }

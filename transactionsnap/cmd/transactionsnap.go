@@ -13,7 +13,7 @@ import (
 	"time"
 
 	logging "github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -22,7 +22,7 @@ import (
 
 	client "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 
-	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/cmd/protos/peer"
+	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
 )
 
 // The newTxID is added so the unit test can access the new transaction id generated in transactionsnap
