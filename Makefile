@@ -6,6 +6,7 @@
 
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
+export GO_LDFLAGS=-s
 
 depend:
 	@scripts/dependencies.sh

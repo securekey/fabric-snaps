@@ -28,9 +28,9 @@ echo "Running linters..."
    fi
 
    echo "Checking gofmt"
-   found=`gofmt -l \`find $i -name "*.go" |grep -v "./vendor"\` 2>&1`
-   if [ $? -ne 0 ]; then
+    OUTPUT="$(gofmt -l $(find ./ -name *.go |grep -v ./vendor))"
+   if [[ $OUTPUT ]]; then
       echo "The following files need reformatting with 'gofmt -w <file>':"
-      printf "$badformat\n"
+      printf "$OUTPUT\n"
       exit 1
    fi
