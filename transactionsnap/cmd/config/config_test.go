@@ -8,6 +8,7 @@ package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -127,15 +128,15 @@ func TestGetLocalPeer(t *testing.T) {
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
-	if err.Error() != `strconv.ParseInt: parsing "Address": invalid syntax` {
-		t.Fatal("GetLocalPeer() didn't return expected error msg")
+	if !strings.Contains(err.Error(), `parsing "Address": invalid syntax`) {
+		t.Fatalf("GetLocalPeer() didn't return expected error msg. got: %s", err.Error())
 	}
 	peerConfig.Set("peer.address", "peer:5050")
 	_, err = GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
-	if err.Error() != `strconv.ParseInt: parsing "EventAddress": invalid syntax` {
+	if !strings.Contains(err.Error(), `parsing "EventAddress": invalid syntax`) {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
 	peerConfig.Set("peer.events.address", "event:5151")
