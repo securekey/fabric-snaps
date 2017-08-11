@@ -168,18 +168,15 @@ func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error 
 	// Get Query value
 	argsArray := strings.Split(args, ",")
 
-	if argsArray[0] == "endorseAndCommitTransaction" || argsArray[0] == "endorseTransaction" {
-		argsArray = d.createTransactionSnapRequest(argsArray[0], argsArray[2], argsArray[1], argsArray[3:], true)
-	}
-	if argsArray[0] == "verifyTransactionProposalSignature" {
+	if len(argsArray) > 1 && argsArray[1] == "verifyTransactionProposalSignature" {
 		signedProposalBytes, err := proto.Marshal(trxPR[0].Proposal.SignedProposal)
 		if err != nil {
 			return fmt.Errorf("Marshal SignedProposal return error: %v", err)
 		}
-		argsArray[2] = string(signedProposalBytes)
+		argsArray[3] = string(signedProposalBytes)
 	}
-	if argsArray[0] == "commitTransaction" {
-		argsArray[2] = queryResult
+	if len(argsArray) > 1 && argsArray[1] == "commitTransaction" {
+		argsArray[3] = queryResult
 	}
 	if channelID != "" && d.BDDContext.Channel.Name() != channelID {
 		return fmt.Errorf("Channel(%s) not created", channelID)
@@ -195,7 +192,7 @@ func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error 
 		return fmt.Errorf("QueryChaincode return error: %v", err)
 	}
 	queryValue = queryResult
-	if argsArray[0] == "endorseTransaction" {
+	if len(argsArray) > 1 && argsArray[1] == "endorseTransaction" {
 		err := json.Unmarshal([]byte(queryResult), &trxPR)
 		if err != nil {
 			return fmt.Errorf("Unmarshal(%s) to TransactionProposalResponse return error: %v", queryValue, err)

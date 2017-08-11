@@ -83,6 +83,12 @@ services:
       - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLEEXTERNAL=true
       - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLECC2CC=true
       - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_CONFIGPATH=/opt/snaps/txnsnap
+     # Txn Snap Invoker
+      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_ENABLED=true
+      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_EXECENV=SYSTEM_EXT
+      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_INVOKABLEEXTERNAL=true
+      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_INVOKABLECC2CC=true
+      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_CONFIGPATH=/opt/snaps/txnsnapinvoker
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/
