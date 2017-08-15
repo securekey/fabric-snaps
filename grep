@@ -1,0 +1,4 @@
+can't load package: package -v: cannot find package "-v" in any of:
+	/usr/local/go/src/-v (from $GOROOT)
+	/home/firas/go/src/-v (from $GOPATH)
+can't load package: package /vendor: import "/vendor": cannot import absolute path
