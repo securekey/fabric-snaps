@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 				composition = newComposition
 
 				fmt.Println("docker-compose up ... waiting for peer to start ...")
-				time.Sleep(time.Second * 50)
+				time.Sleep(time.Second * 70)
 			}
 
 		})
@@ -73,12 +73,6 @@ func TestMain(m *testing.M) {
 }
 
 func FeatureContext(s *godog.Suite) {
-
-	os.RemoveAll("./fixtures/config/extsysccs")
-	os.Mkdir("./fixtures/config/extsysccs", 0777)
-
-	// Create cds for snaps (each snap will have cds.sh in config folder if it requires cds)
-	executeScripts("fixtures/config/snaps", "cds.sh")
 
 	context, err := NewBDDContext()
 	if err != nil {
