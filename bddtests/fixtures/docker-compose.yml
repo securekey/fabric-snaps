@@ -30,7 +30,7 @@ services:
 
   orderer.example.com:
     container_name: orderer.example.com
-    image: ${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_ORDERER_FIXTURE_TAG}
+    image: ${FABRIC_ORDERER_FIXTURE_IMAGE}:${FABRIC_ORDERER_FIXTURE_TAG}
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -54,7 +54,7 @@ services:
         - ./channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/msp/peerOrg2
   cli:
     container_name: cli
-    image:  ${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_PEER_FIXTURE_TAG}
+    image:  ${FABRIC_PEER_FIXTURE_IMAGE}:${FABRIC_PEER_FIXTURE_TAG}
     environment:
       - GOPATH=/opt/gopath
       - FABRIC_CFG_PATH=/etc/hyperledger/fabric
@@ -73,8 +73,8 @@ services:
        - /var/run/:/host/var/run/
        - extsysccs:/opt/extsysccs
        - ./config/snaps/:/opt/snaps
-       - $GOPATH/src/github.com/hyperledger/fabric/sampleconfig/core.yaml:/etc/hyperledger/fabric/core.yaml
-       - $GOPATH/src/github.com/hyperledger/fabric/sampleconfig/msp:/etc/hyperledger/fabric/msp
+       - ./peer-cli-config/core.yaml:/etc/hyperledger/fabric/core.yaml
+       - ./peer-cli-config/msp:/etc/hyperledger/fabric/msp
        - ../../../fabric-snaps/:/opt/gopath/src/github.com/securekey/fabric-snaps
        - ./config:/opt/gopath/src/github.com/hyperledger/fabric/peer/config/
        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
@@ -82,7 +82,7 @@ services:
       - builder
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
-    image: ${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_PEER_FIXTURE_TAG}
+    image: ${FABRIC_PEER_FIXTURE_IMAGE}:${FABRIC_PEER_FIXTURE_TAG}
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
@@ -149,4 +149,4 @@ services:
 
  # builder is only here to create a dependency on the image (not used as part of compose)
   builder:
-    image: ${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
+    image: ${FABRIC_BUILDER_FIXTURE_IMAGE}:${FABRIC_BUILDER_FIXTURE_TAG}
