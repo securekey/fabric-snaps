@@ -5,7 +5,11 @@
 #
 version: '2'
 
+volumes:
+ extsysccs:
+
 services:
+  
   ca0:
     image: hyperledger/fabric-ca
     environment:
@@ -48,7 +52,34 @@ services:
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peerOrg1
         - ./channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/msp/peerOrg2
-
+  cli:
+    container_name: cli
+    image:  ${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_PEER_FIXTURE_TAG}
+    environment:
+      - GOPATH=/opt/gopath
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+      - CORE_PEER_BCCSP_DEFAULT=SW
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_PEER_ID=cli
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash -c './config/script/init.sh; ./config/snaps/httpsnap/cds.sh ; ./config/snaps/txnsnap/script/cds.sh ; ./config/snaps/txnsnapinvoker/cds.sh'
+    volumes:
+       - /var/run/:/host/var/run/
+       - extsysccs:/opt/extsysccs
+       - ./config/snaps/:/opt/snaps
+       - $GOPATH/src/github.com/hyperledger/fabric/sampleconfig/core.yaml:/etc/hyperledger/fabric/core.yaml
+       - $GOPATH/src/github.com/hyperledger/fabric/sampleconfig/msp:/etc/hyperledger/fabric/msp
+       - ../../../fabric-snaps/:/opt/gopath/src/github.com/securekey/fabric-snaps
+       - ./config:/opt/gopath/src/github.com/hyperledger/fabric/peer/config/
+       - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
+    depends_on:
+      - builder
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
     image: ${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_PEER_FIXTURE_TAG}
@@ -94,14 +125,14 @@ services:
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: peer node start
+    command: /bin/bash -c 'sleep 20 ; peer node start'
     ports:
       - 7051:7051
       - 7053:7053
     volumes:
         - /var/run/:/host/var/run/
+        - extsysccs:/opt/extsysccs
         - ./config/snaps/:/opt/snaps
-        - ./config/extsysccs/:/opt/extsysccs
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
@@ -110,11 +141,12 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/keystore/22868392cebd06897f32f8d689522309ffe8c4a63b9910ecf361469b74f34a3a_sk:/etc/hyperledger/fabric/testcerts/ecert/key.pem
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem:/etc/hyperledger/fabric/testcerts/ecert/cert.pem
     depends_on:
-      - orderer.example.com
+      - cli
       - builder
+      - orderer.example.com
+
 
 
  # builder is only here to create a dependency on the image (not used as part of compose)
   builder:
     image: ${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
-
