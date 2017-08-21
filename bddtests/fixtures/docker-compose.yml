@@ -5,9 +5,6 @@
 #
 version: '2'
 
-volumes:
- extsysccs:
-
 services:
   
   ca0:
@@ -68,10 +65,10 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: /bin/bash -c './config/script/init.sh; ./config/snaps/httpsnap/cds.sh ; ./config/snaps/txnsnap/script/cds.sh ; ./config/snaps/txnsnapinvoker/cds.sh'
+    command: /bin/bash -c './config/script/init.sh; ./config/snaps/txnsnapinvoker/cds.sh'
     volumes:
        - /var/run/:/host/var/run/
-       - extsysccs:/opt/extsysccs
+       - ./config/extsysccs:/opt/extsysccs
        - ./config/snaps/:/opt/snaps
        - ./peer-cli-config/core.yaml:/etc/hyperledger/fabric/core.yaml
        - ./peer-cli-config/msp:/etc/hyperledger/fabric/msp
@@ -125,13 +122,13 @@ services:
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: /bin/bash -c 'sleep 20 ; peer node start'
+    command: /bin/bash -c 'sleep 10 ; peer node start'
     ports:
       - 7051:7051
       - 7053:7053
     volumes:
         - /var/run/:/host/var/run/
-        - extsysccs:/opt/extsysccs
+        - ./config/extsysccs:/opt/extsysccs
         - ./config/snaps/:/opt/snaps
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
