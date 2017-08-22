@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a131bea_cce7dd43",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-08-22T12:48:48Z",
+      "side": 1,
+      "message": "This chain of commands is too long. It should be a script",
+      "revId": "de5c53cdf444ac6f6bc1cc98aae85f347bc14677",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
