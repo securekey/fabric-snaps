@@ -7,11 +7,6 @@ client:
  tls:
   enabled: true
 
- security:
-  enabled: true
-  hashAlgorithm: "SHA2"
-  level: 256
-
  tcert:
   batch:
     size: 200
@@ -25,6 +20,19 @@ client:
  cryptoconfig:
   path: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config"
 
+ BCCSP:
+  security:
+   enabled: true
+   default:
+    provider: "SW"
+   hashAlgorithm: "SHA2"
+   softVerify: true
+   ephemeral: false
+   level: 256
+   pin: ""
+   label: ""
+   library: ""
+   
  connection:
    timeout:
     peer:
