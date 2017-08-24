@@ -17,6 +17,8 @@ limitations under the License.
 package util
 
 import (
+	"io/ioutil"
+	"os"
 	"runtime"
 	"strings"
 
@@ -69,4 +71,26 @@ func ParseDockerfileTemplate(template string) string {
 
 func GetDockerfileFromConfig(path string) string {
 	return ParseDockerfileTemplate(viper.GetString(path))
+}
+
+// GetPeerTLSCert returns a list of peer TLS certs
+func GetPeerTLSCert() ([]byte, error) {
+
+	if viper.GetBool("peer.tls.enabled") == false {
+		// no need for certificates if TLS is not enabled
+		return nil, nil
+	}
+	var path string
+	// first we check for the rootcert
+	path = config.GetPath("peer.tls.rootcert.file")
+	if path == "" {
+		// check for tls cert
+		path = config.GetPath("peer.tls.cert.file")
+	}
+	// this should not happen if the peer is running with TLS enabled
+	if _, err := os.Stat(path); err != nil {
+		return nil, err
+	}
+	// FIXME: FAB-2037 - ensure we sanely resolve relative paths specified in the yaml
+	return ioutil.ReadFile(path)
 }

@@ -413,7 +413,7 @@ func (goPlatform *Platform) GetDeploymentPayload(spec *pb.ChaincodeSpec) ([]byte
 	tw := tar.NewWriter(gw)
 
 	for _, file := range files {
-		err = cutil.WriteFileToPackage(file.Path, file.Name, tw)
+		err = cutil.WriteFileToPackage(file.Path, file.Name, tw, 0)
 		if err != nil {
 			return nil, fmt.Errorf("Error writing %s to tar: %s", file.Name, err)
 		}
