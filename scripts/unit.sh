@@ -14,4 +14,4 @@ PKGS=`go list github.com/securekey/fabric-snaps/... 2> /dev/null | \
                                                  grep -v /protos | \
                                                  grep -v /bddtests`
 echo "Running tests..."
-gocov test -ldflags "$GO_LDFLAGS" $PKGS -p 1 -timeout=5m | gocov-xml > report.xml
+go test -cover $PKGS -p 1 -timeout=10m
