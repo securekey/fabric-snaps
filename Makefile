@@ -45,6 +45,7 @@ all: clean checks snaps unit-test integration-test
 
 clean: 
 	rm -Rf ./bddtests/fixtures/config/extsysccs
+	rm -Rf ./bddtests/docker-compose.log
 	rm -Rf ./build
 
 clean-images:

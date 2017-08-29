@@ -79,32 +79,6 @@ func TestGetMembershipPollInterval(t *testing.T) {
 	}
 }
 
-func TestGetMembershipChannelPeers(t *testing.T) {
-	membershipChannelPeers, err := GetMembershipChannelPeers("channel0")
-	if err != nil {
-		t.Fatalf("GetMembershipPeers return error %v", err)
-	}
-	var expectedMembershipChannelsPeers map[string]*MembershipChannelPeers
-	txnSnapConfig.UnmarshalKey("txnsnap.membership.channels", &expectedMembershipChannelsPeers)
-	expectedMembershipChannelPeers := expectedMembershipChannelsPeers["channel0"].Peers
-
-	for key, value := range membershipChannelPeers {
-		if value.Host != expectedMembershipChannelPeers[key].Host {
-			t.Fatalf("Expected GetMembershipChannelPeers() Host return value %v but got %v",
-				expectedMembershipChannelPeers[key].Host, value.Host)
-		}
-		if value.Port != expectedMembershipChannelPeers[key].Port {
-			t.Fatalf("Expected GetMembershipChannelPeers() Port return value %v but got %v",
-				expectedMembershipChannelPeers[key].Port, value.Port)
-		}
-		if value.MspID != expectedMembershipChannelPeers[key].MspID {
-			t.Fatalf("Expected GetMembershipChannelPeers() MspID return value %v but got %v",
-				expectedMembershipChannelPeers[key].MspID, value.MspID)
-		}
-	}
-
-}
-
 func TestGetLocalPeer(t *testing.T) {
 	peerConfig.Set("peer.address", "")
 	_, err := GetLocalPeer()
