@@ -1,3 +1,9 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
 # Configurations for txn snap
 txnsnap:
  loglevel: debug
@@ -5,15 +11,7 @@ txnsnap:
 # Membership list polling interval
  membership:
   pollinterval: 3s
-  channels:
-   # Channel Name
-   channel0:
-    peers:
-    # Peer name
-     peer0:
-      host: "localhost"
-      port: 7051
-      mspID: "mspID"
+
  enrolment:
   cert:
    file: testcerts/ecert/cert.pem
@@ -25,10 +23,18 @@ client:
  tls:
   enabled: true
 
- security:
-  enabled: true
-  hashAlgorithm: "SHA2"
-  level: 256
+ BCCSP:
+  security:
+   enabled: true
+   default:
+    provider: "SW"
+   hashAlgorithm: "SHA2"
+   softVerify: true
+   ephemeral: false
+   level: 256
+   pin: ""
+   label: ""
+   library: ""
 
  logging:
   level: info
