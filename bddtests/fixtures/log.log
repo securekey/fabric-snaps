@@ -1,0 +1,900 @@
+Attaching to fixtures_builder_1, orderer.example.com, cli, peer0.org1.example.com, ca_peerOrg1
+[36mfixtures_builder_1 exited with code 0
+[0m[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.499 UTC [msp] getPemMaterialFromDir -> DEBU 001[0m Reading directory /etc/hyperledger/msp/orderer/signcerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 002[0m Inspecting file /etc/hyperledger/msp/orderer/signcerts/orderer.example.com-cert.pem
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 003[0m Reading directory /etc/hyperledger/msp/orderer/cacerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 004[0m Inspecting file /etc/hyperledger/msp/orderer/cacerts/ca.example.com-cert.pem
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 005[0m Reading directory /etc/hyperledger/msp/orderer/admincerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 006[0m Inspecting file /etc/hyperledger/msp/orderer/admincerts/Admin@example.com-cert.pem
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 007[0m Reading directory /etc/hyperledger/msp/orderer/intermediatecerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getMspConfig -> DEBU 008[0m Intermediate certs folder not found at [/etc/hyperledger/msp/orderer/intermediatecerts]. Skipping. [stat /etc/hyperledger/msp/orderer/intermediatecerts: no such file or directory]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.500 UTC [msp] getPemMaterialFromDir -> DEBU 009[0m Reading directory /etc/hyperledger/msp/orderer/tlscacerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getPemMaterialFromDir -> DEBU 00a[0m Inspecting file /etc/hyperledger/msp/orderer/tlscacerts/tlsca.example.com-cert.pem
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getPemMaterialFromDir -> DEBU 00b[0m Reading directory /etc/hyperledger/msp/orderer/tlsintermediatecerts
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getMspConfig -> DEBU 00c[0m TLS intermediate certs folder not found at [/etc/hyperledger/msp/orderer/tlsintermediatecerts]. Skipping. [stat /etc/hyperledger/msp/orderer/tlsintermediatecerts: no such file or directory]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getPemMaterialFromDir -> DEBU 00d[0m Reading directory /etc/hyperledger/msp/orderer/crls
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getMspConfig -> DEBU 00e[0m crls folder not found at [/etc/hyperledger/msp/orderer/crls]. Skipping. [stat /etc/hyperledger/msp/orderer/crls: no such file or directory]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.501 UTC [msp] getMspConfig -> DEBU 00f[0m MSP configuration file not found at [/etc/hyperledger/msp/orderer/config.yaml]: [stat /etc/hyperledger/msp/orderer/config.yaml: no such file or directory]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.502 UTC [msp] GetLocalMSP -> DEBU 010[0m Returning existing local MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.502 UTC [msp] Setup -> DEBU 011[0m Setting up MSP instance OrdererMSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.502 UTC [msp/identity] newIdentity -> DEBU 012[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICLjCCAdWgAwIBAgIQGM2AkPg9AkeAPXmZcGCicjAKBggqhkjOPQQDAjBpMQsw
+[33morderer.example.com       |[0m CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+[33morderer.example.com       |[0m YW5jaXNjbzEUMBIGA1UEChMLZXhhbXBsZS5jb20xFzAVBgNVBAMTDmNhLmV4YW1w
+[33morderer.example.com       |[0m bGUuY29tMB4XDTE3MDcyODE0MjcyMFoXDTI3MDcyNjE0MjcyMFowaTELMAkGA1UE
+[33morderer.example.com       |[0m BhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lz
+[33morderer.example.com       |[0m Y28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFtcGxlLmNv
+[33morderer.example.com       |[0m bTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABInydWsy9S2ni186+/gaOUTwcmQY
+[33morderer.example.com       |[0m aH7n+sNTdGQf/quWP6cX820zx1NbzCfmXDUGLPmTZt2Hw0vt1pLaPWRXkIijXzBd
+[33morderer.example.com       |[0m MA4GA1UdDwEB/wQEAwIBpjAPBgNVHSUECDAGBgRVHSUAMA8GA1UdEwEB/wQFMAMB
+[33morderer.example.com       |[0m Af8wKQYDVR0OBCIEIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY955X1fiUIWHkMAoG
+[33morderer.example.com       |[0m CCqGSM49BAMCA0cAMEQCIEfrUA9XaRDYojIxAFSkZVtaYr+ODOE9L9ijVjaWZKJn
+[33morderer.example.com       |[0m AiB+YdLmNUZ1JZWCXxysrTA9+0MVbJNmPLIer/TOXl3gDw==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.503 UTC [msp/identity] newIdentity -> DEBU 013[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICCjCCAbGgAwIBAgIRAP6rTgrL8PUGUhDZBlTbttkwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFYxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRowGAYDVQQDDBFBZG1pbkBleGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqG
+[33morderer.example.com       |[0m SM49AwEHA0IABLXVt4VsmmX0x1VZhy4OTyrt5JRgiiFRj8IvIJU3P5QBbfYqLTQp
+[33morderer.example.com       |[0m ZaUacKVcwRqI6JxVKb5tRqSiDibxmToRlB2jTTBLMA4GA1UdDwEB/wQEAwIHgDAM
+[33morderer.example.com       |[0m BgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY
+[33morderer.example.com       |[0m 955X1fiUIWHkMAoGCCqGSM49BAMCA0cAMEQCIEUawoXMhrxTpSEbc771wftWbUmr
+[33morderer.example.com       |[0m aMF8y6IHxWMDzB6HAiA+rr9DsGKN+rG+/r9OyUiKu/Hm+wULC5ejqJlhPciwug==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.503 UTC [msp/identity] newIdentity -> DEBU 014[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICCjCCAbGgAwIBAgIRAP6rTgrL8PUGUhDZBlTbttkwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFYxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRowGAYDVQQDDBFBZG1pbkBleGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqG
+[33morderer.example.com       |[0m SM49AwEHA0IABLXVt4VsmmX0x1VZhy4OTyrt5JRgiiFRj8IvIJU3P5QBbfYqLTQp
+[33morderer.example.com       |[0m ZaUacKVcwRqI6JxVKb5tRqSiDibxmToRlB2jTTBLMA4GA1UdDwEB/wQEAwIHgDAM
+[33morderer.example.com       |[0m BgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY
+[33morderer.example.com       |[0m 955X1fiUIWHkMAoGCCqGSM49BAMCA0cAMEQCIEUawoXMhrxTpSEbc771wftWbUmr
+[33morderer.example.com       |[0m aMF8y6IHxWMDzB6HAiA+rr9DsGKN+rG+/r9OyUiKu/Hm+wULC5ejqJlhPciwug==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.504 UTC [msp/identity] newIdentity -> DEBU 015[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICDTCCAbOgAwIBAgIRAKGC/uaH3T2heEdzCkJH/XwwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFgxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRwwGgYDVQQDExNvcmRlcmVyLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYI
+[33morderer.example.com       |[0m KoZIzj0DAQcDQgAEaEL3eiOozeOpiubqa11A12GNdZ7YOuIj6dqwe04ZP+ev55Zy
+[33morderer.example.com       |[0m Uqxc5dFW+fl3QK/NwhWgOmhYnO4Rq3E15zzMXKNNMEswDgYDVR0PAQH/BAQDAgeA
+[33morderer.example.com       |[0m MAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgkrjnyrwVcSPjCJS0/9P6PpTLSZva
+[33morderer.example.com       |[0m e1j3nlfV+JQhYeQwCgYIKoZIzj0EAwIDSAAwRQIhAP6o9oYaIm5LT17/ntVFb/QI
+[33morderer.example.com       |[0m fOhNKLKn7t26XbrFCipuAiBBpB3Fgm/WHhg6kEmslQFG3ejZJSOil6x2alNAB0D8
+[33morderer.example.com       |[0m bA==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.504 UTC [bccsp_sw] loadPrivateKey -> DEBU 016[0m Loading private key [07bf421d4f12606226f23b274167a956e4421ade2f8bb94e5bf265e71fd39e55] at [/etc/hyperledger/msp/orderer/keystore/07bf421d4f12606226f23b274167a956e4421ade2f8bb94e5bf265e71fd39e55_sk]...
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.504 UTC [msp/identity] newIdentity -> DEBU 017[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICDTCCAbOgAwIBAgIRAKGC/uaH3T2heEdzCkJH/XwwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFgxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRwwGgYDVQQDExNvcmRlcmVyLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYI
+[33morderer.example.com       |[0m KoZIzj0DAQcDQgAEaEL3eiOozeOpiubqa11A12GNdZ7YOuIj6dqwe04ZP+ev55Zy
+[33morderer.example.com       |[0m Uqxc5dFW+fl3QK/NwhWgOmhYnO4Rq3E15zzMXKNNMEswDgYDVR0PAQH/BAQDAgeA
+[33morderer.example.com       |[0m MAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgkrjnyrwVcSPjCJS0/9P6PpTLSZva
+[33morderer.example.com       |[0m e1j3nlfV+JQhYeQwCgYIKoZIzj0EAwIDSAAwRQIhAP6o9oYaIm5LT17/ntVFb/QI
+[33morderer.example.com       |[0m fOhNKLKn7t26XbrFCipuAiBBpB3Fgm/WHhg6kEmslQFG3ejZJSOil6x2alNAB0D8
+[33morderer.example.com       |[0m bA==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[32mcli                       |[0m [36m2017-08-30 13:26:45.449 UTC [msp] GetLocalMSP -> DEBU 001[0m Returning existing local MSP
+[32mcli                       |[0m [36m2017-08-30 13:26:45.449 UTC [msp] GetDefaultSigningIdentity -> DEBU 002[0m Obtaining default signing identity
+[32mcli                       |[0m 2017-08-30 13:26:45.449 UTC [chaincodeCmd] checkChaincodeCmdParams -> INFO 003[0m Using default escc
+[32mcli                       |[0m 2017-08-30 13:26:45.449 UTC [chaincodeCmd] checkChaincodeCmdParams -> INFO 004[0m Using default vscc
+[32mcli                       |[0m [36m2017-08-30 13:26:45.470 UTC [golang-platform] getCodeFromFS -> DEBU 005[0m getCodeFromFS github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker
+[32mcli                       |[0m [36m2017-08-30 13:26:45.696 UTC [golang-platform] func1 -> DEBU 006[0m Discarding GOROOT package encoding/json
+[32mcli                       |[0m [36m2017-08-30 13:26:45.696 UTC [golang-platform] func1 -> DEBU 007[0m Discarding GOROOT package fmt
+[32mcli                       |[0m [36m2017-08-30 13:26:45.696 UTC [golang-platform] func1 -> DEBU 008[0m Accepting import: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/shim
+[32mcli                       |[0m [36m2017-08-30 13:26:45.696 UTC [golang-platform] func1 -> DEBU 009[0m Accepting import: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/peer
+[32mcli                       |[0m [36m2017-08-30 13:26:45.998 UTC [golang-platform] func1 -> DEBU 00a[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor
+[32mcli                       |[0m [36m2017-08-30 13:26:45.998 UTC [golang-platform] GetDeploymentPayload -> DEBU 00b[0m processing dep: crypto/md5
+[32mcli                       |[0m [36m2017-08-30 13:26:45.998 UTC [golang-platform] GetDeploymentPayload -> DEBU 00c[0m checking: /opt/gopath/src/crypto/md5 exists: false
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.505 UTC [msp] Validate -> DEBU 018[0m MSP OrdererMSP validating identity
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.505 UTC [orderer/server/main] createLedgerFactory -> DEBU 019[0m Ledger dir: /var/hyperledger/production/orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.506 UTC [kvledger.util] CreateDirIfMissing -> DEBU 01a[0m CreateDirIfMissing [/var/hyperledger/production/orderer/index/]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.507 UTC [kvledger.util] logDirStatus -> DEBU 01b[0m Before creating dir - [/var/hyperledger/production/orderer/index/] does not exist
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.507 UTC [kvledger.util] logDirStatus -> DEBU 01c[0m After creating dir - [/var/hyperledger/production/orderer/index/] exists
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.521 UTC [fsblkstorage] newBlockfileMgr -> DEBU 01d[0m newBlockfileMgr() initializing file-based block storage for ledger: testchainid 
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.521 UTC [kvledger.util] CreateDirIfMissing -> DEBU 01e[0m CreateDirIfMissing [/var/hyperledger/production/orderer/chains/testchainid/]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.521 UTC [kvledger.util] logDirStatus -> DEBU 01f[0m Before creating dir - [/var/hyperledger/production/orderer/chains/testchainid/] does not exist
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.521 UTC [kvledger.util] logDirStatus -> DEBU 020[0m After creating dir - [/var/hyperledger/production/orderer/chains/testchainid/] exists
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.523 UTC [fsblkstorage] syncCPInfoFromFS -> DEBU 021[0m Starting checkpoint=latestFileChunkSuffixNum=[0], latestFileChunksize=[0], isChainEmpty=[true], lastBlockNumber=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.523 UTC [fsblkstorage] syncCPInfoFromFS -> DEBU 022[0m status of file [/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000]: exists=[false], size=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.524 UTC [fsblkstorage] newBlockIndex -> DEBU 023[0m newBlockIndex() - indexItems:[[BlockNum]]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.524 UTC [fsblkstorage] newBlockfileStream -> DEBU 024[0m newBlockfileStream(): filePath=[/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000], startOffset=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.524 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 025[0m Finished reading file number [0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.524 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 026[0m blockbytes [0] read from file [0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] indexBlock -> DEBU 027[0m Indexing block [blockNum=0, blockHash=[]byte{0x72, 0xbc, 0x7d, 0x4e, 0x8d, 0x23, 0x66, 0x26, 0xfb, 0xd5, 0xe8, 0xc, 0xa6, 0x9d, 0x4d, 0xeb, 0xd7, 0x35, 0xb0, 0x46, 0xdd, 0x88, 0x7f, 0x34, 0x2, 0x9e, 0x57, 0x75, 0xc2, 0x4a, 0x14, 0x5d} txOffsets=
+[33morderer.example.com       |[0m txId=b18f1686cfa04fa94874b93cf6c2d9974d7eb88632c11d71bc62601920e15bf7 locPointer=offset=38, bytesLength=9018
+[33morderer.example.com       |[0m ]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] updateCheckpoint -> DEBU 028[0m Broadcasting about update checkpointInfo: latestFileChunkSuffixNum=[0], latestFileChunksize=[9061], isChainEmpty=[false], lastBlockNumber=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] newBlockfileStream -> DEBU 029[0m newBlockfileStream(): filePath=[/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000], startOffset=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 02a[0m Remaining bytes=[9061], Going to peek [8] bytes
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 02b[0m Returning blockbytes - length=[9059], placementInfo={fileNum=[0], startOffset=[0], bytesOffset=[2]}
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.527 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 02c[0m blockbytes [9059] read from file [0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [fsblkstorage] newBlockfileStream -> DEBU 02d[0m newBlockfileStream(): filePath=[/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000], startOffset=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 02e[0m Remaining bytes=[9061], Going to peek [8] bytes
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 02f[0m Returning blockbytes - length=[9059], placementInfo={fileNum=[0], startOffset=[0], bytesOffset=[2]}
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 030[0m blockbytes [9059] read from file [0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/config] NewStandardValues -> DEBU 031[0m Initializing protos for *config.ChannelProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/config] initializeProtosStruct -> DEBU 032[0m Processing field: HashingAlgorithm
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/config] initializeProtosStruct -> DEBU 033[0m Processing field: BlockDataHashingStructure
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/config] initializeProtosStruct -> DEBU 034[0m Processing field: OrdererAddresses
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/config] initializeProtosStruct -> DEBU 035[0m Processing field: Consortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 036[0m Adding to config map: [Groups] /Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 037[0m Adding to config map: [Groups] /Channel/Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 038[0m Adding to config map: [Groups] /Channel/Consortiums/SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 039[0m Adding to config map: [Groups] /Channel/Consortiums/SampleConsortium/Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 03a[0m Adding to config map: [Values] /Channel/Consortiums/SampleConsortium/Org2MSP/MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 03b[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org2MSP/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 03c[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org2MSP/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.528 UTC [common/configtx] addToMap -> DEBU 03d[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org2MSP/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.529 UTC [common/configtx] addToMap -> DEBU 03e[0m Adding to config map: [Groups] /Channel/Consortiums/SampleConsortium/Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.529 UTC [common/configtx] addToMap -> DEBU 03f[0m Adding to config map: [Values] /Channel/Consortiums/SampleConsortium/Org1MSP/MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 040[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org1MSP/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 041[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org1MSP/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 042[0m Adding to config map: [Policy] /Channel/Consortiums/SampleConsortium/Org1MSP/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 043[0m Adding to config map: [Values] /Channel/Consortiums/SampleConsortium/ChannelCreationPolicy
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 044[0m Adding to config map: [Policy] /Channel/Consortiums/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.531 UTC [common/configtx] addToMap -> DEBU 045[0m Adding to config map: [Groups] /Channel/Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 046[0m Adding to config map: [Groups] /Channel/Orderer/OrdererOrg
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 047[0m Adding to config map: [Values] /Channel/Orderer/OrdererOrg/MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 048[0m Adding to config map: [Policy] /Channel/Orderer/OrdererOrg/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 049[0m Adding to config map: [Policy] /Channel/Orderer/OrdererOrg/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04a[0m Adding to config map: [Policy] /Channel/Orderer/OrdererOrg/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04b[0m Adding to config map: [Values] /Channel/Orderer/ConsensusType
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04c[0m Adding to config map: [Values] /Channel/Orderer/BatchSize
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04d[0m Adding to config map: [Values] /Channel/Orderer/BatchTimeout
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04e[0m Adding to config map: [Values] /Channel/Orderer/ChannelRestrictions
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 04f[0m Adding to config map: [Policy] /Channel/Orderer/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 050[0m Adding to config map: [Policy] /Channel/Orderer/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 051[0m Adding to config map: [Policy] /Channel/Orderer/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 052[0m Adding to config map: [Policy] /Channel/Orderer/BlockValidation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 053[0m Adding to config map: [Values] /Channel/OrdererAddresses
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 054[0m Adding to config map: [Values] /Channel/HashingAlgorithm
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.532 UTC [common/configtx] addToMap -> DEBU 055[0m Adding to config map: [Values] /Channel/BlockDataHashingStructure
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/configtx] addToMap -> DEBU 056[0m Adding to config map: [Policy] /Channel/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/configtx] addToMap -> DEBU 057[0m Adding to config map: [Policy] /Channel/Admins
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/configtx] addToMap -> DEBU 058[0m Adding to config map: [Policy] /Channel/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/configtx] processConfig -> DEBU 059[0m Beginning new config for channel testchainid
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] NewStandardValues -> DEBU 05a[0m Initializing protos for *config.ChannelProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] initializeProtosStruct -> DEBU 05b[0m Processing field: HashingAlgorithm
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] initializeProtosStruct -> DEBU 05c[0m Processing field: BlockDataHashingStructure
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] initializeProtosStruct -> DEBU 05d[0m Processing field: OrdererAddresses
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] initializeProtosStruct -> DEBU 05e[0m Processing field: Consortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [policies] ProposePolicy -> DEBU 05f[0m Proposed new policy Writers for Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [policies] ProposePolicy -> DEBU 060[0m Proposed new policy Admins for Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [policies] ProposePolicy -> DEBU 061[0m Proposed new policy Readers for Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [policies] ProposePolicy -> DEBU 062[0m Proposed new policy Admins for Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] NewStandardValues -> DEBU 063[0m Initializing protos for *config.ConsortiumProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.533 UTC [common/config] initializeProtosStruct -> DEBU 064[0m Processing field: ChannelCreationPolicy
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] NewStandardValues -> DEBU 065[0m Initializing protos for *config.OrganizationProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 066[0m Processing field: MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 067[0m Proposed new policy Admins for Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 068[0m Proposed new policy Readers for Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 069[0m Proposed new policy Writers for Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] NewStandardValues -> DEBU 06a[0m Initializing protos for *config.OrganizationProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 06b[0m Processing field: MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 06c[0m Proposed new policy Readers for Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 06d[0m Proposed new policy Writers for Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 06e[0m Proposed new policy Admins for Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] NewStandardValues -> DEBU 06f[0m Initializing protos for *config.OrdererProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 070[0m Processing field: ConsensusType
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 071[0m Processing field: BatchSize
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 072[0m Processing field: BatchTimeout
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 073[0m Processing field: KafkaBrokers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [common/config] initializeProtosStruct -> DEBU 074[0m Processing field: ChannelRestrictions
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.534 UTC [policies] ProposePolicy -> DEBU 075[0m Proposed new policy Writers for Orderer
+[32mcli                       |[0m [36m2017-08-30 13:26:45.998 UTC [golang-platform] GetDeploymentPayload -> DEBU 00d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/pkcs11
+[32mcli                       |[0m [36m2017-08-30 13:26:45.998 UTC [golang-platform] GetDeploymentPayload -> DEBU 00e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/pkcs11 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 00f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/golang
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 010[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/golang exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 011[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/container/util
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 012[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/container/util exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 013[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/msp
+[32mcli                       |[0m [36m2017-08-30 13:26:45.999 UTC [golang-platform] GetDeploymentPayload -> DEBU 014[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/msp exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.000 UTC [golang-platform] GetDeploymentPayload -> DEBU 015[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/op/go-logging
+[32mcli                       |[0m [36m2017-08-30 13:26:46.000 UTC [golang-platform] GetDeploymentPayload -> DEBU 016[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/op/go-logging exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.000 UTC [golang-platform] GetDeploymentPayload -> DEBU 017[0m processing dep: html/template
+[32mcli                       |[0m [36m2017-08-30 13:26:46.000 UTC [golang-platform] GetDeploymentPayload -> DEBU 018[0m checking: /opt/gopath/src/html/template exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 019[0m processing dep: path
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 01a[0m checking: /opt/gopath/src/path exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 01b[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/system
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 01c[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/system exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 01d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/pflag
+[32mcli                       |[0m [36m2017-08-30 13:26:46.001 UTC [golang-platform] GetDeploymentPayload -> DEBU 01e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/pflag exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 01f[0m processing dep: html
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 020[0m checking: /opt/gopath/src/html exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 021[0m processing dep: crypto
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 022[0m checking: /opt/gopath/src/crypto exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 023[0m processing dep: crypto/hmac
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 024[0m checking: /opt/gopath/src/crypto/hmac exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 025[0m processing dep: encoding/json
+[32mcli                       |[0m [36m2017-08-30 13:26:46.002 UTC [golang-platform] GetDeploymentPayload -> DEBU 026[0m checking: /opt/gopath/src/encoding/json exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 027[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/engine-api/types/versions
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 028[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/engine-api/types/versions exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 029[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/proto
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 02a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/proto exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 02b[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/common
+[32mcli                       |[0m [36m2017-08-30 13:26:46.003 UTC [golang-platform] GetDeploymentPayload -> DEBU 02c[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/common exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 02d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/homedir
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 02e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/homedir exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 02f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/pools
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 030[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/pools exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 031[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/comm
+[32mcli                       |[0m [36m2017-08-30 13:26:46.004 UTC [golang-platform] GetDeploymentPayload -> DEBU 032[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/comm exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 033[0m processing dep: log
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 034[0m checking: /opt/gopath/src/log exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 035[0m processing dep: runtime
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 036[0m checking: /opt/gopath/src/runtime exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 037[0m processing dep: context
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 038[0m checking: /opt/gopath/src/context exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.005 UTC [golang-platform] GetDeploymentPayload -> DEBU 039[0m processing dep: crypto/x509/pkix
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03a[0m checking: /opt/gopath/src/crypto/x509/pkix exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03b[0m processing dep: encoding/base64
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03c[0m checking: /opt/gopath/src/encoding/base64 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03d[0m processing dep: internal/race
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03e[0m checking: /opt/gopath/src/internal/race exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 03f[0m processing dep: math/big
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 040[0m checking: /opt/gopath/src/math/big exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 041[0m processing dep: unsafe
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 042[0m checking: /opt/gopath/src/unsafe exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 043[0m processing dep: compress/bzip2
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 044[0m checking: /opt/gopath/src/compress/bzip2 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 045[0m processing dep: crypto/dsa
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 046[0m checking: /opt/gopath/src/crypto/dsa exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 047[0m processing dep: crypto/sha512
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 048[0m checking: /opt/gopath/src/crypto/sha512 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.006 UTC [golang-platform] GetDeploymentPayload -> DEBU 049[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/BurntSushi/toml
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/BurntSushi/toml exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04b[0m processing dep: net/textproto
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04c[0m checking: /opt/gopath/src/net/textproto exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04d[0m processing dep: reflect
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04e[0m checking: /opt/gopath/src/reflect exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 04f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/binary
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 050[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/binary exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 051[0m processing dep: encoding/asn1
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 052[0m checking: /opt/gopath/src/encoding/asn1 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 053[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/fileutils
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 054[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/fileutils exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 055[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/magiconair/properties
+[32mcli                       |[0m [36m2017-08-30 13:26:46.007 UTC [golang-platform] GetDeploymentPayload -> DEBU 056[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/magiconair/properties exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 057[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclog
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 058[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclog exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 059[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/gopkg.in/yaml.v2
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/gopkg.in/yaml.v2 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05b[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/promise
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05c[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/promise exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/msp
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/msp exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 05f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/stats
+[32mcli                       |[0m [36m2017-08-30 13:26:46.008 UTC [golang-platform] GetDeploymentPayload -> DEBU 060[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/stats exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 061[0m processing dep: math
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 062[0m checking: /opt/gopath/src/math exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 063[0m processing dep: text/template
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 064[0m checking: /opt/gopath/src/text/template exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 065[0m processing dep: encoding/pem
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 066[0m checking: /opt/gopath/src/encoding/pem exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 067[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/idtools
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 068[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/idtools exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 069[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/java
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 076[0m Proposed new policy Admins for Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 077[0m Proposed new policy BlockValidation for Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 078[0m Proposed new policy Readers for Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [common/config] NewStandardValues -> DEBU 079[0m Initializing protos for *config.OrganizationProtos
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [common/config] initializeProtosStruct -> DEBU 07a[0m Processing field: MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 07b[0m Proposed new policy Writers for OrdererOrg
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 07c[0m Proposed new policy Admins for OrdererOrg
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [policies] ProposePolicy -> DEBU 07d[0m Proposed new policy Readers for OrdererOrg
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [common/config/channel] validateMSP -> DEBU 07e[0m Setting up MSP for org Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [msp] NewBccspMsp -> DEBU 07f[0m Creating BCCSP-based MSP instance
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [msp] Setup -> DEBU 080[0m Setting up MSP instance Org2MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.535 UTC [msp/identity] newIdentity -> DEBU 081[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICRDCCAeqgAwIBAgIRANqpQ8r//fDaj4j6kuGJv8gwCgYIKoZIzj0EAwIwczEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xGTAXBgNVBAoTEG9yZzIuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+[33morderer.example.com       |[0m Lm9yZzIuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+[33morderer.example.com       |[0m WjBzMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+[33morderer.example.com       |[0m U2FuIEZyYW5jaXNjbzEZMBcGA1UEChMQb3JnMi5leGFtcGxlLmNvbTEcMBoGA1UE
+[33morderer.example.com       |[0m AxMTY2Eub3JnMi5leGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
+[33morderer.example.com       |[0m BLdwS4lO/WKTrsQt+Q2bLMIbntuM7Teg6fEXvKrpIHFNzaCsTlemFUVxQUugQfUA
+[33morderer.example.com       |[0m /GGIaomaE1STfvbCtElCsSOjXzBdMA4GA1UdDwEB/wQEAwIBpjAPBgNVHSUECDAG
+[33morderer.example.com       |[0m BgRVHSUAMA8GA1UdEwEB/wQFMAMBAf8wKQYDVR0OBCIEIKJZIE29atsUwFpuAt6U
+[33morderer.example.com       |[0m Vnsqn32+nmoGO6dn1CvwtUTBMAoGCCqGSM49BAMCA0gAMEUCIQCH8+Vw0L38dv/v
+[33morderer.example.com       |[0m 9gWvLhQv69q2bS0FBiAFwR4M17Z/2QIgH5W6rmsItiwa7nD0eZyiGmCzzQXW01b4
+[33morderer.example.com       |[0m 5fDo4hNhETQ=
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.536 UTC [msp/identity] newIdentity -> DEBU 082[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICGDCCAb+gAwIBAgIQeIi7Jkt6rpWXkiSbOmf4xDAKBggqhkjOPQQDAjBzMQsw
+[33morderer.example.com       |[0m CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+[33morderer.example.com       |[0m YW5jaXNjbzEZMBcGA1UEChMQb3JnMi5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
+[33morderer.example.com       |[0m b3JnMi5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
+[33morderer.example.com       |[0m MFsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
+[33morderer.example.com       |[0m YW4gRnJhbmNpc2NvMR8wHQYDVQQDDBZBZG1pbkBvcmcyLmV4YW1wbGUuY29tMFkw
+[33morderer.example.com       |[0m EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEif0ijI8mqocquTYxvQ1l1ldjmSLZ+cF+
+[33morderer.example.com       |[0m spBCzQtFF16kuyL3efK9oJo7AF+iNGAontz/YLQ33pvpzNTTd3O+m6NNMEswDgYD
+[33morderer.example.com       |[0m VR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgolkgTb1q2xTA
+[33morderer.example.com       |[0m Wm4C3pRWeyqffb6eagY7p2fUK/C1RMEwCgYIKoZIzj0EAwIDRwAwRAIgGQA094Rt
+[33morderer.example.com       |[0m HxCZ93sdCLiqs0GM8jq2uoa18DS48OqfLIYCIGhv/mMS6aK63cXPwJO/ViJRJvSH
+[33morderer.example.com       |[0m STrxiXhat7xfrSAE
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.537 UTC [msp/identity] newIdentity -> DEBU 083[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICGDCCAb+gAwIBAgIQeIi7Jkt6rpWXkiSbOmf4xDAKBggqhkjOPQQDAjBzMQsw
+[33morderer.example.com       |[0m CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+[33morderer.example.com       |[0m YW5jaXNjbzEZMBcGA1UEChMQb3JnMi5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
+[33morderer.example.com       |[0m b3JnMi5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
+[33morderer.example.com       |[0m MFsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
+[33morderer.example.com       |[0m YW4gRnJhbmNpc2NvMR8wHQYDVQQDDBZBZG1pbkBvcmcyLmV4YW1wbGUuY29tMFkw
+[33morderer.example.com       |[0m EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEif0ijI8mqocquTYxvQ1l1ldjmSLZ+cF+
+[33morderer.example.com       |[0m spBCzQtFF16kuyL3efK9oJo7AF+iNGAontz/YLQ33pvpzNTTd3O+m6NNMEswDgYD
+[33morderer.example.com       |[0m VR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgolkgTb1q2xTA
+[33morderer.example.com       |[0m Wm4C3pRWeyqffb6eagY7p2fUK/C1RMEwCgYIKoZIzj0EAwIDRwAwRAIgGQA094Rt
+[33morderer.example.com       |[0m HxCZ93sdCLiqs0GM8jq2uoa18DS48OqfLIYCIGhv/mMS6aK63cXPwJO/ViJRJvSH
+[33morderer.example.com       |[0m STrxiXhat7xfrSAE
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.538 UTC [msp] Validate -> DEBU 084[0m MSP Org2MSP validating identity
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.539 UTC [common/config/channel] validateMSP -> DEBU 085[0m Setting up MSP for org Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.539 UTC [msp] NewBccspMsp -> DEBU 086[0m Creating BCCSP-based MSP instance
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.539 UTC [msp] Setup -> DEBU 087[0m Setting up MSP instance Org1MSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.539 UTC [msp/identity] newIdentity -> DEBU 088[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICQzCCAemgAwIBAgIQYZpqGmcswky9Iy1SHBIm8zAKBggqhkjOPQQDAjBzMQsw
+[33morderer.example.com       |[0m CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+[33morderer.example.com       |[0m YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
+[33morderer.example.com       |[0m b3JnMS5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
+[33morderer.example.com       |[0m MHMxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
+[33morderer.example.com       |[0m YW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMRwwGgYDVQQD
+[33morderer.example.com       |[0m ExNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+[33morderer.example.com       |[0m 3WtPeUzseT9Wp9VUtkx6mF84plyhgTlI2pbrHa4wYKFSoQGmrt83px6Q5Qu9EmhW
+[33morderer.example.com       |[0m 1y6Fr8DxkHvvg1NX0bCGyaNfMF0wDgYDVR0PAQH/BAQDAgGmMA8GA1UdJQQIMAYG
+[33morderer.example.com       |[0m BFUdJQAwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQgh5HRNj6JUV+a+gQrBpOi
+[33morderer.example.com       |[0m xwS7jdldKPl9NUmiuePENS0wCgYIKoZIzj0EAwIDSAAwRQIhALUmxdk1FP8uL1so
+[33morderer.example.com       |[0m nLdU8D8CS2PW5DLbaMjhR1KVK3b7AiAD5vkgX1PXPRsFFYlbkp/Y+nDdDy+mk3N7
+[33morderer.example.com       |[0m K7xCT/QO7Q==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.540 UTC [msp/identity] newIdentity -> DEBU 089[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICGjCCAcCgAwIBAgIRAIQkbh9nsGnLmDalAVlj8sUwCgYIKoZIzj0EAwIwczEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+[33morderer.example.com       |[0m Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+[33morderer.example.com       |[0m WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+[33morderer.example.com       |[0m U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWQWRtaW5Ab3JnMS5leGFtcGxlLmNvbTBZ
+[33morderer.example.com       |[0m MBMGByqGSM49AgEGCCqGSM49AwEHA0IABH5hECfx0WkNAPK8MDsko+Xk+hl6ePeb
+[33morderer.example.com       |[0m Uo6cyvL+Y5lydedMiHYBJXiyzxWW7MFzIcYC/sEKbFfEOSNxX17Ju/yjTTBLMA4G
+[33morderer.example.com       |[0m A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+[33morderer.example.com       |[0m mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0gAMEUCIQDVf8cL
+[33morderer.example.com       |[0m NrfToiPzJpEFPGF+/8CpzOkl91oz+XJsvdgf5wIgI/e8mpvpplUQbU52+LejA36D
+[33morderer.example.com       |[0m CsbWERvZPjR/GFEDEvc=
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.540 UTC [msp/identity] newIdentity -> DEBU 08a[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICGjCCAcCgAwIBAgIRAIQkbh9nsGnLmDalAVlj8sUwCgYIKoZIzj0EAwIwczEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+[33morderer.example.com       |[0m Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+[33morderer.example.com       |[0m WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+[33morderer.example.com       |[0m U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWQWRtaW5Ab3JnMS5leGFtcGxlLmNvbTBZ
+[33morderer.example.com       |[0m MBMGByqGSM49AgEGCCqGSM49AwEHA0IABH5hECfx0WkNAPK8MDsko+Xk+hl6ePeb
+[33morderer.example.com       |[0m Uo6cyvL+Y5lydedMiHYBJXiyzxWW7MFzIcYC/sEKbFfEOSNxX17Ju/yjTTBLMA4G
+[33morderer.example.com       |[0m A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+[33morderer.example.com       |[0m mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0gAMEUCIQDVf8cL
+[33morderer.example.com       |[0m NrfToiPzJpEFPGF+/8CpzOkl91oz+XJsvdgf5wIgI/e8mpvpplUQbU52+LejA36D
+[33morderer.example.com       |[0m CsbWERvZPjR/GFEDEvc=
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.541 UTC [msp] Validate -> DEBU 08b[0m MSP Org1MSP validating identity
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.541 UTC [common/config/channel] validateMSP -> DEBU 08c[0m Setting up MSP for org OrdererOrg
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.541 UTC [msp] NewBccspMsp -> DEBU 08d[0m Creating BCCSP-based MSP instance
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.541 UTC [msp] Setup -> DEBU 08e[0m Setting up MSP instance OrdererMSP
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.542 UTC [msp/identity] newIdentity -> DEBU 08f[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICLjCCAdWgAwIBAgIQGM2AkPg9AkeAPXmZcGCicjAKBggqhkjOPQQDAjBpMQsw
+[33morderer.example.com       |[0m CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+[33morderer.example.com       |[0m YW5jaXNjbzEUMBIGA1UEChMLZXhhbXBsZS5jb20xFzAVBgNVBAMTDmNhLmV4YW1w
+[33morderer.example.com       |[0m bGUuY29tMB4XDTE3MDcyODE0MjcyMFoXDTI3MDcyNjE0MjcyMFowaTELMAkGA1UE
+[33morderer.example.com       |[0m BhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lz
+[33morderer.example.com       |[0m Y28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFtcGxlLmNv
+[33morderer.example.com       |[0m bTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABInydWsy9S2ni186+/gaOUTwcmQY
+[33morderer.example.com       |[0m aH7n+sNTdGQf/quWP6cX820zx1NbzCfmXDUGLPmTZt2Hw0vt1pLaPWRXkIijXzBd
+[33morderer.example.com       |[0m MA4GA1UdDwEB/wQEAwIBpjAPBgNVHSUECDAGBgRVHSUAMA8GA1UdEwEB/wQFMAMB
+[33morderer.example.com       |[0m Af8wKQYDVR0OBCIEIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY955X1fiUIWHkMAoG
+[33morderer.example.com       |[0m CCqGSM49BAMCA0cAMEQCIEfrUA9XaRDYojIxAFSkZVtaYr+ODOE9L9ijVjaWZKJn
+[33morderer.example.com       |[0m AiB+YdLmNUZ1JZWCXxysrTA9+0MVbJNmPLIer/TOXl3gDw==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.542 UTC [msp/identity] newIdentity -> DEBU 090[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICCjCCAbGgAwIBAgIRAP6rTgrL8PUGUhDZBlTbttkwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFYxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRowGAYDVQQDDBFBZG1pbkBleGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqG
+[33morderer.example.com       |[0m SM49AwEHA0IABLXVt4VsmmX0x1VZhy4OTyrt5JRgiiFRj8IvIJU3P5QBbfYqLTQp
+[33morderer.example.com       |[0m ZaUacKVcwRqI6JxVKb5tRqSiDibxmToRlB2jTTBLMA4GA1UdDwEB/wQEAwIHgDAM
+[33morderer.example.com       |[0m BgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY
+[33morderer.example.com       |[0m 955X1fiUIWHkMAoGCCqGSM49BAMCA0cAMEQCIEUawoXMhrxTpSEbc771wftWbUmr
+[33morderer.example.com       |[0m aMF8y6IHxWMDzB6HAiA+rr9DsGKN+rG+/r9OyUiKu/Hm+wULC5ejqJlhPciwug==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.544 UTC [msp/identity] newIdentity -> DEBU 091[0m Creating identity instance for cert -----BEGIN CERTIFICATE-----
+[33morderer.example.com       |[0m MIICCjCCAbGgAwIBAgIRAP6rTgrL8PUGUhDZBlTbttkwCgYIKoZIzj0EAwIwaTEL
+[33morderer.example.com       |[0m MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+[33morderer.example.com       |[0m cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRcwFQYDVQQDEw5jYS5leGFt
+[33morderer.example.com       |[0m cGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBaMFYxCzAJBgNV
+[33morderer.example.com       |[0m BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNp
+[33morderer.example.com       |[0m c2NvMRowGAYDVQQDDBFBZG1pbkBleGFtcGxlLmNvbTBZMBMGByqGSM49AgEGCCqG
+[33morderer.example.com       |[0m SM49AwEHA0IABLXVt4VsmmX0x1VZhy4OTyrt5JRgiiFRj8IvIJU3P5QBbfYqLTQp
+[33morderer.example.com       |[0m ZaUacKVcwRqI6JxVKb5tRqSiDibxmToRlB2jTTBLMA4GA1UdDwEB/wQEAwIHgDAM
+[33morderer.example.com       |[0m BgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIJK458q8FXEj4wiUtP/T+j6Uy0mb2ntY
+[33morderer.example.com       |[0m 955X1fiUIWHkMAoGCCqGSM49BAMCA0cAMEQCIEUawoXMhrxTpSEbc771wftWbUmr
+[33morderer.example.com       |[0m aMF8y6IHxWMDzB6HAiA+rr9DsGKN+rG+/r9OyUiKu/Hm+wULC5ejqJlhPciwug==
+[33morderer.example.com       |[0m -----END CERTIFICATE-----
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [msp] Validate -> DEBU 092[0m MSP OrdererMSP validating identity
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [msp] Setup -> DEBU 093[0m Setting up the MSP manager (3 msps)
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [msp] Setup -> DEBU 094[0m MSP manager setup complete, setup 3 msps
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 095[0m Returning policy Admins from manager /Channel/Consortiums/SampleConsortium/Org2MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 096[0m In commit adding relative sub-policy Org2MSP/Admins to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 097[0m Returning policy Readers from manager /Channel/Consortiums/SampleConsortium/Org2MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 098[0m In commit adding relative sub-policy Org2MSP/Readers to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 099[0m Returning policy Writers from manager /Channel/Consortiums/SampleConsortium/Org2MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 09a[0m In commit adding relative sub-policy Org2MSP/Writers to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 09b[0m Returning policy Readers from manager /Channel/Consortiums/SampleConsortium/Org1MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 09c[0m In commit adding relative sub-policy Org1MSP/Readers to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 09d[0m Returning policy Writers from manager /Channel/Consortiums/SampleConsortium/Org1MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 09e[0m In commit adding relative sub-policy Org1MSP/Writers to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] GetPolicy -> DEBU 09f[0m Returning policy Admins from manager /Channel/Consortiums/SampleConsortium/Org1MSP for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.545 UTC [policies] CommitProposals -> DEBU 0a0[0m In commit adding relative sub-policy Org1MSP/Admins to SampleConsortium
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] GetPolicy -> DEBU 0a1[0m Returning policy Org2MSP/Admins from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] CommitProposals -> DEBU 0a2[0m In commit adding relative sub-policy SampleConsortium/Org2MSP/Admins to Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] GetPolicy -> DEBU 0a3[0m Returning policy Org2MSP/Readers from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] CommitProposals -> DEBU 0a4[0m In commit adding relative sub-policy SampleConsortium/Org2MSP/Readers to Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] GetPolicy -> DEBU 0a5[0m Returning policy Org2MSP/Writers from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] CommitProposals -> DEBU 0a6[0m In commit adding relative sub-policy SampleConsortium/Org2MSP/Writers to Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.546 UTC [policies] GetPolicy -> DEBU 0a7[0m Returning policy Org1MSP/Readers from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0a8[0m In commit adding relative sub-policy SampleConsortium/Org1MSP/Readers to Consortiums
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/java exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06b[0m processing dep: internal/nettrace
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06c[0m checking: /opt/gopath/src/internal/nettrace exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/shim
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/shim exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.009 UTC [golang-platform] GetDeploymentPayload -> DEBU 06f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/fsouza/go-dockerclient
+[32mcli                       |[0m [36m2017-08-30 13:26:46.010 UTC [golang-platform] GetDeploymentPayload -> DEBU 070[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/fsouza/go-dockerclient exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 071[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/utils
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 072[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/utils exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 073[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/car
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 074[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/car exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 075[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/util
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 076[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/util exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 077[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/peer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.011 UTC [golang-platform] GetDeploymentPayload -> DEBU 078[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/peer exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 079[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/looplab/fsm
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/looplab/fsm exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07b[0m processing dep: net/http/httputil
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07c[0m checking: /opt/gopath/src/net/http/httputil exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07d[0m processing dep: vendor/golang_org/x/net/lex/httplex
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07e[0m checking: /opt/gopath/src/vendor/golang_org/x/net/lex/httplex exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 07f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] GetDeploymentPayload -> DEBU 080[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] func1 -> DEBU 081[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/factory
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] func1 -> DEBU 082[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/pkcs11
+[32mcli                       |[0m [36m2017-08-30 13:26:46.012 UTC [golang-platform] func1 -> DEBU 083[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/signer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] func1 -> DEBU 084[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/sw
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] func1 -> DEBU 085[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/utils
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 086[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/lex/httplex
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 087[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/lex/httplex exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 088[0m processing dep: hash
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 089[0m checking: /opt/gopath/src/hash exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08a[0m processing dep: mime/quotedprintable
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08b[0m checking: /opt/gopath/src/mime/quotedprintable exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08c[0m processing dep: sync/atomic
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08d[0m checking: /opt/gopath/src/sync/atomic exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08e[0m processing dep: bytes
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 08f[0m checking: /opt/gopath/src/bytes exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 090[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/codes
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 091[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/codes exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 092[0m processing dep: strconv
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 093[0m checking: /opt/gopath/src/strconv exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 094[0m processing dep: syscall
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 095[0m checking: /opt/gopath/src/syscall exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 096[0m processing dep: text/tabwriter
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 097[0m checking: /opt/gopath/src/text/tabwriter exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.013 UTC [golang-platform] GetDeploymentPayload -> DEBU 098[0m processing dep: crypto/des
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0a9[0m Returning policy Org1MSP/Writers from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0aa[0m In commit adding relative sub-policy SampleConsortium/Org1MSP/Writers to Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0ab[0m Returning policy Org1MSP/Admins from manager /Channel/Consortiums/SampleConsortium for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0ac[0m In commit adding relative sub-policy SampleConsortium/Org1MSP/Admins to Consortiums
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0ad[0m Returning policy Writers from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0ae[0m In commit adding relative sub-policy OrdererOrg/Writers to Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0af[0m Returning policy Admins from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0b0[0m In commit adding relative sub-policy OrdererOrg/Admins to Orderer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 099[0m checking: /opt/gopath/src/crypto/des exists: false
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] Created default configuration file at /etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] Starting server in home directory: /etc/hyperledger/fabric-ca-server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] CA Home Directory: /etc/hyperledger/fabric-ca-server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Making server filenames absolute
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b1[0m Returning policy Readers from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0b2[0m In commit adding relative sub-policy OrdererOrg/Readers to Orderer
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b3[0m Returning policy Writers from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b4[0m Returning policy Admins from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b5[0m Returning policy Writers from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b6[0m Returning policy Readers from manager /Channel/Orderer/OrdererOrg for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b7[0m Returning policy OrdererOrg/Admins from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0b8[0m In commit adding relative sub-policy Orderer/OrdererOrg/Admins to Channel
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing default CA in directory /etc/hyperledger/fabric-ca-server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Init CA with home /etc/hyperledger/fabric-ca-server and config {CA:{Name:ca-org1 Keyfile:/etc/hyperledger/fabric-ca-server-config/a22daf356b2aab5792ea53e35f66fccef1d7f1aa2b3a2b92dbfbf96a448ea26a_sk Certfile:/etc/hyperledger/fabric-ca-server-config/org1.example.com-cert.pem Chainfile:ca-chain.pem} Signing:0xc4202d0d20 CSR:{CN:fabric-ca-server Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[ea8f84c0a1c1 localhost] KeyRequest:<nil> CA:0xc4202cc4a0 SerialNumber:} Registry:{MaxEnrollments:-1 Identities:[{ Name:admin Pass:**** Type:client Affiliation: MaxEnrollments:-1 Attrs:map[hf.Revoker:1 hf.IntermediateCA:1 hf.Registrar.Roles:client,user,peer,validator,auditor hf.Registrar.DelegateRoles:client,user,validator,auditor]  }]} Affiliations:map[org1:[department1 department2] org2:[department1]] LDAP:{Enabled:false URL:ldap://<adminDN>:<adminPassword>@<host>:<port>/<base> UserFilter:(uid=%s) GroupFilter:(memberUid=%s) TLS:{Enabled:false CertFiles:[ldap-server-cert.pem] Client:{KeyFile:ldap-client-key.pem CertFile:ldap-client-cert.pem}}} DB:{Type:sqlite3 Datasource:fabric-ca-server.db TLS:{Enabled:false CertFiles:[db-server-cert.pem] Client:{KeyFile:db-client-key.pem CertFile:db-client-cert.pem}}} CSP:0xc4202cca60 Client:<nil> Intermediate:{ParentServer:{URL: CAName:} TLS:{Enabled:false CertFiles:[] Client:{KeyFile: CertFile:}} Enrollment:{Name: Secret: Profile: Label: CSR:<nil> CAName:}}}
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] CA Home Directory: /etc/hyperledger/fabric-ca-server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing BCCSP: &{ProviderName:SW SwOpts:0xc4202bcf30 Pkcs11Opts:<nil>}
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing BCCSP with software options &{SecLevel:256 HashFamily:SHA2 Ephemeral:false FileKeystore:0xc4202d0700 DummyKeystore:<nil>}
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0b9[0m Returning policy OrdererOrg/Readers from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0ba[0m In commit adding relative sub-policy Orderer/OrdererOrg/Readers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0bb[0m Returning policy Writers from manager /Channel/Orderer for evaluation
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initialize key material
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Making CA filenames absolute
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0bc[0m In commit adding relative sub-policy Orderer/Writers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0bd[0m Returning policy Admins from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0be[0m In commit adding relative sub-policy Orderer/Admins to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] GetPolicy -> DEBU 0bf[0m Returning policy BlockValidation from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.547 UTC [policies] CommitProposals -> DEBU 0c0[0m In commit adding relative sub-policy Orderer/BlockValidation to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0c1[0m Returning policy Readers from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0c2[0m In commit adding relative sub-policy Orderer/Readers to Channel
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Getting CA cert; parent server URL is ''
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Root CA certificate request: {CN:fabric-ca-server Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[ea8f84c0a1c1 localhost] KeyRequest:0xc4202dd440 CA:0xc4202cc4a0 SerialNumber:}
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] generating key: &{A:ecdsa S:256}
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] generate key from request: algo=ecdsa, size=256
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] encoded CSR
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] validating configuration
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] validate local profile
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] profile is valid
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0c3[0m Returning policy OrdererOrg/Writers from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0c4[0m In commit adding relative sub-policy Orderer/OrdererOrg/Writers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0c5[0m Returning policy SampleConsortium/Org1MSP/Writers from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0c6[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org1MSP/Writers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0c7[0m Returning policy SampleConsortium/Org1MSP/Admins from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0c8[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org1MSP/Admins to Channel
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] signed certificate with serial number 204571566023195730523581816618402579525850839318
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] The CA key and certificate were generated for CA ca-org1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] The key was stored by BCCSP provider 'SW'
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] The certificate is at: /etc/hyperledger/fabric-ca-server-config/org1.example.com-cert.pem
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0c9[0m Returning policy Admins from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0ca[0m In commit adding relative sub-policy Consortiums/Admins to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0cb[0m Returning policy SampleConsortium/Org2MSP/Admins from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0cc[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org2MSP/Admins to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0cd[0m Returning policy SampleConsortium/Org2MSP/Readers from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0ce[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org2MSP/Readers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0cf[0m Returning policy SampleConsortium/Org2MSP/Writers from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0d0[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org2MSP/Writers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d1[0m Returning policy SampleConsortium/Org1MSP/Readers from manager /Channel/Consortiums for evaluation
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing 'sqlite3' database at '/etc/hyperledger/fabric-ca-server/fabric-ca-server.db'
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Using sqlite database, connect to database in home (/etc/hyperledger/fabric-ca-server/fabric-ca-server.db) directory
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] CommitProposals -> DEBU 0d2[0m In commit adding relative sub-policy Consortiums/SampleConsortium/Org1MSP/Readers to Channel
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d3[0m Returning dummy reject all policy because Writers could not be found in /Consortiums/Writers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d4[0m Returning policy Writers from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d5[0m Returning policy Admins from manager /Channel/Consortiums for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d6[0m Returning policy Admins from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d7[0m Returning dummy reject all policy because Readers could not be found in /Consortiums/Readers
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d8[0m Returning policy Readers from manager /Channel/Orderer for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [policies] GetPolicy -> DEBU 0d9[0m Returning policy Readers from manager /Channel for evaluation
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Database (/etc/hyperledger/fabric-ca-server/fabric-ca-server.db) does not exist
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Creating SQLite Database...
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Database location: /etc/hyperledger/fabric-ca-server/fabric-ca-server.db
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Creating tables...
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Created users table
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.548 UTC [common/config/channel] CommitProposals -> DEBU 0da[0m As expected, current configuration has policy '/Channel/Readers'
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [policies] GetPolicy -> DEBU 0db[0m Returning policy Writers from manager /Channel for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [common/config/channel] CommitProposals -> DEBU 0dc[0m As expected, current configuration has policy '/Channel/Writers'
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [policies] GetPolicy -> DEBU 0dd[0m Returning policy Orderer/BlockValidation from manager /Channel for evaluation
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [common/config/channel] CommitProposals -> DEBU 0de[0m As expected, current configuration has policy '/Channel/Orderer/BlockValidation'
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] newBlockfileStream -> DEBU 0df[0m newBlockfileStream(): filePath=[/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000], startOffset=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e0[0m Remaining bytes=[9061], Going to peek [8] bytes
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e1[0m Returning blockbytes - length=[9059], placementInfo={fileNum=[0], startOffset=[0], bytesOffset=[2]}
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e2[0m blockbytes [9059] read from file [0]
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09a[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/stdcopy
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09b[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/stdcopy exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09c[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/factory
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09d[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/factory exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09e[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/http2
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 09f[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/http2 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] func1 -> DEBU 0a0[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/http2/hpack
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a1[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/trace
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a2[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/trace exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a3[0m processing dep: compress/gzip
+[32mcli                       |[0m [36m2017-08-30 13:26:46.014 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a4[0m checking: /opt/gopath/src/compress/gzip exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a5[0m processing dep: flag
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a6[0m checking: /opt/gopath/src/flag exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a7[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/http2/hpack
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a8[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/http2/hpack exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0a9[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/archive
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0aa[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/archive exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ab[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/ledger
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ac[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/ledger exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ad[0m processing dep: hash/crc32
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ae[0m checking: /opt/gopath/src/hash/crc32 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0af[0m processing dep: io/ioutil
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b0[0m checking: /opt/gopath/src/io/ioutil exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b1[0m processing dep: mime
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b2[0m checking: /opt/gopath/src/mime exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b3[0m processing dep: crypto/rand
+[32mcli                       |[0m [36m2017-08-30 13:26:46.015 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b4[0m checking: /opt/gopath/src/crypto/rand exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b5[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/opts
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b6[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/opts exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b7[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0b8[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] func1 -> DEBU 0b9[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/binary
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] func1 -> DEBU 0ba[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/car
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] func1 -> DEBU 0bb[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/golang
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] func1 -> DEBU 0bc[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/java
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] func1 -> DEBU 0bd[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/chaincode/platforms/util
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0be[0m processing dep: net/http/httptrace
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0bf[0m checking: /opt/gopath/src/net/http/httptrace exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c0[0m processing dep: encoding/binary
+[32mcli                       |[0m [36m2017-08-30 13:26:46.016 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c1[0m checking: /opt/gopath/src/encoding/binary exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c2[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/ledger/queryresult
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c3[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/ledger/queryresult exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c4[0m processing dep: net/url
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c5[0m checking: /opt/gopath/src/net/url exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c6[0m processing dep: crypto/elliptic
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c7[0m checking: /opt/gopath/src/crypto/elliptic exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c8[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/cast
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0c9[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/cast exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ca[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/genproto/googleapis/rpc/status
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0cb[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/genproto/googleapis/rpc/status exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0cc[0m processing dep: encoding/hex
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0cd[0m checking: /opt/gopath/src/encoding/hex exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ce[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/empty
+[32mcli                       |[0m [36m2017-08-30 13:26:46.017 UTC [golang-platform] GetDeploymentPayload -> DEBU 0cf[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/empty exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d0[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/timestamp
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d1[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/timestamp exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d2[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/miekg/pkcs11
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d3[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/miekg/pkcs11 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d4[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/crypto/sha3
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d5[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/crypto/sha3 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d6[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/metadata
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d7[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/metadata exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d8[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/naming
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0d9[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/naming exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0da[0m processing dep: os/exec
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0db[0m checking: /opt/gopath/src/os/exec exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.018 UTC [golang-platform] GetDeploymentPayload -> DEBU 0dc[0m processing dep: path/filepath
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0dd[0m checking: /opt/gopath/src/path/filepath exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0de[0m processing dep: crypto/sha256
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0df[0m checking: /opt/gopath/src/crypto/sha256 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e0[0m processing dep: crypto/tls
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e1[0m checking: /opt/gopath/src/crypto/tls exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e2[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/flogging
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e3[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/flogging exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e4[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/keepalive
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e5[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/keepalive exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e6[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/tap
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Created affiliation table
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [orderer/multichannel] newBlockWriter -> DEBU 0e3[0m [channel: testchainid] Creating block writer for tip of chain (blockNumber=0, lastConfigBlockNum=0, lastConfigSeq=0)
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [orderer/multichannel] newChainSupport -> DEBU 0e4[0m [channel: testchainid] Done creating channel support resources
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [common/msgprocessor] NewSystemChannel -> DEBU 0e5[0m Creating system channel msg processor for channel testchainid
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] newBlockfileStream -> DEBU 0e6[0m newBlockfileStream(): filePath=[/var/hyperledger/production/orderer/chains/testchainid/blockfile_000000], startOffset=[0]
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e7[0m Remaining bytes=[9061], Going to peek [8] bytes
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.549 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e8[0m Returning blockbytes - length=[9059], placementInfo={fileNum=[0], startOffset=[0], bytesOffset=[2]}
+[33morderer.example.com       |[0m [36m2017-08-30 13:26:37.550 UTC [fsblkstorage] nextBlockBytesAndPlacementInfo -> DEBU 0e9[0m blockbytes [9059] read from file [0]
+[33morderer.example.com       |[0m 2017-08-30 13:26:37.550 UTC [orderer/multichannel] NewRegistrar -> INFO 0ea[0m Starting system channel 'testchainid' with genesis block hash 72bc7d4e8d236626fbd5e80ca69d4debd735b046dd887f34029e5775c24a145d and orderer type solo
+[33morderer.example.com       |[0m 2017-08-30 13:26:37.550 UTC [orderer/server/main] Start -> INFO 0eb[0m Starting orderer:
+[33morderer.example.com       |[0m  Version: 1.1.0
+[33morderer.example.com       |[0m  Go version: go1.7.5
+[33morderer.example.com       |[0m  OS/Arch: linux/amd64
+[33morderer.example.com       |[0m 2017-08-30 13:26:37.550 UTC [orderer/server/main] initializeSecureServerConfig -> INFO 0ec[0m Starting orderer with TLS enabled
+[33morderer.example.com       |[0m 2017-08-30 13:26:37.552 UTC [orderer/server/main] Start -> INFO 0ed[0m Beginning to serve requests
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Created certificates table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Successfully opened sqlite3 DB
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing identity registry
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initialized DB identity registry
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Loading identity table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Loading identity 'admin'
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Getting identity admin
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Max enrollment value verification - User specified max enrollment: -1, CA max enrollment: -1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add identity admin
+[32mcli                       |[0m [36m2017-08-30 13:26:46.019 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e7[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/tap exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e8[0m processing dep: log/syslog
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0e9[0m checking: /opt/gopath/src/log/syslog exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ea[0m processing dep: runtime/internal/atomic
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0eb[0m checking: /opt/gopath/src/runtime/internal/atomic exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ec[0m processing dep: unicode
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ed[0m checking: /opt/gopath/src/unicode exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ee[0m processing dep: compress/flate
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ef[0m checking: /opt/gopath/src/compress/flate exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f0[0m processing dep: crypto/rsa
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f1[0m checking: /opt/gopath/src/crypto/rsa exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f2[0m processing dep: crypto/x509
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f3[0m checking: /opt/gopath/src/crypto/x509 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f4[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/config
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f5[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/core/config exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f6[0m processing dep: internal/syscall/unix
+[32mcli                       |[0m [36m2017-08-30 13:26:46.020 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f7[0m checking: /opt/gopath/src/internal/syscall/unix exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f8[0m processing dep: regexp/syntax
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0f9[0m checking: /opt/gopath/src/regexp/syntax exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0fa[0m processing dep: runtime/internal/sys
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0fb[0m checking: /opt/gopath/src/runtime/internal/sys exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0fc[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/go-units
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0fd[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/go-units exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0fe[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/any
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 0ff[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/golang/protobuf/ptypes/any exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 100[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/utils
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 101[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/protos/utils exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 102[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclb/grpc_lb_v1
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 103[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclb/grpc_lb_v1 exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 104[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/status
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 105[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/status exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 106[0m processing dep: internal/singleflight
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 107[0m checking: /opt/gopath/src/internal/singleflight exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.021 UTC [golang-platform] GetDeploymentPayload -> DEBU 108[0m processing dep: encoding
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 109[0m checking: /opt/gopath/src/encoding exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10a[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/kr/pretty
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10b[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/kr/pretty exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10c[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/opencontainers/runc/libcontainer/user
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10d[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/opencontainers/runc/libcontainer/user exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10e[0m processing dep: strings
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 10f[0m checking: /opt/gopath/src/strings exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 110[0m processing dep: archive/tar
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 111[0m checking: /opt/gopath/src/archive/tar exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 112[0m processing dep: crypto/sha1
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 113[0m checking: /opt/gopath/src/crypto/sha1 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 114[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/sw
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 115[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/sw exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.022 UTC [golang-platform] GetDeploymentPayload -> DEBU 116[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/crypto
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 117[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/crypto exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 118[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/util
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 119[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/util exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11a[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/credentials
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11b[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/credentials exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11c[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/peer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11d[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/peer exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11e[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/transport
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 11f[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/transport exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 120[0m processing dep: mime/multipart
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 121[0m checking: /opt/gopath/src/mime/multipart exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 122[0m processing dep: net/http
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 123[0m checking: /opt/gopath/src/net/http exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 124[0m processing dep: net/http/internal
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 125[0m checking: /opt/gopath/src/net/http/internal exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 126[0m processing dep: crypto/rc4
+[32mcli                       |[0m [36m2017-08-30 13:26:46.023 UTC [golang-platform] GetDeploymentPayload -> DEBU 127[0m checking: /opt/gopath/src/crypto/rc4 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 128[0m processing dep: crypto/subtle
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 129[0m checking: /opt/gopath/src/crypto/subtle exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12a[0m processing dep: fmt
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12b[0m checking: /opt/gopath/src/fmt exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12c[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/Sirupsen/logrus
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12d[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/Sirupsen/logrus exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12e[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/mitchellh/mapstructure
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 12f[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/mitchellh/mapstructure exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 130[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] GetDeploymentPayload -> DEBU 131[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] func1 -> DEBU 132[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/codes
+[32mcli                       |[0m [36m2017-08-30 13:26:46.024 UTC [golang-platform] func1 -> DEBU 133[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/credentials
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 134[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclb
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 135[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/grpclog
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 136[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/internal
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 137[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/keepalive
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 138[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/metadata
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 139[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/naming
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 13a[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/peer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 13b[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/stats
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 13c[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/status
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 13d[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/tap
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] func1 -> DEBU 13e[0m skipping dir: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/transport
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 13f[0m processing dep: io
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 140[0m checking: /opt/gopath/src/io exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 141[0m processing dep: net
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 142[0m checking: /opt/gopath/src/net exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 143[0m processing dep: sort
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 144[0m checking: /opt/gopath/src/sort exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 145[0m processing dep: text/scanner
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 146[0m checking: /opt/gopath/src/text/scanner exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 147[0m processing dep: bufio
+[32mcli                       |[0m [36m2017-08-30 13:26:46.025 UTC [golang-platform] GetDeploymentPayload -> DEBU 148[0m checking: /opt/gopath/src/bufio exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 149[0m processing dep: crypto/cipher
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14a[0m checking: /opt/gopath/src/crypto/cipher exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14b[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/engine-api/types/filters
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14c[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/engine-api/types/filters exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/kr/text
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/kr/text exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 14f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/errors
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 150[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/errors exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 151[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/idna
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 152[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/idna exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 153[0m processing dep: text/template/parse
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 154[0m checking: /opt/gopath/src/text/template/parse exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 155[0m processing dep: crypto/aes
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 156[0m checking: /opt/gopath/src/crypto/aes exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 157[0m processing dep: crypto/ecdsa
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 158[0m checking: /opt/gopath/src/crypto/ecdsa exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.026 UTC [golang-platform] GetDeploymentPayload -> DEBU 159[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/ioutils
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15a[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/docker/docker/pkg/ioutils exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15b[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/viper
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15c[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/viper exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15d[0m processing dep: math/rand
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15e[0m checking: /opt/gopath/src/math/rand exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 15f[0m processing dep: regexp
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 160[0m checking: /opt/gopath/src/regexp exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 161[0m processing dep: time
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 162[0m checking: /opt/gopath/src/time exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 163[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/metadata
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 164[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/common/metadata exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 165[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/internal/timeseries
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 166[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/internal/timeseries exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 167[0m processing dep: os
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 168[0m checking: /opt/gopath/src/os exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.027 UTC [golang-platform] GetDeploymentPayload -> DEBU 169[0m processing dep: sync
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16a[0m checking: /opt/gopath/src/sync exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16b[0m processing dep: unicode/utf16
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16c[0m checking: /opt/gopath/src/unicode/utf16 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16d[0m processing dep: unicode/utf8
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16e[0m checking: /opt/gopath/src/unicode/utf8 exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 16f[0m processing dep: container/list
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 170[0m checking: /opt/gopath/src/container/list exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 171[0m processing dep: errors
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 172[0m checking: /opt/gopath/src/errors exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 173[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/signer
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 174[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hyperledger/fabric/bccsp/signer exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 175[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/internal
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 176[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/google.golang.org/grpc/internal exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 177[0m processing dep: runtime/cgo
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 178[0m checking: /opt/gopath/src/runtime/cgo exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 179[0m processing dep: vendor/golang_org/x/net/http2/hpack
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 17a[0m checking: /opt/gopath/src/vendor/golang_org/x/net/http2/hpack exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 17b[0m processing dep: encoding/csv
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 17c[0m checking: /opt/gopath/src/encoding/csv exists: false
+[32mcli                       |[0m [36m2017-08-30 13:26:46.028 UTC [golang-platform] GetDeploymentPayload -> DEBU 17d[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hashicorp/go-cleanhttp
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 17e[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/hashicorp/go-cleanhttp exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 17f[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/jwalterweatherman
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 180[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/github.com/spf13/jwalterweatherman exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 181[0m processing dep: github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/context
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 182[0m checking: /opt/gopath/src/github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker/vendor/golang.org/x/net/context exists: true
+[32mcli                       |[0m [36m2017-08-30 13:26:46.029 UTC [golang-platform] GetDeploymentPayload -> DEBU 183[0m done
+[32mcli                       |[0m [36m2017-08-30 13:26:46.216 UTC [chaincodeCmd] chaincodePackage -> DEBU 184[0m Packaged chaincode into deployment spec of size <723161>, with args = [/opt/extsysccs/txnsnapinvoker.golang]
+[32mcli                       |[0m 2017-08-30 13:26:46.217 UTC [main] main -> INFO 185[0m Exiting.....
+[32mcli exited with code 0
+[0m[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Successfully added identity admin to the database
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Registered identity: { Name:admin Pass:**** Type:client Affiliation: MaxEnrollments:-1 Attrs:map[hf.Revoker:1 hf.IntermediateCA:1 hf.Registrar.Roles:client,user,peer,validator,auditor hf.Registrar.DelegateRoles:client,user,validator,auditor]  }
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Successfully loaded identity table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Loading affiliations table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Adding affiliation org2
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add affiliation org2
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Adding affiliation org2.department1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add affiliation org2.department1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Adding affiliation org1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add affiliation org1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Adding affiliation org1.department1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add affiliation org1.department1
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Adding affiliation org1.department2
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] DB: Add affiliation org1.department2
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Successfully loaded affiliations table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Successfully loaded groups table
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] Initialized sqlite3 database at /etc/hyperledger/fabric-ca-server/fabric-ca-server.db
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Initializing enrollment signer
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] validating configuration
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] validate local profile
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] profile is valid
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] validate local profile
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] profile is valid
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] CA initialization successful
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] Home directory for default CA: /etc/hyperledger/fabric-ca-server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] 1 CA instance(s) running on server
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] TLS is enabled
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Could not load TLS certificate with BCCSP: Could not find matching private key for SKI: CSP:500 - Failed getting key for SKI [[155 240 132 160 167 70 176 178 141 10 9 250 200 65 153 120 89 138 69 182 231 109 129 21 14 220 19 171 169 156 194 47]]
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/hyperledger/fabric/bccsp/sw/impl.go:257 github.com/hyperledger/fabric-ca/vendor/github.com/hyperledger/fabric/bccsp/sw.(*impl).GetKey
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/util/csp.go:218 github.com/hyperledger/fabric-ca/util.GetSignerFromCert
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/util/csp.go:340 github.com/hyperledger/fabric-ca/util.LoadX509KeyPair
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/lib/server.go:450 github.com/hyperledger/fabric-ca/lib.(*Server).listenAndServe
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/lib/server.go:127 github.com/hyperledger/fabric-ca/lib.(*Server).Start
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/cmd/fabric-ca-server/start.go:41 main.runStart
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra/command.go:643 github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra.(*Command).execute
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra/command.go:734 github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra.(*Command).ExecuteC
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra/command.go:692 github.com/hyperledger/fabric-ca/vendor/github.com/spf13/cobra.(*Command).Execute
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/cmd/fabric-ca-server/main.go:95 main.RunMain
+[31mca_peerOrg1               |[0m /opt/gopath/src/github.com/hyperledger/fabric-ca/cmd/fabric-ca-server/main.go:82 main.main
+[31mca_peerOrg1               |[0m /opt/go/src/runtime/proc.go:192 runtime.main
+[31mca_peerOrg1               |[0m /opt/go/src/runtime/asm_amd64.s:2087 runtime.goexit
+[31mca_peerOrg1               |[0m Caused by: Key type not recognized
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Attempting fallback with certfile /etc/hyperledger/fabric-ca-server-config/server_localhost.pem and keyfile /etc/hyperledger/fabric-ca-server-config/server_localhost-key.pem
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [DEBUG] Client authentication type requested: noclientcert
+[31mca_peerOrg1               |[0m 2017/08/30 13:26:47 [INFO] Listening on %!s(int=7054)%!(EXTRA string=https://0.0.0.0:7054)
+Gracefully stopping... (press Ctrl+C again to force)

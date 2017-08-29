@@ -24,18 +24,6 @@ const (
 	cmdRootPrefix      = "core"
 )
 
-// MembershipChannelPeers provides a static definition of a Hyperledger Fabric peers
-type MembershipChannelPeers struct {
-	Peers map[string]*Peer
-}
-
-// Peer provides a endpoints for peer
-type Peer struct {
-	Host  string
-	Port  int
-	MspID string
-}
-
 var peerConfig = viper.New()
 var logger = logging.MustGetLogger("txn-snap-config")
 var logFormat = logging.MustStringFormatter(
@@ -159,16 +147,6 @@ func GetEnrolmentKeyPath() string {
 // GetMembershipPollInterval get membership pollinterval
 func GetMembershipPollInterval() time.Duration {
 	return viper.GetDuration("txnsnap.membership.pollinterval")
-}
-
-// GetMembershipChannelPeers get membership peers
-func GetMembershipChannelPeers(channelID string) (map[string]*Peer, error) {
-	var membershipChannelsPeers map[string]*MembershipChannelPeers
-	err := viper.UnmarshalKey("txnsnap.membership.channels", &membershipChannelsPeers)
-	if err != nil {
-		return nil, err
-	}
-	return membershipChannelsPeers[channelID].Peers, nil
 }
 
 // GetConfigPath returns the absolute value of the given path that is

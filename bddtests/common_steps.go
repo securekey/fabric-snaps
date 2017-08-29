@@ -120,7 +120,7 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		}
 
 		time.Sleep(time.Second * 3)
-		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.OrdererAdmin, d.BDDContext.Org1Admin, channel, fmt.Sprintf("./fixtures/channel/%s.tx", "Org1MSPanchors")); err != nil {
+		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, d.BDDContext.Org1Admin, channel, fmt.Sprintf("./fixtures/channel/%s.tx", "Org1MSPanchors")); err != nil {
 			return fmt.Errorf("CreateChannel returned error: %v", err)
 		}
 		if err = sdkFabricTxnAdmin.JoinChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, channel); err != nil {
