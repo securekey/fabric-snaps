@@ -47,8 +47,6 @@ services:
         - ./channel:/etc/hyperledger/configtx
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/msp/orderer
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
-        - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peerOrg1
-        - ./channel/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/msp/peerOrg2
   cli:
     container_name: cli
     image:  ${FABRIC_PEER_FIXTURE_IMAGE}:${FABRIC_PEER_FIXTURE_TAG}

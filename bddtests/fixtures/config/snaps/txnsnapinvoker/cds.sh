@@ -10,6 +10,6 @@ NAME=txnsnapinvoker
 CDS=/opt/extsysccs/$NAME.golang
 SOURCE=github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/txnsnapinvoker
 
-peer chaincode package -n $NAME -p $SOURCE -v 1.0.1 $CDS
+peer chaincode package -n $NAME -p $SOURCE -v 1.1.0 $CDS
 
 chmod 775 $CDS
