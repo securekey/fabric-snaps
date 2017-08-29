@@ -15,6 +15,7 @@ It is generated from these files:
 	peer/proposal.proto
 	peer/proposal_response.proto
 	peer/query.proto
+	peer/resources.proto
 	peer/signed_cc_dep_spec.proto
 	peer/transaction.proto
 
@@ -29,7 +30,9 @@ It has these top-level messages:
 	ChaincodeInvocationSpec
 	ChaincodeEvent
 	ChaincodeMessage
-	PutStateInfo
+	GetState
+	PutState
+	DelState
 	GetStateByRange
 	GetQueryResult
 	GetHistoryForKey
@@ -61,6 +64,7 @@ It has these top-level messages:
 	ChaincodeInfo
 	ChannelQueryResponse
 	ChannelInfo
+	Resource
 	SignedChaincodeDeploymentSpec
 	SignedTransaction
 	ProcessedTransaction

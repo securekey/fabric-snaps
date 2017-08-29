@@ -572,6 +572,8 @@ var (
 	oidExtKeyUsageOCSPSigning                = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 3, 9}
 	oidExtKeyUsageMicrosoftServerGatedCrypto = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 10, 3, 3}
 	oidExtKeyUsageNetscapeServerGatedCrypto  = asn1.ObjectIdentifier{2, 16, 840, 1, 113730, 4, 1}
+	// RFC 6962 s3.1
+	oidExtKeyUsageCertificateTransparency = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 4, 4}
 )
 
 // ExtKeyUsage represents an extended set of actions that are valid for a given key.
@@ -591,6 +593,7 @@ const (
 	ExtKeyUsageOCSPSigning
 	ExtKeyUsageMicrosoftServerGatedCrypto
 	ExtKeyUsageNetscapeServerGatedCrypto
+	ExtKeyUsageCertificateTransparency
 )
 
 // extKeyUsageOIDs contains the mapping between an ExtKeyUsage and its OID.
@@ -610,6 +613,7 @@ var extKeyUsageOIDs = []struct {
 	{ExtKeyUsageOCSPSigning, oidExtKeyUsageOCSPSigning},
 	{ExtKeyUsageMicrosoftServerGatedCrypto, oidExtKeyUsageMicrosoftServerGatedCrypto},
 	{ExtKeyUsageNetscapeServerGatedCrypto, oidExtKeyUsageNetscapeServerGatedCrypto},
+	{ExtKeyUsageCertificateTransparency, oidExtKeyUsageCertificateTransparency},
 }
 
 func extKeyUsageFromOID(oid asn1.ObjectIdentifier) (eku ExtKeyUsage, ok bool) {
@@ -896,10 +900,30 @@ func (h UnhandledCriticalExtension) Error() string {
 	return fmt.Sprintf("x509: unhandled critical extension (%v)", h.ID)
 }
 
-// RemoveCTPoison takes a DER-encoded TBSCertificate and removes the CT poison extension,
-// and returns the result, still as a DER-encoded TBSCertificate.  This function will
-// fail if there is not exactly 1 CT poison extension present.
+// RemoveCTPoison takes a DER-encoded TBSCertificate and removes the CT poison
+// extension (preserving the order of other extensions), and returns the result
+// still as a DER-encoded TBSCertificate.  This function will fail if there is
+// not exactly 1 CT poison extension present.
 func RemoveCTPoison(tbsData []byte) ([]byte, error) {
+	return BuildPrecertTBS(tbsData, nil)
+}
+
+// BuildPrecertTBS builds a Certificate Transparency pre-certificate (RFC 6962
+// s3.1) from the given DER-encoded TBSCertificate, returning a DER-encoded
+// TBSCertificate.
+//
+// This function removes the CT poison extension (there must be exactly 1 of
+// these), preserving the order of other extensions.
+//
+// If preIssuer is provided, this should be a special intermediate certificate
+// that was used to sign the precert (indicated by having the special
+// CertificateTransparency extended key usage).  In this case, the issuance
+// information of the pre-cert is updated to reflect the next issuer in the
+// chain, i.e. the issuer of this special intermediate:
+//  - The precert's Issuer is changed to the Issuer of the intermediate
+//  - The precert's AuthorityKeyId is changed to the AuthorityKeyId of the
+//    intermediate.
+func BuildPrecertTBS(tbsData []byte, preIssuer *Certificate) ([]byte, error) {
 	var tbs tbsCertificate
 	rest, err := asn1.Unmarshal(tbsData, &tbs)
 	if err != nil {
@@ -921,6 +945,54 @@ func RemoveCTPoison(tbsData []byte) ([]byte, error) {
 	}
 	tbs.Extensions = append(tbs.Extensions[:poisonAt], tbs.Extensions[poisonAt+1:]...)
 	tbs.Raw = nil
+
+	if preIssuer != nil {
+		// Update the precert's Issuer field.  Use the RawIssuer rather than the
+		// parsed Issuer to avoid any chance of ASN.1 differences (e.g. switching
+		// from UTF8String to PrintableString).
+		tbs.Issuer.FullBytes = preIssuer.RawIssuer
+
+		// Also need to update the cert's AuthorityKeyID extension
+		// to that of the preIssuer.
+		var issuerKeyID []byte
+		for _, ext := range preIssuer.Extensions {
+			if ext.Id.Equal(oidExtensionAuthorityKeyId) {
+				issuerKeyID = ext.Value
+				break
+			}
+		}
+		if issuerKeyID == nil {
+			return nil, fmt.Errorf("issuer has no auth-key-id extension")
+		}
+
+		// Check the issuer has the CT EKU.
+		seenCTEKU := false
+		for _, eku := range preIssuer.ExtKeyUsage {
+			if eku == ExtKeyUsageCertificateTransparency {
+				seenCTEKU = true
+				break
+			}
+		}
+		if !seenCTEKU {
+			return nil, fmt.Errorf("issuer does not have CertificateTransparency extended key usage")
+		}
+
+		keyAt := -1
+		for i, ext := range tbs.Extensions {
+			if ext.Id.Equal(oidExtensionAuthorityKeyId) {
+				keyAt = i
+				break
+			}
+		}
+		if keyAt < 0 {
+			return nil, fmt.Errorf("pre-cert has no authority-key-id extension to update")
+		}
+		tbs.Extensions[keyAt].Value = issuerKeyID
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal new auth key ID: %v", err)
+		}
+	}
+
 	data, err := asn1.Marshal(tbs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to re-marshal TBSCertificate: %v", err)
