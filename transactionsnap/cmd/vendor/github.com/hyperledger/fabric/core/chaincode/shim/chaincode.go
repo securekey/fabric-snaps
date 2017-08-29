@@ -1,17 +1,7 @@
 /*
-Copyright IBM Corp. 2016 All Rights Reserved.
+Copyright IBM Corp. All Rights Reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-		 http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 // Package shim provides APIs for the chaincode to access its state
@@ -67,6 +57,8 @@ type ChaincodeStub struct {
 	creator   []byte
 	transient map[string][]byte
 	binding   []byte
+
+	decorations map[string][]byte
 }
 
 // Peer address derived from command line or env var
@@ -334,6 +326,7 @@ func (stub *ChaincodeStub) init(handler *Handler, txid string, input *pb.Chainco
 	stub.args = input.Args
 	stub.handler = handler
 	stub.signedProposal = signedProposal
+	stub.decorations = input.Decorations
 
 	// TODO: sanity check: verify that every call to init with a nil
 	// signedProposal is a legitimate one, meaning it is an internal call
@@ -366,6 +359,10 @@ func (stub *ChaincodeStub) GetTxID() string {
 	return stub.TxID
 }
 
+func (stub *ChaincodeStub) GetDecorations() map[string][]byte {
+	return stub.decorations
+}
+
 // --------- Security functions ----------
 //CHAINCODE SEC INTERFACE FUNCS TOBE IMPLEMENTED BY ANGELO
 
@@ -382,9 +379,76 @@ func (stub *ChaincodeStub) InvokeChaincode(chaincodeName string, args [][]byte, 
 
 // --------- State functions ----------
 
+// GetPrivateData documentation can be found in interfaces.go
+func (stub *ChaincodeStub) GetPrivateData(collection string, key string) ([]byte, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("collection must not be an empty string")
+	}
+	return stub.handler.handleGetState(collection, key, stub.TxID)
+}
+
+// PutPrivateData documentation can be found in interfaces.go
+func (stub *ChaincodeStub) PutPrivateData(collection string, key string, value []byte) error {
+	if collection == "" {
+		return fmt.Errorf("collection must not be an empty string")
+	}
+	if key == "" {
+		return fmt.Errorf("key must not be an empty string")
+	}
+	return stub.handler.handlePutState(collection, key, value, stub.TxID)
+}
+
+// DelPrivateData documentation can be found in interfaces.go
+func (stub *ChaincodeStub) DelPrivateData(collection string, key string) error {
+	if collection == "" {
+		return fmt.Errorf("collection must not be an empty string")
+	}
+	return stub.handler.handleDelState(collection, key, stub.TxID)
+}
+
+// GetPrivateDataByRange documentation can be found in interfaces.go
+func (stub *ChaincodeStub) GetPrivateDataByRange(collection, startKey, endKey string) (StateQueryIteratorInterface, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("collection must not be an empty string")
+	}
+	if startKey == "" {
+		startKey = emptyKeySubstitute
+	}
+	if err := validateSimpleKeys(startKey, endKey); err != nil {
+		return nil, err
+	}
+	return stub.handleGetStateByRange(collection, startKey, endKey)
+}
+
+// GetPrivateDataByPartialCompositeKey documentation can be found in interfaces.go
+func (stub *ChaincodeStub) GetPrivateDataByPartialCompositeKey(collection, objectType string, attributes []string) (StateQueryIteratorInterface, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("collection must not be an empty string")
+	}
+	if partialCompositeKey, err := stub.CreateCompositeKey(objectType, attributes); err == nil {
+		return stub.handleGetStateByRange(collection, partialCompositeKey, partialCompositeKey+string(maxUnicodeRuneValue))
+	} else {
+		return nil, err
+	}
+}
+
+// GetPrivateDataQueryResult documentation can be found in interfaces.go
+func (stub *ChaincodeStub) GetPrivateDataQueryResult(collection, query string) (StateQueryIteratorInterface, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("collection must not be an empty string")
+	}
+	response, err := stub.handler.handleGetQueryResult(collection, query, stub.TxID)
+	if err != nil {
+		return nil, err
+	}
+	return &StateQueryIterator{CommonIterator: &CommonIterator{stub.handler, stub.TxID, response, 0}}, nil
+}
+
 // GetState documentation can be found in interfaces.go
 func (stub *ChaincodeStub) GetState(key string) ([]byte, error) {
-	return stub.handler.handleGetState(key, stub.TxID)
+	// Access public data by setting the collection to empty string
+	collection := ""
+	return stub.handler.handleGetState(collection, key, stub.TxID)
 }
 
 // PutState documentation can be found in interfaces.go
@@ -392,12 +456,27 @@ func (stub *ChaincodeStub) PutState(key string, value []byte) error {
 	if key == "" {
 		return fmt.Errorf("key must not be an empty string")
 	}
-	return stub.handler.handlePutState(key, value, stub.TxID)
+	// Access public data by setting the collection to empty string
+	collection := ""
+	return stub.handler.handlePutState(collection, key, value, stub.TxID)
+}
+
+// GetQueryResult documentation can be found in interfaces.go
+func (stub *ChaincodeStub) GetQueryResult(query string) (StateQueryIteratorInterface, error) {
+	// Access public data by setting the collection to empty string
+	collection := ""
+	response, err := stub.handler.handleGetQueryResult(collection, query, stub.TxID)
+	if err != nil {
+		return nil, err
+	}
+	return &StateQueryIterator{CommonIterator: &CommonIterator{stub.handler, stub.TxID, response, 0}}, nil
 }
 
 // DelState documentation can be found in interfaces.go
 func (stub *ChaincodeStub) DelState(key string) error {
-	return stub.handler.handleDelState(key, stub.TxID)
+	// Access public data by setting the collection to empty string
+	collection := ""
+	return stub.handler.handleDelState(collection, key, stub.TxID)
 }
 
 // CommonIterator documentation can be found in interfaces.go
@@ -425,8 +504,8 @@ const (
 	HISTORY_QUERY_RESULT
 )
 
-func (stub *ChaincodeStub) handleGetStateByRange(startKey, endKey string) (StateQueryIteratorInterface, error) {
-	response, err := stub.handler.handleGetStateByRange(startKey, endKey, stub.TxID)
+func (stub *ChaincodeStub) handleGetStateByRange(collection, startKey, endKey string) (StateQueryIteratorInterface, error) {
+	response, err := stub.handler.handleGetStateByRange(collection, startKey, endKey, stub.TxID)
 	if err != nil {
 		return nil, err
 	}
@@ -441,16 +520,8 @@ func (stub *ChaincodeStub) GetStateByRange(startKey, endKey string) (StateQueryI
 	if err := validateSimpleKeys(startKey, endKey); err != nil {
 		return nil, err
 	}
-	return stub.handleGetStateByRange(startKey, endKey)
-}
-
-// GetQueryResult documentation can be found in interfaces.go
-func (stub *ChaincodeStub) GetQueryResult(query string) (StateQueryIteratorInterface, error) {
-	response, err := stub.handler.handleGetQueryResult(query, stub.TxID)
-	if err != nil {
-		return nil, err
-	}
-	return &StateQueryIterator{CommonIterator: &CommonIterator{stub.handler, stub.TxID, response, 0}}, nil
+	collection := ""
+	return stub.handleGetStateByRange(collection, startKey, endKey)
 }
 
 // GetHistoryForKey documentation can be found in interfaces.go
@@ -531,8 +602,9 @@ func validateSimpleKeys(simpleKeys ...string) error {
 //a partial composite key. For a full composite key, an iter with empty response
 //would be returned.
 func (stub *ChaincodeStub) GetStateByPartialCompositeKey(objectType string, attributes []string) (StateQueryIteratorInterface, error) {
+	collection := ""
 	if partialCompositeKey, err := stub.CreateCompositeKey(objectType, attributes); err == nil {
-		return stub.handleGetStateByRange(partialCompositeKey, partialCompositeKey+string(maxUnicodeRuneValue))
+		return stub.handleGetStateByRange(collection, partialCompositeKey, partialCompositeKey+string(maxUnicodeRuneValue))
 	} else {
 		return nil, err
 	}

@@ -12,10 +12,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+)
+
+const (
+	peerProviderSCC      = "mscc"
+	peerProviderfunction = "getPeersOfChannel"
 )
 
 // ChannelMembership defines membership for a channel
@@ -114,36 +121,24 @@ func (m *membershipManagerImpl) pollPeersOfChannel() {
 }
 
 func queryPeersOfChannel(channelID string) ([]sdkApi.Peer, error) {
-
-	peers := []sdkApi.Peer{}
-	clientInstance, err := GetInstance()
+	response, err := queryChaincode(channelID, peerProviderSCC, []string{peerProviderfunction, channelID})
 	if err != nil {
-		return nil, err
-	}
-	channel, err := client.NewChannel(channelID)
-	if err != nil {
-		return nil, formatQueryError(channelID, err)
-	}
-	err = client.InitializeChannel(channel)
-	if err != nil {
-		return nil, formatQueryError(channelID, err)
+		return nil, fmt.Errorf("error querying for peers on channel [%s]: %s", channelID, err)
 	}
 
-	membershipChannelPeers, err := config.GetMembershipChannelPeers(channelID)
+	// return unmarshalled response
+	peerEndpoints := &protosPeer.PeerEndpoints{}
+	err = proto.Unmarshal(response.ProposalResponse.Response.Payload, peerEndpoints)
 	if err != nil {
-		return nil, fmt.Errorf("config.GetMembershipPeers() return error %v", err)
+		return nil, fmt.Errorf("Error unmarshalling response: %s Raw Payload: %+v",
+			err, response.ProposalResponse.Response.Payload)
 	}
-
-	for _, value := range membershipChannelPeers {
-		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", value.Host, value.Port), "", "", clientInstance.GetConfig())
-		if err != nil {
-			return nil, fmt.Errorf("Error creating new peer: %s", err)
-		}
-		peer.SetMSPID(value.MspID)
-		peers = append(peers, peer)
+	peers, err := parsePeerEndpoints(peerEndpoints)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing peer endpoints: %s", err)
 	}
-
 	return peers, nil
+
 }
 
 func queryChaincode(channelID string, ccID string, args []string) (*apitxn.TransactionProposalResponse, error) {
@@ -209,6 +204,25 @@ func queryChaincode(channelID string, ccID string, args []string) (*apitxn.Trans
 			channelID, strings.Join(queryErrors, "\n"))
 	}
 	return response, nil
+}
+
+func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints) ([]sdkApi.Peer, error) {
+	peers := []sdkApi.Peer{}
+	clientInstance, err := GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, endpoint := range endpoints.GetEndpoints() {
+		peer, err := sdkFabApi.NewPeer(endpoint.GetEndpoint(), "", "", clientInstance.GetConfig())
+		if err != nil {
+			return nil, fmt.Errorf("Error creating new peer: %s", err)
+		}
+		peer.SetMSPID(string(endpoint.GetMSPid()))
+		peers = append(peers, peer)
+	}
+
+	return peers, nil
 }
 
 func formatQueryError(channel string, err error) error {
