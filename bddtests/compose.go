@@ -18,6 +18,7 @@ package bddtests
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 
@@ -72,11 +73,11 @@ func (c *Composition) getFileArgs() []string {
 
 // GetContainerIDs returns the container IDs for the composition (NOTE: does NOT include those defined outside composition, eg. chaincode containers)
 func (c *Composition) GetContainerIDs(dir string) (containerIDs []string, err error) {
-	var cmdOutput string
+	var cmdOutput []byte
 	if cmdOutput, err = c.issueCommand([]string{"ps", "-q"}, dir); err != nil {
 		return nil, fmt.Errorf("Error getting container IDs for project '%s':  %s", c.projectName, err)
 	}
-	containerIDs = splitDockerCommandResults(cmdOutput)
+	containerIDs = splitDockerCommandResults(string(cmdOutput))
 	return containerIDs, err
 }
 
@@ -98,7 +99,7 @@ func (c *Composition) refreshContainerList() (err error) {
 	return err
 }
 
-func (c *Composition) issueCommand(args []string, dir string) (_ string, err error) {
+func (c *Composition) issueCommand(args []string, dir string) (_ []byte, err error) {
 	var cmdOut []byte
 	errRetFunc := func() error {
 		return fmt.Errorf("Error issuing command to docker-compose with args '%s':  %s (%s)", args, err, string(cmdOut))
@@ -109,24 +110,34 @@ func (c *Composition) issueCommand(args []string, dir string) (_ string, err err
 	cmd := exec.Command(dockerComposeCommand, cmdArgs...)
 	cmd.Dir = dir
 	if cmdOut, err = cmd.CombinedOutput(); err != nil {
-		return string(cmdOut), errRetFunc()
+		return cmdOut, errRetFunc()
 	}
 
 	// Reparse Container list
 	if err = c.refreshContainerList(); err != nil {
-		return "", errRetFunc()
+		return nil, errRetFunc()
 	}
-	return string(cmdOut), err
+	return cmdOut, err
 }
 
 // Decompose decompose the composition.  Will also remove any containers with the same projectName prefix (eg. chaincode containers)
 func (c *Composition) Decompose(dir string) (output string, err error) {
+	var outputBytes []byte
 	//var containers []string
-	output, err = c.issueCommand([]string{"stop"}, dir)
-	output, err = c.issueCommand([]string{"rm", "-f"}, dir)
+	outputBytes, err = c.issueCommand([]string{"stop"}, dir)
+	outputBytes, err = c.issueCommand([]string{"rm", "-f"}, dir)
 	// Now remove associated chaincode containers if any
 	c.dockerHelper.RemoveContainersWithNamePrefix(c.projectName)
-	return output, err
+	return string(outputBytes), err
+}
+
+func (c *Composition) PrintLogs(dir string) error {
+	outputBytes, err := c.issueCommand([]string{"logs"}, dir)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile("docker-compose.log", outputBytes, 775)
+	return err
 }
 
 // parseComposition parses the current docker-compose project from ps command
