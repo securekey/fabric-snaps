@@ -160,7 +160,7 @@ func TestGetConfigPath(t *testing.T) {
 func TestInitializeLogging(t *testing.T) {
 	viper.Set("txnsnap.loglevel", "wrongLogValue")
 	defer viper.Set("txnsnap.loglevel", "info")
-	err := initializeLogging()
+	err := InitializeLogging()
 	if err == nil {
 		t.Fatal("initializeLogging() didn't return error")
 	}
