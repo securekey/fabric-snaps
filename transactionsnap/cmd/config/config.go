@@ -41,8 +41,11 @@ func Init(configPathOverride string) error {
 
 	replacer := strings.NewReplacer(".", "_")
 	configPath := "./"
+	peerConfigPath := "/etc/hyperledger/fabric"
+
 	if configPathOverride != "" {
 		configPath = configPathOverride
+		peerConfigPath = configPathOverride
 	}
 	//txnSnap Config
 	viper.AddConfigPath(configPath)
@@ -52,7 +55,7 @@ func Init(configPathOverride string) error {
 	viper.SetEnvKeyReplacer(replacer)
 
 	//peer Config
-	peerConfig.AddConfigPath(configPath)
+	peerConfig.AddConfigPath(peerConfigPath)
 	peerConfig.SetConfigName(peerConfigFileName)
 	peerConfig.SetEnvPrefix(cmdRootPrefix)
 	peerConfig.AutomaticEnv()
@@ -68,7 +71,7 @@ func Init(configPathOverride string) error {
 		return fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 
-	err = initializeLogging()
+	err = InitializeLogging()
 	if err != nil {
 		return fmt.Errorf("Error initializing logging: %s", err)
 	}
@@ -163,7 +166,7 @@ func GetConfigPath(path string) string {
 	return filepath.Join(basePath, path)
 }
 
-func initializeLogging() error {
+func InitializeLogging() error {
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, logFormat)
 	level, err := logging.LogLevel(viper.GetString("txnsnap.loglevel"))

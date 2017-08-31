@@ -471,6 +471,8 @@ func (c *clientImpl) initialize() error {
 	}
 	c.client = client
 
+	config.InitializeLogging()
+
 	return nil
 }
 
