@@ -18,6 +18,10 @@ if [[ -z "$CHECK" ]]; then
     | grep -v .md$  | grep -v .crt$ | grep -v vendor/ | grep -v ^build/ | grep -v .pb.go$ | sort -u)
 fi
 
+if [[ -z "$CHECK" ]]; then
+   exit 0
+fi
+
 echo "Checking committed files for Copyright headers ..."
 missing=`echo $CHECK | xargs grep -L "Copyright"`
 if [ -z "$missing" ]; then
