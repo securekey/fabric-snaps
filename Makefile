@@ -15,7 +15,7 @@ snaps: clean
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath build/snaps):/opt/snaps \
-		hyperledger/fabric-peer:latest \
+		hyperledger/fabric-tools:latest \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
 	
 depend:
