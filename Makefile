@@ -36,12 +36,16 @@ spelling:
 unit-test: depend
 	@scripts/unit.sh
 
-integration-test: clean depend snaps
-	@mkdir ./bddtests/fixtures/config/extsysccs
-	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
+integration-test: clean depend snaps cp-snaps-tobdd
 	@scripts/integration.sh
 
+cp-snaps-tobdd: clean depend snaps
+	@mkdir ./bddtests/fixtures/config/extsysccs
+	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
+
 all: clean checks snaps unit-test integration-test
+
+snaps-4-bdd: clean checks snaps cp-snaps-tobdd
 
 clean: 
 	rm -Rf ./bddtests/fixtures/config/extsysccs

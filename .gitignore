@@ -13,3 +13,6 @@ extsysccs
 
 # log file
 docker-compose.log
+
+# intellij file
+*.DS_Store

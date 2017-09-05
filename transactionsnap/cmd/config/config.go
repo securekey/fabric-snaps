@@ -8,7 +8,6 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -71,7 +70,7 @@ func Init(configPathOverride string) error {
 		return fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 
-	err = InitializeLogging()
+	err = initializeLogging()
 	if err != nil {
 		return fmt.Errorf("Error initializing logging: %s", err)
 	}
@@ -166,18 +165,16 @@ func GetConfigPath(path string) string {
 	return filepath.Join(basePath, path)
 }
 
-// InitializeLogging initializes the logger
-func InitializeLogging() error {
-	backend := logging.NewLogBackend(os.Stdout, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, logFormat)
+// initializeLogging initializes the logger
+func initializeLogging() error {
 	level, err := logging.LogLevel(viper.GetString("txnsnap.loglevel"))
 	if err != nil {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetBackend(backendFormatter).SetLevel(level, "")
-
-	logger.Debugf("txnsnap Logger initialized. Log level: %s", logging.GetLevel(""))
+	logging.SetLevel(level, "")                // default module
+	logging.SetLevel(level, "txn-snap-config") // this current file's module
+	logger.Debugf("txnsnap Logger initialized. Default Log level: %s, txn-snap-config Log level: %s", logging.GetLevel(""), logging.GetLevel("txn-snap-config"))
 
 	return nil
 }

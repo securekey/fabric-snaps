@@ -471,7 +471,7 @@ func (c *clientImpl) initialize() error {
 	}
 	c.client = client
 
-	config.InitializeLogging()
+	logger.Debugf("Done initializing client. Default log level: %s, fabric_sdk_go log level: %s, txn-snap-config log lelvel: %s", logging.GetLevel(""), logging.GetLevel("fabric_sdk_go"), logging.GetLevel("txn-snap-config"))
 
 	return nil
 }
