@@ -936,10 +936,10 @@
 			"revisionTime": "2017-08-25T15:35:51Z"
 		},
 		{
-			"checksumSHA1": "9pkIJDL6WGj3aJpoqQDUjI72d24=",
+			"checksumSHA1": "9cpsd0K8Z83hsKYTuTTEKFy8aVs=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/config",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "4213e7e420e6457d748fdf2285726b4c9f7601f8",
+			"revisionTime": "2017-08-28T21:58:16Z"
 		},
 		{
 			"checksumSHA1": "hZxx/s3BUEi+nS/fNLxIpmV3vvo=",
