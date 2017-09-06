@@ -7,23 +7,7 @@ version: '2'
 
 services:
   
-  ca0:
-    image: hyperledger/fabric-ca
-    environment:
-      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-org1
-      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/org1.example.com-cert.pem
-      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/a22daf356b2aab5792ea53e35f66fccef1d7f1aa2b3a2b92dbfbf96a448ea26a_sk
-      - FABRIC_CA_SERVER_TLS_ENABLED=true
-      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/server_localhost.pem
-      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/server_localhost-key.pem
-    ports:
-      - "7054:7054"
-    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
-    volumes:
-      - ./channel/crypto-config/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
-      - ./tls/fabricca/server:/etc/hyperledger/fabric-ca-server-config
-    container_name: ca_peerOrg1
+
 
   orderer.example.com:
     container_name: orderer.example.com
@@ -40,7 +24,7 @@ services:
       - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/tls/orderer/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/tls/orderer/ca.crt]
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
-    command: orderer
+    command: /bin/bash -c 'orderer'
     ports:
       - 7050:7050
     volumes:
@@ -49,7 +33,7 @@ services:
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
   cli:
     container_name: cli
-    image:  ${FABRIC_PEER_FIXTURE_IMAGE}:${FABRIC_PEER_FIXTURE_TAG}
+    image:  ${FABRIC_TOOLS_FIXTURE_IMAGE}:${FABRIC_TOOLS_FIXTURE_TAG}
     environment:
       - GOPATH=/opt/gopath
       - FABRIC_CFG_PATH=/etc/hyperledger/fabric
@@ -63,11 +47,13 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: /bin/bash -c './config/script/init.sh; ./config/snaps/txnsnapinvoker/cds.sh'
+    command: /bin/bash -c './config/snaps/txnsnapinvoker/cds.sh'
     volumes:
        - /var/run/:/host/var/run/
        - ./config/extsysccs:/opt/extsysccs
+       - ./config/snapsbinary:/opt/snapsbinary
        - ./config/snaps/:/opt/snaps
+       - ./snapexample/txnsnapinvoker:/opt/gopath/src/txnsnapinvoker
        - ./peer-cli-config/core.yaml:/etc/hyperledger/fabric/core.yaml
        - ./peer-cli-config/msp:/etc/hyperledger/fabric/msp
        - ../../../fabric-snaps/:/opt/gopath/src/github.com/securekey/fabric-snaps
@@ -120,7 +106,7 @@ services:
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: /bin/bash -c 'sleep 20 ; peer node start'
+    command: /bin/bash -c 'sleep 15 ; peer node start'
     ports:
       - 7051:7051
       - 7053:7053
