@@ -12,10 +12,13 @@ export GO_LDFLAGS=-s
 snaps: clean
 	@echo "Building snaps..."
 	@mkdir -p build/snaps
+	@mkdir -p build/snapsbinary
+	@scripts/build_snapsbinary.sh
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath build/snaps):/opt/snaps \
-		hyperledger/fabric-peer:latest \
+		-v $(abspath build/snapsbinary):/opt/snapsbinary \
+		hyperledger/fabric-tools:latest \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
 	
 depend:
@@ -41,6 +44,8 @@ integration-test: clean depend snaps cp-snaps-tobdd
 
 cp-snaps-tobdd: clean depend snaps
 	@mkdir ./bddtests/fixtures/config/extsysccs
+	@mkdir ./bddtests/fixtures/config/snapsbinary
+	@bddtests/fixtures/config/script/build_snapsbinary.sh
 	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
 
 all: clean checks snaps unit-test integration-test
@@ -49,6 +54,7 @@ snaps-4-bdd: clean checks snaps cp-snaps-tobdd
 
 clean: 
 	rm -Rf ./bddtests/fixtures/config/extsysccs
+	rm -Rf ./bddtests/fixtures/config/snapsbinary
 	rm -Rf ./bddtests/docker-compose.log
 	rm -Rf ./build
 

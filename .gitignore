@@ -10,6 +10,7 @@ build
 
 # Snaps binaries for tests
 extsysccs
+snapsbinary
 
 # log file
 docker-compose.log
