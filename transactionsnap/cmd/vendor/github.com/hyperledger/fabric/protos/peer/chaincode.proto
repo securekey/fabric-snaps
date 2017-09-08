@@ -66,7 +66,7 @@ message ChaincodeSpec {
         NODE = 2;
         CAR = 3;
         JAVA = 4;
-        BINARY = 5;
+				BINARY = 5;
     }
 
     Type type = 1;
@@ -82,7 +82,7 @@ message ChaincodeDeploymentSpec {
     enum ExecutionEnvironment {
         DOCKER = 0;
         SYSTEM = 1;
-        SYSTEM_EXT = 2;
+				SYSTEM_EXT = 2;
     }
 
     ChaincodeSpec chaincode_spec = 1;

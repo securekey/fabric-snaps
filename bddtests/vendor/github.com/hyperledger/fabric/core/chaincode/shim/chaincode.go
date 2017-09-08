@@ -46,6 +46,9 @@ import (
 var chaincodeLogger = logging.MustGetLogger("shim")
 var logOutput = os.Stderr
 
+var key string
+var cert string
+
 const (
 	minUnicodeRuneValue   = 0            //U+0000
 	maxUnicodeRuneValue   = utf8.MaxRune //U+10FFFF - maximum (and unallocated) code point
@@ -67,6 +70,8 @@ type ChaincodeStub struct {
 	creator   []byte
 	transient map[string][]byte
 	binding   []byte
+
+	decorations map[string][]byte
 }
 
 // Peer address derived from command line or env var
@@ -82,6 +87,10 @@ var streamGetter peerStreamGetter
 //the non-mock user CC stream establishment func
 func userChaincodeStreamGetter(name string) (PeerChaincodeStream, error) {
 	flag.StringVar(&peerAddress, "peer.address", "", "peer address")
+	if comm.TLSEnabled() {
+		flag.StringVar(&key, "key", "", "key in BASE64")
+		flag.StringVar(&cert, "cert", "", "certificate in BASE64")
+	}
 
 	flag.Parse()
 
@@ -231,7 +240,7 @@ func getPeerAddress() string {
 func newPeerClientConnection() (*grpc.ClientConn, error) {
 	var peerAddress = getPeerAddress()
 	if comm.TLSEnabled() {
-		return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForPeer())
+		return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForShim(key, cert))
 	}
 	return comm.NewClientConnectionWithAddress(peerAddress, true, false, nil)
 }
@@ -334,6 +343,7 @@ func (stub *ChaincodeStub) init(handler *Handler, txid string, input *pb.Chainco
 	stub.args = input.Args
 	stub.handler = handler
 	stub.signedProposal = signedProposal
+	stub.decorations = input.Decorations
 
 	// TODO: sanity check: verify that every call to init with a nil
 	// signedProposal is a legitimate one, meaning it is an internal call
@@ -364,6 +374,10 @@ func (stub *ChaincodeStub) init(handler *Handler, txid string, input *pb.Chainco
 // GetTxID returns the transaction ID
 func (stub *ChaincodeStub) GetTxID() string {
 	return stub.TxID
+}
+
+func (stub *ChaincodeStub) GetDecorations() map[string][]byte {
+	return stub.decorations
 }
 
 // --------- Security functions ----------

@@ -24,6 +24,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/bccsp"
@@ -48,15 +49,40 @@ type identity struct {
 	msp *bccspmsp
 }
 
-func newIdentity(id *IdentityIdentifier, cert *x509.Certificate, pk bccsp.Key, msp *bccspmsp) (Identity, error) {
-	mspIdentityLogger.Debugf("Creating identity instance for ID %s", id)
+func newIdentity(cert *x509.Certificate, pk bccsp.Key, msp *bccspmsp) (Identity, error) {
+	if mspIdentityLogger.IsEnabledFor(logging.DEBUG) {
+		mspIdentityLogger.Debugf("Creating identity instance for cert %s", certToPEM(cert))
+	}
 
 	// Sanitize first the certificate
 	cert, err := msp.sanitizeCert(cert)
 	if err != nil {
 		return nil, err
 	}
+
+	// Compute identity identifier
+
+	// Use the hash of the identity's certificate as id in the IdentityIdentifier
+	hashOpt, err := bccsp.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
+	if err != nil {
+		return nil, fmt.Errorf("Failed getting hash function options [%s]", err)
+	}
+
+	digest, err := msp.bccsp.Hash(cert.Raw, hashOpt)
+	if err != nil {
+		return nil, fmt.Errorf("Failed hashing raw certificate to compute the id of the IdentityIdentifier [%s]", err)
+	}
+
+	id := &IdentityIdentifier{
+		Mspid: msp.name,
+		Id:    hex.EncodeToString(digest)}
+
 	return &identity{id: id, cert: cert, pk: pk, msp: msp}, nil
+}
+
+// ExpiresAt returns the time at which the Identity expires.
+func (id *identity) ExpiresAt() time.Time {
+	return id.cert.NotAfter
 }
 
 // SatisfiesPrincipal returns null if this instance matches the supplied principal or an error otherwise
@@ -188,9 +214,9 @@ type signingidentity struct {
 	signer crypto.Signer
 }
 
-func newSigningIdentity(id *IdentityIdentifier, cert *x509.Certificate, pk bccsp.Key, signer crypto.Signer, msp *bccspmsp) (SigningIdentity, error) {
+func newSigningIdentity(cert *x509.Certificate, pk bccsp.Key, signer crypto.Signer, msp *bccspmsp) (SigningIdentity, error) {
 	//mspIdentityLogger.Infof("Creating signing identity instance for ID %s", id)
-	mspId, err := newIdentity(id, cert, pk, msp)
+	mspId, err := newIdentity(cert, pk, msp)
 	if err != nil {
 		return nil, err
 	}
