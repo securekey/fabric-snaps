@@ -20,6 +20,7 @@ import (
 
 	"github.com/hyperledger/fabric/bccsp"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp/pkcs11"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
@@ -452,8 +453,49 @@ func (c *clientImpl) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Error initializaing config: %s", err)
 	}
+	//Configure factory options for BCCSP provider
+	var factoryOptions *bccspFactory.FactoryOpts
+	switch clientConfig.SecurityProvider() {
+	case "SW":
+		factoryOptions = &bccspFactory.FactoryOpts{
+			ProviderName: "SW",
+			SwOpts: &bccspFactory.SwOpts{
+				HashFamily: clientConfig.SecurityAlgorithm(),
+				SecLevel:   clientConfig.SecurityLevel(),
+				FileKeystore: &bccspFactory.FileKeystoreOpts{
+					KeyStorePath: clientConfig.KeyStorePath(),
+				},
+				Ephemeral: clientConfig.Ephemeral(),
+			},
+		}
+	case "PKCS11":
+		logger.Infof("PKCS11 library path %s\n", clientConfig.SecurityProviderLibPath())
+		logger.Infof("PKCS11 librarypin %s\n", clientConfig.SecurityProviderPin())
+		logger.Infof("PKCS11 library label %s\n", clientConfig.SecurityProviderLabel())
+		pkks := pkcs11.FileKeystoreOpts{KeyStorePath: clientConfig.KeyStorePath()}
+		factoryOptions = &bccspFactory.FactoryOpts{
+			ProviderName: "PKCS11",
+			Pkcs11Opts: &pkcs11.PKCS11Opts{
+				SecLevel:     clientConfig.SecurityLevel(),
+				HashFamily:   clientConfig.SecurityAlgorithm(),
+				Ephemeral:    clientConfig.Ephemeral(),
+				FileKeystore: &pkks,
+				Library:      clientConfig.SecurityProviderLibPath(),
+				Pin:          clientConfig.SecurityProviderPin(),
+				Label:        clientConfig.SecurityProviderLabel(),
+				SoftVerify:   clientConfig.SoftVerify(),
+			},
+		}
+	default:
+		return fmt.Errorf("Cannot initialize BCCSP factory. Supported options SW and PKCS11. Configured option %s", clientConfig.SecurityProvider())
+	}
+	//initialize BCCSP provider
+	err = bccspFactory.InitFactories(factoryOptions)
+	if err != nil {
+		return fmt.Errorf("Error in init factories +++++++++++++++++ %v", err)
+	}
+	logger.Infof("Configured BCCSP %s provider \n", clientConfig.SecurityProvider())
 
-	clientConfig.CSPConfig()
 	localPeer, err := config.GetLocalPeer()
 	if err != nil {
 		return fmt.Errorf("GetLocalPeer return error [%v]", err)
