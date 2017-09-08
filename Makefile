@@ -12,13 +12,22 @@ export GO_LDFLAGS=-s
 snaps: clean
 	@echo "Building snaps..."
 	@mkdir -p build/snaps
-	@mkdir -p build/snapsbinary
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath build/snaps):/opt/snaps \
-		-v $(abspath build/snapsbinary):/opt/snapsbinary \
 		hyperledger/fabric-tools:latest \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
+
+
+testsnaps: clean
+	@echo "Building test snaps..."
+	@mkdir -p ./bddtests/fixtures/build/testsnaps
+	@docker run -i \
+		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
+		-v $(abspath ./bddtests/fixtures/build/testsnaps):/opt/snaps \
+		hyperledger/fabric-tools:latest \
+		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
+	
 
 depend:
 	@scripts/dependencies.sh
@@ -38,21 +47,20 @@ spelling:
 unit-test: depend
 	@scripts/unit.sh
 
-integration-test: clean depend snaps cp-snaps-tobdd
+integration-test: clean depend snaps-4-bdd
 	@scripts/integration.sh
 
-cp-snaps-tobdd: clean depend snaps
+
+all: clean checks snaps testsnaps unit-test integration-test
+
+snaps-4-bdd: clean checks snaps testsnaps
 	@mkdir ./bddtests/fixtures/config/extsysccs
-	@mkdir ./bddtests/fixtures/config/snapsbinary
 	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
-
-all: clean checks snaps unit-test integration-test
-
-snaps-4-bdd: clean checks snaps cp-snaps-tobdd
+	@cp -r ./bddtests/fixtures/build/testsnaps/* ./bddtests/fixtures/config/extsysccs/
 
 clean:
 	rm -Rf ./bddtests/fixtures/config/extsysccs
-	rm -Rf ./bddtests/fixtures/config/snapsbinary
+	rm -Rf ./bddtests/fixtures/build
 	rm -Rf ./bddtests/docker-compose.log
 	rm -Rf ./build
 

@@ -348,7 +348,7 @@ func GetBytesChaincodeActionPayload(cap *peer.ChaincodeActionPayload) ([]byte, e
 	return capBytes, err
 }
 
-// GetBytesProposalResponse gets propoal bytes response
+// GetBytesProposalResponse gets proposal bytes response
 func GetBytesProposalResponse(pr *peer.ProposalResponse) ([]byte, error) {
 	respBytes, err := proto.Marshal(pr)
 	return respBytes, err
@@ -413,6 +413,15 @@ func GetActionFromEnvelope(envBytes []byte) (*peer.ChaincodeAction, error) {
 
 	_, respPayload, err := GetPayloads(tx.Actions[0])
 	return respPayload, err
+}
+
+// CreateProposalFromCIS returns a proposal given a serialized identity and a ChaincodeInvocationSpec
+func CreateProposalFromCISAndTxid(txid string, typ common.HeaderType, chainID string, cis *peer.ChaincodeInvocationSpec, creator []byte) (*peer.Proposal, string, error) {
+	nonce, err := crypto.GetRandomNonce()
+	if err != nil {
+		return nil, "", err
+	}
+	return CreateChaincodeProposalWithTxIDNonceAndTransient(txid, typ, chainID, cis, nonce, creator, nil)
 }
 
 // CreateProposalFromCIS returns a proposal given a serialized identity and a ChaincodeInvocationSpec
