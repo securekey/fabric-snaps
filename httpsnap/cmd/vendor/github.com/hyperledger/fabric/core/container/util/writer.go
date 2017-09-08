@@ -37,7 +37,7 @@ var javaExcludeFileTypes = map[string]bool{
 	".class": true,
 }
 
-func WriteFolderToTarPackage(tw *tar.Writer, srcPath string, destPath string, excludeDir string, includeFileTypeMap map[string]bool, excludeFileTypeMap map[string]bool) error {
+func WriteFolderToTarPackage(tw *tar.Writer, srcPath string, excludeDir string, includeFileTypeMap map[string]bool, excludeFileTypeMap map[string]bool) error {
 	rootDirectory := srcPath
 	vmLogger.Infof("rootDirectory = %s", rootDirectory)
 
@@ -52,10 +52,6 @@ func WriteFolderToTarPackage(tw *tar.Writer, srcPath string, destPath string, ex
 		// If path includes .git, ignore
 		if strings.Contains(path, ".git") {
 			return nil
-		}
-
-		if info == nil {
-			return fmt.Errorf("Path is not found: %s", path)
 		}
 
 		if info.Mode().IsDir() {
@@ -87,15 +83,16 @@ func WriteFolderToTarPackage(tw *tar.Writer, srcPath string, destPath string, ex
 			}
 		}
 
-		newPath := path[rootDirLen+1:]
-		if destPath != "" {
-			newPath = filepath.Join(destPath, newPath)
-		}
+		newPath := fmt.Sprintf("src%s", path[rootDirLen:])
+		//newPath := path[len(rootDirectory):]
 
 		err = WriteFileToPackage(path, newPath, tw, 0)
 		if err != nil {
 			return fmt.Errorf("Error writing file to package: %s", err)
 		}
+
+		vmLogger.Debugf("Writing file %s to tar", newPath)
+
 		return nil
 	}
 
@@ -111,7 +108,7 @@ func WriteJavaProjectToPackage(tw *tar.Writer, srcPath string) error {
 
 	vmLogger.Debugf("Packaging Java project from path %s", srcPath)
 
-	if err := WriteFolderToTarPackage(tw, srcPath, "src", "", nil, javaExcludeFileTypes); err != nil {
+	if err := WriteFolderToTarPackage(tw, srcPath, "", nil, javaExcludeFileTypes); err != nil {
 
 		vmLogger.Errorf("Error writing folder to tar package %s", err)
 		return err
@@ -156,7 +153,6 @@ func WriteStreamToPackage(is io.Reader, localpath string, packagepath string, tw
 	header.ChangeTime = zeroTime
 	header.Name = packagepath
 	if headerMode == 0 {
-		//Default header mode
 		headerMode = 0100644
 	}
 	header.Mode = headerMode

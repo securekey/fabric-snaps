@@ -66,7 +66,7 @@ type LeveledBackend interface {
 }
 
 type moduleLeveled struct {
- 	sync.RWMutex
+	sync.RWMutex
 	levels    map[string]Level
 	backend   Backend
 	formatter Formatter

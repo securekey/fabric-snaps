@@ -31,36 +31,7 @@ services:
         - ./channel:/etc/hyperledger/configtx
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/msp/orderer
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
-  cli:
-    container_name: cli
-    image:  ${FABRIC_TOOLS_FIXTURE_IMAGE}:${FABRIC_TOOLS_FIXTURE_TAG}
-    environment:
-      - GOPATH=/opt/gopath
-      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
-      - CORE_PEER_BCCSP_DEFAULT=SW
-      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_LOGGING_LEVEL=DEBUG
-      - CORE_PEER_ID=cli
-      - CORE_PEER_LOCALMSPID=Org1MSP
-      - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: /bin/bash -c './config/snaps/txnsnapinvoker/cds.sh'
-    volumes:
-       - /var/run/:/host/var/run/
-       - ./config/extsysccs:/opt/extsysccs
-       - ./config/snapsbinary:/opt/snapsbinary
-       - ./config/snaps/:/opt/snaps
-       - ./snapexample/txnsnapinvoker:/opt/gopath/src/txnsnapinvoker
-       - ./peer-cli-config/core.yaml:/etc/hyperledger/fabric/core.yaml
-       - ./peer-cli-config/msp:/etc/hyperledger/fabric/msp
-       - ../../../fabric-snaps/:/opt/gopath/src/github.com/securekey/fabric-snaps
-       - ./config:/opt/gopath/src/github.com/hyperledger/fabric/peer/config/
-       - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
-    depends_on:
-      - builder
+
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
     image: ${FABRIC_PEER_FIXTURE_IMAGE}:${FABRIC_PEER_FIXTURE_TAG}
@@ -106,7 +77,7 @@ services:
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: /bin/bash -c 'sleep 25 ; peer node start'
+    command: /bin/bash -c 'peer node start'
     ports:
       - 7051:7051
       - 7053:7053
@@ -122,7 +93,6 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/keystore/a23272f898441edb0f415f028b3b3b42627d75e150dfbae23543234751814983_sk:/etc/hyperledger/fabric/testcerts/ecert/key.pem
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem:/etc/hyperledger/fabric/testcerts/ecert/cert.pem
     depends_on:
-      - cli
       - builder
       - orderer.example.com
 

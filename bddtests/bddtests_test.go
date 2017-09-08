@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 				composition = newComposition
 
 				fmt.Println("docker-compose up ... waiting for peer to start ...")
-				time.Sleep(time.Second * 70)
+				time.Sleep(time.Second * 5)
 			}
 
 		})
