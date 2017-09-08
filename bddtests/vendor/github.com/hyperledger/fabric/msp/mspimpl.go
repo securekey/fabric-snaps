@@ -117,22 +117,7 @@ func (msp *bccspmsp) getIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, e
 	// get the public key in the right format
 	certPubK, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 
-	// Use the hash of the identity's certificate as id in the IdentityIdentifier
-	hashOpt, err := bccsp.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
-	if err != nil {
-		return nil, nil, fmt.Errorf("getIdentityFromConf failed getting hash function options [%s]", err)
-	}
-
-	digest, err := msp.bccsp.Hash(cert.Raw, hashOpt)
-	if err != nil {
-		return nil, nil, fmt.Errorf("getIdentityFromConf failed hashing raw certificate to compute the id of the IdentityIdentifier [%s]", err)
-	}
-
-	id := &IdentityIdentifier{
-		Mspid: msp.name,
-		Id:    hex.EncodeToString(digest)}
-
-	mspId, err := newIdentity(id, cert, certPubK, msp)
+	mspId, err := newIdentity(cert, certPubK, msp)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -173,22 +158,7 @@ func (msp *bccspmsp) getSigningIdentityFromConf(sidInfo *m.SigningIdentityInfo) 
 		return nil, fmt.Errorf("getIdentityFromBytes error: Failed initializing bccspCryptoSigner, err %s", err)
 	}
 
-	// Use the hash of the identity's certificate as id in the IdentityIdentifier
-	hashOpt, err := bccsp.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
-	if err != nil {
-		return nil, fmt.Errorf("getIdentityFromBytes failed getting hash function options [%s]", err)
-	}
-
-	digest, err := msp.bccsp.Hash(idPub.(*identity).cert.Raw, hashOpt)
-	if err != nil {
-		return nil, fmt.Errorf("Failed hashing raw certificate to compute the id of the IdentityIdentifier [%s]", err)
-	}
-
-	id := &IdentityIdentifier{
-		Mspid: msp.name,
-		Id:    hex.EncodeToString(digest)}
-
-	return newSigningIdentity(id, idPub.(*identity).cert, idPub.(*identity).pk, peerSigner, msp)
+	return newSigningIdentity(idPub.(*identity).cert, idPub.(*identity).pk, peerSigner, msp)
 }
 
 /*
@@ -439,27 +409,12 @@ func (msp *bccspmsp) deserializeIdentityInternal(serializedIdentity []byte) (Ide
 	// We can't do it yet because there is no standardized way
 	// (yet) to encode the MSP ID into the x.509 body of a cert
 
-	// Use the hash of the identity's certificate as id in the IdentityIdentifier
-	hashOpt, err := bccsp.GetHashOpt(msp.cryptoConfig.IdentityIdentifierHashFunction)
-	if err != nil {
-		return nil, fmt.Errorf("Failed getting hash function options [%s]", err)
-	}
-
-	digest, err := msp.bccsp.Hash(cert.Raw, hashOpt)
-	if err != nil {
-		return nil, fmt.Errorf("Failed hashing raw certificate to compute the id of the IdentityIdentifier [%s]", err)
-	}
-
-	id := &IdentityIdentifier{
-		Mspid: msp.name,
-		Id:    hex.EncodeToString(digest)}
-
 	pub, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to import certitifacate's public key [%s]", err)
 	}
 
-	return newIdentity(id, cert, pub, msp)
+	return newIdentity(cert, pub, msp)
 }
 
 // SatisfiesPrincipal returns null if the identity matches the principal or an error otherwise
@@ -876,7 +831,7 @@ func (msp *bccspmsp) setupOUs(conf *m.FabricMSPConfig) error {
 		}
 
 		// 3. get the certification path for it
-		var certifiersIdentitifer []byte
+		var certifiersIdentifier []byte
 		var chain []*x509.Certificate
 		if root {
 			chain = []*x509.Certificate{cert}
@@ -888,7 +843,7 @@ func (msp *bccspmsp) setupOUs(conf *m.FabricMSPConfig) error {
 		}
 
 		// 4. compute the hash of the certification path
-		certifiersIdentitifer, err = msp.getCertificationChainIdentifierFromChain(chain)
+		certifiersIdentifier, err = msp.getCertificationChainIdentifierFromChain(chain)
 		if err != nil {
 			return fmt.Errorf("Failed computing Certifiers Identifier for [%v]. [%s]", ou.Certificate, err)
 		}
@@ -896,7 +851,7 @@ func (msp *bccspmsp) setupOUs(conf *m.FabricMSPConfig) error {
 		// Check for duplicates
 		found = false
 		for _, id := range msp.ouIdentifiers[ou.OrganizationalUnitIdentifier] {
-			if bytes.Equal(id, certifiersIdentitifer) {
+			if bytes.Equal(id, certifiersIdentifier) {
 				mspLogger.Warningf("Duplicate found in ou identifiers [%s, %v]", ou.OrganizationalUnitIdentifier, id)
 				found = true
 				break
@@ -907,7 +862,7 @@ func (msp *bccspmsp) setupOUs(conf *m.FabricMSPConfig) error {
 			// No duplicates found, add it
 			msp.ouIdentifiers[ou.OrganizationalUnitIdentifier] = append(
 				msp.ouIdentifiers[ou.OrganizationalUnitIdentifier],
-				certifiersIdentitifer,
+				certifiersIdentifier,
 			)
 		}
 	}
@@ -1154,19 +1109,6 @@ func (msp *bccspmsp) getValidityOptsForCert(cert *x509.Certificate) x509.VerifyO
 	tempOpts.Intermediates = msp.opts.Intermediates
 	tempOpts.KeyUsages = msp.opts.KeyUsages
 	tempOpts.CurrentTime = cert.NotBefore.Add(time.Second)
-
-	return tempOpts
-}
-
-func (msp *bccspmsp) getValidityOptsForTLSCert(cert *x509.Certificate) x509.VerifyOptions {
-	// First copy the opts to override the CurrentTime field
-	// in order to make the certificate passing the expiration test
-	// independently from the real local current time.
-	// This is a temporary workaround for FAB-3678
-
-	var tempOpts x509.VerifyOptions
-	tempOpts.Roots = msp.opts.Roots
-	tempOpts.Intermediates = msp.opts.Intermediates
 
 	return tempOpts
 }

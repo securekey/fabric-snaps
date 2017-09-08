@@ -9,8 +9,10 @@ package comm
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -38,7 +40,7 @@ type CASupport struct {
 	ServerRootCAs         [][]byte
 }
 
-// GetCASupport returns the signleton CASupport instance
+// GetCASupport returns the singleton CASupport instance
 func GetCASupport() *CASupport {
 
 	once.Do(func() {
@@ -212,4 +214,36 @@ func InitTLSForPeer() credentials.TransportCredentials {
 		creds = credentials.NewClientTLSFromCert(nil, sn)
 	}
 	return creds
+}
+
+func InitTLSForShim(key, certStr string) credentials.TransportCredentials {
+	var sn string
+	if viper.GetString("peer.tls.serverhostoverride") != "" {
+		sn = viper.GetString("peer.tls.serverhostoverride")
+	}
+	priv, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		commLogger.Panicf("failed decoding private key from base64, string: %s, error: %v", key, err)
+	}
+	pub, err := base64.StdEncoding.DecodeString(certStr)
+	if err != nil {
+		commLogger.Panicf("failed decoding public key from base64, string: %s, error: %v", certStr, err)
+	}
+	cert, err := tls.X509KeyPair(pub, priv)
+	if err != nil {
+		commLogger.Panicf("failed loading certificate: %v", err)
+	}
+	b, err := ioutil.ReadFile(config.GetPath("peer.tls.rootcert.file"))
+	if err != nil {
+		commLogger.Panicf("failed loading root ca cert: %v", err)
+	}
+	cp := x509.NewCertPool()
+	if !cp.AppendCertsFromPEM(b) {
+		commLogger.Panicf("failed to append certificates")
+	}
+	return credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      cp,
+		ServerName:   sn,
+	})
 }

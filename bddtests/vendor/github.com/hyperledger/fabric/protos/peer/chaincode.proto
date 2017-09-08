@@ -53,6 +53,7 @@ message ChaincodeID {
 // the []byte-based current ChaincodeInput structure.
 message ChaincodeInput {
     repeated bytes args  = 1;
+    map<string, bytes> decorations = 2;
 }
 
 // Carries the chaincode specification. This is the actual metadata required for
@@ -65,7 +66,7 @@ message ChaincodeSpec {
         NODE = 2;
         CAR = 3;
         JAVA = 4;
-        BINARY = 5;
+				BINARY = 5;
     }
 
     Type type = 1;
@@ -81,7 +82,7 @@ message ChaincodeDeploymentSpec {
     enum ExecutionEnvironment {
         DOCKER = 0;
         SYSTEM = 1;
-        SYSTEM_EXT = 2;
+				SYSTEM_EXT = 2;
     }
 
     ChaincodeSpec chaincode_spec = 1;
