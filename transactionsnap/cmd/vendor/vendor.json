@@ -888,136 +888,136 @@
 			"revisionTime": "2017-08-25T15:35:51Z"
 		},
 		{
-			"checksumSHA1": "DocoYZkwJV3Bzot4SXCjVYuAub4=",
+			"checksumSHA1": "TP/E+s83I3v5cBOyl6pg2EGE2Oc=",
 			"path": "github.com/hyperledger/fabric-sdk-go/api/apiconfig",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "/GV795Ob6mKHjUu9IU3zHPx8xS0=",
 			"path": "github.com/hyperledger/fabric-sdk-go/api/apifabca",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "05KPRw2GB8hJ+hEDbwF1jCUZhjA=",
 			"path": "github.com/hyperledger/fabric-sdk-go/api/apifabclient",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "YYH+GyxUn20+GHkCDVgxMeSux78=",
 			"path": "github.com/hyperledger/fabric-sdk-go/api/apitxn",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "QnDTMrd8MprFDTMhIspW8PYhVgI=",
 			"path": "github.com/hyperledger/fabric-sdk-go/def/fabapi",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "bpxVyVb2NPNxJtHi50ZzI50xzts=",
 			"path": "github.com/hyperledger/fabric-sdk-go/def/fabapi/context",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "/aJeuBtecvVNN9cZ1op0qHVaOq8=",
 			"path": "github.com/hyperledger/fabric-sdk-go/def/fabapi/context/defprovider",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "8qbChkzzKUrLIn62wDc/x5kb2NU=",
 			"path": "github.com/hyperledger/fabric-sdk-go/def/fabapi/opt",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
-			"checksumSHA1": "9pkIJDL6WGj3aJpoqQDUjI72d24=",
+			"checksumSHA1": "9cpsd0K8Z83hsKYTuTTEKFy8aVs=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/config",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "hZxx/s3BUEi+nS/fNLxIpmV3vvo=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-ca-client",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "0EszoCIoyOeoeMPlNuU6rieAb3w=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "IKRXRVSHc6R0NJ85iGtpQKM5NMU=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "vU8z7jiNl1ITSENWfDJRJDeip08=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "jTfYYPnImoosNv5CiFRLcIAaT60=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events/consumer",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "y/E39mzXRqurJEgwtBSPCKk/AHs=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/identity",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "UpbMUQ4nCqyPQpXMfYJAhrVf/Ys=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/internal",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "HA6pKdLn875xQUYTlnq7cvOtaMM=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/internal/txnproc",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "R3h53MtK6wVuWa3L1lrodfhFH5M=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/keyvaluestore",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
-			"checksumSHA1": "n+ncX/+gwDz50cXK6UQaQA4stok=",
+			"checksumSHA1": "1tbTfm1v74u/7xbLuJmn13H6gik=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "3LvN9BaAMGAf/En/xMYRqzTiqBQ=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/orderer",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "ThVVpLN6Zp4v5jIBOotk9rAw0K8=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/packager",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "TyImNbP1FriAk2O2uC0+iWFqsGg=",
 			"path": "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "e97aefe007c82ca98def2415d17445852d43b4d8",
+			"revisionTime": "2017-09-06T15:07:01Z"
 		},
 		{
 			"checksumSHA1": "eYbv2qA/nMwoTGK9CAron9ULqpQ=",

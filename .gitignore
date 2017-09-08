@@ -10,6 +10,10 @@ build
 
 # Snaps binaries for tests
 extsysccs
+snapsbinary
 
 # log file
 docker-compose.log
+
+# intellij file
+*.DS_Store
