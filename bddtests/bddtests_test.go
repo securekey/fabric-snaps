@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +48,11 @@ func TestMain(m *testing.M) {
 				composition = newComposition
 
 				fmt.Println("docker-compose up ... waiting for peer to start ...")
-				time.Sleep(time.Second * 15)
+				testSleep := 5
+				if os.Getenv("TEST_SLEEP") != "" {
+					testSleep, _ = strconv.Atoi(os.Getenv("BDDTEST_SLEEP"))
+				}
+				time.Sleep(time.Second * time.Duration(testSleep))
 			}
 
 		})
