@@ -47,7 +47,11 @@ func TestMain(m *testing.M) {
 				composition = newComposition
 
 				fmt.Println("docker-compose up ... waiting for peer to start ...")
-				time.Sleep(time.Second * 15)
+				testSleep := "5"
+				if os.Getenv("TEST_SLEEP") != "" {
+					testSleep = os.Getenv("BDDTEST_SLEEP")
+				}
+				time.Sleep(time.Second * testSleep)
 			}
 
 		})
