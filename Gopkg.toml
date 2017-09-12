@@ -1,0 +1,80 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/DATA-DOG/godog"
+  version = "0.7.4"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/fsouza/go-dockerclient"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/golang/protobuf"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hyperledger/fabric"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hyperledger/fabric-sdk-go"
+
+[[constraint]]
+  name = "github.com/op/go-logging"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/xeipuuv/gojsonschema"
+
+[[constraint]]
+  name = "google.golang.org/grpc"
+  version = "1.6.0"
+
+################
+# Downstream overrides to enable testing
+# (https://github.com/golang/dep/blob/master/docs/FAQ.md#how-do-i-constrain-a-transitive-dependencys-version)
+
+# Mainly downstreams that have a direct reference
+[[override]]
+  name = "github.com/op/go-logging"
+  # TODO: source isn't picked up by parent projects - need better solution
+  source = "github.com/troyronda/go-logging"   # TODO: Better home for this fork
+  branch = "datarace"
+  # note: go-logging is mainly a downstream package but is also in tests to ensure the fork is applied
+
+# Temporary downstream overrides due to sirupsen/logrus case sensitivity
+[[override]]
+name = "github.com/docker/docker"
+source = "github.com/moby/moby"
+branch = "master"
+
+[[override]]
+name = "github.com/opencontainers/runc"
+branch = "master"

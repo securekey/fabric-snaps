@@ -52,6 +52,7 @@ func TestMain(m *testing.M) {
 				if os.Getenv("TEST_SLEEP") != "" {
 					testSleep, _ = strconv.Atoi(os.Getenv("TEST_SLEEP"))
 				}
+				fmt.Printf("*** testSleep=%d", testSleep)
 				time.Sleep(time.Second * time.Duration(testSleep))
 			}
 

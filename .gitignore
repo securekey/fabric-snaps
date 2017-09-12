@@ -17,3 +17,6 @@ docker-compose.log
 
 # intellij file
 *.DS_Store
+
+# Vendor
+vendor/
