@@ -11,6 +11,6 @@ export PATH=/usr/local/go/bin:$PATH
 NAME=txnsnapinvoker
 CDS=/opt/snaps/$NAME.golang
 
-peer chaincode package -n $NAME -p /opt/snapsbinary/txnsnapinvoker -v 1.1.0-snapshot-51724a4 $CDS -l binary
+peer chaincode package -n $NAME -p /opt/snapsbinary/txnsnapinvoker -v $FABRIC_VERSION $CDS -l binary
 
 chmod 775 $CDS
