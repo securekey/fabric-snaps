@@ -20,7 +20,7 @@ DEV_IMAGES = $(shell docker images dev-* -q)
 PACKAGE_NAME = github.com/securekey/fabric-snaps
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
-export FABRIC_VERSION=1.1.0-snapshot-4adceaa
+export FABRIC_VERSION=1.1.0-snapshot-$(shell git rev-parse --short $$(git ls-remote ssh://$${GITUSER}@gerrit.securekey.com:29418/fabric-next | grep HEAD | awk '{ print $$1}'))
 
 snaps: clean populate
 	@echo "Building snaps..."
