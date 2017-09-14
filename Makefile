@@ -20,26 +20,34 @@ DEV_IMAGES = $(shell docker images dev-* -q)
 PACKAGE_NAME = github.com/securekey/fabric-snaps
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
-export FABRIC_VERSION=1.1.0-snapshot-4adceaa
 
-snaps: clean populate
+getFabricVersion:
+	@mkdir -p build
+	@touch build/fabricversion.txt
+	@docker run -i \
+		hyperledger/fabric-tools:latest \
+		peer -v | grep '\` Version: ' | awk '{ print $$2}' > build/fabricversion.txt
+
+snaps: clean getFabricVersion populate
 	@echo "Building snaps..."
 	@mkdir -p build/snaps
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath build/snaps):/opt/snaps \
+		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
 		hyperledger/fabric-tools:latest \
-		/bin/bash -c "export FABRIC_VERSION=$(FABRIC_VERSION) ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
+		/bin/bash -c "export FABRIC_VERSION=$$(cat build/fabricversion.txt) ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
 
 
-testsnaps: clean populate
+testsnaps: clean getFabricVersion populate
 	@echo "Building test snaps..."
 	@mkdir -p ./bddtests/fixtures/build/testsnaps
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath ./bddtests/fixtures/build/testsnaps):/opt/snaps \
+		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
 		hyperledger/fabric-tools:latest \
-		/bin/bash -c "export FABRIC_VERSION=$(FABRIC_VERSION) ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
+		/bin/bash -c "export FABRIC_VERSION=$$(cat build/fabricversion.txt) ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
 	
 
 depend:
@@ -57,17 +65,17 @@ lint: populate
 spelling:
 	@scripts/check_spelling.sh
 
-unit-test: depend populate
+unit-test: depend getFabricVersion populate
 	@scripts/unit.sh
 
-integration-test: clean depend populate snaps-4-bdd
-	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:x86_64-$(FABRIC_VERSION)
+integration-test: clean depend getFabricVersion populate snaps-4-bdd
+	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:x86_64-$$(cat build/fabricversion.txt)
 	@scripts/integration.sh
 
 
 all: clean checks snaps testsnaps unit-test integration-test
 
-snaps-4-bdd: clean checks snaps testsnaps
+snaps-4-bdd: clean checks getFabricVersion snaps testsnaps
 	@mkdir ./bddtests/fixtures/config/extsysccs
 	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
 	@cp -r ./bddtests/fixtures/build/testsnaps/* ./bddtests/fixtures/config/extsysccs/
