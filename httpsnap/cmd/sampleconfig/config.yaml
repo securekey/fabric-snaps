@@ -19,3 +19,14 @@ schemas:
   - type: application/json
     request: schema/request.json
     response: schema/response.json
+BCCSP:
+ security:
+  default:
+   provider: "SW"
+  hashAlgorithm: "SHA2"
+  softVerify: true
+  ephemeral: false
+  level: 256
+  pin: "98765432"
+  label: "ForFabric"
+  library: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so, /usr/lib/softhsm/libsofthsm2.so, /usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so, /usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so, /usr/local/Cellar/softhsm/2.1.0/lib/softhsm/libsofthsm2.so"
