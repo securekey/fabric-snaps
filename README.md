@@ -49,3 +49,24 @@ To mount the snaps and configuration files into the container we use docker volu
     - ./config/extsysccs:/opt/extsysccs
     - ./config/snaps/:/opt/snaps
 ```
+
+##### Test
+
+In order to run fabric-snaps tests against your local environment:
+ - Modify properties in `bddtests/fixtures/clientconfig/config.yaml` to point to specific environment. This includes TLS certs, hosts, ports, MSP(crypto config) directories, timeouts, and security configurations.
+ - Run all fabric-snaps tests in `fabric-snaps/bddtests` using the following command `DISABLE_COMPOSITION=true go test`
+
+Run specific tests using the following commands:
+```
+// Smoke tests
+$ DISABLE_COMPOSITION=true go test -run smoke
+// HTTP Snap tests
+$ DISABLE_COMPOSITION=true go test -run httpsnap
+// Transaction Snap tests
+$ DISABLE_COMPOSITION=true go test -run txnsnap
+```
+
+Test pre-requisites:          
+ - Pre-enrolled admin and user for the specified. These certs are read from the MSP Directory whose path is defined by the key `client.cryptoconfig.path` in the config.yaml file
+ - Ability to create channel “mychannel” and deploy two chaincodes example_cc and httpsnaptest_cc
+ - External Connectivity for HttpSnap

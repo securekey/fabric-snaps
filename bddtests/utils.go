@@ -130,6 +130,21 @@ func HasPrimaryPeerJoinedChannel(client api.FabricClient, orgUser api.User, chan
 	return foundChannel, nil
 }
 
+// IsChaincodeInstalled Helper function to check if chaincode has been deployed
+func IsChaincodeInstalled(client api.FabricClient, peer api.Peer, name string) (bool, error) {
+	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(peer)
+	if err != nil {
+		return false, err
+	}
+
+	for _, chaincode := range chaincodeQueryResponse.Chaincodes {
+		if chaincode.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func getFilesWithName(pathRelToWD string, fileName string) ([]string, error) {
 	wd, err := os.Getwd()
 	if err != nil {

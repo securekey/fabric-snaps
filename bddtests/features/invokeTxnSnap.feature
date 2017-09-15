@@ -5,12 +5,13 @@
 #
 @all
 @txnsnap
-Feature:  Feature Invoke Transaction Snap 
+Feature:  Feature Invoke Transaction Snap
+	@smoke
 	Scenario: Invoke Transaction Snap getPeersOfChannel function
         Given fabric has channel "mychannel" and p0 joined channel
         When client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,getPeersOfChannel,mychannel" on p0
-        And response from "txnsnapinvoker" to client C1 contains value "peer0.org1.example.com:7051"
-		
+        And response from "txnsnapinvoker" to client C1 contains value p0
+
 	Scenario: Invoke Transaction Snap endorseAndCommitTransaction,endorseTransaction function
 	    Given fabric has channel "mychannel" and p0 joined channel
 	    And "test" chaincode "example_cc" version "v1" from path "github.com/example_cc" is installed and instantiated with args "init,a,100,b,200"

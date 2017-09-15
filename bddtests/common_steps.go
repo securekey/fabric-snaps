@@ -144,6 +144,17 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	d.BDDContext.Client.SetUserContext(d.BDDContext.Org1Admin)
 	// must reset client user context to normal user once done with Admin privilieges
 	defer d.BDDContext.Client.SetUserContext(d.BDDContext.Org1User)
+
+	// Check if CC is installed
+	installed, err := IsChaincodeInstalled(d.BDDContext.Client, d.BDDContext.Channel.Peers()[0], ccID)
+	if err != nil {
+		return err
+	}
+
+	if installed {
+		return nil
+	}
+
 	// SendInstallCC
 	if err := sdkFabricTxnAdmin.SendInstallCC(d.BDDContext.Client,
 		ccID, ccPath, version, nil, d.BDDContext.Channel.Peers(), d.getDeployPath(ccType)); err != nil {
