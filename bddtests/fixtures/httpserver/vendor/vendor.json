@@ -1,0 +1,175 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "olBUAoUXwntKyblqT7VE1zvINBo=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/fsnotify/fsnotify",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "7JBkp3EZoc0MSbiyWfzVhO4RYoY=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl",
+			"path": "github.com/hashicorp/hcl",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "XQmjDva9JCGGkIecOgwtBEMCJhU=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/hcl/ast",
+			"path": "github.com/hashicorp/hcl/hcl/ast",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "/15SVLnCDzxICSatuYbfctrcpSM=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/hcl/parser",
+			"path": "github.com/hashicorp/hcl/hcl/parser",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "z6wdP4mRw4GVjShkNHDaOWkbxS0=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/hcl/scanner",
+			"path": "github.com/hashicorp/hcl/hcl/scanner",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "oS3SCN9Wd6D8/LG0Yx1fu84a7gI=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/hcl/strconv",
+			"path": "github.com/hashicorp/hcl/hcl/strconv",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "c6yprzj06ASwCo18TtbbNNBHljA=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/hcl/token",
+			"path": "github.com/hashicorp/hcl/hcl/token",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "PwlfXt7mFS8UYzWxOK5DOq0yxS0=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/json/parser",
+			"path": "github.com/hashicorp/hcl/json/parser",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "YdvFsNOMSWMLnY6fcliWQa0O5Fw=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/json/scanner",
+			"path": "github.com/hashicorp/hcl/json/scanner",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "fNlXQCQEnb+B3k5UDL/r15xtSJY=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/hashicorp/hcl/json/token",
+			"path": "github.com/hashicorp/hcl/json/token",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "up35HgA0/UxlprRI0fUSpiGhZvg=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/magiconair/properties",
+			"path": "github.com/magiconair/properties",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "EHjhpHipgm+XGccrRAms9AW3Ewk=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/mitchellh/mapstructure",
+			"path": "github.com/mitchellh/mapstructure",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "F1IYMLBLAZaTOWnmXsgaxTGvrWI=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/pelletier/go-buffruneio",
+			"path": "github.com/pelletier/go-buffruneio",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "qcIY4l8CeriD79q4Ma7oMwSgFAs=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/pelletier/go-toml",
+			"path": "github.com/pelletier/go-toml",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "hLJ4PW0yTON/V6kKjY9v0zfLnd0=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/afero",
+			"path": "github.com/spf13/afero",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "5KRbEQ28dDaQmKwAYTD0if/aEvg=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/afero/mem",
+			"path": "github.com/spf13/afero/mem",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "Sq0QP4JywTr7UM4hTK1cjCi7jec=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/cast",
+			"path": "github.com/spf13/cast",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "suLj1G8Vd//a/a3sUEKz/ROalz0=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/jwalterweatherman",
+			"path": "github.com/spf13/jwalterweatherman",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "STxYqRb4gnlSr3mRpT+Igfdz/kM=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/pflag",
+			"path": "github.com/spf13/pflag",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "XeB0yeQkOMI+CWrllrbTrg4iOEs=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/github.com/spf13/viper",
+			"path": "github.com/spf13/viper",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "2lLjHH8HgbakMDzbZm/5ks/Xnq8=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/golang.org/x/sys/unix",
+			"path": "golang.org/x/sys/unix",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/golang.org/x/text/transform",
+			"path": "golang.org/x/text/transform",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "kKylzIrLEnH8NKyeVAL0dq5gjVQ=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/golang.org/x/text/unicode/norm",
+			"path": "golang.org/x/text/unicode/norm",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		},
+		{
+			"checksumSHA1": "RDJpJQwkF012L6m/2BJizyOksNw=",
+			"origin": "github.com/securekey/fabric-snaps/vendor/gopkg.in/yaml.v2",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "abf73ca0529adb9020ac3cc3184db4fcae8eed8e",
+			"revisionTime": "2017-09-14T19:21:19Z"
+		}
+	],
+	"rootPath": "github.com/securekey/fabric-snaps/bddtests/fixtures/httpserver"
+}

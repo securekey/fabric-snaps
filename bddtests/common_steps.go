@@ -49,11 +49,6 @@ var logger = logging.MustGetLogger("test-logger")
 var trxPR []*apitxn.TransactionProposalResponse
 var queryValue string
 var queryResult string
-var peer0Address = "localhost:7051"
-var ordererAddress = "localhost:7050"
-var peer0EventAddress = "localhost:7053"
-var peer0TlsCert = "./fixtures/channel/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem"
-var ordererTlSCert = "./fixtures/channel/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem"
 
 // NewCommonSteps create new CommonSteps struct
 func NewCommonSteps(context *BDDContext) *CommonSteps {
@@ -78,8 +73,13 @@ func (d *CommonSteps) getEventHub() (sdkApi.EventHub, error) {
 	if err != nil {
 		return nil, fmt.Errorf("GetDefaultImplEventHub failed: %v", err)
 	}
-	eventHub.SetPeerAddr(peer0EventAddress,
-		peer0TlsCert, "peer0.org1.example.com")
+
+	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0")
+	if err != nil {
+		return nil, fmt.Errorf("Error reading peer config: %s", err)
+	}
+	eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", peerConfig.EventHost, peerConfig.EventPort),
+		peerConfig.TLS.Certificate, peerConfig.TLS.ServerHostOverride)
 
 	return eventHub, nil
 }
@@ -91,15 +91,24 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
 	}
 
-	peer, err := sdkFabApi.NewPeer(peer0Address,
-		peer0TlsCert, "peer0.org1.example.com", d.BDDContext.Client.Config())
+	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0")
+	if err != nil {
+		return fmt.Errorf("Error reading peer config: %s", err)
+	}
+	peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peerConfig.Host, peerConfig.Port),
+		peerConfig.TLS.Certificate, peerConfig.TLS.ServerHostOverride, d.BDDContext.Client.Config())
 	if err != nil {
 		return fmt.Errorf("NewPeer failed: %v", err)
 	}
 	channel.AddPeer(peer)
 
-	orderer, err := sdkFabApi.NewOrderer(ordererAddress,
-		ordererTlSCert, "orderer.example.com", d.BDDContext.Client.Config())
+	ordererConfig, err := d.BDDContext.Client.Config().OrdererConfig("orderer0")
+	if err != nil {
+		return fmt.Errorf("Could not load orderer config: %v", err)
+	}
+	orderer, err := sdkFabApi.NewOrderer(fmt.Sprintf("%s:%d", ordererConfig.Host,
+		ordererConfig.Port), ordererConfig.TLS.Certificate,
+		ordererConfig.TLS.ServerHostOverride, d.BDDContext.Client.Config())
 	if err != nil {
 		return fmt.Errorf("NewPeer failed: %v", err)
 	}
