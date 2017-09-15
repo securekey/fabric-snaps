@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	logging "github.com/op/go-logging"
 	"github.com/spf13/viper"
@@ -165,4 +166,54 @@ func GetSchemaConfig(contentType string) (*SchemaConfig, error) {
 	}
 
 	return schemaConfig, nil
+}
+
+// SecurityAlgorithm ...
+func SecurityAlgorithm() string {
+	return viper.GetString("bccsp.security.hashAlgorithm")
+}
+
+// SecurityLevel ...
+func SecurityLevel() int {
+	return viper.GetInt("bccsp.security.level")
+}
+
+//SecurityProvider provider SW or PKCS11
+func SecurityProvider() string {
+	return viper.GetString("bccsp.security.default.provider")
+}
+
+//Ephemeral flag
+func Ephemeral() bool {
+	return viper.GetBool("bccsp.security.ephemeral")
+}
+
+//SoftVerify flag
+func SoftVerify() bool {
+	return viper.GetBool("bccsp.security.softVerify")
+}
+
+//SecurityProviderLibPath will be set only if provider is PKCS11
+func SecurityProviderLibPath() string {
+	configuredLibs := viper.GetString("bccsp.security.library")
+	libPaths := strings.Split(configuredLibs, ",")
+	var lib string
+	for _, path := range libPaths {
+		if _, err := os.Stat(strings.TrimSpace(path)); !os.IsNotExist(err) {
+			lib = strings.TrimSpace(path)
+			break
+		}
+	}
+
+	return lib
+}
+
+//SecurityProviderPin will be set only if provider is PKCS11
+func SecurityProviderPin() string {
+	return viper.GetString("bccsp.security.pin")
+}
+
+//SecurityProviderLabel will be set only if provider is PKCS11
+func SecurityProviderLabel() string {
+	return viper.GetString("bccsp.security.label")
 }

@@ -6,6 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -19,6 +22,8 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	config "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 )
@@ -302,4 +307,57 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	os.Exit(m.Run())
+}
+
+func TestBCCSPKeysAndCertificates(t *testing.T) {
+	opts := GetBCCSPProvider()
+	if opts.ProviderName == "PKCS11" {
+		csp, err := GetConfiguredCSP(opts)
+
+		if err != nil {
+			t.Fatalf("Cannot configure BCCSP provider %v\n", err)
+		}
+		ski, err := GenerateKeyPair(csp)
+		if err != nil {
+			t.Fatalf("Cannot generate key pair using configured BCCSP %v\n", err)
+		}
+		//this is private key
+		key, err := GetKeysForHandle(csp, ski)
+		if err != nil {
+			t.Fatalf("Cannot retrieve keys from BCCSP for given SKI %v\n", err)
+		}
+		//TODO
+		// pub, err := utils.PublicKeyToDER(key.PublicKey)
+		// if err != nil {
+		// 	t.Fatalf("Cannot convert public key to DER format %v\n", err)
+		// }
+		fmt.Printf("SKI %x\nIsPrivate: %v\n", ski, key.Private())
+	}
+}
+
+//GenerateKeyPair and return SKI -
+//The SKI should be in config file for prebuilt and preconfigured keys
+func GenerateKeyPair(csp bccsp.BCCSP) ([]byte, error) {
+	//generate key pair
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get private and import into HSM
+	priv, err := utils.PrivateKeyToDER(key)
+	if err != nil {
+		KeyImport
+		return nil, err
+	}
+
+	sk, err := csp.KeyImport(priv, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: false})
+	if err != nil {
+		return nil, err
+	}
+	if sk == nil {
+		return nil, err
+	}
+	fmt.Printf("%x\n", sk.SKI())
+	return sk.SKI(), nil
 }
