@@ -124,12 +124,12 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 
 	if !alreadyJoined {
 		// Create and join channel
-		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.OrdererAdmin, d.BDDContext.Org1Admin, channel, fmt.Sprintf("./fixtures/channel/%s.tx", channelID)); err != nil {
+		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.OrdererAdmin, d.BDDContext.Org1Admin, channel, GetChannelTxPath(channelID)); err != nil {
 			return fmt.Errorf("CreateOrUpdateChannel returned error: %v", err)
 		}
 
 		time.Sleep(time.Second * 3)
-		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, d.BDDContext.Org1Admin, channel, fmt.Sprintf("./fixtures/channel/%s.tx", "Org1MSPanchors")); err != nil {
+		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, d.BDDContext.Org1Admin, channel, GetChannelAnchorTxPath(channelID, "peerorg1")); err != nil {
 			return fmt.Errorf("CreateChannel returned error: %v", err)
 		}
 		if err = sdkFabricTxnAdmin.JoinChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, channel); err != nil {

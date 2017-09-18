@@ -17,6 +17,7 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric/common/util"
+	"github.com/spf13/viper"
 )
 
 var composition *Composition
@@ -32,6 +33,8 @@ func TestMain(m *testing.M) {
 	if cmdTags != nil && cmdTags.Value != nil && cmdTags.Value.String() != "" {
 		tags = cmdTags.Value.String()
 	}
+
+	initBDDConfig()
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		s.BeforeSuite(func() {
@@ -96,4 +99,20 @@ func FeatureContext(s *godog.Suite) {
 
 	httpServerSteps := NewHTTPServerSteps(context)
 	httpServerSteps.registerSteps(s)
+}
+
+func initBDDConfig() {
+	replacer := strings.NewReplacer(".", "_")
+
+	viper.AddConfigPath("./fixtures/clientconfig/")
+	viper.SetConfigName("config")
+	viper.SetEnvPrefix("core")
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(replacer)
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Printf("Fatal error reading config file: %s \n", err)
+		os.Exit(1)
+	}
 }

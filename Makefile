@@ -13,11 +13,14 @@
 # checks: runs all check conditions (license, spelling, linting)
 # snaps: generate snaps binary
 # populate: populates generated files (not included in git) - currently only vendor
-# populate-vendor: populate the vendor directory based on the lock 
+# populate-vendor: populate the vendor directory based on the lock
+# channel-artifacts: genrates the channel tx files used in the bdd tests
 
+ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
 PACKAGE_NAME = github.com/securekey/fabric-snaps
+FABRIC_TOOLS_RELEASE=1.0.2
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
 
@@ -48,7 +51,14 @@ testsnaps: clean getFabricVersion populate
 		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
 		hyperledger/fabric-tools:latest \
 		/bin/bash -c "export FABRIC_VERSION=$$(cat build/fabricversion.txt) ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
-	
+
+channel-artifacts:
+	@echo "Generating test channel .tx files"
+	@docker run -i \
+		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
+		hyperledger/fabric-tools:$(ARCH)-$(FABRIC_TOOLS_RELEASE) \
+		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
+
 
 depend:
 	@scripts/dependencies.sh

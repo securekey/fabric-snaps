@@ -38,7 +38,7 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 	}
 	// Initialize bccsp factories before calling get client
 	err = bccspFactory.InitFactories(&bccspFactory.FactoryOpts{
-		ProviderName: "SW",
+		ProviderName: clientConfig.SecurityProvider(),
 		SwOpts: &bccspFactory.SwOpts{
 			HashFamily: clientConfig.SecurityAlgorithm(),
 			SecLevel:   clientConfig.SecurityLevel(),
@@ -52,11 +52,8 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 		panic(fmt.Sprintf("Failed getting ephemeral software-based BCCSP [%s]", err))
 	}
 
-	client, err := sdkFabApi.NewClientWithPreEnrolledUser(clientConfig, "", true,
-		"user", "./fixtures/ecert/key.pem", "./fixtures/ecert/cert.pem", "peerorg1", nil)
-	if err != nil {
-		panic(fmt.Sprintf("Failed NewClientWithPreEnrolledUser() [%s]", err))
-	}
+	client := sdkFabApi.NewSystemClient(clientConfig)
+	client.SetCryptoSuite(bccspFactory.GetDefault())
 
 	b.Org1Admin, err = GetAdmin(client, "org1", "peerorg1")
 	if err != nil {

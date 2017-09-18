@@ -18,6 +18,7 @@ import (
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/spf13/viper"
 )
 
 // GetOrdererAdmin returns a pre-enrolled orderer admin user
@@ -41,6 +42,16 @@ func GetUser(c api.FabricClient, orgPath string, orgName string) (api.User, erro
 	certDir := fmt.Sprintf("peerOrganizations/%s.example.com/users/User1@%s.example.com/msp/signcerts", orgPath, orgPath)
 	username := fmt.Sprintf("peer%sUser1", orgPath)
 	return getDefaultImplPreEnrolledUser(c, keyDir, certDir, username, orgName)
+}
+
+// GetChannelTxPath returns path to the channel tx file for the given channel
+func GetChannelTxPath(channelID string) string {
+	return viper.GetString(fmt.Sprintf("bddtest.channelconfig.%s.txpath", channelID))
+}
+
+// GetChannelAnchorTxPath returns path to the channel anchor tx file for the given channel
+func GetChannelAnchorTxPath(channelID, orgName string) string {
+	return viper.GetString(fmt.Sprintf("bddtest.channelconfig.%s.anchortxpath.%s", channelID, orgName))
 }
 
 // GenerateRandomID generates random ID

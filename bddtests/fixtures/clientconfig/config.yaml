@@ -3,6 +3,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+
+bddtest:
+  # Paths to channel .tx files used for bdd tests
+  channelconfig:
+    mychannel:
+      txPath: "./fixtures/channel/mychannel.tx"
+      anchorTxPath:
+        peerorg1: "./fixtures/channel/mychannelOrg1MSPanchors.tx"
+
 client:
  tls:
   enabled: true
@@ -32,14 +41,14 @@ client:
    pin: ""
    label: ""
    library: ""
-   
+
  connection:
    timeout:
     peer:
      endorser: 3s
      eventHub: 3s
      eventReg: 3s
-    orderer: 3s  
+    orderer: 3s
 
 # network provides a static definition of a Hyperledger Fabric network
  network:
@@ -86,5 +95,3 @@ client:
          # Certificate location absolute path
          certificate: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem"
          serverHostOverride: "peer0.org1.example.com"
-
-
