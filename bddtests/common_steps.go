@@ -174,13 +174,11 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 
 	defer eventHub.Disconnect()
 
-	if err := sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, argsArray,
+	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, argsArray,
 		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
-		eventHub); err != nil {
-		return err
-	}
+		eventHub)
 
-	return nil
+	return err
 }
 
 func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error {
