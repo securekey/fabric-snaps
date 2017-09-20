@@ -14,7 +14,7 @@
 # snaps: generate snaps binary
 # populate: populates generated files (not included in git) - currently only vendor
 # populate-vendor: populate the vendor directory based on the lock
-# channel-artifacts: genrates the channel tx files used in the bdd tests
+# channel-artifacts: generates the channel tx files used in the bdd tests
 
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
@@ -58,7 +58,6 @@ channel-artifacts:
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		hyperledger/fabric-tools:$(ARCH)-$(FABRIC_TOOLS_RELEASE) \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
-
 
 depend:
 	@scripts/dependencies.sh
