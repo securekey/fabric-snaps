@@ -7,7 +7,7 @@ The snaps are located at the root of this project. Each snap forms an independen
 Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file as well as any other configurations that the snap requires.
 
 ##### Build
-Note: We assume a working Golang and Docker installation
+Note: We assume a working Golang and Docker installation.
 
 The snaps present in this project currently depend on a custom version of fabric located at https://github.com/securekey/fabric-next
 
@@ -71,3 +71,4 @@ Test pre-requisites:
  - Ability to create channel “mychannel”. To generate custom channel config blocks and transactions, use the make target `make channel-artifacts`. Channel and org names can be configured in the script `scripts/generate_channeltx.sh`
  - Ability to deploy two chaincodes example_cc and httpsnaptest_cc
  - External Connectivity for HttpSnap
+
