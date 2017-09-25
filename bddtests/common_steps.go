@@ -228,6 +228,8 @@ func (d *CommonSteps) invokeCCWithArgs(ccID string, args []string) error {
 }
 
 func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
+	defer clearQueryValue()
+
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
@@ -239,6 +241,8 @@ func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
 }
 
 func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
+	defer clearQueryValue()
+
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
@@ -246,6 +250,10 @@ func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 		return fmt.Errorf("Query value(%s) doesn't contain expected value(%s)", queryValue, value)
 	}
 	return nil
+}
+
+func clearQueryValue() {
+	queryValue = ""
 }
 
 // createAndSendTransactionProposal ...

@@ -85,6 +85,9 @@ func FeatureContext(s *godog.Suite) {
 	commonSteps := NewCommonSteps(context)
 	commonSteps.registerSteps(s)
 
+	txnSnapSteps := NewTxnSnapSteps(context)
+	txnSnapSteps.registerSteps(s)
+
 	httpServerSteps := NewHTTPServerSteps(context)
 	httpServerSteps.registerSteps(s)
 }

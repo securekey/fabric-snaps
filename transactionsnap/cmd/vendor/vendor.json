@@ -1713,109 +1713,88 @@
 			"revisionTime": "2017-08-25T15:35:51Z"
 		},
 		{
-			"checksumSHA1": "HOr/ZJEyEEeb6XKtd0atYyPXYj4=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc",
+			"checksumSHA1": "zX/r1cxU777gFup7n41Nphp7ZLg=",
 			"path": "google.golang.org/grpc",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "/eTpFgjvMq5Bc9hYnw5fzKG4B6I=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/codes",
+			"checksumSHA1": "xDFNvjW6gMsDQ+WRZ0t+8S/e4Qk=",
 			"path": "google.golang.org/grpc/codes",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "XH2WYcDNwVO47zYShREJjcYXm0Y=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/connectivity",
-			"path": "google.golang.org/grpc/connectivity",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
-		},
-		{
-			"checksumSHA1": "5ylThBvJnIcyWhL17AC9+Sdbw2E=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/credentials",
+			"checksumSHA1": "ABO3qOTUiOZOk1UCq47NbQ64yWk=",
 			"path": "google.golang.org/grpc/credentials",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "2NbY9kmMweE4VUsruRsvmViVnNg=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/grpclb/grpc_lb_v1",
+			"checksumSHA1": "d0cyferoJguQhL6d2K6g2oC0mVM=",
 			"path": "google.golang.org/grpc/grpclb/grpc_lb_v1",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "QwfauZF1BCsZb73maxHQtF5y2ro=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/grpclog",
+			"checksumSHA1": "3Lt5hNAG8qJAYSsNghR5uA1zQns=",
 			"path": "google.golang.org/grpc/grpclog",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "U9vDe05/tQrvFBojOQX8Xk12W9I=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/internal",
+			"checksumSHA1": "T3Q0p8kzvXFnRkMaK/G8mCv6mc0=",
 			"path": "google.golang.org/grpc/internal",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "hcuHgKp8W0wIzoCnNfKI8NUss5o=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/keepalive",
+			"checksumSHA1": "TY6NrgLRPSer6a5dBYOo/7o/ghk=",
 			"path": "google.golang.org/grpc/keepalive",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "N++Ur11m6Dq3j14/Hc2Kqmxroag=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/metadata",
+			"checksumSHA1": "89fjWaU6NKVpmWI+0EoDION0dpE=",
 			"path": "google.golang.org/grpc/metadata",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "Zzb7Xsc3tbTJzrcZbSPyye+yxmw=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/naming",
+			"checksumSHA1": "4GSUFhOQ0kdFlBH4D5OTeKy78z0=",
 			"path": "google.golang.org/grpc/naming",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "n5EgDdBqFMa2KQFhtl+FF/4gIFo=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/peer",
+			"checksumSHA1": "wUSBvomJRJhYf4ELuP0bSkFrzgc=",
 			"path": "google.golang.org/grpc/peer",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "ZY8Tq61fGK1stTuvwK5WoqcU8j8=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/stats",
+			"checksumSHA1": "e7eoENPNFnm2QddUE5epm8UmFX8=",
 			"path": "google.golang.org/grpc/stats",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "DIv9qbApAoh2cF2G3Br24lVPqUI=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/status",
+			"checksumSHA1": "0tlQhEkF3hex/+tjcygLxeweuiY=",
 			"path": "google.golang.org/grpc/status",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "aixGx/Kd0cj9ZlZHacpHe3XgMQ4=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/tap",
+			"checksumSHA1": "N0TftT6/CyWqp6VRi2DqDx60+Fo=",
 			"path": "google.golang.org/grpc/tap",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
-			"checksumSHA1": "o0hnTIGkLqrdf3nUisZuzdyEXCE=",
-			"origin": "github.com/hyperledger/fabric-sdk-go/vendor/google.golang.org/grpc/transport",
+			"checksumSHA1": "n0geMkBN+ox+H6Tg7xOiav4BssI=",
 			"path": "google.golang.org/grpc/transport",
-			"revision": "7570207023c7db1a22a727d6c6eba5603cd624eb",
-			"revisionTime": "2017-08-25T15:35:51Z"
+			"revision": "2739967807cc0e3199513569f58fda34252ad65e",
+			"revisionTime": "2017-05-26T15:26:41Z"
 		},
 		{
 			"checksumSHA1": "xsaHqy6/sonLV6xIxTNh4FfkWbU=",
