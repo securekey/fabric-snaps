@@ -81,8 +81,11 @@ integration-test: clean depend getFabricVersion populate snaps-4-bdd
 	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:x86_64-$$(cat build/fabricversion.txt)
 	@scripts/integration.sh
 
+http-server:
+	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 
-all: clean checks snaps testsnaps unit-test integration-test
+
+all: clean checks snaps testsnaps unit-test integration-test http-server
 
 snaps-4-bdd: clean checks getFabricVersion snaps testsnaps
 	@mkdir ./bddtests/fixtures/config/extsysccs

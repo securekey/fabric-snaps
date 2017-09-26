@@ -71,6 +71,8 @@ func initHTTPServerConfig() {
 	replacer := strings.NewReplacer(".", "_")
 
 	viper.AddConfigPath("./")
+	viper.AddConfigPath(os.Getenv("EXT_SERVER_CFG_PATH"))
+	viper.AddConfigPath("/etc/external-http-server/")
 	viper.SetConfigName("config")
 	viper.SetEnvPrefix("core")
 	viper.AutomaticEnv()
