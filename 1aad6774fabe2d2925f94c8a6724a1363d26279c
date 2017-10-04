@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4717dd2_a839af02",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-10-04T20:25:27Z",
+      "side": 1,
+      "message": "err :\u003d fcClient.InitializeChannel(channel)",
+      "revId": "1aad6774fabe2d2925f94c8a6724a1363d26279c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
