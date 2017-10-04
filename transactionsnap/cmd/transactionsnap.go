@@ -251,6 +251,10 @@ func verifyTxnProposalSignature(stub shim.ChaincodeStubInterface) error {
 	if err != nil {
 		return fmt.Errorf("Cannot create channel %v", err)
 	}
+	fcClient.InitializeChannel(channel)
+	if err != nil {
+		return fmt.Errorf("Cannot initialize channel %v", err)
+	}
 	err = fcClient.VerifyTxnProposalSignature(channel, args[2])
 	if err != nil {
 		return fmt.Errorf("VerifyTxnProposalSignature returned error: %v", err)

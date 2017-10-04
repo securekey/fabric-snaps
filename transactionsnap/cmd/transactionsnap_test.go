@@ -554,6 +554,8 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 }
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T) {
+	//Replace client with mock client wrapper, which assumes channel is already initialized
+	fcClient = mocks.GetNewClientWrapper(fcClient)
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = false
@@ -586,6 +588,8 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T
 }
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testing.T) {
+	//Replace client with mock client wrapper, which assumes channel is already initialized
+	fcClient = mocks.GetNewClientWrapper(fcClient)
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = false
@@ -614,7 +618,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 	//invoke transaction snap
 	response := stub.MockInvoke("TxID", args)
 	if response.Status != shim.ERROR {
-		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
 	errorMsg := "The creator's signature over the proposal is not valid"
 	if !strings.Contains(response.Message, errorMsg) {
