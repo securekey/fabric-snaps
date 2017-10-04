@@ -16,6 +16,24 @@
       "revId": "1aad6774fabe2d2925f94c8a6724a1363d26279c",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b982f10_a16db8ea",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2017-10-04T20:40:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4717dd2_a839af02",
+      "revId": "1aad6774fabe2d2925f94c8a6724a1363d26279c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
