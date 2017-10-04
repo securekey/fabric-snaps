@@ -413,7 +413,7 @@ func (c *clientImpl) InitializeChannel(channel sdkApi.Channel) error {
 
 	err := channel.Initialize(nil)
 	if err != nil {
-		return fmt.Errorf("Error initializing new channel: %s", err)
+		return fmt.Errorf("Error initializing new channel: %s", err.Error())
 	}
 	// Channel initialized. Add MSP roots to TLS cert pool.
 	c.initializeTLSPool(channel)
