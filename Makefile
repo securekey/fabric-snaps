@@ -78,7 +78,7 @@ unit-test: depend getFabricVersion populate
 	@scripts/unit.sh
 
 integration-test: clean depend getFabricVersion populate snaps-4-bdd
-	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:x86_64-$$(cat build/fabricversion.txt)
+	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:$(ARCH)-$$(cat build/fabricversion.txt)
 	@scripts/integration.sh
 
 http-server:
