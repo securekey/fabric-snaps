@@ -10,10 +10,10 @@ logging:
   level: debug
 tls:
   caCerts:
-  - tls/test-ca.crt
+  - tls/ca.crt
   - tls/abc-ca.crt
-  clientCert: tls/test-client.crt
-  clientKey: tls/test-client.key
+  clientCert: tls/client.crt
+  clientKey: tls/client.key
   namedClientOverridePath: tls/override
 schemas:
   - type: application/json
