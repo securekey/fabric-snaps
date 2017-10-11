@@ -78,7 +78,7 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 
 func initHTTPServerConfig() {
 	viper.Set("http.listen.address", ":8443")
-	viper.Set("http.tls.caCert.file", "./fixtures/httpserver/test-client.crt")
+	viper.Set("http.tls.caCert.file", "./fixtures/httpserver/ca.crt")
 	viper.Set("http.tls.cert.file", "./fixtures/httpserver/server.crt")
 	viper.Set("http.tls.key.file", "./fixtures/httpserver/server.key")
 }
