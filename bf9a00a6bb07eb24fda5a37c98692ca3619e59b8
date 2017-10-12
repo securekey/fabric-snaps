@@ -22,6 +22,30 @@
       "revId": "bf9a00a6bb07eb24fda5a37c98692ca3619e59b8",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88219faa_cb5ef778",
+        "filename": "bddtests/httpserver_steps.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-10-12T20:44:33Z",
+      "side": 1,
+      "message": "This is from the local server. I can delete all of this since it\u0027s not needed anymore. Thanks.",
+      "parentUuid": "a50390b9_514e886c",
+      "range": {
+        "startLine": 80,
+        "startChar": 36,
+        "endLine": 80,
+        "endChar": 40
+      },
+      "revId": "bf9a00a6bb07eb24fda5a37c98692ca3619e59b8",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
