@@ -63,7 +63,7 @@ var mockEventServer *mocks.MockEventServer
 
 var endorserTestHost = "127.0.0.1"
 var endorserTestPort = 7040
-var endorserTestEventPort = 17564
+var endorserTestEventPort = 7053
 var broadcastTestHost = "127.0.0.1"
 var broadcastTestPort = 7041
 

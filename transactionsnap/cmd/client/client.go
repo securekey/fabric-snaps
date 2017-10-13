@@ -272,15 +272,15 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	fail := make(chan error)
 	txID := transaction.Proposal.TxnID
 	if registerTxEvent {
-		peer, err := c.selectionService.GetPeerForEvents(channel.Name())
+		localPeer, err := config.GetLocalPeer()
 		if err != nil {
-			return fmt.Errorf("Error selecting peer: %s", err)
+			return fmt.Errorf("GetLocalPeer return error [%v]", err)
 		}
 		eventHub, err := sdkFabApi.NewEventHub(c.client)
 		if err != nil {
 			return fmt.Errorf("Failed sdkFabricTxn.GetDefaultImplEventHub() [%v]", err)
 		}
-		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", peer.EventHost, peer.EventPort), "", "")
+		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", localPeer.EventHost, localPeer.EventPort), "", "")
 		if err := eventHub.Connect(); err != nil {
 			return fmt.Errorf("Failed eventHub.Connect() [%v]", err)
 		}
