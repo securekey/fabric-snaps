@@ -30,7 +30,7 @@ func (m *MockSelectionService) GetEndorsersForChaincode(channelID string,
 }
 
 //GetPeerForEvents get peers for events
-func (m *MockSelectionService) GetPeerForEvents(channelID string) (*config.PeerConfig, error) {
+func (m *MockSelectionService) GetPeerForEvents(channelID, mspID string) (*config.PeerConfig, error) {
 	if channelID == m.InvalidChannel {
 		return &config.PeerConfig{}, fmt.Errorf("Invalid channel")
 	}

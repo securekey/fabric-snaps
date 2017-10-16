@@ -8,11 +8,9 @@ package client
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
@@ -39,7 +37,8 @@ type SelectionService interface {
 	// GetEndorsersForChaincode returns a set of peers that should satisfy the endorsement
 	// policies of all of the given chaincodes
 	GetEndorsersForChaincode(channelID string, chaincodeIDs ...string) ([]sdkApi.Peer, error)
-	GetPeerForEvents(channelID string) (*config.PeerConfig, error)
+	//GetPeerForEvents returns peer based on channel id and mspid passed
+	GetPeerForEvents(channelID, mspID string) (*config.PeerConfig, error)
 }
 
 type selectionServiceImpl struct {
@@ -74,7 +73,7 @@ func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
 	return resolver.Resolve().Peers(), nil
 }
 
-func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerConfig, error) {
+func (s *selectionServiceImpl) GetPeerForEvents(channelID, mspID string) (*config.PeerConfig, error) {
 	peerConfig := &config.PeerConfig{}
 	channelMembership := s.membershipManager.GetPeersOfChannel(channelID, false)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
@@ -82,17 +81,25 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerC
 		return peerConfig, channelMembership.QueryError
 	}
 
-	rs := rand.NewSource(time.Now().Unix())
-	r := rand.New(rs)
-	randomPeer := r.Intn(len(channelMembership.Peers))
-
 	// Membership Service does not know the event port. We assume it is the same
 	// as the local peer
 	localPeer, err := config.GetLocalPeer()
 	if err != nil {
 		return peerConfig, err
 	}
-	selectedPeer := channelMembership.Peers[randomPeer]
+	//Select peer matching given msp id
+	var selectedPeer sdkApi.Peer
+	for _, peer := range channelMembership.Peers {
+		if peer.MSPID() == mspID {
+			selectedPeer = peer
+			break
+		}
+	}
+
+	if selectedPeer == nil {
+		return nil, fmt.Errorf("failed to get peer for events for given mspid %s", mspID)
+	}
+
 	host, _, err := net.SplitHostPort(selectedPeer.URL())
 	if err != nil {
 		return peerConfig, err
