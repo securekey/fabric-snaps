@@ -6,9 +6,6 @@
 version: '2'
 
 services:
-  
-
-
   orderer.example.com:
     container_name: orderer.example.com
     image: ${FABRIC_ORDERER_FIXTURE_IMAGE}:${FABRIC_ORDERER_FIXTURE_TAG}

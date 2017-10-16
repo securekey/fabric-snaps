@@ -1,7 +1,12 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 http:
   tls:
     caCert:
-      file: "./test-client.crt"
+      file: "./ca.crt"
     cert:
       file: "./server.crt"
     key:
