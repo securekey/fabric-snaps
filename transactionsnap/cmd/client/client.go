@@ -272,7 +272,7 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	fail := make(chan error)
 	txID := transaction.Proposal.TxnID
 	if registerTxEvent {
-		peer, err := c.selectionService.GetPeerForEvents(channel.Name())
+		peer, err := c.selectionService.GetPeerForEvents(channel.Name(), c.client.UserContext().MspID())
 		if err != nil {
 			return fmt.Errorf("Error selecting peer: %s", err)
 		}
