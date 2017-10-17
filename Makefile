@@ -27,9 +27,7 @@ export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depen
 getFabricVersion:
 	@mkdir -p build
 	@touch build/fabricversion.txt
-	@docker run -i \
-		hyperledger/fabric-tools:latest \
-		peer -v | grep '\` Version: ' | awk '{ print $$2}' > build/fabricversion.txt
+	@echo "1.1.0" > build/fabricversion.txt
 
 snaps: clean getFabricVersion populate
 	@echo "Building snaps..."

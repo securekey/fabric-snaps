@@ -35,10 +35,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/hyperledger/fabric"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
@@ -78,3 +74,8 @@ branch = "master"
 [[override]]
 name = "github.com/opencontainers/runc"
 branch = "master"
+
+[[override]]
+  name = "github.com/hyperledger/fabric"
+  source = "github.com/securekey/fabric-next"
+  branch = "master"

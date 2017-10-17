@@ -107,8 +107,9 @@
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/crypto","common/flogging","common/ledger","common/ledger/util","common/metadata","common/policies","common/util","core/chaincode/platforms","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/version","core/ledger/util","events/consumer","msp","msp/cache","msp/mgmt","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
-  revision = "e840f1b5a66e92202ed5ccb3002a4686aee216f3"
+  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/crypto","common/flogging","common/ledger","common/ledger/util","common/metadata","common/policies","common/util","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/version","core/ledger/util","events/consumer","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
+  revision = "316de6aef9d3b3f3f5c42e91f417f6edc753b60a"
+  source = "github.com/securekey/fabric-next"
 
 [[projects]]
   name = "github.com/hyperledger/fabric-ca"
@@ -157,6 +158,12 @@
   packages = ["."]
   revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
   version = "v1.7.3"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/manudrijvers/amcl"
+  packages = ["go"]
+  revision = "4413a40c6c8d3d9576ea825dd4b40f07b9c1ace4"
 
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
@@ -336,6 +343,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e6fb22c4d7b8d10bd5dbbfa5693b1af5bb9e2f8bffc3422d4d4d0d76d5d06f43"
+  inputs-digest = "79151977955dac30ecb0a244f491d955a3483ca51e6c366794129dcc0911f416"
   solver-name = "gps-cdcl"
   solver-version = 1
