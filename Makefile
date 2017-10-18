@@ -32,7 +32,7 @@ snaps: clean populate
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath build/snaps):/opt/snaps \
 		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
-		hyperledger/fabric-tools:latest \
+		repo.onetap.ca:8443/next/hyperledger/fabric-tools:x86_64-latest \
 		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
 
 
@@ -43,7 +43,7 @@ testsnaps: clean populate
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
 		-v $(abspath ./bddtests/fixtures/build/testsnaps):/opt/snaps \
 		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
-		hyperledger/fabric-tools:latest \
+		repo.onetap.ca:8443/next/hyperledger/fabric-tools:x86_64-latest \
 		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
 
 channel-artifacts:
