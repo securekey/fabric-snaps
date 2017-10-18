@@ -47,6 +47,9 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # override chaincode images (TODO: Add ARCH later)
+      - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${FABRIC_BUILDER_FIXTURE_TAG}
+      - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${FABRIC_BASEOS_FIXTURE_TAG}
       # enable External SCCs
       - CORE_CHAINCODE_SYSTEMEXT_ENABLED=true
       # path of External SCCs to read CodeSpec objects

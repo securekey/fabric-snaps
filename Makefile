@@ -24,12 +24,8 @@ FABRIC_TOOLS_RELEASE=1.0.2
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
 
-getFabricVersion:
-	@mkdir -p build
-	@touch build/fabricversion.txt
-	@echo "1.1.0" > build/fabricversion.txt
 
-snaps: clean getFabricVersion populate
+snaps: clean populate
 	@echo "Building snaps..."
 	@mkdir -p build/snaps
 	@docker run -i \
@@ -37,10 +33,10 @@ snaps: clean getFabricVersion populate
 		-v $(abspath build/snaps):/opt/snaps \
 		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
 		hyperledger/fabric-tools:latest \
-		/bin/bash -c "export FABRIC_VERSION=$$(cat build/fabricversion.txt) ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
+		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
 
 
-testsnaps: clean getFabricVersion populate
+testsnaps: clean populate
 	@echo "Building test snaps..."
 	@mkdir -p ./bddtests/fixtures/build/testsnaps
 	@docker run -i \
@@ -48,7 +44,7 @@ testsnaps: clean getFabricVersion populate
 		-v $(abspath ./bddtests/fixtures/build/testsnaps):/opt/snaps \
 		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
 		hyperledger/fabric-tools:latest \
-		/bin/bash -c "export FABRIC_VERSION=$$(cat build/fabricversion.txt) ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
+		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
 
 channel-artifacts:
 	@echo "Generating test channel .tx files"
@@ -72,11 +68,10 @@ lint: populate
 spelling:
 	@scripts/check_spelling.sh
 
-unit-test: depend getFabricVersion populate
+unit-test: depend populate
 	@scripts/unit.sh
 
-integration-test: clean depend getFabricVersion populate snaps-4-bdd
-	@docker tag hyperledger/fabric-ccenv:latest hyperledger/fabric-ccenv:$(ARCH)-$$(cat build/fabricversion.txt)
+integration-test: clean depend populate snaps-4-bdd
 	@scripts/integration.sh
 
 http-server:
@@ -85,7 +80,7 @@ http-server:
 
 all: clean checks snaps testsnaps unit-test integration-test http-server
 
-snaps-4-bdd: clean checks getFabricVersion snaps testsnaps
+snaps-4-bdd: clean checks snaps testsnaps
 	@mkdir ./bddtests/fixtures/config/extsysccs
 	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
 	@cp -r ./bddtests/fixtures/build/testsnaps/* ./bddtests/fixtures/config/extsysccs/
