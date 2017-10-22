@@ -12,6 +12,7 @@ PKGS=`go list github.com/securekey/fabric-snaps/... 2> /dev/null | \
                                                  grep -v /mocks | \
                                                  grep -v /api | \
                                                  grep -v /protos | \
-                                                 grep -v /bddtests`
+                                                 grep -v /bddtests | \
+                                                 grep -v /internal`
 echo "Running tests..."
 go test -cover $PKGS -p 1 -timeout=10m

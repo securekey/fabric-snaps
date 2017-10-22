@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
-	"github.com/hyperledger/fabric/common/util"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/common/util"
 	"github.com/spf13/viper"
 )
 

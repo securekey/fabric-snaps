@@ -8,7 +8,7 @@ package pgresolver
 
 import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	common "github.com/hyperledger/fabric/protos/common"
+	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 )
 
 // SignaturePolicyFunc is a function that evaluates a signature policy and returns a peer group hierarchy

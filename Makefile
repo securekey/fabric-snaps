@@ -24,6 +24,11 @@ FABRIC_TOOLS_RELEASE=1.0.2
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
 
+# Upstream fabric patching (overridable)
+THIRDPARTY_FABRIC_CA_BRANCH ?= master
+THIRDPARTY_FABRIC_CA_COMMIT ?= 2f9617379ec6c253e610ac02b60b3f963f95ad1d
+THIRDPARTY_FABRIC_BRANCH    ?= master
+THIRDPARTY_FABRIC_COMMIT    ?= 505eb68f64493db86859b649b91e7b7068139e6f
 
 snaps: clean populate
 	@echo "Building snaps..."
@@ -90,6 +95,11 @@ populate: populate-vendor
 populate-vendor:
 	@echo "Populating vendor ..."
 	@dep ensure -vendor-only
+
+thirdparty-pin:
+	@echo "Pinning third party packages ..."
+	@UPSTREAM_COMMIT=$(THIRDPARTY_FABRIC_COMMIT) UPSTREAM_BRANCH=$(THIRDPARTY_FABRIC_BRANCH) scripts/third_party_pins/fabric/apply_upstream.sh
+	@UPSTREAM_COMMIT=$(THIRDPARTY_FABRIC_CA_COMMIT) UPSTREAM_BRANCH=$(THIRDPARTY_FABRIC_CA_BRANCH) scripts/third_party_pins/fabric-ca/apply_upstream.sh
 
 clean:
 	rm -Rf ./bddtests/fixtures/config/extsysccs

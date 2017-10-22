@@ -21,23 +21,20 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	clientConfig "github.com/hyperledger/fabric-sdk-go/pkg/config"
-	"github.com/hyperledger/fabric/bccsp"
-	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/hyperledger/fabric/protos/common"
-	protosUtils "github.com/hyperledger/fabric/protos/utils"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
+	bccspFactory "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
+	protosUtils "github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/protos/utils"
 
-	fcMocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	ab "github.com/hyperledger/fabric/protos/orderer"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/chaincode/shim"
 
-	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+
+	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
-
 	"google.golang.org/grpc"
 )
 
@@ -57,25 +54,21 @@ q5kNqOUxgHwBa2KTi/zJBR9L3IsTRDjJo8ECICf1xiDgKqZKrAMh0OCebskYwf53
 dooG04HBoqBLvB8Q
 -----END CERTIFICATE-----
 `
-var mockEndorserServer *fcMocks.MockEndorserServer
-var mockBroadcastServer *fcMocks.MockBroadcastServer
+var mockEndorserServer *fcmocks.MockEndorserServer
+var mockBroadcastServer *fcmocks.MockBroadcastServer
 var mockEventServer *mocks.MockEventServer
 
-var endorserTestHost = "127.0.0.1"
-var endorserTestPort = 7040
+var endorserTestURL = "127.0.0.1:7040"
+var broadcastTestURL = "127.0.0.1:7041"
+var endorserTestEventHost = "127.0.0.1"
 var endorserTestEventPort = 7053
-var broadcastTestHost = "127.0.0.1"
-var broadcastTestPort = 7041
-
-var configImp = clientmocks.NewMockConfig()
 
 const (
 	org1 = "Org1MSP"
 	org2 = "Org2MSP"
 )
 
-var p1 = peer("peer1", org1)
-var p2 = peer("peer2", org1)
+var p1, p2 sdkApi.Peer
 
 func TestTransactionSnapInit(t *testing.T) {
 	snap := &TxnSnap{}
@@ -214,7 +207,7 @@ func TestNotSpecifiedChannel(t *testing.T) {
 		if response.Status != shim.ERROR {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
-		errorMsg := "Cannot create channel Error creating new channel: failed to create Channel. Missing required 'name' parameter"
+		errorMsg := "Cannot create channel Error creating new channel: name is required"
 		if response.Message != errorMsg {
 			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 		}
@@ -381,7 +374,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionSuccess(t *testing.
 	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	go func() {
 		time.Sleep(time.Second * 1)
-		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, newTxID.ID, "testChannel")
+		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, newTxID.ID, "testChannel")
 		if err != nil {
 			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
 			return
@@ -392,6 +385,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionSuccess(t *testing.
 	//invoke transaction snap
 	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.OK {
+		time.Sleep(time.Second * 3)
 		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
 	}
 }
@@ -409,7 +403,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
-	errorMsg := "broadcast response is not success : INTERNAL_SERVER_ERROR"
+	errorMsg := "broadcast response is not success INTERNAL_SERVER_ERROR"
 	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
 	}
@@ -420,7 +414,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	go func() {
 		time.Sleep(time.Second * 1)
-		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, "wrongTxnID", "testChannel")
+		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, "wrongTxnID", "testChannel")
 		if err != nil {
 			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
 			return
@@ -478,7 +472,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	}
 	go func() {
 		time.Sleep(time.Second * 1)
-		mockBlock, err := mocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, tpResponse[0].Proposal.TxnID.ID, "testChannel")
+		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pb.ChaincodeEvent{}, tpResponse[0].Proposal.TxnID.ID, "testChannel")
 		if err != nil {
 			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
 			return
@@ -531,7 +525,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
-	errorMsg := "broadcast response is not success : INTERNAL_SERVER_ERROR"
+	errorMsg := "broadcast response is not success INTERNAL_SERVER_ERROR"
 	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
 	}
@@ -655,10 +649,10 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	return args
 }
 
-func startEndorserServer() *fcMocks.MockEndorserServer {
+func startEndorserServer() *fcmocks.MockEndorserServer {
 	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", endorserTestHost, endorserTestPort))
-	endorserServer := &fcMocks.MockEndorserServer{}
+	lis, err := net.Listen("tcp", endorserTestURL)
+	endorserServer := &fcmocks.MockEndorserServer{}
 	pb.RegisterEndorserServer(grpcServer, endorserServer)
 	if err != nil {
 		panic(fmt.Sprintf("Error starting endorser server: %s", err))
@@ -668,35 +662,19 @@ func startEndorserServer() *fcMocks.MockEndorserServer {
 	return endorserServer
 }
 
-func startBroadcastServer() *fcMocks.MockBroadcastServer {
-	grpcServer := grpc.NewServer()
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", broadcastTestHost, broadcastTestPort))
-	broadcastServer := new(fcMocks.MockBroadcastServer)
-	ab.RegisterAtomicBroadcastServer(grpcServer, broadcastServer)
-	if err != nil {
-		panic(fmt.Sprintf("Error starting BroadcastServer %s", err))
-	}
-	fmt.Printf("Test broadcast server started\n")
-	go grpcServer.Serve(lis)
-
-	return broadcastServer
-}
-
 func configureClient() client.Client {
 	fabricClient, err := client.GetInstance()
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing fabricClient: %s", err))
 	}
-	clientConfig.FabricClientViper().Set("client.tls.enabled", false)
 
 	newtworkConfig, _ := fabricClient.GetConfig().NetworkConfig()
-	newtworkConfig.Orderers["orderer0"] = apiconfig.OrdererConfig{Host: broadcastTestHost, Port: broadcastTestPort}
-	clientConfig.FabricClientViper().Set("client.network", newtworkConfig)
+	newtworkConfig.Orderers["orderer.example.com"] = apiconfig.OrdererConfig{URL: broadcastTestURL}
 
 	//create selection service
-	peer, _ := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", endorserTestHost, endorserTestPort), "", "", fabricClient.GetConfig())
+	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", fabricClient.GetConfig())
 	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
-		TestPeer:       config.PeerConfig{EventHost: endorserTestHost, EventPort: endorserTestEventPort},
+		TestPeer:       config.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
 		InvalidChannel: ""}
 
 	fabricClient.SetSelectionService(&selectionService)
@@ -778,14 +756,16 @@ func resetRegisterTxEventTimeout() {
 }
 
 func TestMain(m *testing.M) {
+
 	err := config.Init("./sampleconfig")
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 	configureClient()
+
 	mockEndorserServer = startEndorserServer()
-	mockBroadcastServer = startBroadcastServer()
-	mockEventServer, err = mocks.StartMockEventServer(fmt.Sprintf("%s:%d", endorserTestHost, endorserTestEventPort))
+	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
+	mockEventServer, err = mocks.StartMockEventServer(fmt.Sprintf("%s:%d", endorserTestEventHost, endorserTestEventPort))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -797,9 +777,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("NewChannel return error: %v", err))
 	}
-	builder := &fcMocks.MockConfigUpdateEnvelopeBuilder{
+	builder := &fcmocks.MockConfigUpdateEnvelopeBuilder{
 		ChannelID: "testChannel",
-		MockConfigGroupBuilder: fcMocks.MockConfigGroupBuilder{
+		MockConfigGroupBuilder: fcmocks.MockConfigGroupBuilder{
 			ModPolicy:      "Admins",
 			MSPNames:       []string{"Org1MSP"},
 			OrdererAddress: "localhost:8085",
@@ -811,15 +791,20 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("channel Initialize failed : %v", err))
 	}
 
+	p1 = peer("grpc://peer1:7051", org1)
+	p2 = peer("grpc://peer2:7051", org1)
+
 	os.Exit(m.Run())
 }
 
-func peer(name string, mspID string) sdkApi.Peer {
-	peer, err := sdkFabApi.NewPeer(name+":7051", "", "", configImp)
+func peer(url string, mspID string) sdkApi.Peer {
+
+	peer, err := sdkFabApi.NewPeer(url, "", "", fcClient.GetConfig())
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
-	peer.SetName(name)
+
+	peer.SetName(url)
 	peer.SetMSPID(mspID)
 	return peer
 }

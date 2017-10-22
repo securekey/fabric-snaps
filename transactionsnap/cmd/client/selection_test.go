@@ -15,11 +15,10 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	clientConfig "github.com/hyperledger/fabric-sdk-go/pkg/config"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	"github.com/hyperledger/fabric/core/common/ccprovider"
-	"github.com/hyperledger/fabric/protos/common"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
@@ -80,8 +79,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
-	clientConfig.FabricClientViper().Set("client.tls.enabled", false)
-
 	os.Exit(m.Run())
 }
 
