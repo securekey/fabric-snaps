@@ -17,8 +17,8 @@ import (
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	pbsdk "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/chaincode/shim"
 
 	client "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 
@@ -39,7 +39,7 @@ var fcClient client.Client
 var membership client.MembershipManager
 
 // Init snap
-func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pbsdk.Response {
 
 	//initialize fabric client
 	err := config.Init("")
@@ -60,7 +60,7 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 //Invoke transaction snap
 //required args are function name and SnapTransactionRequest
-func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pbsdk.Response {
 	function, args := stub.GetFunctionAndParameters()
 
 	switch function {
@@ -68,32 +68,32 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 		tpResponses, err := endorseTransaction(stub)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		payload, err := json.Marshal(tpResponses)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 
-		return pb.Response{Payload: payload, Status: shim.OK}
+		return pbsdk.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
 		err := commitTransaction(stub)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
-		return pb.Response{Payload: nil, Status: shim.OK}
+		return pbsdk.Response{Payload: nil, Status: shim.OK}
 	case "endorseAndCommitTransaction":
 		err := endorseAndCommitTransaction(stub)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
-		return pb.Response{Payload: nil, Status: shim.OK}
+		return pbsdk.Response{Payload: nil, Status: shim.OK}
 	case "verifyTransactionProposalSignature":
 		err := verifyTxnProposalSignature(stub)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
-		return pb.Response{Payload: nil, Status: shim.OK}
+		return pbsdk.Response{Payload: nil, Status: shim.OK}
 	case "getPeersOfChannel":
 		payload, err := getPeersOfChannel(args)
 		if err != nil {
@@ -104,7 +104,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		logger.Debugf("getPeersOfChannel payload: %s", string(payload))
 		return shim.Success(payload)
 	default:
-		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
+		return pbsdk.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
 	}
 
 }

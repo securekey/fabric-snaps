@@ -106,22 +106,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/crypto","common/flogging","common/ledger","common/ledger/util","common/metadata","common/policies","common/util","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/version","core/ledger/util","events/consumer","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
-  revision = "316de6aef9d3b3f3f5c42e91f417f6edc753b60a"
-  source = "github.com/securekey/fabric-next"
-
-[[projects]]
-  name = "github.com/hyperledger/fabric-ca"
-  packages = ["api","lib","lib/dbutil","lib/ldap","lib/spi","lib/tcert","lib/tls","util"]
-  revision = "cb117d85980799d24d6df2d3533f5598a552b259"
-  version = "v1.0.2"
-
-[[projects]]
-  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = ["api/apiconfig","api/apifabca","api/apifabclient","api/apitxn","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","pkg/config","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/packager","pkg/fabric-client/peer","pkg/fabric-txn","pkg/fabric-txn/admin","pkg/fabric-txn/internal"]
-  revision = "7cdef1d7491ca184fa9492d32fc85a444a37d926"
+  revision = "23ec48184b50b9ebede9d06df1569974eaa29991"
 
 [[projects]]
   name = "github.com/jmhodges/clock"

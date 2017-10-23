@@ -83,6 +83,7 @@ func Init(configPathOverride string) error {
 func GetLocalPeer() (*PeerConfig, error) {
 	var peer = &PeerConfig{}
 	var err error
+
 	peerAddress := peerConfig.GetString("peer.address")
 	if peerAddress == "" {
 		return nil, fmt.Errorf("Peer address not found in config")
@@ -92,13 +93,13 @@ func GetLocalPeer() (*PeerConfig, error) {
 		return nil, fmt.Errorf("Peer event address not found in config")
 	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
-	peer.Host = splitPeerAddress[0]
+	peer.Host = GetMembershipProtocol() + splitPeerAddress[0]
 	peer.Port, err = strconv.Atoi(splitPeerAddress[1])
 	if err != nil {
 		return nil, err
 	}
 	splitEventAddress := strings.Split(eventAddress, ":")
-	peer.EventHost = splitEventAddress[0]
+	peer.EventHost = GetMembershipProtocol() + splitEventAddress[0]
 	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
 		return nil, err
@@ -149,6 +150,14 @@ func GetEnrolmentKeyPath() string {
 // GetMembershipPollInterval get membership pollinterval
 func GetMembershipPollInterval() time.Duration {
 	return viper.GetDuration("txnsnap.membership.pollinterval")
+}
+
+// GetMembershipProtocol returns 'grpcs://' or "grpc://" based on if tls is enabled or disabled
+func GetMembershipProtocol() string {
+	if viper.GetBool("txnsnap.membership.tls.enabled") {
+		return "grpcs://"
+	}
+	return "grpc://"
 }
 
 // GetConfigPath returns the absolute value of the given path that is

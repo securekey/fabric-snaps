@@ -11,15 +11,15 @@ import (
 	"net"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric/protos/peer"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"google.golang.org/grpc"
 )
 
 // MockEventServer ...
 type MockEventServer struct {
-	server     peer.Events_ChatServer
+	server     pb.Events_ChatServer
 	grpcServer *grpc.Server
-	channel    chan *peer.Event
+	channel    chan *pb.Event
 }
 
 // StartMockEventServer will start server
@@ -28,7 +28,7 @@ func StartMockEventServer(testAddress string) (*MockEventServer, error) {
 	grpcServer.GetServiceInfo()
 	lis, err := net.Listen("tcp", testAddress)
 	eventServer := &MockEventServer{grpcServer: grpcServer}
-	peer.RegisterEventsServer(grpcServer, eventServer)
+	pb.RegisterEventsServer(grpcServer, eventServer)
 	if err != nil {
 		return nil, fmt.Errorf("Error starting test server %s", err)
 	}
@@ -39,18 +39,18 @@ func StartMockEventServer(testAddress string) (*MockEventServer, error) {
 }
 
 // Chat ...
-func (m *MockEventServer) Chat(srv peer.Events_ChatServer) error {
+func (m *MockEventServer) Chat(srv pb.Events_ChatServer) error {
 	m.server = srv
-	m.channel = make(chan *peer.Event)
+	m.channel = make(chan *pb.Event)
 	in, _ := srv.Recv()
-	evt := &peer.Event{}
+	evt := &pb.Event{}
 	err := proto.Unmarshal(in.EventBytes, evt)
 	if err != nil {
 		return fmt.Errorf("error unmarshaling the event bytes in the SignedEvent: %s", err)
 	}
 	switch evt.Event.(type) {
-	case *peer.Event_Register:
-		srv.Send(&peer.Event{Event: &peer.Event_Register{Register: &peer.Register{}}})
+	case *pb.Event_Register:
+		srv.Send(&pb.Event{Event: &pb.Event_Register{Register: &pb.Register{}}})
 	}
 	for {
 		event := <-m.channel
@@ -59,7 +59,7 @@ func (m *MockEventServer) Chat(srv peer.Events_ChatServer) error {
 }
 
 // SendMockEvent ...
-func (m *MockEventServer) SendMockEvent(event *peer.Event) {
+func (m *MockEventServer) SendMockEvent(event *pb.Event) {
 	m.channel <- event
 }
 

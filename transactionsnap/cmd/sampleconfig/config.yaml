@@ -6,66 +6,93 @@
 
 # Configurations for txn snap
 txnsnap:
- loglevel: debug
+  loglevel: debug
 
-# Membership list polling interval
- membership:
-  pollinterval: 3s
+# Membership list polling interval and tls flag
+  membership:
+    pollinterval: 3s
+    tls:
+      enabled: false
 
- enrolment:
-  cert:
-   file: testcerts/ecert/cert.pem
-  key:
-   file: testcerts/ecert/key.pem
+  enrolment:
+    cert:
+      file: testcerts/ecert/cert.pem
+    key:
+      file: testcerts/ecert/key.pem
    
 # Configurations for the fabric client
 client:
- tls:
-  enabled: true
+  organization: peerorg1
 
- BCCSP:
-  security:
-   enabled: true
-   default:
-    provider: "SW"
-   hashAlgorithm: "SHA2"
-   softVerify: true
-   ephemeral: false
-   level: 256
-   pin: ""
-   label: ""
-   library: ""
+  BCCSP:
+    security:
+       enabled: true
+       default:
+        provider: "SW"
+       hashAlgorithm: "SHA2"
+       softVerify: true
+       ephemeral: false
+       level: 256
 
- logging:
-  level: info
+  logging:
+    level: info
 
- keystore:
-  path: "/tmp/msp"
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # [Optional]. Not used by Go SDK. Others SDKs may use it if using an alternative impl
+    # Could be used if SDK would require an object for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs"
 
- # network provides a static definition of a Hyperledger Fabric network
- network:
-  # list of ordering service nodes
-  orderers:
-   # orderer name
-   orderer0:
-    host: "orderer.example.com"
-    port: 7050
-    tls:
-     # Certificate location absolute path
-     certificate: "tls/orderer-ca-cert.pem"
-     # For testing only: overrides the virtual host name of the authority
-     serverHostOverride: ""
-  # ap of member organizations forming the network
-  organizations:
-    # Org1 name
-    peerorg1:
-      # Membership Service Provider ID for this organization
-      mspID: "Org1MSP"
-      # CA config defines the fabric-ca instance that issues identities for this org
-      ca:
-       # TLS secured connections with the CA
-       tlsEnabled: false
-       # CA name
-       name: "ca-org1"
-       # CA URL. Note: https prefix required for TLS
-       serverURL: "http://localhost:7054"
+    # [Optional]. Specific to the CryptoSuite implementation used by GO SDK. Software-based implementations
+    # requiring a key store. PKCS#11 based implementations does not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: /tmp/msp
+
+
+orderers:
+  orderer.example.com:
+    url: grpc://orderer.example.com:7050
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+      grpc-max-send-message-length: 15
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: "sampleconfig/tls/orderer-ca-cert.pem"
+
+#
+# list of participating organizations in this network
+#
+organizations:
+  peerorg1:
+    mspid: org1msp
+    cryptoPath:  peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    peers:
+      - peer0.org1.example.com
+    certificateAuthorities:
+      - ca-org1
+
+certificateAuthorities:
+  ca-org1:
+    url: https://ca_peerOrg1:7054
+    # the properties specified under this object are passed to the 'http' client verbatim when
+    # making the request to the Fabric-CA server
+    httpOptions:
+      verify: true
+    tlsCACerts:
+      path : "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/ca/ca_root.pem"
+      client:
+        keyfile: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1-key.pem"
+        certfile: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1.pem"
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org1

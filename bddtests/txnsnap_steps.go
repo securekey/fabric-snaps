@@ -24,7 +24,7 @@ func NewTxnSnapSteps(context *BDDContext) *TxnSnapSteps {
 }
 
 func (t *TxnSnapSteps) assertMembershipResponse(arg string) error {
-	peerConfig, err := t.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0")
+	peerConfig, err := t.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0.org1.example.com")
 	if err != nil {
 		return fmt.Errorf("Error reading peer config: %s", err)
 	}
@@ -32,9 +32,15 @@ func (t *TxnSnapSteps) assertMembershipResponse(arg string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
-	if !strings.Contains(queryValue, peerConfig.Host) && !strings.Contains(queryValue, peerConfig.TLS.ServerHostOverride) {
+
+	serverHostOverride := ""
+	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+		serverHostOverride = str
+	}
+
+	if !strings.Contains(queryValue, peerConfig.URL) && !strings.Contains(queryValue, serverHostOverride) {
 		return fmt.Errorf("Query value(%s) doesn't contain expected value(%s) or value(%s)",
-			queryValue, peerConfig.Host, peerConfig.TLS.ServerHostOverride)
+			queryValue, peerConfig.URL, serverHostOverride)
 	}
 	return nil
 }

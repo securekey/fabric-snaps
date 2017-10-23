@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
-	"github.com/hyperledger/fabric/common/util"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/common/util"
 	"github.com/spf13/viper"
 )
 
@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 				composition = newComposition
 
 				fmt.Println("docker-compose up ... waiting for peer to start ...")
-				testSleep := 5
+				testSleep := 20
 				if os.Getenv("TEST_SLEEP") != "" {
 					testSleep, _ = strconv.Atoi(os.Getenv("TEST_SLEEP"))
 				}

@@ -19,8 +19,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	config "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 var testHost = "0.0.0.0"
@@ -56,7 +56,7 @@ func TestInvalidParameters(t *testing.T) {
 
 	// Required args: empty URL
 	args := [][]byte{[]byte("invoke"), []byte(""), []byte(contentType), []byte(jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to emtpy URL")
+	verifyFailure(t, stub, args, "Invoke should have failed due to empty URL")
 
 	// Required args: empty content type
 	args = [][]byte{[]byte("invoke"), []byte("http/localhost/abc"), []byte(""), []byte(jsonStr)}

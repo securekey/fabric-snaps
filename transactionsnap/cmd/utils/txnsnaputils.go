@@ -9,8 +9,8 @@ package utils
 import (
 	"fmt"
 
-	pb "github.com/hyperledger/fabric/protos/peer"
-	protos_utils "github.com/hyperledger/fabric/protos/utils"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	protos_utils "github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/protos/utils"
 )
 
 // GetCreatorFromSignedProposal ...
@@ -43,4 +43,13 @@ func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, er
 	}
 
 	return signatureHeader.Creator, nil
+}
+
+//GetByteArgs utility which converts string args array to byte args array
+func GetByteArgs(argsArray []string) [][]byte {
+	txArgs := make([][]byte, len(argsArray))
+	for i, val := range argsArray {
+		txArgs[i] = []byte(val)
+	}
+	return txArgs
 }

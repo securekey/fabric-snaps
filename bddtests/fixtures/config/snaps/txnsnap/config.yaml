@@ -5,66 +5,160 @@
 
 # Configurations for txn snap
 txnsnap:
- loglevel: debug
+  loglevel: debug
 
-# Membership list polling interval
- membership:
-  pollinterval: 3s
+# Membership list polling interval and tls flag
+  membership:
+    pollinterval: 3s
+    tls:
+      enabled: true
 
- enrolment:
-  cert:
-   file: /etc/hyperledger/fabric/testcerts/ecert/cert.pem
-  key:
-   file: /etc/hyperledger/fabric/testcerts/ecert/key.pem
+  enrolment:
+    cert:
+      file: /etc/hyperledger/fabric/testcerts/ecert/cert.pem
+    key:
+      file: /etc/hyperledger/fabric/testcerts/ecert/key.pem
    
 # Configurations for the fabric client
+
 client:
- tls:
-  enabled: true
 
- BCCSP:
-  security:
-   enabled: true
-   default:
-    provider: "SW"
-   hashAlgorithm: "SHA2"
-   softVerify: true
-   ephemeral: false
-   level: 256
-   pin: ""
-   label: ""
-   library: ""
+  # Which organization does this application instance belong to? The value must be the name of an org
+  # defined under "organizations"
+  organization: peerorg1
 
- logging:
-  level: info
+  logging:
+    level: info
 
- keystore:
-  path: "/tmp/msp"
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # [Optional]. Not used by Go SDK. Others SDKs may use it if using an alternative impl
+    # Could be used if SDK would require an object for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs"
 
- # network provides a static definition of a Hyperledger Fabric network
- network:
-  # list of ordering service nodes
-  orderers:
-   # orderer name
-   orderer0:
-    host: "orderer.example.com"
-    port: 7050
-    tls:
-     # Certificate location absolute path
-     certificate: "/etc/hyperledger/fabric/tls/orderer-ca-cert.pem"
-     # For testing only: overrides the virtual host name of the authority
-     serverHostOverride: ""
-  # ap of member organizations forming the network
-  organizations:
-    # Org1 name
-    peerorg1:
-      # Membership Service Provider ID for this organization
-      mspID: "Org1MSP"
-      # CA config defines the fabric-ca instance that issues identities for this org
-      ca:
-       # TLS secured connections with the CA
-       tlsEnabled: false
-       # CA name
-       name: "ca-org1"
-       # CA URL. Note: https prefix required for TLS
-       serverURL: "http://localhost:7054"
+    # [Optional]. Specific to the CryptoSuite implementation used by GO SDK. Software-based implementations
+    # requiring a key store. PKCS#11 based implementations does not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: /tmp/msp
+
+   # BCCSP config for the client. Used by GO SDK.
+  BCCSP:
+    security:
+      enabled: true
+      default:
+        provider: "SW"
+      hashAlgorithm: "SHA2"
+      softVerify: true
+      ephemeral: false
+      level: 256
+      pin: ""
+      label: ""
+      library: ""
+
+# Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      queryResponse: 30s
+      executeTxResponse: 30s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 3s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 5s
+
+orderers:
+  orderer.example.com:
+    url: grpcs://orderer.example.com:7050
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: 11orderer.example.com
+      grpc-max-send-message-length: 15
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: /etc/hyperledger/fabric/tls/orderer-ca-cert.pem
+
+#
+# list of participating organizations in this network
+#
+organizations:
+  peerorg1:
+    mspid: Org1MSP
+
+    # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
+    cryptoPath:  peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+
+    peers:
+      - peer0.org1.example.com
+
+    # [Optional]. Certificate Authorities issue certificates for identification purposes in a Fabric based
+    # network. Typically certificates provisioning is done in a separate process outside of the
+    # runtime network. Fabric-CA is a special certificate authority that provides a REST APIs for
+    # dynamic certificate management (enroll, revoke, re-enroll). The following section is only for
+    # Fabric-CA servers.
+    certificateAuthorities:
+      - ca-org1
+
+    # [Optional]. If the application is going to make requests that are reserved to organization
+    # administrators, including creating/updating channels, installing/instantiating chaincodes, it
+    # must have access to the admin identity represented by the private key and signing certificate.
+    # Both properties can be the PEM string or local path to the PEM file. Note that this is mainly for
+    # convenience in development mode, production systems should not expose sensitive information
+    # this way. The SDK should allow applications to set the org admin identity via APIs, and only use
+    # this route as an alternative when it exists.
+    adminPrivateKey:
+      pem: "-----BEGIN PRIVATE KEY----- <etc>"
+    signedCert:
+      path: "/tmp/somepath/signed-cert.pem"
+
+#
+# List of peers to send various requests to, including endorsement, query
+# and event listener registration.
+#
+peers:
+  peer0.org1.example.com:
+    # this URL is used to send endorsement and query requests
+    url: grpcs://peer0.org1.example.com:7051
+
+    # this URL is used to connect the EventHub and registering event listeners
+    eventUrl: grpcs://peer0.org1.example.com:7053
+
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      grpc.http2.keepalive_time: 15
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+
+
+certificateAuthorities:
+  ca-org1:
+    url: https://ca_peerOrg1:7054
+    # the properties specified under this object are passed to the 'http' client verbatim when
+    # making the request to the Fabric-CA server
+    httpOptions:
+      verify: true
+    tlsCACerts:
+      # Comma-Separated list of paths
+        # Comma-Separated list of paths
+      path : $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/ca/ca_root.pem
+      client:
+        keyfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1-key.pem
+        certfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1.pem
+
+    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
+    # needed to enroll and invoke new users.
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    # [Optional] The optional name of the CA.
+    caName: ca-org1
