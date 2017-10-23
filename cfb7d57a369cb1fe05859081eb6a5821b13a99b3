@@ -22,6 +22,23 @@
       "revId": "cfb7d57a369cb1fe05859081eb6a5821b13a99b3",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a2e149a_4781ce1d",
+        "filename": "bddtests/fixtures/clientconfig/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-10-23T19:38:53Z",
+      "side": 1,
+      "message": "This is causing your CI issue. Should be localhost",
+      "revId": "cfb7d57a369cb1fe05859081eb6a5821b13a99b3",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
