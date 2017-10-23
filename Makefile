@@ -16,6 +16,9 @@
 # populate-vendor: populate the vendor directory based on the lock
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
+
+#JUST TO TRIGGER A BUILD IN CI, DO NOT MERGE
+
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
