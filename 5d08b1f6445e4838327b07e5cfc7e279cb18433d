@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6077d5c_72236568",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-10-23T16:08:27Z",
+      "side": 1,
+      "message": "remove empty comment",
+      "revId": "5d08b1f6445e4838327b07e5cfc7e279cb18433d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
