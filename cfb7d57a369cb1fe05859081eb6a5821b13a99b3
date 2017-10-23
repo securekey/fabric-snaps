@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a53b2ab_2fcee950",
+        "filename": "bddtests/bddtests_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2017-10-23T19:20:45Z",
+      "side": 1,
+      "message": "Just to investigate CI failure, will be reversed in next patch.",
+      "range": {
+        "startLine": 54,
+        "startChar": 17,
+        "endLine": 54,
+        "endChar": 19
+      },
+      "revId": "cfb7d57a369cb1fe05859081eb6a5821b13a99b3",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
