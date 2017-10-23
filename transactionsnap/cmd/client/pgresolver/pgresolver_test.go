@@ -12,7 +12,7 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	"github.com/hyperledger/fabric/protos/common"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
 )
 

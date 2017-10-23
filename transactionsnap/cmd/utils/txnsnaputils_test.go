@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hyperledger/fabric/protos/common"
-	protos_peer "github.com/hyperledger/fabric/protos/peer"
-	protos_utils "github.com/hyperledger/fabric/protos/utils"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
+	protos_peer "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	protos_utils "github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/protos/utils"
 )
 
 func TestGetCreatorFromSignedProposal(t *testing.T) {

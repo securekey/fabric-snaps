@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 func newMockStub() *shim.MockStub {

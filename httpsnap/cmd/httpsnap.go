@@ -23,9 +23,9 @@ import (
 	logging "github.com/op/go-logging"
 	"github.com/xeipuuv/gojsonschema"
 
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	config "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	shim "github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 var logger = logging.MustGetLogger("httpsnap")

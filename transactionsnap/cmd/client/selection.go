@@ -17,9 +17,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 
-	"github.com/hyperledger/fabric/core/common/ccprovider"
-	"github.com/hyperledger/fabric/protos/common"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/internal/github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )

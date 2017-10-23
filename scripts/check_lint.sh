@@ -12,7 +12,7 @@ set -e
 echo "Running linters..."
 
    echo "Checking golint"
-   OUTPUT="$(golint $(go list ./... | grep -v /vendor/))"
+   OUTPUT="$(golint $(go list ./... | grep -v /vendor/ | grep -v /internal/))"
    if [[ $OUTPUT ]]; then
       echo "YOU MUST FIX THE FOLLOWING THE FOLLOWING GOLINT SUGGESTIONS:"
       printf "$OUTPUT\n"
@@ -20,7 +20,7 @@ echo "Running linters..."
    fi
 
    echo "Checking govet"
-   OUTPUT="$(go vet  $(go list ./... | grep -v /vendor/))"
+   OUTPUT="$(go vet  $(go list ./... | grep -v /vendor/| grep -v /internal/))"
    if [[ $OUTPUT ]]; then
       echo "YOU MUST FIX THE FOLLOWING THE FOLLOWING GOVET SUGGESTIONS:"
       printf "$OUTPUT\n"
@@ -28,7 +28,7 @@ echo "Running linters..."
    fi
 
    echo "Checking gofmt"
-    OUTPUT="$(gofmt -l $(find ./ -name *.go |grep -v ./vendor))"
+    OUTPUT="$(gofmt -l $(find ./ -name *.go |grep -v ./vendor | grep -v /internal))"
    if [[ $OUTPUT ]]; then
       echo "The following files need reformatting with 'gofmt -w <file>':"
       printf "$OUTPUT\n"
