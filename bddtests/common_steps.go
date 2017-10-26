@@ -19,10 +19,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
-	sdkFabricTxn "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn"
 
 	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
-	"github.com/hyperledger/fabric/common/cauthdsl"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	logging "github.com/op/go-logging"
 
 	"github.com/DATA-DOG/godog"
@@ -74,12 +73,15 @@ func (d *CommonSteps) getEventHub() (sdkApi.EventHub, error) {
 		return nil, fmt.Errorf("GetDefaultImplEventHub failed: %v", err)
 	}
 
-	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0")
+	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0.org1.example.com")
 	if err != nil {
 		return nil, fmt.Errorf("Error reading peer config: %s", err)
 	}
-	eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", peerConfig.EventHost, peerConfig.EventPort),
-		peerConfig.TLS.Certificate, peerConfig.TLS.ServerHostOverride)
+	serverHostOverride := ""
+	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+		serverHostOverride = str
+	}
+	eventHub.SetPeerAddr(peerConfig.EventURL, peerConfig.TLSCACerts.Path, serverHostOverride)
 
 	return eventHub, nil
 }
@@ -91,24 +93,32 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
 	}
 
-	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0")
+	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0.org1.example.com")
 	if err != nil {
 		return fmt.Errorf("Error reading peer config: %s", err)
 	}
-	peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peerConfig.Host, peerConfig.Port),
-		peerConfig.TLS.Certificate, peerConfig.TLS.ServerHostOverride, d.BDDContext.Client.Config())
+	serverHostOverride := ""
+	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+		serverHostOverride = str
+	}
+
+	peer, err := sdkFabApi.NewPeer(peerConfig.URL,
+		peerConfig.TLSCACerts.Path, serverHostOverride, d.BDDContext.Client.Config())
 	if err != nil {
 		return fmt.Errorf("NewPeer failed: %v", err)
 	}
 	channel.AddPeer(peer)
 
-	ordererConfig, err := d.BDDContext.Client.Config().OrdererConfig("orderer0")
+	ordererConfig, err := d.BDDContext.Client.Config().OrdererConfig("orderer.example.com")
 	if err != nil {
 		return fmt.Errorf("Could not load orderer config: %v", err)
 	}
-	orderer, err := sdkFabApi.NewOrderer(fmt.Sprintf("%s:%d", ordererConfig.Host,
-		ordererConfig.Port), ordererConfig.TLS.Certificate,
-		ordererConfig.TLS.ServerHostOverride, d.BDDContext.Client.Config())
+	serverHostOverride = ""
+	if str, ok := ordererConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+		serverHostOverride = str
+	}
+	orderer, err := sdkFabApi.NewOrderer(ordererConfig.URL, ordererConfig.TLSCACerts.Path,
+		serverHostOverride, d.BDDContext.Client.Config())
 	if err != nil {
 		return fmt.Errorf("NewPeer failed: %v", err)
 	}
@@ -174,7 +184,7 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 
 	defer eventHub.Disconnect()
 
-	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, argsArray,
+	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, d.getByteArgs(argsArray),
 		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
 		eventHub)
 
@@ -223,30 +233,6 @@ func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error 
 	return nil
 }
 
-func (d *CommonSteps) invokeCC(ccID string, args string) error {
-
-	// Get Query value
-	argsArray := strings.Split(args, ",")
-
-	return d.invokeCCWithArgs(ccID, argsArray)
-
-}
-
-func (d *CommonSteps) invokeCCWithArgs(ccID string, args []string) error {
-	eventHub, err := d.getEventHub()
-	if err != nil {
-		return fmt.Errorf("getEventHub return error: %v", err)
-	}
-
-	_, err = sdkFabricTxn.InvokeChaincode(d.BDDContext.Client, d.BDDContext.Channel, []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
-		eventHub, ccID, args[0], args[1:], nil)
-	if err != nil {
-		return fmt.Errorf("InvokeChaincode return error: %v", err)
-	}
-	return nil
-
-}
-
 func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
@@ -275,7 +261,7 @@ func (d *CommonSteps) createAndSendTransactionProposal(channel sdkApi.Channel, c
 	request := apitxn.ChaincodeInvokeRequest{
 		Targets:      targets,
 		Fcn:          args[0],
-		Args:         args[1:],
+		Args:         d.getByteArgs(args[1:]),
 		TransientMap: transientData,
 		ChaincodeID:  chainCodeID,
 	}
@@ -345,5 +331,12 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 query chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.queryCC)
 	s.Step(`^C1 receive value "([^"]*)" from "([^"]*)"$`, d.checkQueryValue)
 	s.Step(`^response from "([^"]*)" to client C1 contains value "([^"]*)"$`, d.containsInQueryValue)
-	s.Step(`^client C1 invoke chaincode "([^"]*)" with args "([^"]*)" on p0$`, d.invokeCC)
+}
+
+func (d *CommonSteps) getByteArgs(argsArray []string) [][]byte {
+	txArgs := make([][]byte, len(argsArray))
+	for i, val := range argsArray {
+		txArgs[i] = []byte(val)
+	}
+	return txArgs
 }

@@ -17,13 +17,6 @@ import (
 var txnSnapConfig *viper.Viper
 var coreConfig *viper.Viper
 
-func TestIsTLSEnabled(t *testing.T) {
-	value := IsTLSEnabled()
-	if value == txnSnapConfig.GetBool("client.tls.enabled") {
-		t.Fatalf("Expected IsTLSEnabled() return value %v but got %v", txnSnapConfig.GetBool("client.tls.enabled"), value)
-	}
-}
-
 func TestGetMspID(t *testing.T) {
 	value := GetMspID()
 	if value != coreConfig.GetString("peer.localMspId") {
@@ -127,7 +120,7 @@ func TestGetLocalPeer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetLocalPeer() return error %v", err)
 	}
-	if localPeer.Host != "peer" {
+	if localPeer.Host != "grpc://peer" {
 		t.Fatalf("Expected localPeer.Host value %s but got %s",
 			"peer", localPeer.Host)
 	}
@@ -135,7 +128,7 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatalf("Expected localPeer.Port value %d but got %d",
 			5050, localPeer.Port)
 	}
-	if localPeer.EventHost != "event" {
+	if localPeer.EventHost != "grpc://event" {
 		t.Fatalf("Expected localPeer.EventHost value %s but got %s",
 			"event", localPeer.Host)
 	}
@@ -166,6 +159,13 @@ func TestInitializeLogging(t *testing.T) {
 	}
 	if err.Error() != "Error initializing log level: logger: invalid log level" {
 		t.Fatal("initializeLogging() didn't return expected error msg")
+	}
+}
+
+func TestGetGRPCProtocol(t *testing.T) {
+	value := GetGRPCProtocol()
+	if (value == "grpcs://") != txnSnapConfig.GetBool("txnsnap.grpc.tls.enabled") {
+		t.Fatalf("Expected GetGRPCProtocol() return value 'grpc://' but got %v", value)
 	}
 }
 

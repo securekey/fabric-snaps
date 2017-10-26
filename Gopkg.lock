@@ -112,16 +112,10 @@
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
-  name = "github.com/hyperledger/fabric-ca"
-  packages = ["api","lib","lib/dbutil","lib/ldap","lib/spi","lib/tcert","lib/tls","util"]
-  revision = "cb117d85980799d24d6df2d3533f5598a552b259"
-  version = "v1.0.2"
-
-[[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = ["api/apiconfig","api/apifabca","api/apifabclient","api/apitxn","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","pkg/config","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/packager","pkg/fabric-client/peer","pkg/fabric-txn","pkg/fabric-txn/admin","pkg/fabric-txn/internal"]
-  revision = "7cdef1d7491ca184fa9492d32fc85a444a37d926"
+  revision = "aafbea28037ef0f2e8c1d3bbef42671d5525e81a"
 
 [[projects]]
   name = "github.com/jmhodges/clock"

@@ -18,6 +18,7 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
 const (
@@ -167,6 +168,7 @@ func queryChaincode(channelID string, ccID string, args []string) (*apitxn.Trans
 	for _, anchor := range anchors {
 		// Load anchor peer
 		//orgCertPool, err := client.GetTLSRootsForOrg(, channel)
+		anchor.Host = config.GetGRPCProtocol() + anchor.Host
 		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", anchor.Host,
 			anchor.Port), config.GetTLSRootCertPath(), "", client.GetConfig())
 		if err != nil {
@@ -177,7 +179,7 @@ func queryChaincode(channelID string, ccID string, args []string) (*apitxn.Trans
 		request := apitxn.ChaincodeInvokeRequest{
 			Targets:      []apitxn.ProposalProcessor{peer},
 			Fcn:          args[0],
-			Args:         args[1:],
+			Args:         utils.GetByteArgs(args[1:]),
 			TransientMap: nil,
 			ChaincodeID:  ccID,
 		}
@@ -203,6 +205,7 @@ func queryChaincode(channelID string, ccID string, args []string) (*apitxn.Trans
 			"Error querying peers from all configured anchors for channel %s: %s",
 			channelID, strings.Join(queryErrors, "\n"))
 	}
+
 	return response, nil
 }
 
@@ -214,7 +217,8 @@ func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints) ([]sdkApi.Peer, err
 	}
 
 	for _, endpoint := range endpoints.GetEndpoints() {
-		peer, err := sdkFabApi.NewPeer(endpoint.GetEndpoint(), "", "", clientInstance.GetConfig())
+		enpoint := config.GetGRPCProtocol() + endpoint.GetEndpoint()
+		peer, err := sdkFabApi.NewPeer(enpoint, "", "", clientInstance.GetConfig())
 		if err != nil {
 			return nil, fmt.Errorf("Error creating new peer: %s", err)
 		}

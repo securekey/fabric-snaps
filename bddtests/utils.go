@@ -11,13 +11,20 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"time"
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	fabapi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/pkg/errors"
+
+	"crypto/ecdsa"
+	"crypto/rsa"
+
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/utils"
+
 	"github.com/spf13/viper"
 )
 
@@ -72,6 +79,7 @@ func randomString(strlen int) string {
 
 // GetDefaultImplPreEnrolledUser ...
 func getDefaultImplPreEnrolledUser(client api.FabricClient, keyDir string, certDir string, username string, orgName string) (api.User, error) {
+
 	privateKeyDir := filepath.Join(client.Config().CryptoConfigPath(), keyDir)
 	privateKeyPath, err := getFirstPathFromDir(privateKeyDir)
 	if err != nil {
@@ -83,11 +91,18 @@ func getDefaultImplPreEnrolledUser(client api.FabricClient, keyDir string, certD
 	if err != nil {
 		return nil, fmt.Errorf("Error finding the enrollment cert path: %v", err)
 	}
+
 	mspID, err := client.Config().MspID(orgName)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading MSP ID config: %s", err)
 	}
-	return fabapi.NewPreEnrolledUser(client.Config(), privateKeyPath, enrollmentCertPath, username, mspID, client.CryptoSuite())
+
+	signingIdentity, err := getSigningIdentity(mspID, privateKeyPath, enrollmentCertPath, client.CryptoSuite())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get signing identity %v", err)
+	}
+
+	return fabapi.NewPreEnrolledUser(client.Config(), username, signingIdentity)
 }
 
 // Gets the first path from the dir directory
@@ -176,19 +191,46 @@ func getFilesWithName(pathRelToWD string, fileName string) ([]string, error) {
 	return files, nil
 }
 
-func executeScripts(pathRelToWD string, fileName string) error {
-	snaps, err := getFilesWithName(pathRelToWD, fileName)
+func getSigningIdentity(mspID string, privateKeyPath string, enrollmentCertPath string, cryptoSuite bccsp.BCCSP) (*api.SigningIdentity, error) {
+
+	privateKey, err := importBCCSPKeyFromPEM(privateKeyPath, cryptoSuite, true)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Error importing private key: %v", err)
+	}
+	enrollmentCert, err := ioutil.ReadFile(enrollmentCertPath)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading from the enrollment cert path: %v", err)
 	}
 
-	for _, cds := range snaps {
-		fmt.Println(fmt.Sprintf("Running: %s", cds))
-		cmd := exec.Command(cds)
-		if err := cmd.Run(); err != nil {
-			return err
+	signingIdentity := &api.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
+
+	return signingIdentity, nil
+}
+
+// importBCCSPKeyFromPEM attempts to create a private BCCSP key from a pem file keyFile
+func importBCCSPKeyFromPEM(keyFile string, myCSP bccsp.BCCSP, temporary bool) (bccsp.Key, error) {
+	keyBuff, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	key, err := utils.PEMtoPrivateKey(keyBuff, nil)
+	if err != nil {
+		return nil, errors.WithMessage(err, fmt.Sprintf("Failed parsing private key from %s", keyFile))
+	}
+	switch key.(type) {
+	case *ecdsa.PrivateKey:
+		priv, err := utils.PrivateKeyToDER(key.(*ecdsa.PrivateKey))
+		if err != nil {
+			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
 		}
+		sk, err := myCSP.KeyImport(priv, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: temporary})
+		if err != nil {
+			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
+		}
+		return sk, nil
+	case *rsa.PrivateKey:
+		return nil, errors.Errorf("Failed to import RSA key from %s; RSA private key import is not supported", keyFile)
+	default:
+		return nil, errors.Errorf("Failed to import key from %s: invalid secret key type", keyFile)
 	}
-
-	return nil
 }

@@ -14,15 +14,19 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
+	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 
-	"github.com/hyperledger/fabric/bccsp"
-	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/hyperledger/fabric/bccsp/pkcs11"
+	bccsp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
+	bccspFactory "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/factory"
+	pkcs11 "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/pkcs11"
+	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
+
+	"io/ioutil"
 
 	logging "github.com/op/go-logging"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
@@ -163,8 +167,8 @@ func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("GetRandomOrdererConfig return error: %s", err)
 	}
-	orderer, err := sdkFabApi.NewOrderer(fmt.Sprintf("%s:%d",
-		ordererConfig.Host, ordererConfig.Port), config.GetConfigPath(ordererConfig.TLS.Certificate), "", c.client.Config())
+
+	orderer, err := sdkFabApi.NewOrderer(ordererConfig.URL, ordererConfig.TLSCACerts.Path, "", c.client.Config())
 	if err != nil {
 		return nil, fmt.Errorf("Error adding orderer: %s", err)
 	}
@@ -225,7 +229,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 	request := apitxn.ChaincodeInvokeRequest{
 		Targets:      processors,
 		Fcn:          args[0],
-		Args:         args[1:],
+		Args:         utils.GetByteArgs(args[1:]),
 		TransientMap: transientData,
 		ChaincodeID:  chaincodeID,
 	}
@@ -449,67 +453,84 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 
 func (c *clientImpl) initialize() error {
 
-	clientConfig, err := sdkFabApi.NewConfigManager(config.GetConfigPath("") + "/config.yaml")
-	if err != nil {
-		return fmt.Errorf("Error initializaing config: %s", err)
+	sdkOptions := sdkFabApi.Options{
+		ConfigFile: config.GetConfigPath("") + "/config.yaml",
 	}
+
+	sdk, err := sdkFabApi.NewSDK(sdkOptions)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
+	}
+
+	configProvider := sdk.ConfigProvider()
+	if err != nil {
+		return fmt.Errorf("Error getting config: %s", err)
+	}
+
 	//Configure factory options for BCCSP provider
 	var factoryOptions *bccspFactory.FactoryOpts
-	switch clientConfig.SecurityProvider() {
+	switch configProvider.SecurityProvider() {
 	case "SW":
 		factoryOptions = &bccspFactory.FactoryOpts{
 			ProviderName: "SW",
 			SwOpts: &bccspFactory.SwOpts{
-				HashFamily: clientConfig.SecurityAlgorithm(),
-				SecLevel:   clientConfig.SecurityLevel(),
+				HashFamily: configProvider.SecurityAlgorithm(),
+				SecLevel:   configProvider.SecurityLevel(),
 				FileKeystore: &bccspFactory.FileKeystoreOpts{
-					KeyStorePath: clientConfig.KeyStorePath(),
+					KeyStorePath: configProvider.KeyStorePath(),
 				},
-				Ephemeral: clientConfig.Ephemeral(),
+				Ephemeral: configProvider.Ephemeral(),
 			},
 		}
 	case "PKCS11":
-		logger.Infof("PKCS11 library path %s\n", clientConfig.SecurityProviderLibPath())
-		logger.Infof("PKCS11 librarypin %s\n", clientConfig.SecurityProviderPin())
-		logger.Infof("PKCS11 library label %s\n", clientConfig.SecurityProviderLabel())
-		pkks := pkcs11.FileKeystoreOpts{KeyStorePath: clientConfig.KeyStorePath()}
+		logger.Infof("PKCS11 library path %s\n", configProvider.SecurityProviderLibPath())
+		logger.Infof("PKCS11 librarypin %s\n", configProvider.SecurityProviderPin())
+		logger.Infof("PKCS11 library label %s\n", configProvider.SecurityProviderLabel())
+		pkks := pkcs11.FileKeystoreOpts{KeyStorePath: configProvider.KeyStorePath()}
 		factoryOptions = &bccspFactory.FactoryOpts{
 			ProviderName: "PKCS11",
 			Pkcs11Opts: &pkcs11.PKCS11Opts{
-				SecLevel:     clientConfig.SecurityLevel(),
-				HashFamily:   clientConfig.SecurityAlgorithm(),
-				Ephemeral:    clientConfig.Ephemeral(),
+				SecLevel:     configProvider.SecurityLevel(),
+				HashFamily:   configProvider.SecurityAlgorithm(),
+				Ephemeral:    configProvider.Ephemeral(),
 				FileKeystore: &pkks,
-				Library:      clientConfig.SecurityProviderLibPath(),
-				Pin:          clientConfig.SecurityProviderPin(),
-				Label:        clientConfig.SecurityProviderLabel(),
-				SoftVerify:   clientConfig.SoftVerify(),
+				Library:      configProvider.SecurityProviderLibPath(),
+				Pin:          configProvider.SecurityProviderPin(),
+				Label:        configProvider.SecurityProviderLabel(),
+				SoftVerify:   configProvider.SoftVerify(),
 			},
 		}
 	default:
-		return fmt.Errorf("Cannot initialize BCCSP factory. Supported options SW and PKCS11. Configured option %s", clientConfig.SecurityProvider())
+		return fmt.Errorf("Cannot initialize BCCSP factory. Supported options SW and PKCS11. Configured option %s", configProvider.SecurityProvider())
 	}
+
 	//initialize BCCSP provider
 	err = bccspFactory.InitFactories(factoryOptions)
 	if err != nil {
-		return fmt.Errorf("Error in init factories +++++++++++++++++ %v", err)
+		return fmt.Errorf("Error in init factories %v", err)
 	}
-	logger.Infof("Configured BCCSP %s provider \n", clientConfig.SecurityProvider())
+	logger.Infof("Configured BCCSP %s provider \n", configProvider.SecurityProvider())
 
 	localPeer, err := config.GetLocalPeer()
 	if err != nil {
 		return fmt.Errorf("GetLocalPeer return error [%v]", err)
 	}
+
 	cryptoSuite := bccspFactory.GetDefault()
-	user, err := sdkFabApi.NewPreEnrolledUser(clientConfig,
-		config.GetEnrolmentKeyPath(), config.GetEnrolmentCertPath(), txnSnapUser, string(localPeer.MSPid), cryptoSuite)
+
+	signingIdentity, err := c.getSigningIdentity(string(localPeer.MSPid), config.GetEnrolmentKeyPath(), config.GetEnrolmentCertPath(), cryptoSuite)
 	if err != nil {
-		return fmt.Errorf("Failed NewClientWithPreEnrolledUser() [%s]", err)
+		return fmt.Errorf("Failed to get signing identity %v", err)
 	}
 
-	client, err := sdkFabApi.NewClient(user, true, "", cryptoSuite, clientConfig)
+	user, err := sdkFabApi.NewPreEnrolledUser(configProvider, txnSnapUser, signingIdentity)
 	if err != nil {
-		return fmt.Errorf("Failed NewClient() [%s]", err)
+		return fmt.Errorf("Failed to get NewPreEnrolledUser [%s]", err)
+	}
+
+	client, err := sdkFabApi.NewClient(user, true, "", cryptoSuite, configProvider)
+	if err != nil {
+		return fmt.Errorf("Failed to get new client [%s]", err)
 	}
 	c.client = client
 
@@ -537,7 +558,7 @@ func (c *clientImpl) registerTxEvent(txID apitxn.TransactionID, eventHub sdkApi.
 	done := make(chan bool)
 	fail := make(chan error)
 
-	eventHub.RegisterTxEvent(txID, func(txId string, errorCode pb.TxValidationCode, err error) {
+	eventHub.RegisterTxEvent(txID, func(txId string, errorCode sdkpb.TxValidationCode, err error) {
 		if err != nil {
 			logger.Debugf("Received error event for txid(%s)\n", txId)
 			fail <- err
@@ -548,4 +569,20 @@ func (c *clientImpl) registerTxEvent(txID apitxn.TransactionID, eventHub sdkApi.
 	})
 
 	return done, fail
+}
+
+func (c *clientImpl) getSigningIdentity(mspID string, privateKeyPath string, enrollmentCertPath string, cryptoSuite bccsp.BCCSP) (*fab.SigningIdentity, error) {
+
+	privateKey, err := utils.ImportBCCSPKeyFromPEM(privateKeyPath, cryptoSuite, true)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing private key: %v", err)
+	}
+	enrollmentCert, err := ioutil.ReadFile(enrollmentCertPath)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading from the enrollment cert path: %v", err)
+	}
+
+	signingIdentity := &fab.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
+
+	return signingIdentity, nil
 }
