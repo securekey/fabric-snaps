@@ -14,12 +14,6 @@
   version = "v0.7.4"
 
 [[projects]]
-  name = "github.com/Knetic/govaluate"
-  packages = ["."]
-  revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
-  version = "v3.0.0"
-
-[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "78439966b38d69bf38227fbf57ac8a6fee70f69a"
@@ -34,7 +28,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/cloudflare/cfssl"
-  packages = ["api","api/client","auth","certdb","certdb/sql","cli","config","crypto/pkcs7","csr","errors","helpers","helpers/derhelpers","info","initca","log","ocsp","ocsp/config","revoke","signer","signer/local","signer/remote","signer/universal"]
+  packages = ["api","auth","certdb","config","crypto/pkcs7","csr","errors","helpers","helpers/derhelpers","info","log","ocsp/config","signer"]
   revision = "1b0507f6a1e0394a77da2f72f1de9c5a27bd83ac"
 
 [[projects]]
@@ -69,22 +63,10 @@
   revision = "98edf3edfae6a6500fecc69d2bcccf1302544004"
 
 [[projects]]
-  name = "github.com/go-sql-driver/mysql"
-  packages = ["."]
-  revision = "a0583e0143b1624142adab07e0e97fe106d99561"
-  version = "v1.3"
-
-[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   revision = "100ba4e885062801d56799d78530b73b178a78f3"
   version = "v0.4"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golang/groupcache"
-  packages = ["lru"]
-  revision = "b710c8433bd175204919eb38776e944233235d03"
 
 [[projects]]
   branch = "master"
@@ -95,7 +77,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/google/certificate-transparency-go"
-  packages = [".","asn1","client","client/configpb","jsonclient","tls","x509","x509/pkix"]
+  packages = [".","asn1","tls","x509","x509/pkix"]
   revision = "abb79e468b6f3bbd48d1ab0c9e68febf80d52c4d"
 
 [[projects]]
@@ -107,39 +89,15 @@
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/crypto","common/flogging","common/ledger","common/ledger/util","common/metadata","common/policies","common/util","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/version","core/ledger/util","events/consumer","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
+  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/crypto","common/flogging","common/ledger","common/metadata","common/util","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","idemix","msp","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/msp","protos/peer","protos/utils"]
   revision = "316de6aef9d3b3f3f5c42e91f417f6edc753b60a"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
-  packages = ["api/apiconfig","api/apifabca","api/apifabclient","api/apitxn","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","pkg/config","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/packager","pkg/fabric-client/peer","pkg/fabric-txn","pkg/fabric-txn/admin","pkg/fabric-txn/internal"]
+  packages = ["api/apiconfig","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","internal/github.com/hyperledger/fabric/core/ledger/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/protos/utils","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/urlutil","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/packager","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/admin","pkg/fabric-txn/chclient","pkg/fabric-txn/discovery","pkg/fabric-txn/internal","pkg/logging","third_party/github.com/hyperledger/fabric/bccsp","third_party/github.com/hyperledger/fabric/bccsp/factory","third_party/github.com/hyperledger/fabric/bccsp/pkcs11","third_party/github.com/hyperledger/fabric/bccsp/signer","third_party/github.com/hyperledger/fabric/bccsp/sw","third_party/github.com/hyperledger/fabric/bccsp/utils","third_party/github.com/hyperledger/fabric/common/cauthdsl","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer"]
   revision = "aafbea28037ef0f2e8c1d3bbef42671d5525e81a"
-
-[[projects]]
-  name = "github.com/jmhodges/clock"
-  packages = ["."]
-  revision = "880ee4c335489bc78d01e4d0a254ae880734bc15"
-  version = "v1.1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jmoiron/sqlx"
-  packages = [".","reflectx"]
-  revision = "d9bd385d68c068f1fabb5057e3dedcbcbb039d0f"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/kisielk/sqlstruct"
-  packages = ["."]
-  revision = "648daed35d49dac24a4bff253b190a80da3ab6a5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/lib/pq"
-  packages = [".","oid"]
-  revision = "e42267488fe361b9dc034be7a6bffef5b195bceb"
 
 [[projects]]
   branch = "master"
@@ -158,12 +116,6 @@
   name = "github.com/manudrijvers/amcl"
   packages = ["go"]
   revision = "4413a40c6c8d3d9576ea825dd4b40f07b9c1ace4"
-
-[[projects]]
-  name = "github.com/mattn/go-sqlite3"
-  packages = ["."]
-  revision = "ca5e3819723d8eeaf170ad510e7da1d6d2e94a08"
-  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -215,10 +167,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -277,7 +229,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["bcrypt","blowfish","ocsp","pkcs12","pkcs12/internal/rc2","sha3","ssh/terminal"]
+  packages = ["ocsp","pkcs12","pkcs12/internal/rc2","sha3","ssh/terminal"]
   revision = "2bcb7b5baf829ed280ed1fd7320ad473b6849d60"
 
 [[projects]]
@@ -317,18 +269,6 @@
   version = "v1.6.0"
 
 [[projects]]
-  name = "gopkg.in/asn1-ber.v1"
-  packages = ["."]
-  revision = "379148ca0225df7a432012b8df0355c2a2063ac0"
-  version = "v1.2"
-
-[[projects]]
-  name = "gopkg.in/ldap.v2"
-  packages = ["."]
-  revision = "8168ee085ee43257585e50c6441aadf54ecb2c9f"
-  version = "v2.5.0"
-
-[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -337,6 +277,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "79151977955dac30ecb0a244f491d955a3483ca51e6c366794129dcc0911f416"
+  inputs-digest = "57417da794202cea1f0d9a556e5d3d829938ea8ac85aaca72f00c12a1702a245"
   solver-name = "gps-cdcl"
   solver-version = 1
