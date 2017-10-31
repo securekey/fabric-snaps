@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "841f5416_c3845c6d",
+        "filename": "configmanager/pkg/client/configclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-10-31T19:08:40Z",
+      "side": 1,
+      "message": "Wrong license",
+      "revId": "1bd912d3c4002e065fcdbde6ef5f45c681299916",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70938312_4d5de5b6",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-10-31T19:08:40Z",
+      "side": 1,
+      "message": "Wrong license",
+      "revId": "1bd912d3c4002e065fcdbde6ef5f45c681299916",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4d062c3_740cf9a7",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-10-31T19:08:40Z",
+      "side": 1,
+      "message": "Proper comment",
+      "revId": "1bd912d3c4002e065fcdbde6ef5f45c681299916",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b1464dd_2da48093",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-10-31T19:08:40Z",
+      "side": 1,
+      "message": "No need for Configuration in the method names",
+      "revId": "1bd912d3c4002e065fcdbde6ef5f45c681299916",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
