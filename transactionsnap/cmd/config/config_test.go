@@ -11,112 +11,114 @@ import (
 	"strings"
 	"testing"
 
+	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/spf13/viper"
 )
 
 var txnSnapConfig *viper.Viper
 var coreConfig *viper.Viper
+var c transactionsnapApi.Config
 
 func TestGetMspID(t *testing.T) {
-	value := GetMspID()
+	value := c.GetMspID()
 	if value != coreConfig.GetString("peer.localMspId") {
 		t.Fatalf("Expected GetMspID() return value %v but got %v", coreConfig.GetString("peer.localMspId"), value)
 	}
 }
 
 func TestGetTLSRootCertPath(t *testing.T) {
-	value := GetTLSRootCertPath()
-	if value != GetConfigPath(coreConfig.GetString("peer.tls.rootcert.file")) {
+	value := c.GetTLSRootCertPath()
+	if value != c.GetConfigPath(coreConfig.GetString("peer.tls.rootcert.file")) {
 		t.Fatalf("Expected GetTLSRootCertPath() return value %v but got %v",
-			GetConfigPath(coreConfig.GetString("peer.tls.rootcert.file")), value)
+			c.GetConfigPath(coreConfig.GetString("peer.tls.rootcert.file")), value)
 	}
 }
 
 func TestGetTLSCertPath(t *testing.T) {
-	value := GetTLSCertPath()
-	if value != GetConfigPath(coreConfig.GetString("peer.tls.cert.file")) {
+	value := c.GetTLSCertPath()
+	if value != c.GetConfigPath(coreConfig.GetString("peer.tls.cert.file")) {
 		t.Fatalf("Expected GetTLSCertPath() return value %v but got %v",
-			GetConfigPath(coreConfig.GetString("peer.tls.cert.file")), value)
+			c.GetConfigPath(coreConfig.GetString("peer.tls.cert.file")), value)
 	}
 }
 
 func TestGetTLSKeyPath(t *testing.T) {
-	value := GetTLSKeyPath()
-	if value != GetConfigPath(coreConfig.GetString("peer.tls.key.file")) {
+	value := c.GetTLSKeyPath()
+	if value != c.GetConfigPath(coreConfig.GetString("peer.tls.key.file")) {
 		t.Fatalf("Expected GetTLSKeyPath() return value %v but got %v",
-			GetConfigPath(coreConfig.GetString("peer.tls.key.file")), value)
+			c.GetConfigPath(coreConfig.GetString("peer.tls.key.file")), value)
 	}
 }
 
 func TestGetEnrolmentCertPath(t *testing.T) {
-	value := GetEnrolmentCertPath()
-	if value != GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")) {
+	value := c.GetEnrolmentCertPath()
+	if value != c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")) {
 		t.Fatalf("Expected GetEnrolmentCertPath() return value %v but got %v",
-			GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")), value)
+			c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")), value)
 	}
 }
 
 func TestGetEnrolmentKeyPath(t *testing.T) {
-	value := GetEnrolmentKeyPath()
-	if value != GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")) {
+	value := c.GetEnrolmentKeyPath()
+	if value != c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")) {
 		t.Fatalf("Expected GetEnrolmentKeyPath() return value %v but got %v",
-			GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")), value)
+			c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")), value)
 	}
 }
 
 func TestGetMembershipPollInterval(t *testing.T) {
-	value := GetMembershipPollInterval()
+	value := c.GetMembershipPollInterval()
 	if value != txnSnapConfig.GetDuration("txnsnap.membership.pollinterval") {
 		t.Fatalf("Expected GetMembershipPollInterval() return value %v but got %v",
-			GetConfigPath(txnSnapConfig.GetString("txnsnap.membership.pollinterval")), value)
+			c.GetConfigPath(txnSnapConfig.GetString("txnsnap.membership.pollinterval")), value)
 	}
 }
 
 func TestGetLocalPeer(t *testing.T) {
-	peerConfig.Set("peer.address", "")
-	_, err := GetLocalPeer()
+	c.GetPeerConfig().Set("peer.address", "")
+	_, err := c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if err.Error() != "Peer address not found in config" {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
-	peerConfig.Set("peer.address", "peer:Address")
-	peerConfig.Set("peer.events.address", "")
-	_, err = GetLocalPeer()
+	c.GetPeerConfig().Set("peer.address", "peer:Address")
+	c.GetPeerConfig().Set("peer.events.address", "")
+	_, err = c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if err.Error() != "Peer event address not found in config" {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
-	peerConfig.Set("peer.events.address", "peer:EventAddress")
-	_, err = GetLocalPeer()
+	c.GetPeerConfig().Set("peer.events.address", "peer:EventAddress")
+	_, err = c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if !strings.Contains(err.Error(), `parsing "Address": invalid syntax`) {
 		t.Fatalf("GetLocalPeer() didn't return expected error msg. got: %s", err.Error())
 	}
-	peerConfig.Set("peer.address", "peer:5050")
-	_, err = GetLocalPeer()
+	c.GetPeerConfig().Set("peer.address", "peer:5050")
+	_, err = c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if !strings.Contains(err.Error(), `parsing "EventAddress": invalid syntax`) {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
-	peerConfig.Set("peer.events.address", "event:5151")
-	peerConfig.Set("peer.localMspId", "")
-	_, err = GetLocalPeer()
+	c.GetPeerConfig().Set("peer.events.address", "event:5151")
+	c.GetPeerConfig().Set("peer.localMspId", "")
+	_, err = c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if err.Error() != "Peer localMspId not found in config" {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
-	peerConfig.Set("peer.localMspId", "mspID")
-	localPeer, err := GetLocalPeer()
+	c.GetPeerConfig().Set("peer.localMspId", "mspID")
+	localPeer, err := c.GetLocalPeer()
 	if err != nil {
 		t.Fatalf("GetLocalPeer() return error %v", err)
 	}
@@ -144,33 +146,22 @@ func TestGetLocalPeer(t *testing.T) {
 }
 
 func TestGetConfigPath(t *testing.T) {
-	if GetConfigPath("/") != "/" {
+	if c.GetConfigPath("/") != "/" {
 		t.Fatalf(`Expected GetConfigPath("/") value %s but got %s`,
 			"/", "/")
 	}
 }
 
-func TestInitializeLogging(t *testing.T) {
-	viper.Set("txnsnap.loglevel", "wrongLogValue")
-	defer viper.Set("txnsnap.loglevel", "info")
-	err := initializeLogging()
-	if err == nil {
-		t.Fatal("initializeLogging() didn't return error")
-	}
-	if err.Error() != "Error initializing log level: logger: invalid log level" {
-		t.Fatal("initializeLogging() didn't return expected error msg")
-	}
-}
-
 func TestGetGRPCProtocol(t *testing.T) {
-	value := GetGRPCProtocol()
+	value := c.GetGRPCProtocol()
 	if (value == "grpcs://") != txnSnapConfig.GetBool("txnsnap.grpc.tls.enabled") {
 		t.Fatalf("Expected GetGRPCProtocol() return value 'grpc://' but got %v", value)
 	}
 }
 
 func TestMain(m *testing.M) {
-	err := Init("../sampleconfig")
+	var err error
+	c, err = NewConfig("../sampleconfig", nil)
 	if err != nil {
 		panic(err.Error())
 	}

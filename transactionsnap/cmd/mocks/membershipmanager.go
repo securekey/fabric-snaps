@@ -8,7 +8,7 @@ package mocks
 
 import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	client "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 // MockMembershipManager implements mock membership manager
@@ -18,11 +18,11 @@ type MockMembershipManager struct {
 }
 
 // GetPeersOfChannel is mock implementation of GetPeersOfChannel
-func (m *MockMembershipManager) GetPeersOfChannel(channelID string, poll bool) client.ChannelMembership {
+func (m *MockMembershipManager) GetPeersOfChannel(channelID string, poll bool) api.ChannelMembership {
 	if m.err != nil {
-		return client.ChannelMembership{Peers: m.peerConfigs[channelID], QueryError: m.err}
+		return api.ChannelMembership{Peers: m.peerConfigs[channelID], QueryError: m.err}
 	}
-	return client.ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
+	return api.ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
 }
 
 // NewMockMembershipManager creates new mock membership manager

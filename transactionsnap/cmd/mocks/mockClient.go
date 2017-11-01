@@ -12,18 +12,17 @@ import (
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 //GetNewClientWrapper returns wrapper mock object of client
-func GetNewClientWrapper(fcClient client.Client) *MockClient {
+func GetNewClientWrapper(fcClient transactionsnapApi.Client) *MockClient {
 	return &MockClient{fcClient: fcClient}
 }
 
 //MockClient wrapper for client.Client which can be manipulated for desired results for tests
 type MockClient struct {
-	fcClient client.Client
+	fcClient transactionsnapApi.Client
 }
 
 // NewChannel registers a channel object with the fabric client
@@ -74,7 +73,7 @@ func (c *MockClient) CommitTransaction(channel sdkApi.Channel, txres []*apitxn.T
 // @param {Peer} The peer to query
 // @returns {[]string} list of channels
 // @returns {error} error, if any
-func (c *MockClient) QueryChannels(config config.PeerConfig) ([]string, error) {
+func (c *MockClient) QueryChannels(config transactionsnapApi.PeerConfig) ([]string, error) {
 	return c.fcClient.QueryChannels(config)
 }
 
@@ -88,12 +87,12 @@ func (c *MockClient) VerifyTxnProposalSignature(channel sdkApi.Channel, bytes []
 
 // SetSelectionService is used to inject a selection service for testing
 // @param {SelectionService} SelectionService
-func (c *MockClient) SetSelectionService(service client.SelectionService) {
+func (c *MockClient) SetSelectionService(service transactionsnapApi.SelectionService) {
 	c.fcClient.SetSelectionService(service)
 }
 
 // GetSelectionService returns the SelectionService
-func (c *MockClient) GetSelectionService() client.SelectionService {
+func (c *MockClient) GetSelectionService() transactionsnapApi.SelectionService {
 	return c.fcClient.GetSelectionService()
 }
 

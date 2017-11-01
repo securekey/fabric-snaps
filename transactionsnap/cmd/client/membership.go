@@ -16,8 +16,8 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
@@ -26,33 +26,6 @@ const (
 	peerProviderfunction = "getPeersOfChannel"
 )
 
-// ChannelMembership defines membership for a channel
-type ChannelMembership struct {
-	// Peers on the channel
-	Peers []sdkApi.Peer
-	// PollingEnabled is polling for membership enabled for this channel
-	PollingEnabled bool
-	// QueryError Error from the last query/polling operation
-	QueryError error
-}
-
-// MembershipManager maintains a peer membership lists on channels
-type MembershipManager interface {
-	// GetPeersOfChannel returns the peers on the given channel. It returns
-	// ChannelMembership.QueryError is there was an error querying or polling
-	// peers on the channel. It also returns the last known membership list
-	// in case there was a polling error
-	// @param {string} name of the channel
-	// @param {bool} enable membership polling for this channel
-	// @returns {ChannelMembership} channel membership object
-	GetPeersOfChannel(string, bool) ChannelMembership
-}
-
-type membershipManagerImpl struct {
-	sync.RWMutex
-	peersOfChannel map[string]ChannelMembership
-}
-
 var manager *membershipManagerImpl
 var membershipSyncOnce sync.Once
 
@@ -60,28 +33,31 @@ const (
 	defaultPollInterval = 5 * time.Second
 )
 
-// GetMembershipInstance returns an instance of the membership manager
-func GetMembershipInstance() MembershipManager {
-	membershipSyncOnce.Do(func() {
-		peersOfChannel := make(map[string]ChannelMembership)
-		manager = &membershipManagerImpl{
-			peersOfChannel: peersOfChannel,
-		}
+type membershipManagerImpl struct {
+	sync.RWMutex
+	peersOfChannel map[string]api.ChannelMembership
+	config         api.Config
+}
 
+// GetMembershipInstance returns an instance of the membership manager
+func GetMembershipInstance(config api.Config) api.MembershipManager {
+	membershipSyncOnce.Do(func() {
+		peersOfChannel := make(map[string]api.ChannelMembership)
+		manager = &membershipManagerImpl{peersOfChannel: peersOfChannel, config: config}
 		go manager.pollPeersOfChannel()
 	})
 	return manager
 }
 
 func (m *membershipManagerImpl) GetPeersOfChannel(channel string,
-	enablePolling bool) ChannelMembership {
+	enablePolling bool) api.ChannelMembership {
 	m.RLock()
 	membership := m.peersOfChannel[channel]
 	m.RUnlock()
 
 	if membership.Peers == nil {
-		peers, err := queryPeersOfChannel(channel)
-		membership = ChannelMembership{
+		peers, err := queryPeersOfChannel(channel, m.config)
+		membership = api.ChannelMembership{
 			Peers:      peers,
 			QueryError: err,
 		}
@@ -96,7 +72,7 @@ func (m *membershipManagerImpl) GetPeersOfChannel(channel string,
 }
 
 func (m *membershipManagerImpl) pollPeersOfChannel() {
-	pollInterval := config.GetMembershipPollInterval()
+	pollInterval := m.config.GetMembershipPollInterval()
 	if pollInterval == 0 {
 		pollInterval = defaultPollInterval
 	}
@@ -108,21 +84,21 @@ func (m *membershipManagerImpl) pollPeersOfChannel() {
 				continue
 			}
 
-			peers, err := queryPeersOfChannel(channel)
+			peers, err := queryPeersOfChannel(channel, m.config)
 			if err != nil {
 				logger.Warningf("Error polling peers of channel %s: %s", channel, err)
 			}
 
 			m.Lock()
-			m.peersOfChannel[channel] = ChannelMembership{Peers: peers, QueryError: err}
+			m.peersOfChannel[channel] = api.ChannelMembership{Peers: peers, QueryError: err}
 			m.Unlock()
 		}
 		time.Sleep(time.Second * pollInterval)
 	}
 }
 
-func queryPeersOfChannel(channelID string) ([]sdkApi.Peer, error) {
-	response, err := queryChaincode(channelID, peerProviderSCC, []string{peerProviderfunction, channelID})
+func queryPeersOfChannel(channelID string, config api.Config) ([]sdkApi.Peer, error) {
+	response, err := queryChaincode(channelID, peerProviderSCC, []string{peerProviderfunction, channelID}, config)
 	if err != nil {
 		return nil, fmt.Errorf("error querying for peers on channel [%s]: %s", channelID, err)
 	}
@@ -134,7 +110,7 @@ func queryPeersOfChannel(channelID string) ([]sdkApi.Peer, error) {
 		return nil, fmt.Errorf("Error unmarshalling response: %s Raw Payload: %+v",
 			err, response.ProposalResponse.Response.Payload)
 	}
-	peers, err := parsePeerEndpoints(peerEndpoints)
+	peers, err := parsePeerEndpoints(peerEndpoints, config)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing peer endpoints: %s", err)
 	}
@@ -142,9 +118,9 @@ func queryPeersOfChannel(channelID string) ([]sdkApi.Peer, error) {
 
 }
 
-func queryChaincode(channelID string, ccID string, args []string) (*apitxn.TransactionProposalResponse, error) {
+func queryChaincode(channelID string, ccID string, args []string, config api.Config) (*apitxn.TransactionProposalResponse, error) {
 	logger.Debugf("queryChaincode channelID:%s", channelID)
-	client, err := GetInstance()
+	client, err := GetInstance(config)
 	if err != nil {
 		return nil, formatQueryError(channelID, err)
 	}
@@ -209,9 +185,9 @@ func queryChaincode(channelID string, ccID string, args []string) (*apitxn.Trans
 	return response, nil
 }
 
-func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints) ([]sdkApi.Peer, error) {
+func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints, config api.Config) ([]sdkApi.Peer, error) {
 	peers := []sdkApi.Peer{}
-	clientInstance, err := GetInstance()
+	clientInstance, err := GetInstance(config)
 	if err != nil {
 		return nil, err
 	}

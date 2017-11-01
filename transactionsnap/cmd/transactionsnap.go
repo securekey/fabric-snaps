@@ -28,32 +28,25 @@ import (
 // The newTxID is added so the unit test can access the new transaction id generated in transactionsnap
 var newTxID apitxn.TransactionID
 
+//TODO temp var will be removed when configmanager implementation ready
+var configPath = ""
+
 var registerTxEventTimeout time.Duration = 30
 
 // TxnSnap implements endorse transaction and commit transaction
 type TxnSnap struct {
 }
 
+// clientServiceImpl implements client service
+type clientServiceImpl struct {
+}
+
+var clientService = newClientService()
+
 var logger = logging.MustGetLogger("transaction-snap")
-var fcClient client.Client
-var membership client.MembershipManager
 
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
-	//initialize fabric client
-	err := config.Init("")
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Failed to initialize config: %s", err))
-	}
-
-	if err := getInstanceOfFabricClient(); err != nil {
-		logger.Errorf("Init failed: %s", err)
-		return shim.Error(fmt.Sprintf("getInstanceOfFabricClient return error %s", err.Error()))
-	}
-
-	// membership mananger
-	membership = client.GetMembershipInstance()
 
 	return shim.Success(nil)
 }
@@ -61,12 +54,25 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 //Invoke transaction snap
 //required args are function name and SnapTransactionRequest
 func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+
+	config, err := config.NewConfig(configPath, stub)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to initialize config: %s", err))
+	}
+
+	fcClient, err := clientService.GetFabricClient(config)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("GetFabricClient return error %s", err.Error()))
+	}
+
+	membership := clientService.GetClientMembership(config)
+
 	function, args := stub.GetFunctionAndParameters()
 
 	switch function {
 	case "endorseTransaction":
 
-		tpResponses, err := endorseTransaction(stub)
+		tpResponses, err := endorseTransaction(stub, fcClient)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -77,25 +83,25 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
-		err := commitTransaction(stub)
+		err := commitTransaction(stub, fcClient)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 	case "endorseAndCommitTransaction":
-		err := endorseAndCommitTransaction(stub)
+		err := endorseAndCommitTransaction(stub, fcClient)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 	case "verifyTransactionProposalSignature":
-		err := verifyTxnProposalSignature(stub)
+		err := verifyTxnProposalSignature(stub, fcClient)
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 	case "getPeersOfChannel":
-		payload, err := getPeersOfChannel(args)
+		payload, err := getPeersOfChannel(args, membership)
 		if err != nil {
 			logger.Errorf("getPeersOfChannel error: %s", err.Error())
 			return shim.Error(err.Error())
@@ -110,7 +116,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 // getPeersOfChannel returns peers that are available for that channel
-func getPeersOfChannel(args []string) ([]byte, error) {
+func getPeersOfChannel(args []string, membership api.MembershipManager) ([]byte, error) {
 
 	if len(args) < 1 || args[0] == "" {
 		return nil, fmt.Errorf("Channel name must be provided")
@@ -147,7 +153,7 @@ func getPeersOfChannel(args []string) ([]byte, error) {
 }
 
 //endorseTransaction returns []*sdkApi.TransactionProposalResponse
-func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.TransactionProposalResponse, error) {
+func endorseTransaction(stub shim.ChaincodeStubInterface, fcClient api.Client) ([]*apitxn.TransactionProposalResponse, error) {
 
 	args := stub.GetArgs()
 	//first arg is function name; the second one is SnapTransactionRequest
@@ -185,7 +191,7 @@ func endorseTransaction(stub shim.ChaincodeStubInterface) ([]*apitxn.Transaction
 }
 
 //commitTransaction returns error
-func commitTransaction(stub shim.ChaincodeStubInterface) error {
+func commitTransaction(stub shim.ChaincodeStubInterface, fcClient api.Client) error {
 	args := stub.GetArgs()
 	//first arg is function name; the second one is channel name; the third one is tpResponses;
 	//the fourth one is registerTxEvent
@@ -212,7 +218,7 @@ func commitTransaction(stub shim.ChaincodeStubInterface) error {
 }
 
 //endorseAndCommitTransaction returns error
-func endorseAndCommitTransaction(stub shim.ChaincodeStubInterface) error {
+func endorseAndCommitTransaction(stub shim.ChaincodeStubInterface, fcClient api.Client) error {
 	args := stub.GetArgs()
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
@@ -224,7 +230,7 @@ func endorseAndCommitTransaction(stub shim.ChaincodeStubInterface) error {
 		return err
 	}
 
-	tpxResponse, err := endorseTransaction(stub)
+	tpxResponse, err := endorseTransaction(stub, fcClient)
 	if err != nil {
 		return err
 	}
@@ -241,7 +247,7 @@ func endorseAndCommitTransaction(stub shim.ChaincodeStubInterface) error {
 }
 
 //verifyTxnProposalSignature returns error
-func verifyTxnProposalSignature(stub shim.ChaincodeStubInterface) error {
+func verifyTxnProposalSignature(stub shim.ChaincodeStubInterface, fcClient api.Client) error {
 	args := stub.GetArgs()
 	//first arg is function name; the second one is channel name; the third one is TxnProposalBytes
 	if len(args) < 3 {
@@ -262,16 +268,6 @@ func verifyTxnProposalSignature(stub shim.ChaincodeStubInterface) error {
 	return nil
 }
 
-// getInstanceOfFabricClient
-func getInstanceOfFabricClient() error {
-	var err error
-	fcClient, err = client.GetInstance()
-	if err != nil {
-		return fmt.Errorf("Cannot initialize client %v", err)
-	}
-	return nil
-}
-
 // getSnapTransactionRequest
 func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTransactionRequest, error) {
 	var snapTxRequest api.SnapTransactionRequest
@@ -287,4 +283,25 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error starting Txn snap: %s", err)
 	}
+}
+
+func newClientService() api.ClientService {
+	return &clientServiceImpl{}
+}
+
+// GetFabricClient return fabric client
+func (cs *clientServiceImpl) GetFabricClient(config api.Config) (api.Client, error) {
+	fcClient, err := client.GetInstance(config)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot initialize client %v", err)
+	}
+	return fcClient, nil
+}
+
+// GetClientMembership return client membership
+func (cs *clientServiceImpl) GetClientMembership(config api.Config) api.MembershipManager {
+	// membership mananger
+	membership := client.GetMembershipInstance(config)
+
+	return membership
 }

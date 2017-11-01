@@ -16,3 +16,9 @@ type SnapTransactionRequest struct {
 	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
 	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
+
+// ClientService interface
+type ClientService interface {
+	GetFabricClient(config Config) (Client, error)
+	GetClientMembership(config Config) MembershipManager
+}

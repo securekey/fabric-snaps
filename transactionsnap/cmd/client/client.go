@@ -29,7 +29,7 @@ import (
 	"io/ioutil"
 
 	logging "github.com/op/go-logging"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
@@ -39,102 +39,21 @@ const (
 	txnSnapUser = "Txn-Snap-User"
 )
 
-// Client is a wrapper interface around the fabric client
-// It enables multithreaded access to the client
-type Client interface {
-	// NewChannel registers a channel object with the fabric client
-	// this object represents a channel on the fabric network
-	// @param {string} name of the channel
-	// @returns {Channel} channel object
-	// @returns {error} error, if any
-	NewChannel(string) (sdkApi.Channel, error)
-
-	// GetChannel returns a channel object that has been added to the fabric client
-	// @param {string} name of the channel
-	// @returns {Channel} channel that was requested
-	// @returns {error} error, if any
-	GetChannel(string) (sdkApi.Channel, error)
-
-	// EndorseTransaction request endorsement from the peers on this channel
-	// for a transaction with the given parameters
-	// @param {Channel} channel on which we want to transact
-	// @param {string} chaincodeID identifies the chaincode to invoke
-	// @param {[]string} args to pass to the chaincode. Args[0] is the function name
-	// @param {[]Peer} (optional) targets for transaction
-	// @param {map[string][]byte} transientData map
-	// @param {[]string} ccIDs For Endorsement selection
-	// @returns {[]TransactionProposalResponse} responses from endorsers
-	// @returns {error} error, if any
-	EndorseTransaction(sdkApi.Channel, string, []string, map[string][]byte,
-		[]sdkApi.Peer, []string) ([]*apitxn.TransactionProposalResponse, error)
-
-	// CommitTransaction submits the given endorsements on the specified channel for
-	// commit
-	// @param {Channel} channel on which the transaction is taking place
-	// @param {[]TransactionProposalResponse} responses from endorsers
-	// @param {bool} register for Tx event
-	// @param {time.Duration} register for Tx event timeout in seconds
-	// @returns {error} error, if any
-	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool, time.Duration) error
-
-	// QueryChannels joined by the given peer
-	// @param {Peer} The peer to query
-	// @returns {[]string} list of channels
-	// @returns {error} error, if any
-	QueryChannels(config.PeerConfig) ([]string, error)
-
-	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
-	// @param {Channel} channel on which the transaction is taking place
-	// @param {[]byte} Txn Proposal
-	// @returns {error} error, if any
-	VerifyTxnProposalSignature(sdkApi.Channel, []byte) error
-
-	// SetSelectionService is used to inject a selection service for testing
-	// @param {SelectionService} SelectionService
-	SetSelectionService(SelectionService)
-
-	// GetSelectionService returns the SelectionService
-	GetSelectionService() SelectionService
-
-	// GetEventHub returns the GetEventHub
-	// @returns {EventHub} EventHub
-	// @returns {error} error, if any
-	GetEventHub() (sdkApi.EventHub, error)
-
-	// Hash message
-	// @param {[]byte} message to hash
-	// @returns {[[]byte} hash
-	// @returns {error} error, if any
-	Hash([]byte) ([]byte, error)
-
-	// InitializeChannel initializes the given channel
-	// @param {Channel} Channel that needs to be initialized
-	// @returns {error} error, if any
-	InitializeChannel(channel sdkApi.Channel) error
-
-	// GetConfig get client config
-	// @returns {Config} config
-	GetConfig() sdkConfigApi.Config
-
-	// GetUser returns the user from the client context
-	// @retruns {User} user
-	GetUser() sdkApi.User
-}
-
 type clientImpl struct {
 	sync.RWMutex
 	client           sdkApi.FabricClient
-	selectionService SelectionService
+	selectionService api.SelectionService
+	config           api.Config
 }
 
 var client *clientImpl
 var once sync.Once
 
 // GetInstance returns a singleton instance of the fabric client
-func GetInstance() (Client, error) {
+func GetInstance(config api.Config) (api.Client, error) {
 	var err error
 	once.Do(func() {
-		client = &clientImpl{selectionService: NewSelectionService()}
+		client = &clientImpl{selectionService: NewSelectionService(config), config: config}
 		initError := client.initialize()
 		if initError != nil {
 			err = fmt.Errorf("Error initializing fabric client: %s", initError)
@@ -276,7 +195,7 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	fail := make(chan error)
 	txID := transaction.Proposal.TxnID
 	if registerTxEvent {
-		localPeer, err := config.GetLocalPeer()
+		localPeer, err := c.config.GetLocalPeer()
 		if err != nil {
 			return fmt.Errorf("GetLocalPeer return error [%v]", err)
 		}
@@ -313,9 +232,9 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	return nil
 }
 
-func (c *clientImpl) QueryChannels(peer config.PeerConfig) ([]string, error) {
+func (c *clientImpl) QueryChannels(peer api.PeerConfig) ([]string, error) {
 	p, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peer.Host, peer.Port),
-		config.GetTLSRootCertPath(), "", c.client.Config())
+		c.config.GetTLSRootCertPath(), "", c.client.Config())
 	if err != nil {
 		return nil, fmt.Errorf("Error creating peer: %s", err)
 	}
@@ -390,13 +309,13 @@ func (c *clientImpl) VerifyTxnProposalSignature(channel sdkApi.Channel, proposal
 	return nil
 }
 
-func (c *clientImpl) SetSelectionService(service SelectionService) {
+func (c *clientImpl) SetSelectionService(service api.SelectionService) {
 	c.Lock()
 	defer c.Unlock()
 	c.selectionService = service
 }
 
-func (c *clientImpl) GetSelectionService() SelectionService {
+func (c *clientImpl) GetSelectionService() api.SelectionService {
 	return c.selectionService
 }
 
@@ -454,7 +373,7 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 func (c *clientImpl) initialize() error {
 
 	sdkOptions := sdkFabApi.Options{
-		ConfigFile: config.GetConfigPath("") + "/config.yaml",
+		ConfigFile: c.config.GetConfigPath("") + "/config.yaml",
 	}
 
 	sdk, err := sdkFabApi.NewSDK(sdkOptions)
@@ -511,14 +430,14 @@ func (c *clientImpl) initialize() error {
 	}
 	logger.Infof("Configured BCCSP %s provider \n", configProvider.SecurityProvider())
 
-	localPeer, err := config.GetLocalPeer()
+	localPeer, err := c.config.GetLocalPeer()
 	if err != nil {
 		return fmt.Errorf("GetLocalPeer return error [%v]", err)
 	}
 
 	cryptoSuite := bccspFactory.GetDefault()
 
-	signingIdentity, err := c.getSigningIdentity(string(localPeer.MSPid), config.GetEnrolmentKeyPath(), config.GetEnrolmentCertPath(), cryptoSuite)
+	signingIdentity, err := c.getSigningIdentity(string(localPeer.MSPid), c.config.GetEnrolmentKeyPath(), c.config.GetEnrolmentCertPath(), cryptoSuite)
 	if err != nil {
 		return fmt.Errorf("Failed to get signing identity %v", err)
 	}
