@@ -19,6 +19,7 @@ import (
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
@@ -71,11 +72,11 @@ var p11 = peer("peer11", org5)
 var p12 = peer("peer12", org5)
 
 func TestMain(m *testing.M) {
-	err := config.Init("../sampleconfig")
+	c, err := config.NewConfig("../sampleconfig", nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	_, err = GetInstance()
+	_, err = GetInstance(c)
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
@@ -91,7 +92,7 @@ func TestGetEndorsersForChaincodeOneCC(t *testing.T) {
 		pgresolver.NewRoundRobinLBP())
 
 	// Channel1(Policy(cc1)) = Org1
-	expected := []pgresolver.PeerGroup{
+	expected := []api.PeerGroup{
 		// Org1
 		pg(p1), pg(p2),
 	}
@@ -108,7 +109,7 @@ func TestGetEndorsersForChaincodeTwoCCs(t *testing.T) {
 		pgresolver.NewRoundRobinLBP())
 
 	// Channel1(Policy(cc1) and Policy(cc2)) = Org1 and (1 of [(2 of [Org1,Org2]),(2 of [Org1,Org3,Org4])])
-	expected := []pgresolver.PeerGroup{
+	expected := []api.PeerGroup{
 		// Org1 and Org2
 		pg(p1, p3), pg(p1, p4), pg(p2, p3), pg(p2, p4),
 		// Org1 and Org3
@@ -136,7 +137,7 @@ func TestGetEndorsersForChaincodeTwoCCsTwoChannels(t *testing.T) {
 	)
 
 	// Channel1(Policy(cc1) and Policy(cc2)) = Org1 and (1 of [(2 of [Org1,Org2]),(2 of [Org1,Org3,Org4])])
-	expected := []pgresolver.PeerGroup{
+	expected := []api.PeerGroup{
 		// Org1 and Org2
 		pg(p1, p3), pg(p1, p4), pg(p2, p3), pg(p2, p4),
 		// Org1 and Org3
@@ -150,7 +151,7 @@ func TestGetEndorsersForChaincodeTwoCCsTwoChannels(t *testing.T) {
 	verify(t, service, expected, channel1, cc1, cc2)
 
 	// Channel2(Policy(cc1) and Policy(cc2)) = Org5 and (1 of [(2 of [Org1,Org2]),(2 of [Org1,Org3,Org4])])
-	expected = []pgresolver.PeerGroup{
+	expected = []api.PeerGroup{
 		// Org5 and Org2
 		pg(p11, p1, p3), pg(p11, p1, p4), pg(p11, p2, p3), pg(p11, p2, p4),
 		pg(p12, p1, p3), pg(p12, p1, p4), pg(p12, p2, p3), pg(p12, p2, p4),
@@ -167,7 +168,7 @@ func TestGetEndorsersForChaincodeTwoCCsTwoChannels(t *testing.T) {
 	verify(t, service, expected, channel2, cc1, cc2)
 }
 
-func verify(t *testing.T, service SelectionService, expectedPeerGroups []pgresolver.PeerGroup, channelID string, chaincodeIDs ...string) {
+func verify(t *testing.T, service api.SelectionService, expectedPeerGroups []api.PeerGroup, channelID string, chaincodeIDs ...string) {
 	// Set the log level to WARNING since the following spits out too much info in DEBUG
 	module := "pg-resolver"
 	level := logging.GetLevel(module)
@@ -186,7 +187,7 @@ func verify(t *testing.T, service SelectionService, expectedPeerGroups []pgresol
 
 }
 
-func containsPeerGroup(groups []pgresolver.PeerGroup, peers []apifabclient.Peer) bool {
+func containsPeerGroup(groups []api.PeerGroup, peers []apifabclient.Peer) bool {
 	for _, g := range groups {
 		if containsAllPeers(peers, g) {
 			return true
@@ -195,7 +196,7 @@ func containsPeerGroup(groups []pgresolver.PeerGroup, peers []apifabclient.Peer)
 	return false
 }
 
-func containsAllPeers(peers []apifabclient.Peer, pg pgresolver.PeerGroup) bool {
+func containsAllPeers(peers []apifabclient.Peer, pg api.PeerGroup) bool {
 	if len(peers) != len(pg.Peers()) {
 		return false
 	}
@@ -216,7 +217,7 @@ func containsPeer(peers []apifabclient.Peer, peer apifabclient.Peer) bool {
 	return false
 }
 
-func pg(peers ...apifabclient.Peer) pgresolver.PeerGroup {
+func pg(peers ...apifabclient.Peer) api.PeerGroup {
 	return pgresolver.NewPeerGroup(peers...)
 }
 
@@ -230,12 +231,12 @@ func peer(name string, mspID string) apifabclient.Peer {
 	return peer
 }
 
-func newMockSelectionService(membershipManager MembershipManager, ccDataProvider CCDataProvider, lbp pgresolver.LoadBalancePolicy) SelectionService {
+func newMockSelectionService(membershipManager api.MembershipManager, ccDataProvider api.CCDataProvider, lbp api.LoadBalancePolicy) api.SelectionService {
 	return &selectionServiceImpl{
 		membershipManager: membershipManager,
 		ccDataProvider:    ccDataProvider,
 		pgLBP:             lbp,
-		pgResolvers:       make(map[string]pgresolver.PeerGroupResolver),
+		pgResolvers:       make(map[string]api.PeerGroupResolver),
 	}
 }
 
@@ -243,8 +244,8 @@ type mockMembershipManager struct {
 	peerConfigs map[string][]sdkApi.Peer
 }
 
-func (m *mockMembershipManager) GetPeersOfChannel(channelID string, poll bool) ChannelMembership {
-	return ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
+func (m *mockMembershipManager) GetPeersOfChannel(channelID string, poll bool) api.ChannelMembership {
+	return api.ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
 }
 
 func newMockMembershipManager() *mockMembershipManager {

@@ -9,17 +9,19 @@ package pgresolver
 import (
 	"math/rand"
 	"time"
+
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 type randomLBP struct {
 }
 
 // NewRandomLBP returns a random load-balance policy
-func NewRandomLBP() LoadBalancePolicy {
+func NewRandomLBP() api.LoadBalancePolicy {
 	return &randomLBP{}
 }
 
-func (lbp *randomLBP) Choose(peerGroups []PeerGroup) PeerGroup {
+func (lbp *randomLBP) Choose(peerGroups []api.PeerGroup) api.PeerGroup {
 	logger.Debugf("Invoking random LBP\n")
 
 	if len(peerGroups) == 0 {
@@ -40,11 +42,11 @@ type roundRobinLBP struct {
 }
 
 // NewRoundRobinLBP returns a round-robin load-balance policy
-func NewRoundRobinLBP() LoadBalancePolicy {
+func NewRoundRobinLBP() api.LoadBalancePolicy {
 	return &roundRobinLBP{index: -1}
 }
 
-func (lbp *roundRobinLBP) Choose(peerGroups []PeerGroup) PeerGroup {
+func (lbp *roundRobinLBP) Choose(peerGroups []api.PeerGroup) api.PeerGroup {
 	if len(peerGroups) == 0 {
 		logger.Warningf("No available peer groups\n")
 		// Return an empty PeerGroup

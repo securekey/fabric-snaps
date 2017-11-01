@@ -7,6 +7,8 @@ package pgresolver
 
 import (
 	"testing"
+
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 const (
@@ -70,18 +72,18 @@ func TestGroupReduce(t *testing.T) {
 
 	r1 := g(g1).Reduce()
 	logger.Debugf("%v\n", r1)
-	verifyGroups(t, []Group{g1}, r1)
+	verifyGroups(t, []api.Group{g1}, r1)
 
 	r2 := g(g1, g2).Reduce()
 	logger.Debugf("%v\n", r2)
-	verifyGroups(t, []Group{g(g1, g2)}, r2)
+	verifyGroups(t, []api.Group{g(g1, g2)}, r2)
 }
 
 func TestGroupCollapse(t *testing.T) {
 	g1 := g(g(a, b), g(c), g(d, e, f))
 	logger.Debugf("%v\n", g1)
 
-	r1 := g1.(Collapsable).Collapse()
+	r1 := g1.(api.Collapsable).Collapse()
 	logger.Debugf("%v\n", r1)
 	expected := g(a, b, c, d, e, f)
 	if !expected.Equals(r1) {
@@ -101,7 +103,7 @@ func TestGOGGroups(t *testing.T) {
 		t.Fatalf("expecting %d groups in the group-of-groups but got %d", 2, len(groups))
 	}
 	group0 := groups[0]
-	if g, ok := group0.(Group); ok {
+	if g, ok := group0.(api.Group); ok {
 		if g != g1 {
 			t.Fatalf("expecting item[%d] to be %s but got %s", 0, g1, groups[0])
 		}
@@ -141,18 +143,18 @@ func TestGroupOfGroupsReduce(t *testing.T) {
 
 	r1 := gog(g1).Reduce()
 	logger.Debugf("%v\n", r1)
-	verifyGroups(t, []Group{g1}, r1)
+	verifyGroups(t, []api.Group{g1}, r1)
 
 	r2 := gog(g1, g2).Reduce()
 	logger.Debugf("%v\n", r2)
-	verifyGroups(t, []Group{g1, g2}, r2)
+	verifyGroups(t, []api.Group{g1, g2}, r2)
 }
 
 func TestGOGCollapse(t *testing.T) {
 	g1 := gog(g(a, b), g(c), g(d, e, f))
 	logger.Debugf("%v\n", g1)
 
-	r1 := g1.(Collapsable).Collapse()
+	r1 := g1.(api.Collapsable).Collapse()
 	logger.Debugf("%v\n", r1)
 	expected := g1
 	if !expected.Equals(r1) {
@@ -169,33 +171,33 @@ func TestCompositeReduce(t *testing.T) {
 
 	r := g(gog(g1, g2), gog(g3, g4, g5)).Reduce()
 	logger.Debugf("%v\n", r)
-	verifyGroups(t, []Group{g(g1, g3), g(g1, g4), g(g1, g5), g(g2, g3), g(g2, g4), g(g2, g5)}, r)
+	verifyGroups(t, []api.Group{g(g1, g3), g(g1, g4), g(g1, g5), g(g2, g3), g(g2, g4), g(g2, g5)}, r)
 }
 
 func TestAndOperation(t *testing.T) {
 	g1 := g(a, b)
 	g2 := g(c, d, e)
 
-	expected := []Group{
+	expected := []api.Group{
 		g(a, c), g(a, d), g(a, e),
 		g(b, c), g(b, d), g(b, e),
 	}
 
-	r := and([]Group{g1, g2})
+	r := and([]api.Group{g1, g2})
 	logger.Debugf("%v\n", r)
 
 	verifyGroups(t, expected, r)
 }
 
-func g(items ...Item) Group {
+func g(items ...api.Item) api.Group {
 	return NewGroup(items)
 }
 
-func gog(groups ...Group) GroupOfGroups {
+func gog(groups ...api.Group) api.GroupOfGroups {
 	return NewGroupOfGroups(groups)
 }
 
-func verifyGroups(t *testing.T, expected []Group, actual []Group) {
+func verifyGroups(t *testing.T, expected []api.Group, actual []api.Group) {
 	if len(expected) != len(actual) {
 		t.Fatalf("expecting %d groups but got %d", len(expected), len(actual))
 	}
@@ -211,16 +213,16 @@ type mockGroup struct {
 	groupImpl
 }
 
-func (g *mockGroup) Reduce() []Group {
-	return []Group{g}
+func (g *mockGroup) Reduce() []api.Group {
+	return []api.Group{g}
 }
 
-func (g *mockGroup) Collapse() Group {
-	return NewGroup([]Item{g})
+func (g *mockGroup) Collapse() api.Group {
+	return NewGroup([]api.Item{g})
 }
 
-func mg(items ...Item) Group {
-	itms := make([]Item, len(items))
+func mg(items ...api.Item) api.Group {
+	itms := make([]api.Item, len(items))
 	for i := 0; i < len(items); i++ {
 		itms[i] = items[i]
 	}

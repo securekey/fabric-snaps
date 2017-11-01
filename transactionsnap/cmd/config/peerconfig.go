@@ -6,17 +6,12 @@ SPDX-License-Identifier: Apache-2.0
 
 package config
 
-// PeerConfig represents the server addresses of a fabric peer
-type PeerConfig struct {
-	Host      string
-	Port      int
-	EventHost string
-	EventPort int
-	MSPid     []byte
-}
+import (
+	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
+)
 
 // PeerConfigs represents a list of peers. It implements the sort interface
-type PeerConfigs []PeerConfig
+type PeerConfigs []transactionsnapApi.PeerConfig
 
 func (p PeerConfigs) Len() int {
 	return len(p)

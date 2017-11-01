@@ -15,17 +15,18 @@ import (
 	common "github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric/protos/msp"
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 var logger = logging.MustGetLogger("pg-resolver")
 
 type peerGroupResolver struct {
-	mspGroups []Group
-	lbp       LoadBalancePolicy
+	mspGroups []api.Group
+	lbp       api.LoadBalancePolicy
 }
 
 // NewRoundRobinPeerGroupResolver returns a PeerGroupResolver that chooses peers in a round-robin fashion
-func NewRoundRobinPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, peerRetriever PeerRetriever) (PeerGroupResolver, error) {
+func NewRoundRobinPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, peerRetriever api.PeerRetriever) (api.PeerGroupResolver, error) {
 	compiler := NewSignaturePolicyCompiler(peerRetriever)
 	groupHierarchy, err := compiler.Compile(sigPolicyEnv)
 	if err != nil {
@@ -35,7 +36,7 @@ func NewRoundRobinPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope
 }
 
 // NewRandomPeerGroupResolver returns a PeerGroupResolver that chooses peers in a round-robin fashion
-func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, peerRetriever PeerRetriever) (PeerGroupResolver, error) {
+func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, peerRetriever api.PeerRetriever) (api.PeerGroupResolver, error) {
 	compiler := NewSignaturePolicyCompiler(peerRetriever)
 	groupHierarchy, err := compiler.Compile(sigPolicyEnv)
 	if err != nil {
@@ -45,7 +46,7 @@ func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, pe
 }
 
 // NewPeerGroupResolver returns a new PeerGroupResolver
-func NewPeerGroupResolver(groupHierarchy GroupOfGroups, lbp LoadBalancePolicy) (PeerGroupResolver, error) {
+func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalancePolicy) (api.PeerGroupResolver, error) {
 	if logger.IsEnabledFor(logging.DEBUG) {
 		logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
 	}
@@ -70,7 +71,7 @@ func NewPeerGroupResolver(groupHierarchy GroupOfGroups, lbp LoadBalancePolicy) (
 	}, nil
 }
 
-func (c *peerGroupResolver) Resolve() PeerGroup {
+func (c *peerGroupResolver) Resolve() api.PeerGroup {
 	peerGroups := c.getPeerGroups()
 
 	if logger.IsEnabledFor(logging.DEBUG) {
@@ -93,8 +94,8 @@ func (c *peerGroupResolver) Resolve() PeerGroup {
 	return c.lbp.Choose(peerGroups)
 }
 
-func (c *peerGroupResolver) getPeerGroups() []PeerGroup {
-	var allPeerGroups []PeerGroup
+func (c *peerGroupResolver) getPeerGroups() []api.PeerGroup {
+	var allPeerGroups []api.PeerGroup
 	for _, g := range c.mspGroups {
 		for _, pg := range mustGetPeerGroups(g) {
 			allPeerGroups = append(allPeerGroups, pg)
@@ -103,19 +104,19 @@ func (c *peerGroupResolver) getPeerGroups() []PeerGroup {
 	return allPeerGroups
 }
 
-func mustGetPeerGroups(group Group) []PeerGroup {
+func mustGetPeerGroups(group api.Group) []api.PeerGroup {
 	items := group.Items()
 	if len(items) == 0 {
 		return nil
 	}
 
-	if _, ok := items[0].(Group); !ok {
-		group = NewGroup([]Item{group})
+	if _, ok := items[0].(api.Group); !ok {
+		group = NewGroup([]api.Item{group})
 	}
 
-	groups := make([]Group, len(group.Items()))
+	groups := make([]api.Group, len(group.Items()))
 	for i, item := range group.Items() {
-		if grp, ok := item.(PeerGroup); ok {
+		if grp, ok := item.(api.PeerGroup); ok {
 			groups[i] = grp
 		} else {
 			panic(fmt.Sprintf("unexpected: expecting item to be a PeerGroup but found: %s", reflect.TypeOf(item)))
@@ -123,7 +124,7 @@ func mustGetPeerGroups(group Group) []PeerGroup {
 	}
 
 	andedGroups := and(groups)
-	peerGroups := make([]PeerGroup, len(andedGroups))
+	peerGroups := make([]api.PeerGroup, len(andedGroups))
 	for i, g := range andedGroups {
 		peerGroups[i] = mustGetPeerGroup(g)
 	}
@@ -131,8 +132,8 @@ func mustGetPeerGroups(group Group) []PeerGroup {
 	return peerGroups
 }
 
-func mustGetPeerGroup(g Group) PeerGroup {
-	if pg, ok := g.(PeerGroup); ok {
+func mustGetPeerGroup(g api.Group) api.PeerGroup {
+	if pg, ok := g.(api.PeerGroup); ok {
 		return pg
 	}
 
@@ -148,17 +149,17 @@ func mustGetPeerGroup(g Group) PeerGroup {
 }
 
 // NewSignaturePolicyCompiler returns a new PolicyCompiler
-func NewSignaturePolicyCompiler(peerRetriever PeerRetriever) SignaturePolicyCompiler {
+func NewSignaturePolicyCompiler(peerRetriever api.PeerRetriever) api.SignaturePolicyCompiler {
 	return &signaturePolicyCompiler{
 		peerRetriever: peerRetriever,
 	}
 }
 
 type signaturePolicyCompiler struct {
-	peerRetriever PeerRetriever
+	peerRetriever api.PeerRetriever
 }
 
-func (c *signaturePolicyCompiler) Compile(sigPolicyEnv *common.SignaturePolicyEnvelope) (GroupOfGroups, error) {
+func (c *signaturePolicyCompiler) Compile(sigPolicyEnv *common.SignaturePolicyEnvelope) (api.GroupOfGroups, error) {
 	policFunc, err := c.compile(sigPolicyEnv.Rule, sigPolicyEnv.Identities)
 	if err != nil {
 		return nil, fmt.Errorf("error compiling chaincode signature policy: %s", err)
@@ -166,24 +167,24 @@ func (c *signaturePolicyCompiler) Compile(sigPolicyEnv *common.SignaturePolicyEn
 	return policFunc()
 }
 
-func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, identities []*mb.MSPPrincipal) (SignaturePolicyFunc, error) {
+func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, identities []*mb.MSPPrincipal) (api.SignaturePolicyFunc, error) {
 	if sigPolicy == nil {
 		return nil, fmt.Errorf("nil signature policy")
 	}
 
 	switch t := sigPolicy.Type.(type) {
 	case *common.SignaturePolicy_SignedBy:
-		return func() (GroupOfGroups, error) {
+		return func() (api.GroupOfGroups, error) {
 			mspID, err := mspPrincipalToString(identities[t.SignedBy])
 			if err != nil {
 				return nil, fmt.Errorf("error getting MSP ID from MSP principal: %s", err)
 			}
-			return NewGroupOfGroups([]Group{NewMSPPeerGroup(mspID, c.peerRetriever)}), nil
+			return NewGroupOfGroups([]api.Group{NewMSPPeerGroup(mspID, c.peerRetriever)}), nil
 		}, nil
 
 	case *common.SignaturePolicy_NOutOf_:
 		nOutOfPolicy := t.NOutOf
-		var pfuncs []SignaturePolicyFunc
+		var pfuncs []api.SignaturePolicyFunc
 		for _, policy := range nOutOfPolicy.Rules {
 			f, err := c.compile(policy, identities)
 			if err != nil {
@@ -191,8 +192,8 @@ func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, ide
 			}
 			pfuncs = append(pfuncs, f)
 		}
-		return func() (GroupOfGroups, error) {
-			var groups []Group
+		return func() (api.GroupOfGroups, error) {
+			var groups []api.Group
 			for _, f := range pfuncs {
 				grps, err := f()
 				if err != nil {

@@ -20,8 +20,8 @@ import (
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
 	logging "github.com/op/go-logging"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
 
 const (
@@ -29,34 +29,23 @@ const (
 	ccDataProviderfunction = "getccdata"
 )
 
-// CCDataProvider retrieves Chaincode Data for the given chaincode ID on the given channel
-type CCDataProvider interface {
-	QueryChaincodeData(channelID string, chaincodeID string) (*ccprovider.ChaincodeData, error)
-}
-
-// SelectionService selects peers for endorsement and commit events
-type SelectionService interface {
-	// GetEndorsersForChaincode returns a set of peers that should satisfy the endorsement
-	// policies of all of the given chaincodes
-	GetEndorsersForChaincode(channelID string, chaincodeIDs ...string) ([]sdkApi.Peer, error)
-	GetPeerForEvents(channelID string) (*config.PeerConfig, error)
-}
-
 type selectionServiceImpl struct {
-	membershipManager MembershipManager
+	membershipManager api.MembershipManager
 	mutex             sync.RWMutex
-	pgResolvers       map[string]pgresolver.PeerGroupResolver
-	pgLBP             pgresolver.LoadBalancePolicy
-	ccDataProvider    CCDataProvider
+	pgResolvers       map[string]api.PeerGroupResolver
+	pgLBP             api.LoadBalancePolicy
+	ccDataProvider    api.CCDataProvider
+	config            api.Config
 }
 
 // NewSelectionService creates a selection service
-func NewSelectionService() SelectionService {
+func NewSelectionService(config api.Config) api.SelectionService {
 	return &selectionServiceImpl{
-		membershipManager: GetMembershipInstance(),
-		pgResolvers:       make(map[string]pgresolver.PeerGroupResolver),
+		membershipManager: GetMembershipInstance(config),
+		pgResolvers:       make(map[string]api.PeerGroupResolver),
 		pgLBP:             pgresolver.NewRandomLBP(),
-		ccDataProvider:    newCCDataProvider(),
+		ccDataProvider:    newCCDataProvider(config),
+		config:            config,
 	}
 }
 
@@ -74,8 +63,8 @@ func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
 	return resolver.Resolve().Peers(), nil
 }
 
-func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerConfig, error) {
-	peerConfig := &config.PeerConfig{}
+func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*api.PeerConfig, error) {
+	peerConfig := &api.PeerConfig{}
 	channelMembership := s.membershipManager.GetPeersOfChannel(channelID, false)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
 		// Query error and there is no cached membership list
@@ -88,7 +77,7 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerC
 
 	// Membership Service does not know the event port. We assume it is the same
 	// as the local peer
-	localPeer, err := config.GetLocalPeer()
+	localPeer, err := s.config.GetLocalPeer()
 	if err != nil {
 		return peerConfig, err
 	}
@@ -98,7 +87,7 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerC
 		return peerConfig, err
 	}
 
-	peerConfig = &config.PeerConfig{
+	peerConfig = &api.PeerConfig{
 		EventHost: host,
 		EventPort: localPeer.EventPort,
 		MSPid:     []byte(selectedPeer.MSPID()),
@@ -107,7 +96,7 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*config.PeerC
 	return peerConfig, nil
 }
 
-func (s *selectionServiceImpl) getPeerGroupResolver(channelID string, chaincodeIDs []string) (pgresolver.PeerGroupResolver, error) {
+func (s *selectionServiceImpl) getPeerGroupResolver(channelID string, chaincodeIDs []string) (api.PeerGroupResolver, error) {
 	key := newResolverKey(channelID, chaincodeIDs...)
 
 	s.mutex.RLock()
@@ -123,7 +112,7 @@ func (s *selectionServiceImpl) getPeerGroupResolver(channelID string, chaincodeI
 	return resolver, nil
 }
 
-func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (pgresolver.PeerGroupResolver, error) {
+func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (api.PeerGroupResolver, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -134,7 +123,7 @@ func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (pgresolver.Pe
 	}
 
 	// Retrieve the signature policies for all of the chaincodes
-	var policyGroups []pgresolver.Group
+	var policyGroups []api.Group
 	for _, ccID := range key.chaincodeIDs {
 		policyGroup, err := s.getPolicyGroupForCC(key.channelID, ccID)
 		if err != nil {
@@ -159,7 +148,7 @@ func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (pgresolver.Pe
 	return resolver, nil
 }
 
-func (s *selectionServiceImpl) getPolicyGroupForCC(channelID, ccID string) (pgresolver.Group, error) {
+func (s *selectionServiceImpl) getPolicyGroupForCC(channelID, ccID string) (api.Group, error) {
 	ccData, err := s.ccDataProvider.QueryChaincodeData(channelID, ccID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying chaincode [%s] on channel [%s]: %s", ccID, channelID, err)
@@ -207,10 +196,11 @@ func (s *selectionServiceImpl) getAvailablePeers(channelID string, mspID string)
 type ccDataProviderImpl struct {
 	ccDataMap map[string]*ccprovider.ChaincodeData
 	mutex     sync.RWMutex
+	config    api.Config
 }
 
-func newCCDataProvider() CCDataProvider {
-	return &ccDataProviderImpl{ccDataMap: make(map[string]*ccprovider.ChaincodeData)}
+func newCCDataProvider(config api.Config) api.CCDataProvider {
+	return &ccDataProviderImpl{ccDataMap: make(map[string]*ccprovider.ChaincodeData), config: config}
 }
 
 func (p *ccDataProviderImpl) QueryChaincodeData(channelID string, chaincodeID string) (*ccprovider.ChaincodeData, error) {
@@ -228,7 +218,7 @@ func (p *ccDataProviderImpl) QueryChaincodeData(channelID string, chaincodeID st
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	response, err := queryChaincode(channelID, ccDataProviderSCC, []string{ccDataProviderfunction, channelID, chaincodeID})
+	response, err := queryChaincode(channelID, ccDataProviderSCC, []string{ccDataProviderfunction, channelID, chaincodeID}, p.config)
 	if err != nil {
 		return nil, fmt.Errorf("error querying chaincode data for chaincode [%s] on channel [%s]: %s", chaincodeID, channelID, err)
 	}

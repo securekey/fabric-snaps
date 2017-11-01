@@ -61,6 +61,8 @@ var endorserTestURL = "127.0.0.1:7040"
 var broadcastTestURL = "127.0.0.1:7041"
 var endorserTestEventHost = "127.0.0.1"
 var endorserTestEventPort = 7053
+var membership api.MembershipManager
+var fcClient api.Client
 
 const (
 	org1 = "Org1MSP"
@@ -648,8 +650,8 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	return args
 }
 
-func configureClient() client.Client {
-	fabricClient, err := client.GetInstance()
+func configureClient(config api.Config) api.Client {
+	fabricClient, err := client.GetInstance(config)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing fabricClient: %s", err))
 	}
@@ -660,7 +662,7 @@ func configureClient() client.Client {
 	//create selection service
 	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", fabricClient.GetConfig())
 	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
-		TestPeer:       config.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
+		TestPeer:       api.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
 		InvalidChannel: ""}
 
 	fabricClient.SetSelectionService(&selectionService)
@@ -743,12 +745,12 @@ func resetRegisterTxEventTimeout() {
 }
 
 func TestMain(m *testing.M) {
-
-	err := config.Init("./sampleconfig")
+	configPath = "./sampleconfig"
+	config, err := config.NewConfig(configPath, nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	configureClient()
+	configureClient(config)
 
 	mockEndorserServer = fcmocks.StartEndorserServer(endorserTestURL)
 	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
@@ -756,10 +758,14 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err.Error())
 	}
-	err = getInstanceOfFabricClient()
+	fcClient, err = client.GetInstance(config)
 	if err != nil {
-		panic(fmt.Sprintf("getInstanceOfFabricClient return error: %v", err))
+		panic(err.Error())
 	}
+	//	err = getInstanceOfFabricClient(config)
+	//	if err != nil {
+	//		panic(fmt.Sprintf("getInstanceOfFabricClient return error: %v", err))
+	//	}
 	testChannel, err := fcClient.NewChannel("testChannel")
 	if err != nil {
 		panic(fmt.Sprintf("NewChannel return error: %v", err))
@@ -780,7 +786,7 @@ func TestMain(m *testing.M) {
 
 	p1 = peer("grpc://peer1:7051", org1)
 	p2 = peer("grpc://peer2:7051", org1)
-
+	clientService = newClientServiceMock()
 	os.Exit(m.Run())
 }
 
@@ -794,4 +800,22 @@ func peer(url string, mspID string) sdkApi.Peer {
 	peer.SetName(url)
 	peer.SetMSPID(mspID)
 	return peer
+}
+
+// clientServiceMock implements client service mock
+type clientServiceMock struct {
+}
+
+func newClientServiceMock() api.ClientService {
+	return &clientServiceMock{}
+}
+
+// GetFabricClient return fabric client
+func (cs *clientServiceMock) GetFabricClient(config api.Config) (api.Client, error) {
+	return fcClient, nil
+}
+
+// GetClientMembership return client membership
+func (cs *clientServiceMock) GetClientMembership(config api.Config) api.MembershipManager {
+	return membership
 }

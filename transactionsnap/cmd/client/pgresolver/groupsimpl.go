@@ -11,11 +11,12 @@ import (
 	"reflect"
 
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 // NewGroupOfGroups returns a new group of groups
-func NewGroupOfGroups(groups []Group) GroupOfGroups {
-	items := make([]Item, len(groups))
+func NewGroupOfGroups(groups []api.Group) api.GroupOfGroups {
+	items := make([]api.Item, len(groups))
 	for i, g := range groups {
 		items[i] = g
 	}
@@ -23,17 +24,17 @@ func NewGroupOfGroups(groups []Group) GroupOfGroups {
 }
 
 // NewGroup creates a new Group
-func NewGroup(items []Item) Group {
+func NewGroup(items []api.Item) api.Group {
 	return &groupImpl{Itms: items}
 }
 
 // NewPeerGroup returns a new PeerGroup
-func NewPeerGroup(peers ...sdkApi.Peer) PeerGroup {
+func NewPeerGroup(peers ...sdkApi.Peer) api.PeerGroup {
 	return &peerGroup{peers: asPeerWrappers(peers)}
 }
 
 // NewMSPPeerGroup returns a new MSP PeerGroup
-func NewMSPPeerGroup(mspID string, peerRetriever PeerRetriever) PeerGroup {
+func NewMSPPeerGroup(mspID string, peerRetriever api.PeerRetriever) api.PeerGroup {
 	return &mspPeerGroup{
 		mspID:         mspID,
 		peerRetriever: peerRetriever,
@@ -41,36 +42,36 @@ func NewMSPPeerGroup(mspID string, peerRetriever PeerRetriever) PeerGroup {
 }
 
 type groupImpl struct {
-	Itms []Item
+	Itms []api.Item
 }
 
-func (g *groupImpl) Items() []Item {
+func (g *groupImpl) Items() []api.Item {
 	return g.Itms
 }
 
-func (g *groupImpl) Reduce() []Group {
+func (g *groupImpl) Reduce() []api.Group {
 	grps := asGroupsOrPanic(g.Items())
 	if len(grps) == 1 {
 		return grps[0].Reduce()
 	}
 
 	// Reduce each item
-	var reduced []Group
+	var reduced []api.Group
 	for _, g := range grps {
 		reduced = append(reduced, NewGroupOfGroups(g.Reduce()))
 	}
 
 	// Collapse each group
-	var collapsed []Group
+	var collapsed []api.Group
 	for _, g := range and(reduced) {
-		if c, ok := g.(Collapsable); ok {
+		if c, ok := g.(api.Collapsable); ok {
 			g = c.Collapse()
 		}
 		collapsed = append(collapsed, g)
 	}
 
 	// Get rid of duplicates
-	var pruned []Group
+	var pruned []api.Group
 	for _, g := range collapsed {
 		if !containsGroup(pruned, g) {
 			pruned = append(pruned, g)
@@ -80,11 +81,11 @@ func (g *groupImpl) Reduce() []Group {
 	return pruned
 }
 
-func (g *groupImpl) Collapse() Group {
-	var collapsable []Item
-	var nonCollapsable []Item
+func (g *groupImpl) Collapse() api.Group {
+	var collapsable []api.Item
+	var nonCollapsable []api.Item
 	for _, item := range g.Items() {
-		if c, ok := item.(Collapsable); ok {
+		if c, ok := item.(api.Collapsable); ok {
 			for _, ci := range c.Collapse().Items() {
 				if containsItem(collapsable, ci) {
 					continue
@@ -110,7 +111,7 @@ func (g *groupImpl) Collapse() Group {
 	return NewGroup(append(nonCollapsable, cg))
 }
 
-func (g *groupImpl) Equals(other Group) bool {
+func (g *groupImpl) Equals(other api.Group) bool {
 	if len(g.Items()) != len(other.Items()) {
 		return false
 	}
@@ -144,10 +145,10 @@ type groupsImpl struct {
 	groupImpl
 }
 
-func (g *groupsImpl) Groups() []Group {
-	groups := make([]Group, len(g.Items()))
+func (g *groupsImpl) Groups() []api.Group {
+	groups := make([]api.Group, len(g.Items()))
 	for i, item := range g.Items() {
-		if group, ok := item.(Group); ok {
+		if group, ok := item.(api.Group); ok {
 			groups[i] = group
 		} else {
 			// This shouldn't happen since we have control over how the items are set.
@@ -157,19 +158,19 @@ func (g *groupsImpl) Groups() []Group {
 	return groups
 }
 
-func (g *groupsImpl) Reduce() []Group {
-	var result []Group
+func (g *groupsImpl) Reduce() []api.Group {
+	var result []api.Group
 	for _, grp := range g.Groups() {
 		result = append(result, grp.Reduce()...)
 	}
 	return result
 }
 
-func (g *groupsImpl) Collapse() Group {
+func (g *groupsImpl) Collapse() api.Group {
 	return g
 }
 
-func (g *groupsImpl) Nof(threshold int32) (GroupOfGroups, error) {
+func (g *groupsImpl) Nof(threshold int32) (api.GroupOfGroups, error) {
 	if int(threshold) > len(g.Items()) {
 		return nil, fmt.Errorf("N is greater than length of the group")
 	}
@@ -214,8 +215,8 @@ type peerGroup struct {
 	peers []*peerWrapper
 }
 
-func (pg *peerGroup) Items() []Item {
-	items := make([]Item, len(pg.peers))
+func (pg *peerGroup) Items() []api.Item {
+	items := make([]api.Item, len(pg.peers))
 	for i, peer := range pg.peers {
 		items[i] = peer
 	}
@@ -230,7 +231,7 @@ func (pg *peerGroup) Peers() []sdkApi.Peer {
 	return peers
 }
 
-func (pg *peerGroup) Equals(other Group) bool {
+func (pg *peerGroup) Equals(other api.Group) bool {
 	if len(pg.Items()) != len(other.Items()) {
 		return false
 	}
@@ -260,22 +261,22 @@ func (pg *peerGroup) String() string {
 	return str
 }
 
-func (pg *peerGroup) Reduce() []Group {
-	return []Group{pg}
+func (pg *peerGroup) Reduce() []api.Group {
+	return []api.Group{pg}
 }
 
-func (pg *peerGroup) Collapse() Group {
-	return NewGroup([]Item{pg})
+func (pg *peerGroup) Collapse() api.Group {
+	return NewGroup([]api.Item{pg})
 }
 
 type mspPeerGroup struct {
 	mspID         string
-	peerRetriever PeerRetriever
+	peerRetriever api.PeerRetriever
 }
 
-func (pg *mspPeerGroup) Items() []Item {
+func (pg *mspPeerGroup) Items() []api.Item {
 	peers := pg.Peers()
-	items := make([]Item, len(peers))
+	items := make([]api.Item, len(peers))
 	for i, peer := range peers {
 		items[i] = peer
 	}
@@ -286,19 +287,19 @@ func (pg *mspPeerGroup) Peers() []sdkApi.Peer {
 	return pg.peerRetriever(pg.mspID)
 }
 
-func (pg *mspPeerGroup) Equals(other Group) bool {
+func (pg *mspPeerGroup) Equals(other api.Group) bool {
 	if otherPG, ok := other.(*mspPeerGroup); ok {
 		return otherPG.GetName() == pg.GetName()
 	}
 	return false
 }
 
-func (pg *mspPeerGroup) Reduce() []Group {
-	return []Group{pg}
+func (pg *mspPeerGroup) Reduce() []api.Group {
+	return []api.Group{pg}
 }
 
-func (pg *mspPeerGroup) Collapse() Group {
-	return NewGroup([]Item{pg})
+func (pg *mspPeerGroup) Collapse() api.Group {
+	return NewGroup([]api.Item{pg})
 }
 
 func (pg *mspPeerGroup) String() string {
@@ -319,10 +320,10 @@ func asPeerWrappers(peers []sdkApi.Peer) []*peerWrapper {
 
 // asGroupsOrPanic converts the given array of Item into an array of Group.
 // Each of the given items in the array must also be a Group or else a panic results.
-func asGroupsOrPanic(items []Item) []Group {
-	groups := make([]Group, len(items))
+func asGroupsOrPanic(items []api.Item) []api.Group {
+	groups := make([]api.Group, len(items))
 	for i, item := range items {
-		if grp, ok := item.(Group); ok {
+		if grp, ok := item.(api.Group); ok {
 			groups[i] = grp
 		} else {
 			panic(fmt.Sprintf("item is not a group: %s", reflect.TypeOf(item)))
@@ -331,19 +332,19 @@ func asGroupsOrPanic(items []Item) []Group {
 	return groups
 }
 
-func getCombinations(items []Item, length int32, r int) (GroupOfGroups, error) {
+func getCombinations(items []api.Item, length int32, r int) (api.GroupOfGroups, error) {
 	if length == 1 {
 		// Create an item group for each item, containing a single item
-		var groups []Group
+		var groups []api.Group
 		for _, item := range items {
-			groups = append(groups, NewGroup([]Item{item}))
+			groups = append(groups, NewGroup([]api.Item{item}))
 		}
 		combinations := NewGroupOfGroups(groups)
 
 		return combinations, nil
 	}
 
-	var groups []Group
+	var groups []api.Group
 	for i := 0; i < len(items)-int(length)+1; i++ {
 		leftItem := items[i]
 		rightCombinations, err := getCombinations(items[i+1:], length-1, r+1)
@@ -353,7 +354,7 @@ func getCombinations(items []Item, length int32, r int) (GroupOfGroups, error) {
 
 		// Add the leftItem to each of the groups that came back
 		for _, g := range rightCombinations.Groups() {
-			var newItems []Item
+			var newItems []api.Item
 			newItems = append(newItems, leftItem)
 			newItems = append(newItems, g.Items()...)
 			groups = append(groups, NewGroup(newItems))
@@ -365,7 +366,7 @@ func getCombinations(items []Item, length int32, r int) (GroupOfGroups, error) {
 // and performs an 'and' operation of the given set of groups
 // For example, given the set of groups, G=[(A,B),(C,D)],
 // then and(G) = [(A,C),(A,D),(B,C),(B,D)]
-func and(groups []Group) []Group {
+func and(groups []api.Group) []api.Group {
 	op := &andOperation{stack: &stack{}}
 	op.and(groups, 0)
 	return op.result
@@ -373,12 +374,12 @@ func and(groups []Group) []Group {
 
 type andOperation struct {
 	stack  *stack
-	result []Group
+	result []api.Group
 }
 
-func (o *andOperation) and(grps []Group, index int) {
+func (o *andOperation) and(grps []api.Group, index int) {
 	if index >= len(grps) {
-		var items []Item
+		var items []api.Item
 		for _, c := range o.stack.Groups() {
 			items = append(items, c.group.Items()[c.index])
 		}
@@ -399,7 +400,7 @@ type stack struct {
 	items []*entry
 }
 
-func (s *stack) Push(group Group, index int) {
+func (s *stack) Push(group api.Group, index int) {
 	s.items = append(s.items, &entry{
 		group: group,
 		index: index,
@@ -418,14 +419,14 @@ func (s *stack) Groups() []*entry {
 }
 
 type entry struct {
-	group Group
+	group api.Group
 	index int
 }
 
-func containsItem(items []Item, item Item) bool {
-	if grp, ok := item.(Group); ok {
+func containsItem(items []api.Item, item api.Item) bool {
+	if grp, ok := item.(api.Group); ok {
 		for _, item2 := range items {
-			if ogrp, ok2 := item2.(Group); ok2 {
+			if ogrp, ok2 := item2.(api.Group); ok2 {
 				if grp.Equals(ogrp) {
 					return true
 				}
@@ -441,7 +442,7 @@ func containsItem(items []Item, item Item) bool {
 	return false
 }
 
-func containsGroup(groups []Group, group Group) bool {
+func containsGroup(groups []api.Group, group api.Group) bool {
 	for _, g := range groups {
 		if g.Equals(group) {
 			return true

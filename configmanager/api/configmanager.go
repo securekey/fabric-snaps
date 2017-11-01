@@ -6,9 +6,13 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
+import (
+	"github.com/spf13/viper"
+)
+
 // ConfigClient is used to publish messages
 type ConfigClient interface {
-	Get(org string, peer string, appname string) (viperConfig string, err error)
+	Get(org string, peer string, appname string) (viper *viper.Viper, err error)
 }
 
 //ConfigManager is used to manage configuration in ledger(save,get,delete)

@@ -10,12 +10,12 @@ import (
 	"fmt"
 
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 //MockSelectionService type used in testing
 type MockSelectionService struct {
-	TestPeer       config.PeerConfig
+	TestPeer       api.PeerConfig
 	TestEndorsers  []sdkApi.Peer
 	InvalidChannel string
 }
@@ -30,9 +30,9 @@ func (m *MockSelectionService) GetEndorsersForChaincode(channelID string,
 }
 
 //GetPeerForEvents get peers for events
-func (m *MockSelectionService) GetPeerForEvents(channelID string) (*config.PeerConfig, error) {
+func (m *MockSelectionService) GetPeerForEvents(channelID string) (*api.PeerConfig, error) {
 	if channelID == m.InvalidChannel {
-		return &config.PeerConfig{}, fmt.Errorf("Invalid channel")
+		return &api.PeerConfig{}, fmt.Errorf("Invalid channel")
 	}
 	return &m.TestPeer, nil
 }
