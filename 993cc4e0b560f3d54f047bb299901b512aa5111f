@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8d43cee_2e88b20e",
+        "filename": "bddtests/fixtures/docker-compose.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-02T20:30:52Z",
+      "side": 1,
+      "message": "The peers don\u0027t talk to fabric-ca. Why is this required?",
+      "revId": "993cc4e0b560f3d54f047bb299901b512aa5111f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
