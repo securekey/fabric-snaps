@@ -11,17 +11,7 @@ txnsnap:
 # Membership list polling interval and tls flag
   membership:
     pollinterval: 3s
-# grpc configs, tls enabled flag
-  grpc:
-    tls:
-      enabled: false
 
-  enrolment:
-    cert:
-      file: testcerts/ecert/cert.pem
-    key:
-      file: testcerts/ecert/key.pem
-   
 # Configurations for the fabric client
 client:
   organization: peerorg1
@@ -38,6 +28,9 @@ client:
 
   logging:
     level: info
+
+  cryptoconfig:
+    path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
@@ -72,8 +65,8 @@ orderers:
 #
 organizations:
   peerorg1:
-    mspid: org1msp
-    cryptoPath:  peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    mspid: Org1MSP
+    cryptoPath: sampleconfig/msp
     peers:
       - peer0.org1.example.com
     certificateAuthorities:
