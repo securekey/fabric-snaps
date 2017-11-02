@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f7834aa_1ddf6fe9",
+        "filename": "configmanager/pkg/client/configclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-02T14:09:40Z",
+      "side": 1,
+      "message": "It may be batter to have the stub being passed on every call to Get(). This way you can more easily implement caching. For example:\n\n// Declared at package level\nvar client ConfigClient \u003d NewConfigClient()\n\n// Called on every Invoke:\nv, err :\u003d client.Get(stub, org,...) // Check if cached config is stale and, if so, refresh",
+      "revId": "1682e9eab29f70d765b0324b91058e8bf281b284",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e81e39cf_86181d17",
+        "filename": "configmanager/pkg/client/configclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-02T14:09:40Z",
+      "side": 1,
+      "message": "I\u0027m assuming that the viper arg is temporary? Maybe it would be better to create a new viper implementation of the config client since it\u0027s confusing to have both viper and stub being passed in.",
+      "revId": "1682e9eab29f70d765b0324b91058e8bf281b284",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
