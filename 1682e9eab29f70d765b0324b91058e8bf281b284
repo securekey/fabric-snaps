@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "b57142bf_c78e3cf3",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-02T14:14:17Z",
+      "side": 1,
+      "message": "I think these args should be replaced with a composite key. For example:\n\ntype ConfigKey struct {\n  org string\n  . . .\n}\n\nThis way we could add more parts if required without changing the interface.",
+      "range": {
+        "startLine": 15,
+        "startChar": 5,
+        "endLine": 15,
+        "endChar": 44
+      },
+      "revId": "1682e9eab29f70d765b0324b91058e8bf281b284",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57f06907_81f4892c",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-02T14:14:17Z",
+      "side": 1,
+      "message": "Same here - replace with ConfigKey.",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 25,
+        "endChar": 47
+      },
+      "revId": "1682e9eab29f70d765b0324b91058e8bf281b284",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f7834aa_1ddf6fe9",
         "filename": "configmanager/pkg/client/configclient.go",
         "patchSetId": 1
