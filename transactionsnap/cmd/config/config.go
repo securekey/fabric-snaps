@@ -132,16 +132,6 @@ func GetTLSKeyPath() string {
 	return GetConfigPath(peerConfig.GetString("peer.tls.key.file"))
 }
 
-// GetEnrolmentCertPath returns absolute path to the Enrolment cert
-func GetEnrolmentCertPath() string {
-	return GetConfigPath(viper.GetString("txnsnap.enrolment.cert.file"))
-}
-
-// GetEnrolmentKeyPath returns absolute path to the Enrolment key
-func GetEnrolmentKeyPath() string {
-	return GetConfigPath(viper.GetString("txnsnap.enrolment.key.file"))
-}
-
 // GetMembershipPollInterval get membership pollinterval
 func GetMembershipPollInterval() time.Duration {
 	return viper.GetDuration("txnsnap.membership.pollinterval")
@@ -149,7 +139,7 @@ func GetMembershipPollInterval() time.Duration {
 
 // GetGRPCProtocol returns 'grpcs://' or "grpc://" based on if tls is enabled or disabled
 func GetGRPCProtocol() string {
-	if viper.GetBool("txnsnap.grpc.tls.enabled") {
+	if viper.GetBool("peer.tls.enabled") {
 		return "grpcs://"
 	}
 	return "grpc://"
