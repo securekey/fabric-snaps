@@ -16,6 +16,24 @@
       "revId": "993cc4e0b560f3d54f047bb299901b512aa5111f",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65780834_5ab4e158",
+        "filename": "bddtests/fixtures/docker-compose.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2017-11-02T21:03:44Z",
+      "side": 1,
+      "message": "currently sdk.NewPreEnrolledUserSession calls NewMSPCLient() in SDK which is causing this problem.\n\nIt is going to be fixed in SDK.",
+      "parentUuid": "a8d43cee_2e88b20e",
+      "revId": "993cc4e0b560f3d54f047bb299901b512aa5111f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
