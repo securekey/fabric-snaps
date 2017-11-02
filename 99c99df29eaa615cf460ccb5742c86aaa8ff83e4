@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e70f604c_a2b8c910",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-02T19:26:15Z",
+      "side": 1,
+      "message": "fabric-snaps is published externally but ext isn\u0027t so this commit message is weird for external folks.",
+      "range": {
+        "startLine": 10,
+        "startChar": 30,
+        "endLine": 10,
+        "endChar": 67
+      },
+      "revId": "99c99df29eaa615cf460ccb5742c86aaa8ff83e4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
