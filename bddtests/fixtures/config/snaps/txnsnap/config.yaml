@@ -11,17 +11,7 @@ txnsnap:
   membership:
     pollinterval: 3s
 
-# grpc configs, tls enabled flag
-  grpc:
-    tls:
-      enabled: true
 
-  enrolment:
-    cert:
-      file: /etc/hyperledger/fabric/testcerts/ecert/cert.pem
-    key:
-      file: /etc/hyperledger/fabric/testcerts/ecert/key.pem
-   
 # Configurations for the fabric client
 
 client:
@@ -97,7 +87,7 @@ organizations:
     mspid: Org1MSP
 
     # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
-    cryptoPath:  peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    cryptoPath: /etc/hyperledger/msp/peer/
 
     peers:
       - peer0.org1.example.com
@@ -132,10 +122,10 @@ certificateAuthorities:
     tlsCACerts:
       # Comma-Separated list of paths
         # Comma-Separated list of paths
-      path : $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/ca/ca_root.pem
+      path : /etc/hyperledger/fabric-ca/ca/ca_root.pem
       client:
-        keyfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1-key.pem
-        certfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1.pem
+        keyfile: /etc/hyperledger/fabric-ca/client/client_client1-key.pem
+        certfile: /etc/hyperledger/fabric-ca/client/client_client1.pem
 
     # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
     # needed to enroll and invoke new users.

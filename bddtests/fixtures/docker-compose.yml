@@ -92,6 +92,7 @@ services:
         # Tell Snap to use Peer's e-certs
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/keystore/a23272f898441edb0f415f028b3b3b42627d75e150dfbae23543234751814983_sk:/etc/hyperledger/fabric/testcerts/ecert/key.pem
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem:/etc/hyperledger/fabric/testcerts/ecert/cert.pem
+        - ./tls/fabricca:/etc/hyperledger/fabric-ca
     depends_on:
       - builder
       - orderer.example.com

@@ -8,48 +8,13 @@ package bddtests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
-	"os"
-	"path/filepath"
-	"regexp"
 	"time"
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	fabapi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	"github.com/pkg/errors"
-
-	"crypto/ecdsa"
-	"crypto/rsa"
-
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/utils"
 
 	"github.com/spf13/viper"
 )
-
-// GetOrdererAdmin returns a pre-enrolled orderer admin user
-func GetOrdererAdmin(c api.FabricClient, orgName string) (api.User, error) {
-	keyDir := "ordererOrganizations/example.com/users/Admin@example.com/msp/keystore"
-	certDir := "ordererOrganizations/example.com/users/Admin@example.com/msp/signcerts"
-	return getDefaultImplPreEnrolledUser(c, keyDir, certDir, "ordererAdmin", orgName)
-}
-
-// GetAdmin returns a pre-enrolled org admin user
-func GetAdmin(c api.FabricClient, orgPath string, orgName string) (api.User, error) {
-	keyDir := fmt.Sprintf("peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/keystore", orgPath, orgPath)
-	certDir := fmt.Sprintf("peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/signcerts", orgPath, orgPath)
-	username := fmt.Sprintf("peer%sAdmin", orgPath)
-	return getDefaultImplPreEnrolledUser(c, keyDir, certDir, username, orgName)
-}
-
-// GetUser returns a pre-enrolled org user
-func GetUser(c api.FabricClient, orgPath string, orgName string) (api.User, error) {
-	keyDir := fmt.Sprintf("peerOrganizations/%s.example.com/users/User1@%s.example.com/msp/keystore", orgPath, orgPath)
-	certDir := fmt.Sprintf("peerOrganizations/%s.example.com/users/User1@%s.example.com/msp/signcerts", orgPath, orgPath)
-	username := fmt.Sprintf("peer%sUser1", orgPath)
-	return getDefaultImplPreEnrolledUser(c, keyDir, certDir, username, orgName)
-}
 
 // GetChannelTxPath returns path to the channel tx file for the given channel
 func GetChannelTxPath(channelID string) string {
@@ -75,61 +40,6 @@ func randomString(strlen int) string {
 		result[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(result)
-}
-
-// GetDefaultImplPreEnrolledUser ...
-func getDefaultImplPreEnrolledUser(client api.FabricClient, keyDir string, certDir string, username string, orgName string) (api.User, error) {
-
-	privateKeyDir := filepath.Join(client.Config().CryptoConfigPath(), keyDir)
-	privateKeyPath, err := getFirstPathFromDir(privateKeyDir)
-	if err != nil {
-		return nil, fmt.Errorf("Error finding the private key path: %v", err)
-	}
-
-	enrollmentCertDir := filepath.Join(client.Config().CryptoConfigPath(), certDir)
-	enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
-	if err != nil {
-		return nil, fmt.Errorf("Error finding the enrollment cert path: %v", err)
-	}
-
-	mspID, err := client.Config().MspID(orgName)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading MSP ID config: %s", err)
-	}
-
-	signingIdentity, err := getSigningIdentity(mspID, privateKeyPath, enrollmentCertPath, client.CryptoSuite())
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get signing identity %v", err)
-	}
-
-	return fabapi.NewPreEnrolledUser(client.Config(), username, signingIdentity)
-}
-
-// Gets the first path from the dir directory
-func getFirstPathFromDir(dir string) (string, error) {
-
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return "", fmt.Errorf("Could not read directory %s, err %s", err, dir)
-	}
-
-	for _, p := range files {
-		if p.IsDir() {
-			continue
-		}
-
-	}
-
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-
-		fullName := filepath.Join(dir, string(filepath.Separator), f.Name())
-		return fullName, nil
-	}
-
-	return "", fmt.Errorf("No paths found in directory: %s", dir)
 }
 
 // HasPrimaryPeerJoinedChannel checks whether the primary peer of a channel
@@ -169,68 +79,4 @@ func IsChaincodeInstalled(client api.FabricClient, peer api.Peer, name string) (
 		}
 	}
 	return false, nil
-}
-
-func getFilesWithName(pathRelToWD string, fileName string) ([]string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	var files []string
-	filepath.Walk(wd+"/"+pathRelToWD, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() {
-			r, err := regexp.MatchString(fileName, f.Name())
-			if err == nil && r {
-				files = append(files, path)
-			}
-		}
-		return nil
-	})
-
-	return files, nil
-}
-
-func getSigningIdentity(mspID string, privateKeyPath string, enrollmentCertPath string, cryptoSuite bccsp.BCCSP) (*api.SigningIdentity, error) {
-
-	privateKey, err := importBCCSPKeyFromPEM(privateKeyPath, cryptoSuite, true)
-	if err != nil {
-		return nil, fmt.Errorf("Error importing private key: %v", err)
-	}
-	enrollmentCert, err := ioutil.ReadFile(enrollmentCertPath)
-	if err != nil {
-		return nil, fmt.Errorf("Error reading from the enrollment cert path: %v", err)
-	}
-
-	signingIdentity := &api.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
-
-	return signingIdentity, nil
-}
-
-// importBCCSPKeyFromPEM attempts to create a private BCCSP key from a pem file keyFile
-func importBCCSPKeyFromPEM(keyFile string, myCSP bccsp.BCCSP, temporary bool) (bccsp.Key, error) {
-	keyBuff, err := ioutil.ReadFile(keyFile)
-	if err != nil {
-		return nil, err
-	}
-	key, err := utils.PEMtoPrivateKey(keyBuff, nil)
-	if err != nil {
-		return nil, errors.WithMessage(err, fmt.Sprintf("Failed parsing private key from %s", keyFile))
-	}
-	switch key.(type) {
-	case *ecdsa.PrivateKey:
-		priv, err := utils.PrivateKeyToDER(key.(*ecdsa.PrivateKey))
-		if err != nil {
-			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
-		}
-		sk, err := myCSP.KeyImport(priv, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: temporary})
-		if err != nil {
-			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
-		}
-		return sk, nil
-	case *rsa.PrivateKey:
-		return nil, errors.Errorf("Failed to import RSA key from %s; RSA private key import is not supported", keyFile)
-	default:
-		return nil, errors.Errorf("Failed to import key from %s: invalid secret key type", keyFile)
-	}
 }
