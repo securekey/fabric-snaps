@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65e116ca_b7123097",
+        "filename": "bddtests/fixtures/config/snaps/txnsnap/config-pkcs11.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-11-02T19:16:39Z",
+      "side": 1,
+      "message": "Is this still necessary?",
+      "revId": "0576cad9d0134bdcb40c55b5f872e14f153ced1e",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
