@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "268ffc98_2006e83c",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-03T15:40:17Z",
+      "side": 1,
+      "message": "The delimiter should be something more obscure, i.e. something that app developers will not likely use. For example, if the client uses org\u003dmy_org, peer\u003dmy_peer, app\u003dmy_app, this will produce a key my_org_my_peer_my_app. Maybe ! or ^?",
+      "revId": "d4b54946b5a2b064e16e92b56e696fbd008c42c1",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
