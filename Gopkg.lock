@@ -14,6 +14,11 @@
   version = "v0.7.4"
 
 [[projects]]
+  name = "github.com/Knetic/govaluate"
+  packages = ["."]
+  revision = "3cc7c7de92e74a87c657e957e003600723db32f6"
+
+[[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
   revision = "78439966b38d69bf38227fbf57ac8a6fee70f69a"
@@ -26,10 +31,21 @@
   revision = "cd527374f1e5bff4938207604a14f2e38a9cf512"
 
 [[projects]]
+  name = "github.com/Shopify/sarama"
+  packages = ["."]
+  revision = "bbdbe644099b7fdc8327d5cc69c030945188b2e9"
+  version = "v1.13.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/cloudflare/cfssl"
   packages = ["api","auth","certdb","config","crypto/pkcs7","csr","errors","helpers","helpers/derhelpers","info","log","ocsp/config","signer"]
   revision = "1b0507f6a1e0394a77da2f72f1de9c5a27bd83ac"
+
+[[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 
 [[projects]]
   branch = "master"
@@ -51,6 +67,21 @@
   version = "v0.3.2"
 
 [[projects]]
+  name = "github.com/eapache/go-resiliency"
+  packages = ["breaker"]
+  revision = "b86b1ec0dd4209a588dc1285cdd471e73525c0b3"
+
+[[projects]]
+  name = "github.com/eapache/go-xerial-snappy"
+  packages = ["."]
+  revision = "bb955e01b9346ac19dc29eb16586c90ded99a98c"
+
+[[projects]]
+  name = "github.com/eapache/queue"
+  packages = ["."]
+  revision = "44cc805cf13205b55f69e14bcb69867d1ae92f98"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
@@ -69,10 +100,20 @@
   version = "v0.4"
 
 [[projects]]
+  name = "github.com/golang/groupcache"
+  packages = ["lru"]
+  revision = "b710c8433bd175204919eb38776e944233235d03"
+
+[[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/empty","ptypes/timestamp"]
   revision = "17ce1425424ab154092bbb43af630bd647f3bb0d"
+
+[[projects]]
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  revision = "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
 
 [[projects]]
   branch = "master"
@@ -89,7 +130,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/crypto","common/flogging","common/ledger","common/metadata","common/util","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/common/ccpackage","core/common/ccprovider","core/config","core/container/util","core/ledger","idemix","msp","protos/common","protos/ledger/queryresult","protos/ledger/rwset","protos/msp","protos/peer","protos/utils"]
+  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/configtx/test","common/crypto","common/flogging","common/genesis","common/ledger","common/ledger/blkstorage","common/ledger/blkstorage/fsblkstorage","common/ledger/util","common/ledger/util/leveldbhelper","common/localmsp","common/metadata","common/mocks/config","common/mocks/configtx","common/mocks/policies","common/policies","common/tools/configtxgen/encoder","common/tools/configtxgen/localconfig","common/util","common/viperutil","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/committer","core/committer/txvalidator","core/common/ccpackage","core/common/ccprovider","core/common/privdata","core/common/sysccprovider","core/common/validation","core/config","core/container/util","core/deliverservice","core/deliverservice/blocksprovider","core/ledger","core/ledger/customtx","core/ledger/kvledger","core/ledger/kvledger/history/historydb","core/ledger/kvledger/history/historydb/historyleveldb","core/ledger/kvledger/txmgmt/privacyenabledstate","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/statedb","core/ledger/kvledger/txmgmt/statedb/statecouchdb","core/ledger/kvledger/txmgmt/statedb/stateleveldb","core/ledger/kvledger/txmgmt/txmgr","core/ledger/kvledger/txmgmt/txmgr/lockbasedtxmgr","core/ledger/kvledger/txmgmt/validator","core/ledger/kvledger/txmgmt/validator/statebasedval","core/ledger/kvledger/txmgmt/validator/valimpl","core/ledger/kvledger/txmgmt/validator/valinternal","core/ledger/kvledger/txmgmt/version","core/ledger/ledgerconfig","core/ledger/ledgermgmt","core/ledger/ledgerstorage","core/ledger/pvtdatastorage","core/ledger/util","core/ledger/util/couchdb","core/peer","core/policy","core/policy/mocks","core/transientstore","events/producer","gossip/api","gossip/comm","gossip/common","gossip/discovery","gossip/election","gossip/filter","gossip/gossip","gossip/gossip/algo","gossip/gossip/channel","gossip/gossip/msgstore","gossip/gossip/pull","gossip/identity","gossip/integration","gossip/privdata","gossip/service","gossip/state","gossip/util","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/gossip","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
   revision = "316de6aef9d3b3f3f5c42e91f417f6edc753b60a"
   source = "github.com/securekey/fabric-next"
 
@@ -167,10 +208,30 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/pierrec/lz4"
+  packages = ["."]
+  revision = "90290f74b1b4d9c097f0a3b3c7eba2ef3875c699"
+
+[[projects]]
+  name = "github.com/pierrec/xxHash"
+  packages = ["xxHash32"]
+  revision = "5a004441f897722c627870a981d02b29924215fa"
+
+[[projects]]
   branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+
+[[projects]]
+  name = "github.com/rcrowley/go-metrics"
+  packages = ["."]
+  revision = "ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -209,6 +270,16 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "d77da356e56a7428ad25149ca77381849a6a5232"
+
+[[projects]]
+  name = "github.com/syndtr/goleveldb"
+  packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
+  revision = "6b4daa5362b502898ddf367c5c11deb9e7a5c727"
+
+[[projects]]
   branch = "master"
   name = "github.com/xeipuuv/gojsonpointer"
   packages = ["."]
@@ -241,7 +312,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
-  packages = ["syncmap"]
+  packages = ["semaphore","syncmap"]
   revision = "f52d1811a62927559de87708c8913c1650ce4f26"
 
 [[projects]]
@@ -277,6 +348,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "57417da794202cea1f0d9a556e5d3d829938ea8ac85aaca72f00c12a1702a245"
+  inputs-digest = "4613e69e013489044d1b10bce2b33097595bf05e7bae096848b58cf085617de9"
   solver-name = "gps-cdcl"
   solver-version = 1
