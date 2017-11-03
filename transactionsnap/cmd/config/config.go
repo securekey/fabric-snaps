@@ -75,7 +75,7 @@ func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (tra
 		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 
-	txnSnapConfig, err = client.NewTempConfigClient(txnSnapConfig).Get(stub, &configmanagerApi.ConfigKey{Org: peerConfig.GetString("peer.localMspId"), Peer: peerConfig.GetString("peer.id"), Appname: "txnsnap"})
+	txnSnapConfig, err = client.NewTempConfigClient(txnSnapConfig).Get(stub, &configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "txnsnap"})
 	if err != nil {
 		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
 	}

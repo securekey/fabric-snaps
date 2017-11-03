@@ -13,9 +13,9 @@ import (
 
 // ConfigKey contain org,peer,appname
 type ConfigKey struct {
-	Org     string
-	Peer    string
-	Appname string
+	MspID   string
+	PeerID  string
+	AppName string
 }
 
 // ConfigClient is used to publish messages
@@ -26,9 +26,9 @@ type ConfigClient interface {
 //ConfigManager is used to manage configuration in ledger(save,get,delete)
 type ConfigManager interface {
 	//Save configuration
-	Save(jsonConfig string) (saved bool, err error)
+	Save(jsonConfig []byte) error
 	//Get configuration
-	Get(configKey ConfigKey) (appconfig string, err error)
+	Get(configKey ConfigKey) (appconfig []byte, err error)
 	//Delete configuration
-	Delete(configKey ConfigKey) (deleted bool, err error)
+	Delete(configKey ConfigKey) error
 }
