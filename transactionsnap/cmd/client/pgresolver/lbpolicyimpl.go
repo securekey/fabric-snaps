@@ -25,7 +25,7 @@ func (lbp *randomLBP) Choose(peerGroups []api.PeerGroup) api.PeerGroup {
 	logger.Debugf("Invoking random LBP\n")
 
 	if len(peerGroups) == 0 {
-		logger.Warningf("No available peer groups\n")
+		logger.Warnf("No available peer groups\n")
 		// Return an empty PeerGroup
 		return NewPeerGroup()
 	}
@@ -48,7 +48,7 @@ func NewRoundRobinLBP() api.LoadBalancePolicy {
 
 func (lbp *roundRobinLBP) Choose(peerGroups []api.PeerGroup) api.PeerGroup {
 	if len(peerGroups) == 0 {
-		logger.Warningf("No available peer groups\n")
+		logger.Warnf("No available peer groups\n")
 		// Return an empty PeerGroup
 		return NewPeerGroup()
 	}

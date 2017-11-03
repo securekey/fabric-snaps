@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	logging "github.com/op/go-logging"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/client"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -27,10 +27,7 @@ const (
 	cmdRootPrefix      = "core"
 )
 
-var logger = logging.MustGetLogger("txn-snap-config")
-var logFormat = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
+var logger = logging.NewLogger("txn-snap-config")
 
 // config implements Config interface
 type config struct {

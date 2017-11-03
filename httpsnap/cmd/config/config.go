@@ -8,10 +8,9 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
-	logging "github.com/op/go-logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/spf13/viper"
 )
 
@@ -19,7 +18,7 @@ const (
 	configFileName = "config"
 )
 
-var logger = logging.MustGetLogger("httpsnap-config")
+var logger = logging.NewLogger("httpsnap-config")
 var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var defaultLogLevel = "info"
 
@@ -67,24 +66,17 @@ func Init(configPathOverride string) error {
 // Helper function to initialize logging
 func initializeLogging() error {
 
-	logFormat := viper.GetString("logging.format")
-	if logFormat == "" {
-		logFormat = defaultLogFormat
-	}
-
 	logLevel := viper.GetString("logging.level")
 	if logLevel == "" {
 		logLevel = defaultLogLevel
 	}
 
-	backend := logging.NewLogBackend(os.Stdout, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, logging.MustStringFormatter(logFormat))
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetBackend(backendFormatter).SetLevel(level, "")
+	logging.SetLevel(level, "")
 	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel(""))
 
 	return nil

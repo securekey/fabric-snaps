@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	logging "github.com/op/go-logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 
@@ -43,7 +43,7 @@ type clientServiceImpl struct {
 
 var clientService = newClientService()
 
-var logger = logging.MustGetLogger("transaction-snap")
+var logger = logging.NewLogger("transaction-snap")
 
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
@@ -131,7 +131,7 @@ func getPeersOfChannel(args []string, membership api.MembershipManager) ([]byte,
 		return nil, fmt.Errorf("Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
 	}
 	if channelMembership.QueryError != nil && channelMembership.Peers != nil {
-		logger.Warningf(
+		logger.Warnf(
 			"Error polling peers on channel %s, using last known configuration. Error: %s",
 			channelMembership.QueryError)
 	}
