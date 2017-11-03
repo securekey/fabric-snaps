@@ -19,8 +19,6 @@ type Config interface {
 	GetTLSRootCertPath() string
 	GetTLSCertPath() string
 	GetTLSKeyPath() string
-	GetEnrolmentCertPath() string
-	GetEnrolmentKeyPath() string
 	GetMembershipPollInterval() time.Duration
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string
