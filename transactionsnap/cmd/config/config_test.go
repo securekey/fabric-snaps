@@ -50,22 +50,6 @@ func TestGetTLSKeyPath(t *testing.T) {
 	}
 }
 
-func TestGetEnrolmentCertPath(t *testing.T) {
-	value := c.GetEnrolmentCertPath()
-	if value != c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")) {
-		t.Fatalf("Expected GetEnrolmentCertPath() return value %v but got %v",
-			c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.cert.file")), value)
-	}
-}
-
-func TestGetEnrolmentKeyPath(t *testing.T) {
-	value := c.GetEnrolmentKeyPath()
-	if value != c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")) {
-		t.Fatalf("Expected GetEnrolmentKeyPath() return value %v but got %v",
-			c.GetConfigPath(txnSnapConfig.GetString("txnsnap.enrolment.key.file")), value)
-	}
-}
-
 func TestGetMembershipPollInterval(t *testing.T) {
 	value := c.GetMembershipPollInterval()
 	if value != txnSnapConfig.GetDuration("txnsnap.membership.pollinterval") {
