@@ -10,69 +10,90 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	logging "github.com/op/go-logging"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/client"
+	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/spf13/viper"
 )
 
 const (
-	configFileName = "config"
+	configFileName     = "config"
+	peerConfigFileName = "core"
+	cmdRootPrefix      = "core"
 )
 
 var logger = logging.MustGetLogger("httpsnap-config")
 var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var defaultLogLevel = "info"
 
-// SchemaConfig defines request and response schemas for content type
-type SchemaConfig struct {
-	// Content type
-	Type string
-
-	// Request schema
-	Request string
-
-	// Response schema
-	Response string
+// config implements Config interface
+type config struct {
+	peerConfig     *viper.Viper
+	httpSnapConfig *viper.Viper
 }
 
-// Init configuration and logging for snap. By default, we look for configuration files
-// in working directory. Optionally, a path override parameter can be passed in.
-// @param {string} [OPTIONAL] configPathOverride
-// @returns {error} error, if any
-func Init(configPathOverride string) error {
+// NewConfig return config struct
+func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (httpsnapApi.Config, error) {
 
-	// default config path is working directory
+	replacer := strings.NewReplacer(".", "_")
 	configPath := "./"
+	peerConfigPath := "/etc/hyperledger/fabric"
+
 	if configPathOverride != "" {
 		configPath = configPathOverride
+		peerConfigPath = configPathOverride
 	}
+	//httpSnapConfig Config
+	httpSnapConfig := viper.GetViper()
+	httpSnapConfig.AddConfigPath(configPath)
+	httpSnapConfig.SetConfigName(configFileName)
+	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
+	httpSnapConfig.AutomaticEnv()
+	httpSnapConfig.SetEnvKeyReplacer(replacer)
 
-	viper.AddConfigPath(configPath)
-	viper.SetConfigName(configFileName)
-	viper.AutomaticEnv()
+	//peer Config
+	peerConfig := viper.New()
+	peerConfig.AddConfigPath(peerConfigPath)
+	peerConfig.SetConfigName(peerConfigFileName)
+	peerConfig.SetEnvPrefix(cmdRootPrefix)
+	peerConfig.AutomaticEnv()
+	peerConfig.SetEnvKeyReplacer(replacer)
 
-	err := viper.ReadInConfig()
+	err := httpSnapConfig.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("Error reading snap config file: %s", err)
+		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 
-	err = initializeLogging()
+	err = peerConfig.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("Error initializing logging: %s", err)
+		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 
-	return nil
+	httpSnapConfig, err = client.NewTempConfigClient(httpSnapConfig).Get(stub, &configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"})
+	if err != nil {
+		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
+	}
+	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig}
+	err = c.initializeLogging()
+	if err != nil {
+		return nil, fmt.Errorf("Error initializing logging: %s", err)
+	}
+	return c, nil
 }
 
 // Helper function to initialize logging
-func initializeLogging() error {
+func (c *config) initializeLogging() error {
 
-	logFormat := viper.GetString("logging.format")
+	logFormat := c.httpSnapConfig.GetString("logging.format")
 	if logFormat == "" {
 		logFormat = defaultLogFormat
 	}
 
-	logLevel := viper.GetString("logging.level")
+	logLevel := c.httpSnapConfig.GetString("logging.level")
 	if logLevel == "" {
 		logLevel = defaultLogLevel
 	}
@@ -93,8 +114,8 @@ func initializeLogging() error {
 // GetConfigPath returns the absolute value of the given path that is relative to the config file
 // For example, if the config file is at /opt/snaps/example/config.yaml,
 // calling GetConfigPath("tls/cert") will return /opt/snaps/example/tls/cert
-func GetConfigPath(path string) string {
-	basePath := filepath.Dir(viper.ConfigFileUsed())
+func (c *config) GetConfigPath(path string) string {
+	basePath := filepath.Dir(c.httpSnapConfig.ConfigFileUsed())
 
 	if filepath.IsAbs(path) {
 		return path
@@ -104,32 +125,32 @@ func GetConfigPath(path string) string {
 }
 
 // GetCaCerts returns the list of ca certs
-func GetCaCerts() []string {
+func (c *config) GetCaCerts() []string {
 
-	caCerts := viper.GetStringSlice("tls.caCerts")
+	caCerts := c.httpSnapConfig.GetStringSlice("tls.caCerts")
 	absoluteCaCerts := make([]string, 0, len(caCerts))
 
 	for _, v := range caCerts {
-		absoluteCaCerts = append(absoluteCaCerts, GetConfigPath(v))
+		absoluteCaCerts = append(absoluteCaCerts, c.GetConfigPath(v))
 	}
 
 	return absoluteCaCerts
 }
 
 // Helper function to retieve schema configuration
-func getSchemaMap() (schemaMap map[string]*SchemaConfig, err error) {
+func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig, err error) {
 
-	var schemaConfigs []SchemaConfig
-	err = viper.UnmarshalKey("schemas", &schemaConfigs)
+	var schemaConfigs []httpsnapApi.SchemaConfig
+	err = c.httpSnapConfig.UnmarshalKey("schemas", &schemaConfigs)
 	if err != nil {
 		return nil, err
 	}
 
-	schemaMap = make(map[string]*SchemaConfig, len(schemaConfigs))
+	schemaMap = make(map[string]*httpsnapApi.SchemaConfig, len(schemaConfigs))
 
 	for _, sc := range schemaConfigs {
-		sc.Request = GetConfigPath(sc.Request)
-		sc.Response = GetConfigPath(sc.Response)
+		sc.Request = c.GetConfigPath(sc.Request)
+		sc.Response = c.GetConfigPath(sc.Response)
 		schemaMap[sc.Type] = &sc
 	}
 
@@ -137,23 +158,23 @@ func getSchemaMap() (schemaMap map[string]*SchemaConfig, err error) {
 }
 
 // GetClientCert returns client cert
-func GetClientCert() string {
-	return GetConfigPath(viper.GetString("tls.clientCert"))
+func (c *config) GetClientCert() string {
+	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.clientCert"))
 }
 
 // GetClientKey returns client key
-func GetClientKey() string {
-	return GetConfigPath(viper.GetString("tls.clientKey"))
+func (c *config) GetClientKey() string {
+	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.clientKey"))
 }
 
 // GetNamedClientOverridePath returns overide path
-func GetNamedClientOverridePath() string {
-	return GetConfigPath(viper.GetString("tls.namedClientOverridePath"))
+func (c *config) GetNamedClientOverridePath() string {
+	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.namedClientOverridePath"))
 }
 
 // GetSchemaConfig return schema configuration based on content type
-func GetSchemaConfig(contentType string) (*SchemaConfig, error) {
-	schemaMap, err := getSchemaMap()
+func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig, error) {
+	schemaMap, err := c.getSchemaMap()
 	if err != nil {
 		return nil, err
 	}
