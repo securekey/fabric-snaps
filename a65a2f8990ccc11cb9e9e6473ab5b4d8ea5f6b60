@@ -16,6 +16,24 @@
       "revId": "a65a2f8990ccc11cb9e9e6473ab5b4d8ea5f6b60",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1f5630b_320089f3",
+        "filename": "Gopkg.lock",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-03T18:54:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbe2cefb_beb6b65c",
+      "revId": "a65a2f8990ccc11cb9e9e6473ab5b4d8ea5f6b60",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
