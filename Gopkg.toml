@@ -79,3 +79,59 @@ branch = "master"
   name = "github.com/hyperledger/fabric"
   source = "github.com/securekey/fabric-next"
   branch = "master"
+
+[[override]]
+  name = "github.com/Knetic/govaluate"
+	revision = "3cc7c7de92e74a87c657e957e003600723db32f6"
+
+[[override]]
+  name = "github.com/Shopify/sarama"
+  revision = "c01858abb625b73a3af51d0798e4ad42c8147093"
+
+[[override]]
+  name = "github.com/davecgh/go-spew"
+  revision = "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
+
+[[override]]
+  name = "github.com/eapache/go-resiliency"
+  revision = "b86b1ec0dd4209a588dc1285cdd471e73525c0b3"
+
+[[override]]
+  name = "github.com/eapache/go-xerial-snappy"
+  revision = "bb955e01b9346ac19dc29eb16586c90ded99a98c"
+
+[[override]]
+  name = "github.com/eapache/queue"
+  revision = "44cc805cf13205b55f69e14bcb69867d1ae92f98"
+
+[[override]]
+  name = "github.com/golang/groupcache"
+  revision = "b710c8433bd175204919eb38776e944233235d03"
+
+[[override]]
+  name = "github.com/golang/snappy"
+  revision = "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
+
+[[override]]
+  name = "github.com/pierrec/lz4"
+  revision = "90290f74b1b4d9c097f0a3b3c7eba2ef3875c699"
+
+[[override]]
+  name = "github.com/pierrec/xxHash"
+  revision = "5a004441f897722c627870a981d02b29924215fa"
+
+[[override]]
+  name = "github.com/pmezard/go-difflib"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+
+[[override]]
+  name = "github.com/rcrowley/go-metrics"
+  revision = "ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8"
+
+[[override]]
+  name = "github.com/stretchr/testify"
+  revision = "d77da356e56a7428ad25149ca77381849a6a5232"
+
+[[override]]
+  name = "github.com/syndtr/goleveldb"
+  revision = "6b4daa5362b502898ddf367c5c11deb9e7a5c727"

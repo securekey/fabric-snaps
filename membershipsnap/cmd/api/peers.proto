@@ -1,0 +1,23 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+syntax = "proto3";
+
+option go_package = "github.com/hyperledger/fabric/core/scc/mscc/protos";
+
+package api;
+
+// PeerEndpoint contains the internal and external endpoint of a peer
+message PeerEndpoint {
+	string Endpoint = 1;
+	string InternalEndpoint = 2;
+    bytes MSPid = 3;
+}
+
+// PeerEndpoints contains a list of peer endpoints
+message PeerEndpoints {
+	repeated PeerEndpoint Endpoints = 1;
+}
