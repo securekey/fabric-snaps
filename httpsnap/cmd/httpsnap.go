@@ -25,10 +25,14 @@ import (
 
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	config "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/httpsnap/api"
+	httpsnapConfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 )
 
 var logger = logging.MustGetLogger("httpsnap")
+
+//TODO temp var will be removed when configmanager implementation ready
+var configPath = ""
 
 //HTTPSnap implementation
 type HTTPSnap struct {
@@ -36,13 +40,6 @@ type HTTPSnap struct {
 
 // Init snap
 func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
-	err := config.Init("")
-	if err != nil {
-		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
-		logger.Errorf(errMsg)
-		return shim.Error(errMsg)
-	}
 
 	logger.Info("Snap configuration loaded.")
 	return shim.Success(nil)
@@ -56,6 +53,13 @@ func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 // args[4] - Named Client (optional)
 // args[5] - Pin set (optional)
 func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+
+	config, err := httpsnapConfig.NewConfig(configPath, stub)
+	if err != nil {
+		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
+		logger.Errorf(errMsg)
+		return shim.Error(errMsg)
+	}
 
 	_, args := stub.GetFunctionAndParameters()
 
@@ -117,7 +121,7 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// URL is ok, retrieve data using http client
-	responseContentType, response, err := getData(requestURL, contentType, requestBody, client, pins)
+	responseContentType, response, err := getData(requestURL, contentType, requestBody, client, pins, config)
 	if err != nil {
 		logger.Error(err)
 		return shim.Error(err.Error())
@@ -135,9 +139,9 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 }
 
-func getData(url string, requestContentType string, requestBody string, namedClient string, pins []string) (responseContentType string, responseBody []byte, err error) {
+func getData(url string, requestContentType string, requestBody string, namedClient string, pins []string, config api.Config) (responseContentType string, responseBody []byte, err error) {
 
-	tlsConfig, err := getTLSConfig(namedClient)
+	tlsConfig, err := getTLSConfig(namedClient, config)
 	if err != nil {
 		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", namedClient, err)
 		return "", nil, err
@@ -226,7 +230,7 @@ func GeneratePin(c *x509.Certificate) string {
 	return base64.StdEncoding.EncodeToString(digest[:])
 }
 
-func getTLSConfig(client string) (*tls.Config, error) {
+func getTLSConfig(client string, config api.Config) (*tls.Config, error) {
 
 	// Default values
 	clientCert := config.GetClientCert()

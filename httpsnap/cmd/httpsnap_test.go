@@ -17,16 +17,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/spf13/viper"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	config "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	httpsnapConfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 )
 
 var testHost = "0.0.0.0"
 var testPort = 15484
 var jsonStr = []byte(`{"id":"123", "name": "Test Name"}`)
 var contentType = "application/json"
+var config api.Config
 
 func TestInit(t *testing.T) {
 
@@ -291,7 +293,9 @@ func initHTTPServerConfig() {
 }
 
 func TestMain(m *testing.M) {
-	err := config.Init("./sampleconfig")
+	var err error
+	configPath = "./sampleconfig"
+	config, err = httpsnapConfig.NewConfig(configPath, nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
