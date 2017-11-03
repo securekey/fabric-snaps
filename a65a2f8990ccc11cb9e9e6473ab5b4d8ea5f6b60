@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbe2cefb_beb6b65c",
+        "filename": "Gopkg.lock",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-03T18:39:27Z",
+      "side": 1,
+      "message": "Needs another \u0027dep ensure\u0027 this is out of sync with the toml file",
+      "revId": "a65a2f8990ccc11cb9e9e6473ab5b4d8ea5f6b60",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
