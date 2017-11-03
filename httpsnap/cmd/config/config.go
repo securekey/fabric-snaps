@@ -8,15 +8,15 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	logging "github.com/op/go-logging"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/client"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
+
 	"github.com/spf13/viper"
 )
 
@@ -26,7 +26,7 @@ const (
 	cmdRootPrefix      = "core"
 )
 
-var logger = logging.MustGetLogger("httpsnap-config")
+var logger = logging.NewLogger("httpsnap-config")
 var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var defaultLogLevel = "info"
 
@@ -88,24 +88,18 @@ func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (htt
 // Helper function to initialize logging
 func (c *config) initializeLogging() error {
 
-	logFormat := c.httpSnapConfig.GetString("logging.format")
-	if logFormat == "" {
-		logFormat = defaultLogFormat
-	}
-
 	logLevel := c.httpSnapConfig.GetString("logging.level")
+
 	if logLevel == "" {
 		logLevel = defaultLogLevel
 	}
 
-	backend := logging.NewLogBackend(os.Stdout, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, logging.MustStringFormatter(logFormat))
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetBackend(backendFormatter).SetLevel(level, "")
+	logging.SetLevel(level, "")
 	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel(""))
 
 	return nil

@@ -86,7 +86,7 @@ func (m *membershipManagerImpl) pollPeersOfChannel() {
 
 			peers, err := queryPeersOfChannel(channel, m.config)
 			if err != nil {
-				logger.Warningf("Error polling peers of channel %s: %s", channel, err)
+				logger.Warnf("Error polling peers of channel %s: %s", channel, err)
 			}
 
 			m.Lock()

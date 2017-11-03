@@ -21,8 +21,8 @@ import (
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
 
 	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	logging "github.com/op/go-logging"
 
 	"github.com/DATA-DOG/godog"
 )
@@ -43,7 +43,7 @@ type SnapTransactionRequest struct {
 	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
 
-var logger = logging.MustGetLogger("test-logger")
+var logger = logging.NewLogger("test-logger")
 
 var trxPR []*apitxn.TransactionProposalResponse
 var queryValue string

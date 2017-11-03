@@ -23,12 +23,12 @@ import (
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
-	logging "github.com/op/go-logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
-var logger = logging.MustGetLogger("transaction-fabric-client")
+var logger = logging.NewLogger("transaction-fabric-client")
 
 const (
 	txnSnapUser = "Txn-Snap-User"

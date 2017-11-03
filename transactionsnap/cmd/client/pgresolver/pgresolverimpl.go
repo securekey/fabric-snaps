@@ -12,13 +12,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	common "github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric/protos/msp"
-	logging "github.com/op/go-logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
-var logger = logging.MustGetLogger("pg-resolver")
+var logger = logging.NewLogger("pg-resolver")
 
 type peerGroupResolver struct {
 	mspGroups []api.Group
@@ -47,13 +47,13 @@ func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, pe
 
 // NewPeerGroupResolver returns a new PeerGroupResolver
 func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalancePolicy) (api.PeerGroupResolver, error) {
-	if logger.IsEnabledFor(logging.DEBUG) {
+	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
 		logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
 	}
 
 	mspGroups := groupHierarchy.Reduce()
 
-	if logger.IsEnabledFor(logging.DEBUG) {
+	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
 		s := "\n***** Org Groups:\n"
 		for i, g := range mspGroups {
 			s += fmt.Sprintf("%s", g)
@@ -74,7 +74,7 @@ func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalanceP
 func (c *peerGroupResolver) Resolve() api.PeerGroup {
 	peerGroups := c.getPeerGroups()
 
-	if logger.IsEnabledFor(logging.DEBUG) {
+	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
 		s := ""
 		if len(peerGroups) == 0 {
 			s = "\n\n***** No Available Peer Groups\n"

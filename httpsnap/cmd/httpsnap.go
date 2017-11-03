@@ -20,7 +20,7 @@ import (
 
 	"fmt"
 
-	logging "github.com/op/go-logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/xeipuuv/gojsonschema"
 
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
@@ -29,7 +29,7 @@ import (
 	httpsnapConfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 )
 
-var logger = logging.MustGetLogger("httpsnap")
+var logger = logging.NewLogger("httpsnap")
 
 //TODO temp var will be removed when configmanager implementation ready
 var configPath = ""
@@ -167,7 +167,7 @@ func getData(url string, requestContentType string, requestBody string, namedCli
 
 	if resp.StatusCode != http.StatusOK {
 		errMsg := fmt.Sprintf("Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, url)
-		logger.Warning(errMsg)
+		logger.Warnln(errMsg)
 		return "", nil, fmt.Errorf(errMsg)
 	}
 
@@ -175,13 +175,13 @@ func getData(url string, requestContentType string, requestBody string, namedCli
 
 	if requestContentType != responseContentType {
 		errMsg := fmt.Sprintf("Response content-type: %s doesn't match request content-type: %s", responseContentType, requestContentType)
-		logger.Warning(errMsg)
+		logger.Warnln(errMsg)
 		return "", nil, fmt.Errorf(errMsg)
 	}
 
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Warning("Read contents failed. url=%s, err=%s", url, err)
+		logger.Warnf("Read contents failed. url=%s, err=%s", url, err)
 		return "", nil, err
 	}
 
