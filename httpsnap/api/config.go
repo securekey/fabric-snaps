@@ -18,12 +18,24 @@ type SchemaConfig struct {
 	Response string
 }
 
+// ClientCrt defines client crt
+type ClientCrt struct {
+	// CA
+	Ca string
+
+	// Public Crt
+	Crt string
+
+	// Private Key
+	Key string
+}
+
 // Config configuration interface
 type Config interface {
 	GetConfigPath(path string) string
 	GetClientCert() string
 	GetClientKey() string
-	GetNamedClientOverridePath() string
+	GetNamedClientOverride() (map[string]*ClientCrt, error)
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() []string
 }
