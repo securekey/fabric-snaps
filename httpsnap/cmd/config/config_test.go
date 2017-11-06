@@ -27,8 +27,19 @@ func TestGetClientCert(t *testing.T) {
 func TestGetClientKey(t *testing.T) {
 	verifyEqual(t, c.GetClientKey(), snapConfig.GetString("tls.clientKey"), "Failed to get client key.")
 }
-func TestGetNamedClientOverridePath(t *testing.T) {
-	verifyEqual(t, c.GetNamedClientOverridePath(), snapConfig.GetString("tls.namedClientOverridePath"), "Failed to get client override path.")
+
+func TestGetNamedClientOverride(t *testing.T) {
+	clientMap, err := c.GetNamedClientOverride()
+	if err != nil {
+		t.Fatalf("Error from GetNamedClientOverride %v", err)
+	}
+	if _, exist := clientMap["abc"]; !exist {
+		t.Fatalf("abc client not exist")
+	}
+	verifyEqual(t, clientMap["abc"].Ca, "abcCA", "Failed to get client override CA.")
+	verifyEqual(t, clientMap["abc"].Crt, "abcCert", "Failed to get client override Crt.")
+	verifyEqual(t, clientMap["abc"].Key, "abcKey", "Failed to get client override Key.")
+
 }
 
 func TestGetShemaConfig(t *testing.T) {
@@ -38,11 +49,19 @@ func TestGetShemaConfig(t *testing.T) {
 		t.Fatalf("Should have failed to retrieve schema config for non-existent type.")
 	}
 
-	expected := httpsnapApi.SchemaConfig{Type: "application/json", Request: "/schema/request.json", Response: "/schema/response.json"}
+	expected := httpsnapApi.SchemaConfig{Type: "application/json", Request: `{ "$schema": "http://json-schema.org/draft-04/schema#", "title": "Request Schema", "description": "Some product", "type": "object"}`, Response: `{ "$schema": "http://json-schema.org/draft-04/schema#", "title": "Response Schema"}`}
 	value, err = c.GetSchemaConfig(expected.Type)
-
-	if err != nil || *value != expected {
-		t.Fatalf("Failed to get schema config. Expecting %s, got %s, err=%s ", expected, value, err)
+	if err != nil {
+		t.Fatalf("Failed to get schema config. err=%s ", err)
+	}
+	if value.Type != expected.Type {
+		t.Fatalf("Failed to get schema config. Expecting %s, got %s ", expected.Type, value.Type)
+	}
+	if value.Request != expected.Request {
+		t.Fatalf("Failed to get schema config. Expecting %s, got %s ", expected.Request, value.Request)
+	}
+	if value.Response != expected.Response {
+		t.Fatalf("Failed to get schema config. Expecting %s, got %s ", expected.Response, value.Response)
 	}
 }
 
