@@ -16,6 +16,24 @@
       "revId": "a213a487e5b0de82e2dffeb1d0e5919be5d4449f",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83b57681_a6586923",
+        "filename": "httpsnap/api/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-11-06T21:54:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a9f1437_2334f094",
+      "revId": "a213a487e5b0de82e2dffeb1d0e5919be5d4449f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
