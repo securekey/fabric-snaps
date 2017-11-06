@@ -238,14 +238,21 @@ func getTLSConfig(client string, config api.Config) (*tls.Config, error) {
 	caCerts := config.GetCaCerts()
 
 	if client != "" {
-		overridePath := config.GetNamedClientOverridePath()
-		clientCert = fmt.Sprintf("%s/%s/%s.crt", overridePath, client, client)
-		clientKey = fmt.Sprintf("%s/%s/%s.key", overridePath, client, client)
-		caCerts = []string{fmt.Sprintf("%s/%s/%s-ca.crt", overridePath, client, client)}
+		clientOverrideCrtMap, err := config.GetNamedClientOverride()
+		if err != nil {
+			return nil, err
+		}
+		clientOverrideCrt := clientOverrideCrtMap[client]
+		if clientOverrideCrt == nil {
+			return nil, fmt.Errorf("client[%s] crt not found", client)
+		}
+		clientCert = clientOverrideCrt.Crt
+		clientKey = clientOverrideCrt.Key
+		caCerts = []string{clientOverrideCrt.Ca}
 	}
 
 	// Load client cert
-	cert, err := tls.LoadX509KeyPair(clientCert, clientKey)
+	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
 	if err != nil {
 		return nil, err
 	}
@@ -253,11 +260,7 @@ func getTLSConfig(client string, config api.Config) (*tls.Config, error) {
 	// Load CA certs
 	caCertPool := x509.NewCertPool()
 	for _, cert := range caCerts {
-		caCert, err := ioutil.ReadFile(cert)
-		if err != nil {
-			return nil, err
-		}
-		caCertPool.AppendCertsFromPEM(caCert)
+		caCertPool.AppendCertsFromPEM([]byte(cert))
 	}
 
 	// Setup HTTPS client
@@ -281,7 +284,7 @@ func validate(contentType string, schema string, body string) error {
 func validateJSON(jsonSchema string, jsonStr string) error {
 	logger.Debugf("Validating %s against schema: %s", jsonStr, jsonSchema)
 
-	schemaLoader := gojsonschema.NewReferenceLoader("file://" + jsonSchema)
+	schemaLoader := gojsonschema.NewStringLoader(jsonSchema)
 	result, err := gojsonschema.Validate(schemaLoader, gojsonschema.NewStringLoader(jsonStr))
 	if err != nil {
 		return err
