@@ -18,12 +18,24 @@ type SchemaConfig struct {
 	Response string
 }
 
+// ClientTLS defines client crt and key
+type ClientTLS struct {
+	// CA
+	Ca string
+
+	// Public Crt
+	Crt string
+
+	// Private Key
+	Key string
+}
+
 // Config configuration interface
 type Config interface {
 	GetConfigPath(path string) string
 	GetClientCert() string
 	GetClientKey() string
-	GetNamedClientOverridePath() string
+	GetNamedClientOverride() (map[string]*ClientTLS, error)
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() []string
 }

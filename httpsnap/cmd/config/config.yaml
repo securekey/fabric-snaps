@@ -10,12 +10,23 @@ logging:
   level: debug
 tls:
   caCerts:
-  - /ca1.crt
-  - /ca2.crt
-  clientCert: /test.crt
-  clientKey: /test.key
-  namedClientOverridePath: /override
+  - "ca1"
+  - "ca2"
+  clientCert: "testCrt"
+  clientKey: "testKey"
+  namedClientOverride:
+   abc:
+     ca: "abcCA"
+     crt: "abcCert"
+     key: "abcKey"
+    
 schemas:
   - type: application/json
-    request: /schema/request.json
-    response: /schema/response.json
+    request: '{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Request Schema",
+    "description": "Some product",
+    "type": "object"}'
+    response: '{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Response Schema"}'

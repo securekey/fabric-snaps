@@ -125,7 +125,7 @@ func (c *config) GetCaCerts() []string {
 	absoluteCaCerts := make([]string, 0, len(caCerts))
 
 	for _, v := range caCerts {
-		absoluteCaCerts = append(absoluteCaCerts, c.GetConfigPath(v))
+		absoluteCaCerts = append(absoluteCaCerts, v)
 	}
 
 	return absoluteCaCerts
@@ -143,8 +143,6 @@ func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig,
 	schemaMap = make(map[string]*httpsnapApi.SchemaConfig, len(schemaConfigs))
 
 	for _, sc := range schemaConfigs {
-		sc.Request = c.GetConfigPath(sc.Request)
-		sc.Response = c.GetConfigPath(sc.Response)
 		schemaMap[sc.Type] = &sc
 	}
 
@@ -153,17 +151,23 @@ func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig,
 
 // GetClientCert returns client cert
 func (c *config) GetClientCert() string {
-	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.clientCert"))
+	return c.httpSnapConfig.GetString("tls.clientCert")
 }
 
 // GetClientKey returns client key
 func (c *config) GetClientKey() string {
-	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.clientKey"))
+	return c.httpSnapConfig.GetString("tls.clientKey")
 }
 
-// GetNamedClientOverridePath returns overide path
-func (c *config) GetNamedClientOverridePath() string {
-	return c.GetConfigPath(c.httpSnapConfig.GetString("tls.namedClientOverridePath"))
+// GetNamedClientOverridePath returns map of clientTLS
+func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, error) {
+	var clientTLS map[string]*httpsnapApi.ClientTLS
+	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &clientTLS)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientTLS, nil
 }
 
 // GetSchemaConfig return schema configuration based on content type
