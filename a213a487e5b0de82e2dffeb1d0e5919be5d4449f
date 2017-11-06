@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a9f1437_2334f094",
+        "filename": "httpsnap/api/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-11-06T21:51:37Z",
+      "side": 1,
+      "message": "Can you use different name? This is used for mutual auth. TLS?",
+      "revId": "a213a487e5b0de82e2dffeb1d0e5919be5d4449f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
