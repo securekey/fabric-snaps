@@ -46,6 +46,11 @@
   version = "1.0.0"
 
 [[constraint]]
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  name = "github.com/op/go-cache"
+  
+
+[[constraint]]
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
 

@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package mgmt
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	mspID = "msp.one"
 	//number of records to be inserted in hyperledger for valid configuration test
 	numOfRecords = 6
 	//config contentCannot save state Configuration must be provided
@@ -45,7 +46,7 @@ func TestValidConfiguration(t *testing.T) {
 		t.Fatalf("Error: %s", err)
 	}
 	//verify that key exists in map
-	key, err := createConfigKey("msp.one", "peer.zero.example.com", "appNameTwo")
+	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -55,13 +56,13 @@ func TestValidConfiguration(t *testing.T) {
 	}
 
 	//verify that key does not exists in map
-	key, _ = createConfigKey("non.existing.msp", "peer.zero.example.com", "appName")
+	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName")
 	_, present = keyConfigMap[key]
 	if present == true {
 		t.Fatalf("Key : %s should NOT be in map", key)
 	}
 
-	//verify number of rCannot create config key usingecords to be saved to hyperledger
+	//verify that all records were inserted
 	if len(keyConfigMap) != numOfRecords {
 		t.Fatalf("Expected : %d key/value records. Got %d", numOfRecords, len(keyConfigMap))
 	}
@@ -84,15 +85,6 @@ func TestInvalidConfigurations(t *testing.T) {
 
 }
 
-func TestConfigKeyToString(t *testing.T) {
-	key := api.ConfigKey{MspID: "abc", PeerID: "peer.zero.sk.example", AppName: "testApp"}
-	keyStr := configKeyToString(key)
-	expectedKeyString := "abc!peer.zero.sk.example!testApp"
-	if keyStr != expectedKeyString {
-		t.Fatalf("Expected key string %s. Got %s", expectedKeyString, keyStr)
-	}
-}
-
 func TestInstantiateConfigManager(t *testing.T) {
 	stub := shim.NewMockStub("testConfigState", nil)
 	configManager := NewConfigManager(stub)
@@ -101,34 +93,55 @@ func TestInstantiateConfigManager(t *testing.T) {
 	}
 }
 
-func TestSaveValidConfig(t *testing.T) {
+func TestGetConfigForKey(t *testing.T) {
+	key := api.ConfigKey{}
+	key.MspID = "ssss"
+	key.PeerID = "peerID"
+	key.AppName = ""
 
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+	cmimpl := configManagerImpl{stub: stub}
+
+	config, err := cmimpl.getConfig(key)
+	if err == nil {
+		t.Fatalf("Did not expect error. Key is valid %v ", key)
 	}
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save state %s", err)
+	if len(config) > 0 {
+		t.Fatalf("Did not expect any config for bogus key %v ", key)
 	}
-	stub.MockTransactionEnd("saveConfiguration")
-	//get saved configs
-	mspID := "msp.one"
-	criteria, err := api.NewSearchCriteriaByMspID(mspID)
+
+	key.PeerID = ""
+	configs, err := cmimpl.getConfigs(key)
 	if err != nil {
-		t.Fatalf("Error creating message status search criteria: %v", err)
+		t.Fatalf("Did not expect error. Key is valid %v ", key)
 	}
-	stub.MockTransactionStart("queryConfiguration")
-	//use criteria by mspID=msp.one
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	if len(configs) > 0 {
+		t.Fatalf("Did not expect any config for bogus key %v ", key)
+	}
+
+}
+
+func TestGetConfigurations(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	cmimpl := configManagerImpl{stub: stub}
+
+	configs, err := cmimpl.getConfigurations("index", []string{""})
 	if err != nil {
-		t.Fatalf("Cannot query for configs %v", err)
+		t.Fatalf("Error %v ", err)
 	}
-	fmt.Printf("%d\n", len(*configMessages))
-	if len(*configMessages) != numOfRecords {
-		t.Fatalf("Did not retrieve all configs %v", err)
+
+	if len(configs) > 0 {
+		t.Fatalf("no configs expected for bogus index")
+	}
+	configs, err = cmimpl.getConfigurations("index", []string{"abc"})
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(configs) > 0 {
+		t.Fatalf("no configs expected for bogus index")
 	}
 
 }
@@ -137,7 +150,8 @@ func TestPutStateFailed(t *testing.T) {
 	stub := shim.NewMockStub("testConfigState", nil)
 	configManager := NewConfigManager(stub)
 	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+		t.Fatal("Cannot instantiate config manager") //var configKey *api.ConfigKV
+
 	}
 	b := []byte(validMsg)
 	//put state should fail
@@ -146,33 +160,23 @@ func TestPutStateFailed(t *testing.T) {
 	}
 }
 
-func TestSearchCriteria(t *testing.T) {
-	mspID := "msp.one"
-	criteria, err := api.NewSearchCriteriaByMspID(mspID)
-	if err != nil {
-		t.Fatalf("Error creating message status search criteria: %v", err)
-	}
-	mspid := criteria.GetMspID()
-	if mspid != mspID {
-		t.Fatalf("Expected %s retrieved %s for mspid.: ", mspID, mspid)
-	}
-	criteria, err = api.NewSearchCriteriaByMspID("")
-	if err == nil {
-		t.Fatalf("Expected error. An empty criterie is not valid")
-	}
-
-}
-
 func TestGetFieldsForIndex(t *testing.T) {
 	key := api.ConfigKey{}
 	if _, err := getFieldsForIndex("abc", key); err == nil {
 		t.Fatalf("Expected error:'unknown index'")
 	}
-	fields, err := getFieldsForIndex(indexMspID, key)
+	_, err := getFieldsForIndex(indexMspID, key)
 	if err == nil {
 		t.Fatalf("Error 'invalid key' expected")
 	}
-	fmt.Printf("%d\n", len(fields))
+	key.MspID = "ssss"
+	key.PeerID = "peerID"
+	key.AppName = "appname"
+	_, err = getFieldsForIndex("index", key)
+	if err == nil {
+		t.Fatalf("Error 'unknown index' expected")
+	}
+
 }
 
 func TestAddIndexes(t *testing.T) {
@@ -192,6 +196,24 @@ func TestAddIndexes(t *testing.T) {
 	key.AppName = ""
 	if err := configManagerImpl.addIndexes(key); err == nil {
 		t.Fatalf("Expected error:'Cannot create config key using empty AppName")
+	}
+
+	key.AppName = "appName"
+	indexes = [...]string{"abc"}
+	if err := configManagerImpl.addIndexes(key); err == nil {
+		t.Fatalf("Expected error:'Cannot create config error adding index [abc]: unknown index [abc]")
+	}
+
+	indexes = [...]string{""}
+	if err := configManagerImpl.addIndexes(key); err == nil {
+		t.Fatalf("Expected error:'error adding index []: Index is empty")
+	}
+
+	//reset to valid index
+	indexes = [...]string{indexMspID}
+	key = api.ConfigKey{}
+	if err := configManagerImpl.addIndexes(key); err == nil {
+		t.Fatalf("Expected error:'error adding index []: Index is empty")
 	}
 
 }
@@ -214,97 +236,78 @@ func TestGetIndexKey(t *testing.T) {
 	}
 
 }
-func TestQueryForValidConfigs(t *testing.T) {
-	// mspID
-	mspID := "msp.one"
-	criteria, err := api.NewSearchCriteriaByMspID(mspID)
+
+func TestGetForValidConfigsOnValidKey(t *testing.T) {
+
+	configManager, err := uploadTestMessagesToHL(validMsg)
 	if err != nil {
-		t.Fatalf("Error creating message status search criteria: %v", err)
-	}
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
-	}
-	//store  config messages
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save state %s", err)
+		t.Fatalf("Error %v", err)
 	}
 	//store another  config messages for msp.one
-	b = []byte(validMsgOne)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save state %s", err)
+	configManager, err = uploadTestMessagesToHL(validMsgOne)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
 
-	//store config messages for msp.two
-	b = []byte(validMsgForMspTwo)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save state %s", err)
+	configManager, err = uploadTestMessagesToHL(validMsgForMspTwo)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
-
-	stub.MockTransactionEnd("saveConfiguration")
-	stub.MockTransactionStart("queryConfiguration")
-	//use criteria by mspID=msp.one
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	//look for this key
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	configMessages, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	//verify that all configs for mspID were returned
-	expectedLength := numOfRecords*2 - 1
-	if len(*configMessages) != expectedLength {
-		t.Fatalf("Expected %d configs for %s", numOfRecords*2, mspID)
-	}
-	//verify that config map contains proper keys and values
-	key, _ := createConfigKey("msp.one", "peer.one.example.com", "appNameOneOne")
-	keystr := configKeyToString(key)
-	expectedConfigValue := "config for appNameOneOne goes here"
-	retrievedConfigValue := (*configMessages)[keystr]
-	if expectedConfigValue != retrievedConfigValue {
-		t.Fatalf("Expected %s value for key %s but got %s ", expectedConfigValue, keystr, retrievedConfigValue)
+	if len(configMessages) != 1 {
+		t.Fatalf("Expect exactly one config for key %v", key)
 	}
 
-	mspID = "msp.two"
-	criteria, err = api.NewSearchCriteriaByMspID(mspID)
-	if err != nil {
-		t.Fatalf("Error creating message status search criteria: %v", err)
-	}
-	//use criteria by mspID=msp.two
-	configMessages, err = configManager.QueryForConfigs(criteria)
+	//look for another key
+	key, _ = CreateConfigKey(mspID, "peer.one.example.com", "appNameP")
+	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	if len(*configMessages) != numOfRecords {
-		t.Fatalf("Expected %d configs for %s", numOfRecords, mspID)
+	if len(configMessages) != 1 {
+		t.Fatalf("Expect exactly one config for key %v", key)
 	}
-
-	stub.MockTransactionEnd("queryConfiguration")
 
 }
 
-func TestNoConfigsReturnedForBogusMSP(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("queryConfiguration")
+//valid config key has mspID, peer ID and App Name
+//valid partial config key has mspID
+func TestGetForValidConfigsOnPartialValidKey(t *testing.T) {
 
-	mspID := "bogus.msp.id"
-	criteria, err := api.NewSearchCriteriaByMspID(mspID)
+	configManager, err := uploadTestMessagesToHL(validMsg)
 	if err != nil {
-		t.Fatalf("Error creating message status search criteria: %v", err)
+		t.Fatalf("Error %v", err)
 	}
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
-	}
-	//use criteria by mspID=bogus.msp.id
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	//look for this key
+	key, _ := CreateConfigKey("msp.one", "", "")
+	configMessages, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	if len(*configMessages) > 0 {
-		t.Fatalf("Expected no messaged for for %s", mspID)
+	fmt.Printf("%d\n", len(configMessages))
+	if len(configMessages) != 6 {
+		t.Fatalf("Expected 6 configs. Got %d", len(configMessages))
 	}
-	stub.MockTransactionEnd("queryConfiguration")
+
+}
+
+func TestGetForValidConfigsOnInvalidPartialKey(t *testing.T) {
+
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
+	}
+	//look for this key
+	key, _ := CreateConfigKey("", "aaaa", "")
+	_, err = configManager.Get(key)
+	if err == nil {
+		t.Fatalf("Expected error: ' Error Invalid config key { aaaa }. MspID is required. ")
+	}
 
 }
 
@@ -356,132 +359,168 @@ func TestSaveInvalidConfig(t *testing.T) {
 	stub.MockTransactionEnd("saveConfiguration")
 }
 
-func TestGetWithValidKey(t *testing.T) {
+func TestSaveConfigs(t *testing.T) {
+	configs := make(map[api.ConfigKey][]byte)
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	//value := []byte("adsf")
+	//nil value is accepted
+	configs[key] = nil
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+	cmimpl := configManagerImpl{stub: stub}
+	if err := cmimpl.saveConfigs(configs); err != nil {
+		t.Fatalf("Error %v", err)
 	}
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save configuration message %s", err)
+	cfgKey := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com"}
+	configs[cfgKey] = nil
+	if err := cmimpl.saveConfigs(configs); err == nil {
+		t.Fatalf("Expected 'Cannot put state. Invalid key ...")
 	}
-	key, _ := createConfigKey("msp.one", "peer.zero.example.com", "appNameTwo")
+
+}
+
+func TestGetWithValidKey(t *testing.T) {
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
+	}
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
 	}
+	fmt.Printf("++++++%s\n", config[0])
 	if len(config) == 0 {
 		t.Fatalf("Cannot get config content for key %s", key)
 	}
-	if bytes.Equal([]byte(testConfigValue), config[:]) {
-		t.Fatalf("Stored and retrieved content are not the same.Expected %s received %s", testConfigValue, string(config[:]))
-	}
-	stub.MockTransactionEnd("saveConfiguration")
+
 }
 
 func TestGetWithInvalidKey(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
-	}
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save configuration message %s", err)
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
 	key := api.ConfigKey{MspID: "abc", PeerID: ""}
-	if _, err := configManager.Get(key); err == nil {
-		t.Fatalf("Expected error 'Cannot create key using mspID:abc , peerID , appName'")
+	if _, err := configManager.Get(key); err != nil {
+		t.Fatalf("Expected to have config. Key is valid %v", key)
 	}
-	stub.MockTransactionEnd("saveConfiguration")
+
 }
 
 func TestGetWithNonExistingKey(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save configuration message %s", err)
-	}
-	key, _ := createConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s", err)
 	}
-	if len(config) > 0 {
+	if len(config[0].Value) > 0 {
 		t.Fatalf("Should not get any config for non-existing key %s", key)
 	}
-	stub.MockTransactionEnd("saveConfiguration")
+
 }
 
 func TestDeleteWithValidKey(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
+
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
 	stub.MockTransactionStart("saveConfiguration")
 	configManager := NewConfigManager(stub)
 	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+		t.Fatalf("Cannot instantiate config manager")
 	}
+	//store  config messages
 	b := []byte(validMsg)
 	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save configuration message %s", err)
+		t.Fatalf("Cannot save state ")
 	}
-	key, _ := createConfigKey("msp.one", "peer.zero.example.com", "appName")
+
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "testAppName")
+	config, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(config[0].Value) == 0 {
+		t.Fatalf("Config should exist for key %v ", key)
+	}
 	if err := configManager.Delete(key); err != nil {
 		t.Fatalf("Cannot delete config for  key %s %s", key, err)
 	}
 	stub.MockTransactionEnd("saveConfiguration")
+	stub.MockTransactionStart("a")
+
+	config, err = configManager.Get(key)
+	if len(config[0].Value) != 0 {
+		t.Fatalf("Config should be deleted for key %v ", key)
+	}
+
+	stub.MockTransactionEnd("a")
+
+}
+
+func TestDeleteByMspID(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	configManager := NewConfigManager(stub)
+	if configManager == nil {
+		t.Fatalf("Cannot instantiate config manager")
+	}
+	//store  config messages
+	b := []byte(validMsg)
+	if err := configManager.Save(b); err != nil {
+		t.Fatalf("Cannot save state ")
+	}
+
+	key, _ := CreateConfigKey(mspID, "", "")
+	config, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(config) != 6 {
+		t.Fatalf("Six messages should be uploaded for msp %v ", key)
+	}
+	if err := configManager.Delete(key); err != nil {
+		t.Fatalf("Cannot delete config for  key %s %s", key, err)
+	}
+	stub.MockTransactionEnd("saveConfiguration")
+
 }
 
 func TestDeleteWithNonExistingKey(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
-	b := []byte(validMsg)
-	if err := configManager.Save(b); err != nil {
-		t.Fatalf("Cannot save configuration message %s", err)
-	}
-	key, _ := createConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName")
 	if err := configManager.Delete(key); err != nil {
 		t.Fatalf("Cannot delete config for  key %s %s", key, err)
 	}
-	stub.MockTransactionEnd("saveConfiguration")
+
 }
 func TestDeleteWithInvalidKey(t *testing.T) {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	configManager := NewConfigManager(stub)
-	if configManager == nil {
-		t.Fatal("Cannot instantiate config manager")
+	configManager, err := uploadTestMessagesToHL(validMsg)
+	if err != nil {
+		t.Fatalf("Error %v", err)
 	}
 	key := api.ConfigKey{MspID: ""}
 	if err := configManager.Delete(key); err == nil {
-		t.Fatalf("Expected error 'Cannot create key using mspID: , peerID , appName'")
+		t.Fatalf("Expected error 'Invalid key....'")
 	}
-	stub.MockTransactionEnd("saveConfiguration")
 }
 
-func TestCreateConfigKey(t *testing.T) {
-	//(mspID string, peerID string, appName string) (api.ConfigKey, error) {
-	if _, err := createConfigKey("", "asv", "aaa"); err == nil {
-		t.Fatalf("Expected error ")
+func TestSearch(t *testing.T) {
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	cmimpl := configManagerImpl{stub: stub}
+	key := api.ConfigKey{MspID: ""}
+	_, err := cmimpl.search(key)
+	if err == nil {
+		t.Fatalf("Expected error 'Invalid key....'")
 	}
-	if _, err := createConfigKey("safsdf", "", "aaa"); err == nil {
-		t.Fatalf("Expected error ")
-	}
-	if _, err := createConfigKey("sdfsdf", "asv", ""); err == nil {
-		t.Fatalf("Expected error ")
-	}
-
 }
 
 func TestUnmarshalConfig(t *testing.T) {
@@ -492,4 +531,25 @@ func TestUnmarshalConfig(t *testing.T) {
 	if _, err := unmarshalConfig(config); err == nil {
 		t.Fatalf("Expected error 'No configuration passed to unmarshaller'")
 	}
+	v := []byte("whatever")
+	if _, err := unmarshalConfig(v); err == nil {
+		t.Fatalf("Expected error 'No configuration passed to unmarshaller'")
+	}
+}
+
+func uploadTestMessagesToHL(msgName string) (api.ConfigManager, error) {
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	configManager := NewConfigManager(stub)
+	if configManager == nil {
+		return nil, errors.New("Cannot instantiate config manager")
+	}
+	//store  config messages
+	b := []byte(msgName)
+	if err := configManager.Save(b); err != nil {
+		return nil, errors.New("Cannot save state ")
+	}
+
+	stub.MockTransactionEnd("saveConfiguration")
+	return configManager, nil
 }
