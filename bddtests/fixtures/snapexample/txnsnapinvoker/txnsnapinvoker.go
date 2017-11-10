@@ -27,6 +27,11 @@ type SnapTransactionRequest struct {
 	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
 
+// New chaincode implementation
+func New() shim.Chaincode {
+	return &TxnSnapInvoker{}
+}
+
 // TxnSnapInvoker demostrates how to invoke tx snap via chaincode
 type TxnSnapInvoker struct {
 }
@@ -98,8 +103,4 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 }
 
 func main() {
-	err := shim.Start(new(TxnSnapInvoker))
-	if err != nil {
-		fmt.Printf("Error starting TxnSnapInvoker: %s", err)
-	}
 }
