@@ -8,6 +8,8 @@ package api
 
 import (
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // SearchCriteria is used for querying configuration
@@ -29,7 +31,7 @@ const (
 // NewSearchCriteriaByMspID returns search criteria that queries by MSP ID
 func NewSearchCriteriaByMspID(mspID string) (SearchCriteria, error) {
 	if mspID == "" {
-		return nil, fmt.Errorf("must specify message ID for search criteria")
+		return nil, errors.New("must specify message ID for search criteria")
 	}
 	return &searchCriteriaImpl{
 		searchType: SearchByMspID,
