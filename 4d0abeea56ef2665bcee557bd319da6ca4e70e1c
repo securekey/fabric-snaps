@@ -45,6 +45,54 @@
       "revId": "4d0abeea56ef2665bcee557bd319da6ca4e70e1c",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50fbd930_9bf8faa4",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-10T19:00:55Z",
+      "side": 1,
+      "message": "I will make these variables as part of the task below. I would like to merge this change soon since CI is currently broken.",
+      "parentUuid": "1fb43c8c_79065102",
+      "range": {
+        "startLine": 37,
+        "startChar": 10,
+        "endLine": 37,
+        "endChar": 39
+      },
+      "revId": "4d0abeea56ef2665bcee557bd319da6ca4e70e1c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3741899_266d4818",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-10T19:00:55Z",
+      "side": 1,
+      "message": "Have an existing task to put these images in an SK-hosted repo: https://jira.securekey.com/browse/DEV-4088\n\nThis is being used temporarily to unblock all the tasks that depend on plugins while the image builds are setup.",
+      "parentUuid": "8840681c_4cec2827",
+      "range": {
+        "startLine": 37,
+        "startChar": 2,
+        "endLine": 37,
+        "endChar": 9
+      },
+      "revId": "4d0abeea56ef2665bcee557bd319da6ca4e70e1c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
