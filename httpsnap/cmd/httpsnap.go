@@ -38,6 +38,10 @@ var configPath = ""
 type HTTPSnap struct {
 }
 
+func New() shim.Chaincode {
+	return &HTTPSnap{}
+}
+
 // Init snap
 func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
@@ -305,8 +309,4 @@ func validateJSON(jsonSchema string, jsonStr string) error {
 }
 
 func main() {
-	err := shim.Start(new(HTTPSnap))
-	if err != nil {
-		fmt.Printf("Error starting httpsnap: %s", err)
-	}
 }

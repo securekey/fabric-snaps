@@ -36,10 +36,9 @@
   revision = "c01858abb625b73a3af51d0798e4ad42c8147093"
 
 [[projects]]
-  branch = "master"
   name = "github.com/cloudflare/cfssl"
   packages = ["api","auth","certdb","config","crypto/pkcs7","csr","errors","helpers","helpers/derhelpers","info","log","ocsp/config","signer"]
-  revision = "1b0507f6a1e0394a77da2f72f1de9c5a27bd83ac"
+  revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -106,7 +105,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
-  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/empty","ptypes/timestamp"]
+  packages = ["proto","ptypes/any","ptypes/empty","ptypes/timestamp"]
   revision = "17ce1425424ab154092bbb43af630bd647f3bb0d"
 
 [[projects]]
@@ -124,17 +123,14 @@
   branch = "master"
   name = "github.com/hashicorp/hcl"
   packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
-  revision = "8f6b1344a92ff8877cf24a5de9177bf7d0a2a187"
+  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
-  branch = "master"
   name = "github.com/hyperledger/fabric"
-  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/api","common/configtx/test","common/crypto","common/flogging","common/genesis","common/ledger","common/ledger/blkstorage","common/ledger/blkstorage/fsblkstorage","common/ledger/util","common/ledger/util/leveldbhelper","common/localmsp","common/metadata","common/mocks/config","common/mocks/configtx","common/mocks/policies","common/policies","common/tools/configtxgen/encoder","common/tools/configtxgen/localconfig","common/util","common/viperutil","core/chaincode/platforms","core/chaincode/platforms/binary","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/committer","core/committer/txvalidator","core/common/ccpackage","core/common/ccprovider","core/common/privdata","core/common/sysccprovider","core/common/validation","core/config","core/container/util","core/deliverservice","core/deliverservice/blocksprovider","core/ledger","core/ledger/customtx","core/ledger/kvledger","core/ledger/kvledger/history/historydb","core/ledger/kvledger/history/historydb/historyleveldb","core/ledger/kvledger/txmgmt/privacyenabledstate","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/statedb","core/ledger/kvledger/txmgmt/statedb/statecouchdb","core/ledger/kvledger/txmgmt/statedb/stateleveldb","core/ledger/kvledger/txmgmt/txmgr","core/ledger/kvledger/txmgmt/txmgr/lockbasedtxmgr","core/ledger/kvledger/txmgmt/validator","core/ledger/kvledger/txmgmt/validator/statebasedval","core/ledger/kvledger/txmgmt/validator/valimpl","core/ledger/kvledger/txmgmt/validator/valinternal","core/ledger/kvledger/txmgmt/version","core/ledger/ledgerconfig","core/ledger/ledgermgmt","core/ledger/ledgerstorage","core/ledger/pvtdatastorage","core/ledger/util","core/ledger/util/couchdb","core/peer","core/policy","core/policy/mocks","core/transientstore","events/producer","gossip/api","gossip/comm","gossip/common","gossip/discovery","gossip/election","gossip/filter","gossip/gossip","gossip/gossip/algo","gossip/gossip/channel","gossip/gossip/msgstore","gossip/gossip/pull","gossip/identity","gossip/integration","gossip/privdata","gossip/service","gossip/state","gossip/util","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/gossip","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
-  revision = "316de6aef9d3b3f3f5c42e91f417f6edc753b60a"
-  source = "github.com/securekey/fabric-next"
+  packages = ["bccsp","bccsp/factory","bccsp/pkcs11","bccsp/signer","bccsp/sw","bccsp/utils","common/capabilities","common/cauthdsl","common/channelconfig","common/configtx","common/configtx/test","common/crypto","common/flogging","common/genesis","common/ledger","common/ledger/blkstorage","common/ledger/blkstorage/fsblkstorage","common/ledger/util","common/ledger/util/leveldbhelper","common/localmsp","common/metadata","common/mocks/config","common/mocks/configtx","common/mocks/policies","common/policies","common/resourcesconfig","common/tools/configtxgen/encoder","common/tools/configtxgen/localconfig","common/util","common/viperutil","core/chaincode/platforms","core/chaincode/platforms/car","core/chaincode/platforms/golang","core/chaincode/platforms/java","core/chaincode/platforms/node","core/chaincode/platforms/util","core/chaincode/shim","core/comm","core/committer","core/committer/txvalidator","core/common/ccpackage","core/common/ccprovider","core/common/privdata","core/common/sysccprovider","core/common/validation","core/config","core/container/util","core/deliverservice","core/deliverservice/blocksprovider","core/ledger","core/ledger/customtx","core/ledger/kvledger","core/ledger/kvledger/history/historydb","core/ledger/kvledger/history/historydb/historyleveldb","core/ledger/kvledger/txmgmt/privacyenabledstate","core/ledger/kvledger/txmgmt/rwsetutil","core/ledger/kvledger/txmgmt/statedb","core/ledger/kvledger/txmgmt/statedb/statecouchdb","core/ledger/kvledger/txmgmt/statedb/stateleveldb","core/ledger/kvledger/txmgmt/txmgr","core/ledger/kvledger/txmgmt/txmgr/lockbasedtxmgr","core/ledger/kvledger/txmgmt/validator","core/ledger/kvledger/txmgmt/validator/statebasedval","core/ledger/kvledger/txmgmt/validator/valimpl","core/ledger/kvledger/txmgmt/validator/valinternal","core/ledger/kvledger/txmgmt/version","core/ledger/ledgerconfig","core/ledger/ledgermgmt","core/ledger/ledgerstorage","core/ledger/pvtdatastorage","core/ledger/util","core/ledger/util/couchdb","core/peer","core/policy","core/policy/mocks","core/transientstore","events/producer","gossip/api","gossip/comm","gossip/common","gossip/discovery","gossip/election","gossip/filter","gossip/gossip","gossip/gossip/algo","gossip/gossip/channel","gossip/gossip/msgstore","gossip/gossip/pull","gossip/identity","gossip/integration","gossip/privdata","gossip/service","gossip/state","gossip/util","idemix","msp","msp/cache","msp/mgmt","protos/common","protos/gossip","protos/ledger/queryresult","protos/ledger/rwset","protos/ledger/rwset/kvrwset","protos/msp","protos/orderer","protos/peer","protos/utils"]
+  revision = "4f7a7c8d696e866d06780e14b10704614a68564b"
 
 [[projects]]
-  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = ["api/apiconfig","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","internal/github.com/hyperledger/fabric/core/ledger/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/protos/utils","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/urlutil","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/packager","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/admin","pkg/fabric-txn/chclient","pkg/fabric-txn/discovery/staticdiscovery","pkg/fabric-txn/internal","pkg/fabric-txn/selection/staticselection","pkg/logging","third_party/github.com/hyperledger/fabric/bccsp","third_party/github.com/hyperledger/fabric/bccsp/factory","third_party/github.com/hyperledger/fabric/bccsp/pkcs11","third_party/github.com/hyperledger/fabric/bccsp/signer","third_party/github.com/hyperledger/fabric/bccsp/sw","third_party/github.com/hyperledger/fabric/bccsp/utils","third_party/github.com/hyperledger/fabric/common/cauthdsl","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer"]
   revision = "2443ac763e943d2fb4149c60cfbd8450ae4275fb"
@@ -195,16 +191,10 @@
   revision = "68e00e906b27f92454736fe010ddcfa1181868e4"
 
 [[projects]]
-  name = "github.com/pelletier/go-buffruneio"
-  packages = ["."]
-  revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
-  version = "v0.2.0"
-
-[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "5ccdfb18c776b740aecaf085c4d9a2779199c279"
-  version = "v1.0.0"
+  revision = "16398bac157da96aa88f98a2df640c7f32af1da2"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/pierrec/lz4"
@@ -242,7 +232,7 @@
   branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
-  revision = "ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b"
+  revision = "5660eeed305fe5f69c8fc6cf899132a459a97064"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -334,9 +324,8 @@
 
 [[projects]]
   name = "google.golang.org/grpc"
-  packages = [".","codes","connectivity","credentials","grpclb/grpc_lb_v1/messages","grpclog","internal","keepalive","metadata","naming","peer","stats","status","tap","transport"]
-  revision = "f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3"
-  version = "v1.6.0"
+  packages = [".","codes","connectivity","credentials","grpclb/grpc_lb_v1","grpclog","internal","keepalive","metadata","naming","peer","stats","status","tap","transport"]
+  revision = "b3ddf786825de56a4178401b7e174ee332173b66"
 
 [[projects]]
   branch = "v2"
@@ -347,6 +336,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6ee7b8d5d9b2ab446c21492c08b52c43b3711d7076c268a3c90b6b48f57b2098"
+  inputs-digest = "5187583c665a2105121e16a12ef3c2de227a4753626d5d5172553b1d15a094e3"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -45,6 +45,10 @@ var clientService = newClientService()
 
 var logger = logging.NewLogger("transaction-snap")
 
+func New() shim.Chaincode {
+	return &TxnSnap{}
+}
+
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
@@ -278,13 +282,6 @@ func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTr
 	return &snapTxRequest, nil
 }
 
-func main() {
-	err := shim.Start(new(TxnSnap))
-	if err != nil {
-		fmt.Printf("Error starting Txn snap: %s", err)
-	}
-}
-
 func newClientService() api.ClientService {
 	return &clientServiceImpl{}
 }
@@ -304,4 +301,7 @@ func (cs *clientServiceImpl) GetClientMembership(config api.Config) api.Membersh
 	membership := client.GetMembershipInstance(config)
 
 	return membership
+}
+
+func main() {
 }

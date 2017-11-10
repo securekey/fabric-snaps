@@ -35,7 +35,7 @@ services:
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
-      - CORE_LOGGING_PEER=debug
+      - CORE_LOGGING_LEVEL=debug
       ## the following setting redirects chaincode container logs to the peer container logs
       - CORE_VM_DOCKER_ATTACHSTDOUT=true
       - CORE_PEER_LOCALMSPID=Org1MSP
@@ -50,28 +50,6 @@ services:
       # override chaincode images
       - CORE_CHAINCODE_BUILDER=${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BUILDER_FIXTURE_TAG}
       - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BASEOS_FIXTURE_TAG}
-      # enable External SCCs
-      - CORE_CHAINCODE_SYSTEMEXT_ENABLED=true
-      # path of External SCCs to read CodeSpec objects
-      - CORE_CHAINCODE_SYSTEMEXT_CDS_PATH=/opt/extsysccs
-      # Http Snap
-      - CORE_CHAINCODE_SYSTEMEXT_HTTPSNAP_ENABLED=true
-      - CORE_CHAINCODE_SYSTEMEXT_HTTPSNAP_EXECENV=SYSTEM_EXT
-      - CORE_CHAINCODE_SYSTEMEXT_HTTPSNAP_INVOKABLEEXTERNAL=true
-      - CORE_CHAINCODE_SYSTEMEXT_HTTPSNAP_INVOKABLECC2CC=true
-      - CORE_CHAINCODE_SYSTEMEXT_HTTPSNAP_CONFIGPATH=/opt/snaps/httpsnap
-      # Txn Snap
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_ENABLED=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_EXECENV=SYSTEM_EXT
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLEEXTERNAL=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLECC2CC=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_CONFIGPATH=/opt/snaps/txnsnap
-     # Txn Snap Invoker
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_ENABLED=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_EXECENV=SYSTEM_EXT
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_INVOKABLEEXTERNAL=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_INVOKABLECC2CC=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAPINVOKER_CONFIGPATH=/opt/snaps/txnsnapinvoker
       # # the following setting starts chaincode containers on the same
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/
@@ -83,8 +61,12 @@ services:
       - 7053:7053
     volumes:
         - /var/run/:/host/var/run/
-        - ./config/extsysccs:/opt/extsysccs
-        - ./config/snaps/:/opt/snaps
+        - ./config/fabric/core.yaml:/etc/hyperledger/fabric/core.yaml
+        - ../../build/snaps/httpsnap.so:/opt/extsysccs/httpsnap.so
+        - ../../build/snaps/transactionsnap.so:/opt/extsysccs/transactionsnap.so
+        - ../../build/test/txnsnapinvoker.so:/opt/extsysccs/txnsnapinvoker.so
+        - ../../build/snaps/membershipsnap.so:/opt/extsysccs/membership.so
+        - ./config/snaps/:/opt/extsysccs/config
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
