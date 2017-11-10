@@ -34,24 +34,24 @@
   name = "github.com/golang/protobuf"
 
 [[constraint]]
-  branch = "master"
+  revision = "2443ac763e943d2fb4149c60cfbd8450ae4275fb"
   name = "github.com/hyperledger/fabric-sdk-go"
+
+[[constraint]]
+  revision = "4f7a7c8d696e866d06780e14b10704614a68564b"
+  name = "github.com/hyperledger/fabric"
 
 [[constraint]]
   name = "github.com/op/go-logging"
   version = "1.0.0"
 
 [[constraint]]
-  name = "github.com/spf13/viper"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
 
-[[constraint]]
+[[override]]
   name = "google.golang.org/grpc"
-  version = "1.6.0"
+  revision = "b3ddf786825de56a4178401b7e174ee332173b66"
 
 ################
 # Downstream overrides to enable testing
@@ -74,11 +74,6 @@ branch = "master"
 [[override]]
 name = "github.com/opencontainers/runc"
 branch = "master"
-
-[[override]]
-  name = "github.com/hyperledger/fabric"
-  source = "github.com/securekey/fabric-next"
-  branch = "master"
 
 [[override]]
   name = "github.com/Knetic/govaluate"
@@ -135,3 +130,7 @@ branch = "master"
 [[override]]
   name = "github.com/syndtr/goleveldb"
   revision = "6b4daa5362b502898ddf367c5c11deb9e7a5c727"
+
+[[override]]
+  name = "github.com/cloudflare/cfssl"
+  revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"

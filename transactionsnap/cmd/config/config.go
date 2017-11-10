@@ -39,7 +39,7 @@ type config struct {
 func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (transactionsnapApi.Config, error) {
 
 	replacer := strings.NewReplacer(".", "_")
-	configPath := "./"
+	configPath := "/opt/extsysccs/config/txnsnap"
 	peerConfigPath := "/etc/hyperledger/fabric"
 
 	if configPathOverride != "" {
@@ -144,7 +144,7 @@ func (c *config) GetMembershipPollInterval() time.Duration {
 }
 
 func (c *config) GetGRPCProtocol() string {
-	if viper.GetBool("peer.tls.enabled") {
+	if c.peerConfig.GetBool("peer.tls.enabled") {
 		return "grpcs://"
 	}
 	return "grpc://"

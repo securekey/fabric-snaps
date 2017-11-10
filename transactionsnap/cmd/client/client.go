@@ -19,8 +19,8 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 
 	bccsp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
+	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
-	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"

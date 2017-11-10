@@ -180,7 +180,7 @@ func TestPost(t *testing.T) {
 	}
 
 	// Failed path: invalid ca
-	viper.Set("tls.caCerts", []string{"cert1", "cert2"})
+	os.Setenv("CORE_TLS_CACERTS", "cert1,cert2")
 	args = [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed due to invalid ca cert pool")
 

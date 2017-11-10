@@ -40,7 +40,7 @@ type config struct {
 func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (httpsnapApi.Config, error) {
 
 	replacer := strings.NewReplacer(".", "_")
-	configPath := "./"
+	configPath := "/opt/extsysccs/config/httpsnap"
 	peerConfigPath := "/etc/hyperledger/fabric"
 
 	if configPathOverride != "" {
@@ -48,7 +48,7 @@ func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (htt
 		peerConfigPath = configPathOverride
 	}
 	//httpSnapConfig Config
-	httpSnapConfig := viper.GetViper()
+	httpSnapConfig := viper.New()
 	httpSnapConfig.AddConfigPath(configPath)
 	httpSnapConfig.SetConfigName(configFileName)
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)

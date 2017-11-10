@@ -8,6 +8,7 @@ set -e
 
 # Packages to exclude
 PKGS=`go list github.com/securekey/fabric-snaps/... 2> /dev/null | \
+                                                 grep -v /build | \
                                                  grep -v /vendor/ | \
                                                  grep -v /mocks | \
                                                  grep -v /api | \
