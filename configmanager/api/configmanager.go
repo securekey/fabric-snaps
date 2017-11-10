@@ -21,6 +21,12 @@ type ConfigKey struct {
 	AppName string
 }
 
+//ConfigKV represents key value struct for managing configurations
+type ConfigKV struct {
+	Key   ConfigKey
+	Value []byte
+}
+
 //AppConfig identifier has application name and config
 type AppConfig struct {
 	AppName string
@@ -46,15 +52,21 @@ type ConfigClient interface {
 
 //ConfigManager is used to manage configuration in ledger(save,get,delete)
 type ConfigManager interface {
-	//Save configuration
-	Save(jsonConfig []byte) error
-	//Get configuration
-	Get(configKey ConfigKey) (appconfig []byte, err error)
-	//Delete configuration
+	//Save configuration - The submited payload should be in form of ConfigMessage
+	Save(config []byte) error
+	//Get configuration - Gets configuration based on config key.
+	//For the valid config key retuned array will have only one element.
+	//For the config key containing only MspID all configurations for that MspID will be returned
+	Get(configKey ConfigKey) ([]*ConfigKV, error)
+	//Delete configuration -
+	//For the valid config one config message will be deleted
+	//For the config key containing only MspID all configurations for that MspID will be deleted
 	Delete(configKey ConfigKey) error
-	//Query for configs based on supplied critria.
-	//Returned map's key is string representation og configKey and value is config for that key
-	QueryForConfigs(criteria SearchCriteria) (*map[string]string, error)
+}
+
+//ConfigService configuration service interface
+type ConfigService interface {
+	Get(channelID string, configKey ConfigKey) ([]byte, error)
 }
 
 //IsValid validates config message
