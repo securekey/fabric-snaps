@@ -57,6 +57,18 @@ type ConfigManager interface {
 	QueryForConfigs(criteria SearchCriteria) (*map[string]string, error)
 }
 
+//ConfigService configuration service interface
+type ConfigService interface {
+	Get(configKey ConfigKey) ([]byte, error)
+}
+
+//ConfigServiceAdmin admin interface for configuration service
+type ConfigServiceAdmin interface {
+	ConfigService
+	//To refresh items in cache
+	Refresh(stub shim.ChaincodeStubInterface, mspID string) error
+}
+
 //IsValid validates config message
 func (cm ConfigMessage) IsValid() error {
 	if cm.MspID == "" {
