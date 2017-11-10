@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fb43c8c_79065102",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-10T18:54:50Z",
+      "side": 1,
+      "message": "suggest variables for image \u0026 tag",
+      "range": {
+        "startLine": 37,
+        "startChar": 10,
+        "endLine": 37,
+        "endChar": 39
+      },
+      "revId": "4d0abeea56ef2665bcee557bd319da6ca4e70e1c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8840681c_4cec2827",
+        "filename": "Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-10T18:54:50Z",
+      "side": 1,
+      "message": "this looks like it should be changed.",
+      "range": {
+        "startLine": 37,
+        "startChar": 2,
+        "endLine": 37,
+        "endChar": 9
+      },
+      "revId": "4d0abeea56ef2665bcee557bd319da6ca4e70e1c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
