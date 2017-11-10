@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f379082e_b767c3d7",
+        "filename": "scripts/build_plugins.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-10T18:49:51Z",
+      "side": 1,
+      "message": "why? this changes the user\u0027s git configuration.",
+      "range": {
+        "startLine": 21,
+        "startChar": 11,
+        "endLine": 21,
+        "endChar": 19
+      },
+      "revId": "f258368cf48683582f37a00c4d3c518372b9cf26",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f27ebe59_86236053",
+        "filename": "scripts/build_plugins.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-10T18:49:51Z",
+      "side": 1,
+      "message": "why? this changes the user\u0027s git configuration.",
+      "range": {
+        "startLine": 22,
+        "startChar": 11,
+        "endLine": 22,
+        "endChar": 19
+      },
+      "revId": "f258368cf48683582f37a00c4d3c518372b9cf26",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
