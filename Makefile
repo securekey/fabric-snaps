@@ -62,12 +62,19 @@ spelling:
 unit-test: depend populate
 	@scripts/unit.sh
 
-integration-test: clean depend populate snaps
+integration-test: clean depend populate snaps pull-fabric-images
 	@scripts/integration.sh
 
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 
+pull-fabric-images:
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-ca
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-orderer
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-peer
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-couchdb
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-tools
+	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-ccenv
 
 all: clean checks snaps unit-test integration-test http-server
 
