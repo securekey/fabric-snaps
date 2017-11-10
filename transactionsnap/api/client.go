@@ -12,8 +12,8 @@ import (
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
-	common "github.com/hyperledger/fabric/protos/common"
 )
 
 // Client is a wrapper interface around the fabric client

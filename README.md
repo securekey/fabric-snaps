@@ -71,4 +71,3 @@ Test pre-requisites:
  - Ability to create channel “mychannel”. To generate custom channel config blocks and transactions, use the make target `make channel-artifacts`. Channel and org names can be configured in the script `scripts/generate_channeltx.sh`
  - Ability to deploy two chaincodes example_cc and httpsnaptest_cc
  - External Connectivity for HttpSnap
-

@@ -21,30 +21,21 @@ CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
 PACKAGE_NAME = github.com/securekey/fabric-snaps
 FABRIC_TOOLS_RELEASE=1.0.2
+GO_BUILD_TAGS ?= "experimental"
+FABRIC_VERSION ?= 4f7a7c8d696e866d06780e14b10704614a68564b
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
 
-
 snaps: clean populate
-	@echo "Building snaps..."
+	@echo "Building snap plugins"
 	@mkdir -p build/snaps
-	@docker run -i \
-		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
-		-v $(abspath build/snaps):/opt/snaps \
-		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
-		repo.onetap.ca:8443/next/hyperledger/fabric-tools:x86_64-latest \
-		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/scripts/build_snaps.sh"
-
-
-testsnaps: clean populate
-	@echo "Building test snaps..."
-	@mkdir -p ./bddtests/fixtures/build/testsnaps
-	@docker run -i \
-		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
-		-v $(abspath ./bddtests/fixtures/build/testsnaps):/opt/snaps \
-		-v $(abspath build/fabricversion.txt):/opt/fabricversion.txt \
-		repo.onetap.ca:8443/next/hyperledger/fabric-tools:x86_64-latest \
-		/bin/bash -c "export FABRIC_VERSION=1.1.0 ;/opt/gopath/src/$(PACKAGE_NAME)/bddtests/fixtures/config/snaps/txnsnapinvoker/cds.sh"
+	@mkdir -p build/test
+	@docker run -i --rm \
+		-e FABRIC_VERSION=$(FABRIC_VERSION) \
+		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
+		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
+		d1vyank/fabric-baseimage:x86_64-0.4.2 \
+		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/build_plugins.sh"
 
 channel-artifacts:
 	@echo "Generating test channel .tx files"
@@ -71,19 +62,14 @@ spelling:
 unit-test: depend populate
 	@scripts/unit.sh
 
-integration-test: clean depend populate snaps-4-bdd
+integration-test: clean depend populate snaps
 	@scripts/integration.sh
 
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 
 
-all: clean checks snaps testsnaps unit-test integration-test http-server
-
-snaps-4-bdd: clean checks snaps testsnaps
-	@mkdir ./bddtests/fixtures/config/extsysccs
-	@cp -r build/snaps/* ./bddtests/fixtures/config/extsysccs/
-	@cp -r ./bddtests/fixtures/build/testsnaps/* ./bddtests/fixtures/config/extsysccs/
+all: clean checks snaps unit-test integration-test http-server
 
 populate: populate-vendor
 
