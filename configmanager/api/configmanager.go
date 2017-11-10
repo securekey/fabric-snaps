@@ -47,14 +47,19 @@ type ConfigClient interface {
 //ConfigManager is used to manage configuration in ledger(save,get,delete)
 type ConfigManager interface {
 	//Save configuration
-	Save(jsonConfig []byte) error
+	Save(config []byte) error
 	//Get configuration
 	Get(configKey ConfigKey) (appconfig []byte, err error)
 	//Delete configuration
 	Delete(configKey ConfigKey) error
 	//Query for configs based on supplied critria.
 	//Returned map's key is string representation og configKey and value is config for that key
-	QueryForConfigs(criteria SearchCriteria) (*map[string]string, error)
+	Query(criteria SearchCriteria) (*map[string][]byte, error)
+}
+
+//ConfigService configuration service interface
+type ConfigService interface {
+	Get(channelID string, configKey ConfigKey) ([]byte, error)
 }
 
 //IsValid validates config message

@@ -9,7 +9,6 @@ package mgmt
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -17,6 +16,7 @@ import (
 )
 
 const (
+	mspID = "msp.one"
 	//number of records to be inserted in hyperledger for valid configuration test
 	numOfRecords = 6
 	//config contentCannot save state Configuration must be provided
@@ -45,7 +45,7 @@ func TestValidConfiguration(t *testing.T) {
 		t.Fatalf("Error: %s", err)
 	}
 	//verify that key exists in map
-	key, err := createConfigKey("msp.one", "peer.zero.example.com", "appNameTwo")
+	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -55,13 +55,13 @@ func TestValidConfiguration(t *testing.T) {
 	}
 
 	//verify that key does not exists in map
-	key, _ = createConfigKey("non.existing.msp", "peer.zero.example.com", "appName")
+	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName")
 	_, present = keyConfigMap[key]
 	if present == true {
 		t.Fatalf("Key : %s should NOT be in map", key)
 	}
 
-	//verify number of rCannot create config key usingecords to be saved to hyperledger
+	//verify that all records were inserted
 	if len(keyConfigMap) != numOfRecords {
 		t.Fatalf("Expected : %d key/value records. Got %d", numOfRecords, len(keyConfigMap))
 	}
@@ -84,21 +84,52 @@ func TestInvalidConfigurations(t *testing.T) {
 
 }
 
-func TestConfigKeyToString(t *testing.T) {
-	key := api.ConfigKey{MspID: "abc", PeerID: "peer.zero.sk.example", AppName: "testApp"}
-	keyStr := configKeyToString(key)
-	expectedKeyString := "abc!peer.zero.sk.example!testApp"
-	if keyStr != expectedKeyString {
-		t.Fatalf("Expected key string %s. Got %s", expectedKeyString, keyStr)
-	}
-}
-
 func TestInstantiateConfigManager(t *testing.T) {
 	stub := shim.NewMockStub("testConfigState", nil)
 	configManager := NewConfigManager(stub)
 	if configManager == nil {
 		t.Fatal("Cannot instantiate config manager")
 	}
+}
+
+func TestGetConfigForKey(t *testing.T) {
+	key := api.ConfigKey{}
+	key.MspID = "ssss"
+	key.PeerID = "peerID"
+	key.AppName = ""
+
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	cmimpl := configManagerImpl{stub: stub}
+
+	if _, err := cmimpl.getConfigForKey(key); err == nil {
+		t.Fatalf("Expected 'error getting config for ID' ")
+	}
+
+}
+
+func TestGetConfigurations(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	cmimpl := configManagerImpl{stub: stub}
+
+	configs, err := cmimpl.getConfigurations("index", []string{""})
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+
+	if len(*configs) > 0 {
+		t.Fatalf("no configs expected for bogus index")
+	}
+	configs, err = cmimpl.getConfigurations("index", []string{"abc"})
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(*configs) > 0 {
+		t.Fatalf("no configs expected for bogus index")
+	}
+
 }
 
 func TestSaveValidConfig(t *testing.T) {
@@ -115,18 +146,16 @@ func TestSaveValidConfig(t *testing.T) {
 	}
 	stub.MockTransactionEnd("saveConfiguration")
 	//get saved configs
-	mspID := "msp.one"
 	criteria, err := api.NewSearchCriteriaByMspID(mspID)
 	if err != nil {
 		t.Fatalf("Error creating message status search criteria: %v", err)
 	}
 	stub.MockTransactionStart("queryConfiguration")
 	//use criteria by mspID=msp.one
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	configMessages, err := configManager.Query(criteria)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	fmt.Printf("%d\n", len(*configMessages))
 	if len(*configMessages) != numOfRecords {
 		t.Fatalf("Did not retrieve all configs %v", err)
 	}
@@ -147,18 +176,48 @@ func TestPutStateFailed(t *testing.T) {
 }
 
 func TestSearchCriteria(t *testing.T) {
-	mspID := "msp.one"
-	criteria, err := api.NewSearchCriteriaByMspID(mspID)
+	criteria, err := api.NewSearchCriteriaByMspID("msp.one")
 	if err != nil {
 		t.Fatalf("Error creating message status search criteria: %v", err)
 	}
 	mspid := criteria.GetMspID()
 	if mspid != mspID {
-		t.Fatalf("Expected %s retrieved %s for mspid.: ", mspID, mspid)
+		t.Fatalf("Expected 'msp.one' retrieved %s for mspid.: ", mspid)
 	}
 	criteria, err = api.NewSearchCriteriaByMspID("")
 	if err == nil {
 		t.Fatalf("Expected error. An empty criterie is not valid")
+	}
+	criteria, err = api.NewSearchCriteriaByMspID(mspID)
+	if err != nil {
+		t.Fatalf("Error %v", err)
+	}
+
+}
+
+func TestQueryOnBogusCriteria(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	configManager := NewConfigManager(stub)
+	if configManager == nil {
+		t.Fatal("Cannot instantiate config manager")
+	}
+	b := []byte(validMsg)
+	if err := configManager.Save(b); err != nil {
+		t.Fatalf("Cannot save state %s", err)
+	}
+	stub.MockTransactionEnd("saveConfiguration")
+	//get saved configs
+	criteria, err := api.NewSearchCriteriaByMspID("msp.one.one")
+	if err != nil {
+		t.Fatalf("Error creating message status search criteria: %v", err)
+	}
+	stub.MockTransactionStart("queryConfiguration")
+	cm, err := configManager.Query(criteria)
+	if len(*cm) > 0 {
+		//we do not expect any configs for msp.one.one
+		t.Fatalf("No configs were saved for msp.one.one. Nothing should be returned from HL")
 	}
 
 }
@@ -168,11 +227,18 @@ func TestGetFieldsForIndex(t *testing.T) {
 	if _, err := getFieldsForIndex("abc", key); err == nil {
 		t.Fatalf("Expected error:'unknown index'")
 	}
-	fields, err := getFieldsForIndex(indexMspID, key)
+	_, err := getFieldsForIndex(indexMspID, key)
 	if err == nil {
 		t.Fatalf("Error 'invalid key' expected")
 	}
-	fmt.Printf("%d\n", len(fields))
+	key.MspID = "ssss"
+	key.PeerID = "peerID"
+	key.AppName = "appname"
+	_, err = getFieldsForIndex("index", key)
+	if err == nil {
+		t.Fatalf("Error 'unknown index' expected")
+	}
+
 }
 
 func TestAddIndexes(t *testing.T) {
@@ -194,6 +260,19 @@ func TestAddIndexes(t *testing.T) {
 		t.Fatalf("Expected error:'Cannot create config key using empty AppName")
 	}
 
+	key.AppName = "appName"
+	indexes = [...]string{"abc"}
+	if err := configManagerImpl.addIndexes(key); err == nil {
+		t.Fatalf("Expected error:'Cannot create config error adding index [abc]: unknown index [abc]")
+	}
+
+	indexes = [...]string{""}
+	if err := configManagerImpl.addIndexes(key); err == nil {
+		t.Fatalf("Expected error:'error adding index []: Index is empty")
+	}
+	//reset to valid index
+	indexes = [...]string{indexMspID}
+
 }
 
 func TestGetIndexKey(t *testing.T) {
@@ -214,14 +293,13 @@ func TestGetIndexKey(t *testing.T) {
 	}
 
 }
+
 func TestQueryForValidConfigs(t *testing.T) {
-	// mspID
-	mspID := "msp.one"
 	criteria, err := api.NewSearchCriteriaByMspID(mspID)
 	if err != nil {
 		t.Fatalf("Error creating message status search criteria: %v", err)
 	}
-	stub := shim.NewMockStub("testConfigState", nil)
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
 	stub.MockTransactionStart("saveConfiguration")
 	configManager := NewConfigManager(stub)
 	if configManager == nil {
@@ -247,7 +325,7 @@ func TestQueryForValidConfigs(t *testing.T) {
 	stub.MockTransactionEnd("saveConfiguration")
 	stub.MockTransactionStart("queryConfiguration")
 	//use criteria by mspID=msp.one
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	configMessages, err := configManager.Query(criteria)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
@@ -257,21 +335,23 @@ func TestQueryForValidConfigs(t *testing.T) {
 		t.Fatalf("Expected %d configs for %s", numOfRecords*2, mspID)
 	}
 	//verify that config map contains proper keys and values
-	key, _ := createConfigKey("msp.one", "peer.one.example.com", "appNameOneOne")
-	keystr := configKeyToString(key)
-	expectedConfigValue := "config for appNameOneOne goes here"
+	key, _ := CreateConfigKey(mspID, "peer.one.example.com", "appNameOneOne")
+	keystr, err := ConfigKeyToString(key)
+	if err != nil {
+		t.Fatalf("Invalid key %s", err)
+	}
+	expectedConfigValue := []byte("\"config for appNameOneOne goes here\"")
 	retrievedConfigValue := (*configMessages)[keystr]
-	if expectedConfigValue != retrievedConfigValue {
+	if !bytes.Equal(expectedConfigValue, retrievedConfigValue) {
 		t.Fatalf("Expected %s value for key %s but got %s ", expectedConfigValue, keystr, retrievedConfigValue)
 	}
 
-	mspID = "msp.two"
-	criteria, err = api.NewSearchCriteriaByMspID(mspID)
+	criteria, err = api.NewSearchCriteriaByMspID("msp.two")
 	if err != nil {
 		t.Fatalf("Error creating message status search criteria: %v", err)
 	}
 	//use criteria by mspID=msp.two
-	configMessages, err = configManager.QueryForConfigs(criteria)
+	configMessages, err = configManager.Query(criteria)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
@@ -297,7 +377,7 @@ func TestNoConfigsReturnedForBogusMSP(t *testing.T) {
 		t.Fatal("Cannot instantiate config manager")
 	}
 	//use criteria by mspID=bogus.msp.id
-	configMessages, err := configManager.QueryForConfigs(criteria)
+	configMessages, err := configManager.Query(criteria)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
@@ -356,6 +436,26 @@ func TestSaveInvalidConfig(t *testing.T) {
 	stub.MockTransactionEnd("saveConfiguration")
 }
 
+func TestSaveConfigs(t *testing.T) {
+	configs := make(map[api.ConfigKey][]byte)
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	//value := []byte("adsf")
+	//nil value is accepted
+	configs[key] = nil
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	cmimpl := configManagerImpl{stub: stub}
+	if err := cmimpl.saveConfigs(configs); err != nil {
+		t.Fatalf("Error %v", err)
+	}
+	cfgKey := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com"}
+	configs[cfgKey] = nil
+	if err := cmimpl.saveConfigs(configs); err == nil {
+		t.Fatalf("Expected 'Cannot put state. Invalid key ...")
+	}
+
+}
+
 func TestGetWithValidKey(t *testing.T) {
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
@@ -367,7 +467,7 @@ func TestGetWithValidKey(t *testing.T) {
 	if err := configManager.Save(b); err != nil {
 		t.Fatalf("Cannot save configuration message %s", err)
 	}
-	key, _ := createConfigKey("msp.one", "peer.zero.example.com", "appNameTwo")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
@@ -410,7 +510,7 @@ func TestGetWithNonExistingKey(t *testing.T) {
 	if err := configManager.Save(b); err != nil {
 		t.Fatalf("Cannot save configuration message %s", err)
 	}
-	key, _ := createConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s", err)
@@ -432,7 +532,7 @@ func TestDeleteWithValidKey(t *testing.T) {
 	if err := configManager.Save(b); err != nil {
 		t.Fatalf("Cannot save configuration message %s", err)
 	}
-	key, _ := createConfigKey("msp.one", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appName")
 	if err := configManager.Delete(key); err != nil {
 		t.Fatalf("Cannot delete config for  key %s %s", key, err)
 	}
@@ -450,7 +550,7 @@ func TestDeleteWithNonExistingKey(t *testing.T) {
 	if err := configManager.Save(b); err != nil {
 		t.Fatalf("Cannot save configuration message %s", err)
 	}
-	key, _ := createConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName")
 	if err := configManager.Delete(key); err != nil {
 		t.Fatalf("Cannot delete config for  key %s %s", key, err)
 	}
@@ -468,20 +568,6 @@ func TestDeleteWithInvalidKey(t *testing.T) {
 		t.Fatalf("Expected error 'Cannot create key using mspID: , peerID , appName'")
 	}
 	stub.MockTransactionEnd("saveConfiguration")
-}
-
-func TestCreateConfigKey(t *testing.T) {
-	//(mspID string, peerID string, appName string) (api.ConfigKey, error) {
-	if _, err := createConfigKey("", "asv", "aaa"); err == nil {
-		t.Fatalf("Expected error ")
-	}
-	if _, err := createConfigKey("safsdf", "", "aaa"); err == nil {
-		t.Fatalf("Expected error ")
-	}
-	if _, err := createConfigKey("sdfsdf", "asv", ""); err == nil {
-		t.Fatalf("Expected error ")
-	}
-
 }
 
 func TestUnmarshalConfig(t *testing.T) {
