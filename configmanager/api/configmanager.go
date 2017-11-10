@@ -8,9 +8,9 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -57,13 +57,18 @@ type ConfigManager interface {
 	QueryForConfigs(criteria SearchCriteria) (*map[string]string, error)
 }
 
+//ConfigService configuration service interface
+type ConfigService interface {
+	Get(configKey ConfigKey) ([]byte, error)
+}
+
 //IsValid validates config message
 func (cm ConfigMessage) IsValid() error {
 	if cm.MspID == "" {
-		return errors.New("MSPID cannot be empty")
+		return fmt.Errorf("MSPID cannot be empty")
 	}
 	if len(cm.Peers) == 0 {
-		return errors.New("Collection of peers is required")
+		return fmt.Errorf("Collection of peers is required")
 	}
 
 	for _, config := range cm.Peers {
@@ -77,10 +82,10 @@ func (cm ConfigMessage) IsValid() error {
 //IsValid validates config messagegetIndexKey
 func (pc PeerConfig) IsValid() error {
 	if pc.PeerID == "" {
-		return errors.New("PeerID cannot be empty")
+		return fmt.Errorf("PeerID cannot be empty")
 	}
 	if len(pc.App) == 0 {
-		return errors.New("App cannot be empty")
+		return fmt.Errorf("App cannot be empty")
 	}
 	//App is required
 	for _, appConfig := range pc.App {
@@ -95,10 +100,10 @@ func (pc PeerConfig) IsValid() error {
 //IsValid appconfig
 func (ac AppConfig) IsValid() error {
 	if ac.AppName == "" {
-		return errors.New("AppName cannot be empty")
+		return fmt.Errorf("AppName cannot be empty")
 	}
 	if len(ac.Config) == 0 {
-		return errors.New("AppConfig is not set (empty payload)")
+		return fmt.Errorf("AppConfig is not set (empty payload)")
 	}
 	return nil
 }
