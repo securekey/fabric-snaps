@@ -19,10 +19,16 @@
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
+
 PACKAGE_NAME = github.com/securekey/fabric-snaps
+
 FABRIC_TOOLS_RELEASE=1.0.2
+
 GO_BUILD_TAGS ?= "experimental"
 FABRIC_VERSION ?= 4f7a7c8d696e866d06780e14b10704614a68564b
+
+FABRIC_SNAPS_POPULATE_VENDOR ?= true
+
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
 
@@ -82,14 +88,17 @@ populate: populate-vendor
 
 populate-vendor:
 	@echo "Populating vendor ..."
-	@dep ensure -vendor-only
+	ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
+		@echo "Populating vendor ..."
+		@$(GO_DEP_CMD) ensure -vendor-only
+	endif
+
 
 clean:
 	rm -Rf ./bddtests/fixtures/config/extsysccs
 	rm -Rf ./bddtests/fixtures/build
 	rm -Rf ./bddtests/docker-compose.log
 	rm -Rf ./build
-	rm -Rf vendor
 
 clean-images:
 	@echo "Stopping all containers, pruning containers and images, deleting dev images"
