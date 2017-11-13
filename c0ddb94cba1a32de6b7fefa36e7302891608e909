@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbf3ce89_b041df07",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-13T16:49:32Z",
+      "side": 1,
+      "message": "Use errors.New",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a6bca4_34a5bb34",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-13T16:49:32Z",
+      "side": 1,
+      "message": "Need to call Refresh here?",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7803f8e0_4e98420b",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-13T16:49:32Z",
+      "side": 1,
+      "message": "Is this code necessary?",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 2
+      },
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
