@@ -82,14 +82,17 @@ populate: populate-vendor
 
 populate-vendor:
 	@echo "Populating vendor ..."
-	@dep ensure -vendor-only
+	@if [ ! -d "vendor" ]; then \
+		dep ensure --vendor-only; \
+		else echo "Vendor directory exists. Skipping..."; \
+	fi
+
 
 clean:
 	rm -Rf ./bddtests/fixtures/config/extsysccs
 	rm -Rf ./bddtests/fixtures/build
 	rm -Rf ./bddtests/docker-compose.log
 	rm -Rf ./build
-	rm -Rf vendor
 
 clean-images:
 	@echo "Stopping all containers, pruning containers and images, deleting dev images"
