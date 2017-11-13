@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88e16dbe_c84f12c1",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-13T14:49:30Z",
+      "side": 1,
+      "message": "people need to be careful about this - if someone updated Gopkg.lock - could lead to unexpected issues.\n\nIn SDK, used a variable for this (changeable from environment):\nhttps://github.com/hyperledger/fabric-sdk-go/blob/master/Makefile#L148\n\nPrefer snaps to be the same as the SDK.",
+      "range": {
+        "startLine": 85,
+        "startChar": 1,
+        "endLine": 85,
+        "endChar": 30
+      },
+      "revId": "00265c26262a7e286c33627ec94349c85c3602c5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
