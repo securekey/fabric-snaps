@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "fda2a93d_c8dd1a5f",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-13T17:16:55Z",
+      "side": 1,
+      "message": "Should there be a sync.Once() around this to ensure it\u0027s a singleton?",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6a6bca4_34a5bb34",
         "filename": "configmanager/pkg/service/configmgmtservice.go",
         "patchSetId": 3
