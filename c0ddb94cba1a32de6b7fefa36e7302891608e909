@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "620b711d_82026b3f",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-11-14T13:13:24Z",
+      "side": 1,
+      "message": "Does it have to be json? Should we just say \u0027config []byte\u0027?",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbf3ce89_b041df07",
         "filename": "configmanager/api/configmanager.go",
         "patchSetId": 3
