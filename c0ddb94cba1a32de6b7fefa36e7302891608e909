@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "1f3679cd_c0efcfc5",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-11-14T14:13:35Z",
+      "side": 1,
+      "message": "Rename to \u0027Query\u0027? \u0027ForConfigs\u0027 seems redundant.",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbf3ce89_b041df07",
         "filename": "configmanager/api/configmanager.go",
         "patchSetId": 3
