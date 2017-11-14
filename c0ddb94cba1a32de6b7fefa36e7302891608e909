@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "74a2a650_212b7ab5",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-11-14T14:19:07Z",
+      "side": 1,
+      "message": "Is Query exposed as a SCC function? Should there be a string representation of SearchCriteria?",
+      "parentUuid": "1f3679cd_c0efcfc5",
+      "revId": "c0ddb94cba1a32de6b7fefa36e7302891608e909",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbf3ce89_b041df07",
         "filename": "configmanager/api/configmanager.go",
         "patchSetId": 3
