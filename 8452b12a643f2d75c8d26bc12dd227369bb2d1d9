@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f39c82e1_4fece61e",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-14T18:57:13Z",
+      "side": 1,
+      "message": "Should check for nil channelCache",
+      "revId": "8452b12a643f2d75c8d26bc12dd227369bb2d1d9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f47b694_56f7c2ff",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-14T18:57:13Z",
+      "side": 1,
+      "message": "Do you need to return a bool?",
+      "range": {
+        "startLine": 156,
+        "startChar": 78,
+        "endLine": 156,
+        "endChar": 82
+      },
+      "revId": "8452b12a643f2d75c8d26bc12dd227369bb2d1d9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
