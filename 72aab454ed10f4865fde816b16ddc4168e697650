@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d407d85e_7aceb5cb",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-15T20:41:24Z",
+      "side": 1,
+      "message": "This shouldn\u0027t assume that the delete would be by MSP ID. It should do a  generic search and then delete all of the keys that were returned from the search.",
+      "revId": "72aab454ed10f4865fde816b16ddc4168e697650",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
