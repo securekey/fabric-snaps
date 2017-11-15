@@ -1,53 +1,45 @@
 # Fabric Snaps
 
-A Snap is a fabric extension that implements the Chaincode Shim interface. It is deployed as a process inside the peer container.
-The snaps are located at the root of this project. Each snap forms an independently deployable executable.
+A Snap is a fabric extension that implements the Chaincode Shim interface. It is deployed as a system chaincode plugin.
+The snaps are located at the root of this project. Each snap forms an independently deployable shared object binary.
 
 ##### Configure
+(TODO: update this once config moves to the ledger)
 Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file as well as any other configurations that the snap requires.
 
 ##### Build
-Note: We assume a working Golang and Docker installation.
+Note: We assume a working Golang(v1.9.2) and Docker(v17.09.0-ce) installation.
 
 The snaps present in this project currently depend on a custom version of fabric located at https://github.com/securekey/fabric-next
+This version of fabric contains certain features that have been cherry-picked, a dynamic build to enable Go plugins, and the 'experimental' build tag set. Please see the README located in the project mentioned above for instructions on how to build this.
 
-As a prerequisite, you must clone and build this project first:
-```
-$ cd $GOPATH/src/github.com/hyperledger/fabric
-$ git clone https://github.com/securekey/fabric-next.git fabric
-$ cd fabric
-// Checkout the the tag corresponding to this project
-$ git checkout v17.08.02
-$ make docker
-```
+*Note:* The tagged version of fabric-snaps being used must match the corresponding tag in fabric-next. e.g v17.11.1 of fabric-snaps is compatible with v17.11.1 of fabric-next.
 
 To build snaps:
 ```
 $ cd $GOPATH/src/github.com/securekey/fabric-snaps
 $ make snaps
 ```
-This will produce deployable artifacts at build/snaps
+This will produce deployable plugins at build/snaps
 
 ##### Deploy
-To deploy a snap, the peer is configured with environment variables. As an example, you can refer to the docker-compose file located at `bddtests/fixtures/docker-compose.yml` lines 82-85 and 92-97:
+To deploy a system chaincode plugin you must define it in the `chaincode.systemPlugins` section in fabric's `core.yaml` configuration file and whitelist it in the `chaincode.system` section. As an example, you can refer to the test configuration file located at `bddtests/fixtures/config/fabric/core.yaml` lines 458 and 476:
 ```
-      # enable External SCCs
-      - CORE_CHAINCODE_SYSTEMEXT_ENABLED=true
-      # path of External SCCs to read CodeSpec objects
-      - CORE_CHAINCODE_SYSTEMEXT_CDS_PATH=/opt/extsysccs
-
-      # Txn Snap
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_ENABLED=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_EXECENV=SYSTEM_EXT
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLEEXTERNAL=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_INVOKABLECC2CC=true
-      - CORE_CHAINCODE_SYSTEMEXT_TXNSNAP_CONFIGPATH=/opt/snaps/txnsnap
+chaincode
+  system:
+    txnsnap: enable
+  systemPlugins:
+    - enabled: true
+      name: txnsnap
+      path: /opt/extsysccs/txnsnap.so
+      invokableExternal: true
+      invokableCC2CC: true
 ```
 
-To mount the snaps and configuration files into the container we use docker volumes. Example, lines 115-116:
+To mount the snaps and configuration files into the container we use docker volumes. Example, `bddtests/fixtures/docker-compose.yml` lines 66-69:
 ```
-    - ./config/extsysccs:/opt/extsysccs
-    - ./config/snaps/:/opt/snaps
+    - ../../build/snaps/transactionsnap.so:/opt/extsysccs/transactionsnap.so
+    - ./config/snaps/:/opt/extsysccs/config
 ```
 
 ##### Test
@@ -69,5 +61,5 @@ $ DISABLE_COMPOSITION=true go test -run txnsnap
 Test pre-requisites:          
  - Pre-enrolled admin and user for the specified environment. These certs are read from the MSP Directory whose path is defined by the key `client.cryptoconfig.path` in the config.yaml file
  - Ability to create channel “mychannel”. To generate custom channel config blocks and transactions, use the make target `make channel-artifacts`. Channel and org names can be configured in the script `scripts/generate_channeltx.sh`
- - Ability to deploy two chaincodes example_cc and httpsnaptest_cc 
+ - Ability to deploy two chaincodes example_cc and httpsnaptest_cc
  - External Connectivity for HttpSnap
