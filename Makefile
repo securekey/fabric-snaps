@@ -24,6 +24,11 @@ PACKAGE_NAME = github.com/securekey/fabric-snaps
 
 FABRIC_TOOLS_RELEASE=1.0.2
 
+#fabric base image parameters
+FABRIC_BASE_IMAGE_NS=repo.onetap.ca:8443/next/securekey
+FABRIC_BASE_IMAGE=fabric-baseimage
+FABRIC_BASE_IMAGE_VERSION=x86_64-0.4.2
+
 GO_BUILD_TAGS ?= "experimental"
 FABRIC_VERSION ?= 4f7a7c8d696e866d06780e14b10704614a68564b
 
@@ -40,7 +45,7 @@ snaps: clean populate
 		-e FABRIC_VERSION=$(FABRIC_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
 		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
-		d1vyank/fabric-baseimage:x86_64-0.4.2 \
+		$(FABRIC_BASE_IMAGE_NS)/$(FABRIC_BASE_IMAGE):$(FABRIC_BASE_IMAGE_VERSION) \
 		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/build_plugins.sh"
 
 channel-artifacts:
@@ -87,7 +92,6 @@ all: clean checks snaps unit-test integration-test http-server
 populate: populate-vendor
 
 populate-vendor:
-	@echo "Populating vendor ..."
 ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
 		@echo "Populating vendor ..."
 		@dep ensure -vendor-only
