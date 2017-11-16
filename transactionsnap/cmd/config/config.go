@@ -105,7 +105,8 @@ func (c *config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
 		return nil, err
 	}
 	splitEventAddress := strings.Split(eventAddress, ":")
-	peer.EventHost = c.GetGRPCProtocol() + splitEventAddress[0]
+	// Event host should be set to the peer host as that is the advertised address
+	peer.EventHost = c.GetGRPCProtocol() + splitPeerAddress[0]
 	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
 		return nil, err

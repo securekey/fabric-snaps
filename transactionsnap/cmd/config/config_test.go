@@ -114,7 +114,7 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatalf("Expected localPeer.Port value %d but got %d",
 			5050, localPeer.Port)
 	}
-	if localPeer.EventHost != "grpc://event" {
+	if localPeer.EventHost != "grpc://peer" {
 		t.Fatalf("Expected localPeer.EventHost value %s but got %s",
 			"event", localPeer.Host)
 	}
