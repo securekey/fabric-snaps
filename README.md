@@ -3,6 +3,21 @@
 A Snap is a fabric extension that implements the Chaincode Shim interface. It is deployed as a system chaincode plugin.
 The snaps are located at the root of this project. Each snap forms an independently deployable shared object binary.
 
+##### Quick Start
+
+Install:
+- A Git Client
+- Go - 1.9 or later
+- Docker - 17.06.2-ce or later
+- Docker Compose - 1.14.0 or later
+- You may need libtool - sudo apt-get install -y libtool (linux) or brew install libtool (macOS)
+- You may need GNU tar on macOS -  brew install gnu-tar --with-default-names
+
+```
+$ cd $GOPATH/src/github.com/securekey/fabric-snaps
+$ make integration-test
+```
+
 ##### Configure
 (TODO: update this once config moves to the ledger)
 Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file as well as any other configurations that the snap requires.
