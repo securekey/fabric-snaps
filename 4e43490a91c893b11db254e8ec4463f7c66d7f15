@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b0de4e2_f6134737",
+        "filename": "Gopkg.lock",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-16T18:53:03Z",
+      "side": 1,
+      "message": "this item should also be in Gopkg.toml",
+      "range": {
+        "startLine": 194,
+        "startChar": 10,
+        "endLine": 194,
+        "endChar": 40
+      },
+      "revId": "4e43490a91c893b11db254e8ec4463f7c66d7f15",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
