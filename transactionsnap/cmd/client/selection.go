@@ -16,6 +16,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -179,7 +180,7 @@ func (s *selectionServiceImpl) getAvailablePeers(channelID string, mspID string)
 		}
 	}
 
-	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
+	if logging.IsEnabledFor(module, apilogging.DEBUG) {
 		str := ""
 		for i, peer := range peers {
 			str += peer.URL()

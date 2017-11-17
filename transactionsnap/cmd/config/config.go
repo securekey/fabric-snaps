@@ -176,8 +176,8 @@ func (c *config) initializeLogging() error {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetLevel(level, "")                // default module
-	logging.SetLevel(level, "txn-snap-config") // this current file's module
+	logging.SetLevel("", level)                // default module
+	logging.SetLevel("txn-snap-config", level) // this current file's module
 	logger.Debugf("txnsnap Logger initialized. Default Log level: %s, txn-snap-config Log level: %s", logging.GetLevel(""), logging.GetLevel("txn-snap-config"))
 
 	return nil

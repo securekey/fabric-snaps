@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -172,8 +173,8 @@ func verify(t *testing.T, service api.SelectionService, expectedPeerGroups []api
 	// Set the log level to WARNING since the following spits out too much info in DEBUG
 	module := "pg-resolver"
 	level := logging.GetLevel(module)
-	logging.SetLevel(logging.WARNING, module)
-	defer logging.SetLevel(level, module)
+	logging.SetLevel(module, apilogging.WARNING)
+	defer logging.SetLevel(module, level)
 
 	for i := 0; i < len(expectedPeerGroups); i++ {
 		peers, err := service.GetEndorsersForChaincode(channelID, chaincodeIDs...)
