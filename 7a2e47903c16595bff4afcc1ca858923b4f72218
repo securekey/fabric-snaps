@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9599315a_ea3fabc1",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-11-17T17:24:39Z",
+      "side": 1,
+      "message": "Non-nil error should be returned in this case",
+      "range": {
+        "startLine": 78,
+        "startChar": 2,
+        "endLine": 78,
+        "endChar": 62
+      },
+      "revId": "7a2e47903c16595bff4afcc1ca858923b4f72218",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
