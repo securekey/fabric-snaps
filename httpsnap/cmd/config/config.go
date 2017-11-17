@@ -99,7 +99,7 @@ func (c *config) initializeLogging() error {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetLevel(level, "")
+	logging.SetLevel("", level)
 	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel(""))
 
 	return nil

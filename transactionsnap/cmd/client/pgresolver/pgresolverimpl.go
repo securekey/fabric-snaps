@@ -12,13 +12,15 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
-var logger = logging.NewLogger("pg-resolver")
+var module = "pg-resolver"
+var logger = logging.NewLogger(module)
 
 type peerGroupResolver struct {
 	mspGroups []api.Group
@@ -47,13 +49,13 @@ func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, pe
 
 // NewPeerGroupResolver returns a new PeerGroupResolver
 func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalancePolicy) (api.PeerGroupResolver, error) {
-	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
+	if logging.IsEnabledFor(module, apilogging.DEBUG) {
 		logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
 	}
 
 	mspGroups := groupHierarchy.Reduce()
 
-	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
+	if logging.IsEnabledFor(module, apilogging.DEBUG) {
 		s := "\n***** Org Groups:\n"
 		for i, g := range mspGroups {
 			s += fmt.Sprintf("%s", g)
@@ -74,7 +76,7 @@ func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalanceP
 func (c *peerGroupResolver) Resolve() api.PeerGroup {
 	peerGroups := c.getPeerGroups()
 
-	if logging.IsEnabledForLogger(logging.DEBUG, logger) {
+	if logging.IsEnabledFor(module, apilogging.DEBUG) {
 		s := ""
 		if len(peerGroups) == 0 {
 			s = "\n\n***** No Available Peer Groups\n"

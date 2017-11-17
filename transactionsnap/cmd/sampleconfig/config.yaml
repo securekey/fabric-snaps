@@ -67,27 +67,3 @@ organizations:
   peerorg1:
     mspid: Org1MSP
     cryptoPath: sampleconfig/msp
-    peers:
-      - peer0.org1.example.com
-    certificateAuthorities:
-      - ca-org1
-
-certificateAuthorities:
-  ca-org1:
-    url: https://ca_peerOrg1:7054
-    # the properties specified under this object are passed to the 'http' client verbatim when
-    # making the request to the Fabric-CA server
-    httpOptions:
-      verify: true
-    tlsCACerts:
-      path : "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/ca/ca_root.pem"
-      client:
-        keyfile: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1-key.pem"
-        certfile: "$GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/tls/fabricca/client/client_client1.pem"
-    # Fabric-CA supports dynamic user enrollment via REST APIs. A "root" user, a.k.a registrar, is
-    # needed to enroll and invoke new users.
-    registrar:
-      enrollId: admin
-      enrollSecret: adminpw
-    # [Optional] The optional name of the CA.
-    caName: ca-org1

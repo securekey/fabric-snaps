@@ -17,8 +17,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	chmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/chmgmtclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
+	"github.com/pkg/errors"
 
 	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -132,15 +134,28 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
 	}
 
+	// Channel management client is responsible for managing channels (create/update)
+	chMgmtClient, err := d.BDDContext.Sdk.NewChannelMgmtClientWithOpts("Admin", &sdkFabApi.ChannelMgmtClientOpts{OrgName: "peerorg1"})
+	if err != nil {
+		return fmt.Errorf("Failed to create new channel management client: %s", err)
+	}
+
 	if !alreadyJoined {
 		// Create and join channel
-		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.OrdererAdmin, d.BDDContext.Org1Admin, channel, GetChannelTxPath(channelID)); err != nil {
-			return fmt.Errorf("CreateOrUpdateChannel returned error: %v", err)
-		}
+		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
+			ChannelConfig: GetChannelTxPath(channelID),
+			SigningUser:   d.BDDContext.Org1Admin}
 
+		if err = chMgmtClient.SaveChannel(req); err != nil {
+			return errors.WithMessage(err, "SaveChannel failed")
+		}
 		time.Sleep(time.Second * 3)
-		if err = sdkFabricTxnAdmin.CreateOrUpdateChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, d.BDDContext.Org1Admin, channel, GetChannelAnchorTxPath(channelID, "peerorg1")); err != nil {
-			return fmt.Errorf("CreateChannel returned error: %v", err)
+		req = chmgmt.SaveChannelRequest{ChannelID: channelID,
+			ChannelConfig: GetChannelAnchorTxPath(channelID, "peerorg1"),
+			SigningUser:   d.BDDContext.Org1Admin}
+
+		if err = chMgmtClient.SaveChannel(req); err != nil {
+			return errors.WithMessage(err, "SaveChannel failed")
 		}
 		if err = sdkFabricTxnAdmin.JoinChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, channel); err != nil {
 			return fmt.Errorf("JoinChannel returned error: %v", err)
@@ -165,9 +180,15 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 		return nil
 	}
 
+	peers := d.BDDContext.Channel.Peers()
+	var processors []apitxn.ProposalProcessor
+	for _, peer := range peers {
+		processors = append(processors, peer)
+	}
+
 	// SendInstallCC
 	if err := sdkFabricTxnAdmin.SendInstallCC(d.BDDContext.Client,
-		ccID, ccPath, version, nil, d.BDDContext.Channel.Peers(), d.getDeployPath(ccType)); err != nil {
+		ccID, ccPath, version, nil, processors, d.getDeployPath(ccType)); err != nil {
 		return fmt.Errorf("SendInstallProposal return error: %v", err)
 	}
 
