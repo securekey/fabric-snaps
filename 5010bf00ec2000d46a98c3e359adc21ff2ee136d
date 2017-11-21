@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c85aeea_d3263746",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-21T13:35:01Z",
+      "side": 1,
+      "message": "There are no args for system chaincode so a call to setRefreshInterval will always do nothing.",
+      "revId": "5010bf00ec2000d46a98c3e359adc21ff2ee136d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d72e1ca4_af3d1690",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-21T13:35:01Z",
+      "side": 1,
+      "message": "I don\u0027t think you should be validating the key here. When you pass the key to the config manager, the key will be validated and an error will be returned if it\u0027s invalid for the function that\u0027s being invoked.",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 186,
+        "endChar": 16
+      },
+      "revId": "5010bf00ec2000d46a98c3e359adc21ff2ee136d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b5d19fc_a276522e",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-21T13:35:01Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work. The stub can only be used for a single transaction that\u0027s started by the peer. You\u0027ll need to create a new transaction proposal that invokes a refresh function in this snap.",
+      "revId": "5010bf00ec2000d46a98c3e359adc21ff2ee136d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
