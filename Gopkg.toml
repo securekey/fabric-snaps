@@ -34,7 +34,7 @@
   name = "github.com/golang/protobuf"
 
 [[constraint]]
-  revision = "70060735b3dc41c404fa5254b921d74fbcfe2687"
+  revision = "7f851a9c2d84b74a6f0785a2139af48478aee913"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
@@ -139,3 +139,8 @@ branch = "master"
 [[override]]
   name = "github.com/cloudflare/cfssl"
   revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"
+
+[[override]]
+  name = "github.com/hyperledger/fabric-sdk-go"
+  source = "git@github.com:securekey/fabric-sdk-go-next.git"
+  branch = "master"
