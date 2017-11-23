@@ -16,6 +16,7 @@ echo "Cloning fabric..."
 cd /opt/gopath/src/github.com/hyperledger
 git clone https://github.com/securekey/fabric-next.git
 cd fabric-next/scripts
+git checkout $FABRIC_NEXT_VERSION
 ./fabric_cherry_picks.sh >/dev/null
 
 cd  /opt/gopath/src/github.com/securekey/fabric-snaps

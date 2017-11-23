@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-
 # Supported Targets:
 # all : runs unit and integration tests
 # depend: checks that test dependencies are installed
@@ -16,11 +15,15 @@
 # populate-vendor: populate the vendor directory based on the lock
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
+# This can be a commit hash or a tag (or any git ref)
+FABRIC_NEXT_VERSION ?= 4834122c2a8dcdf82f81e9f6817aa1b2b341bf87
+
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
 
-PACKAGE_NAME = github.com/securekey/fabric-snaps
+PROJECT_NAME = fabric-snaps
+PACKAGE_NAME = github.com/securekey/$(PROJECT_NAME)
 
 FABRIC_TOOLS_RELEASE=1.0.2
 
@@ -30,7 +33,6 @@ FABRIC_BASE_IMAGE=fabric-baseimage
 FABRIC_BASE_IMAGE_VERSION=x86_64-0.4.2
 
 GO_BUILD_TAGS ?= "experimental"
-FABRIC_VERSION ?= 4f7a7c8d696e866d06780e14b10704614a68564b
 
 FABRIC_SNAPS_POPULATE_VENDOR ?= true
 
@@ -42,7 +44,7 @@ snaps: clean populate
 	@mkdir -p build/snaps
 	@mkdir -p build/test
 	@docker run -i --rm \
-		-e FABRIC_VERSION=$(FABRIC_VERSION) \
+		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
 		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
 		$(FABRIC_BASE_IMAGE_NS)/$(FABRIC_BASE_IMAGE):$(FABRIC_BASE_IMAGE_VERSION) \
