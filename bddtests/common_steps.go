@@ -206,7 +206,7 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	defer eventHub.Disconnect()
 
 	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, d.getByteArgs(argsArray),
-		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
+		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), nil, []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
 		eventHub)
 
 	return err
