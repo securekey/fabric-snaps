@@ -389,7 +389,7 @@ func TestGetWithValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
 	}
-	fmt.Printf("++++++%s\n", config[0])
+	fmt.Printf("++++++%v\n", config[0])
 	if len(config) == 0 {
 		t.Fatalf("Cannot get config content for key %s", key)
 	}

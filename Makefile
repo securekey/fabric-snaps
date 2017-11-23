@@ -25,7 +25,7 @@ PACKAGE_NAME = github.com/securekey/fabric-snaps
 FABRIC_TOOLS_RELEASE=1.0.2
 
 #fabric base image parameters
-FABRIC_BASE_IMAGE_NS=repo.onetap.ca:8443/next/securekey
+FABRIC_BASE_IMAGE_NS=securekey
 FABRIC_BASE_IMAGE=fabric-baseimage
 FABRIC_BASE_IMAGE_VERSION=x86_64-0.4.2
 
@@ -73,19 +73,11 @@ spelling:
 unit-test: depend populate
 	@scripts/unit.sh
 
-integration-test: clean depend populate snaps pull-fabric-images
+integration-test: clean depend populate snaps
 	@scripts/integration.sh
 
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
-
-pull-fabric-images:
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-ca
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-orderer
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-peer
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-couchdb
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-tools
-	@docker pull repo.onetap.ca:8443/next/hyperledger/fabric-ccenv
 
 all: clean checks snaps unit-test integration-test http-server
 
@@ -113,3 +105,4 @@ endif
 ifneq ($(strip $(DEV_IMAGES)),)
 	@docker rmi $(DEV_IMAGES) -f
 endif
+	@docker rmi $(docker images securekey/* -aq)
