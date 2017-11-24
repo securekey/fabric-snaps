@@ -20,6 +20,7 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkcryptosuite "github.com/hyperledger/fabric-sdk-go/pkg/cryptosuite/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
 	bccspFactory "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/protos/common"
@@ -30,6 +31,7 @@ import (
 	pbsdk "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
+	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
@@ -706,7 +708,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		return nil, fmt.Errorf("Error getting user context: %s", err)
 	}
 
-	cryptoSuite := bccspFactory.GetDefault()
+	cryptoSuite := sdkcryptosuite.GetSuite(bccspFactory.GetDefault())
 	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
 		&bccsp.SHAOpts{}, nil, cryptoSuite)
 	if err != nil {
@@ -727,8 +729,8 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 
 // SignObjectWithKey will sign the given object with the given key,
 // hashOpts and signerOpts
-func signObjectWithKey(object []byte, key bccsp.Key,
-	hashOpts bccsp.HashOpts, signerOpts bccsp.SignerOpts, cryptoSuite bccsp.BCCSP) ([]byte, error) {
+func signObjectWithKey(object []byte, key apicryptosuite.Key,
+	hashOpts apicryptosuite.HashOpts, signerOpts apicryptosuite.SignerOpts, cryptoSuite apicryptosuite.CryptoSuite) ([]byte, error) {
 	digest, err := cryptoSuite.Hash(object, hashOpts)
 	if err != nil {
 		return nil, err
