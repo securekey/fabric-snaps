@@ -16,7 +16,7 @@
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION ?= 4834122c2a8dcdf82f81e9f6817aa1b2b341bf87
+FABRIC_NEXT_VERSION ?= 825b2def64ab54e57f31a258d8dfd79aa6e2aa37
 
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)

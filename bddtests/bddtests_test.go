@@ -74,6 +74,7 @@ func TestMain(m *testing.M) {
 		Format:    "progress",
 		Paths:     []string{"features"},
 		Randomize: time.Now().UTC().UnixNano(), // randomize scenario execution order
+		Strict:    true,
 	})
 
 	if st := m.Run(); st > status {
