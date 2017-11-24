@@ -21,10 +21,7 @@ import (
 
 func main() {
 	fmt.Println("Starting go routine...")
-	go startTestHTTPServer()
-	fmt.Println("Entering for loop...")
-	for {
-	}
+	startTestHTTPServer()
 }
 
 func startTestHTTPServer() {
