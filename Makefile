@@ -15,22 +15,40 @@
 # populate-vendor: populate the vendor directory based on the lock
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
+# Release Parameters
+BASE_VERSION = 0.1.1
+IS_RELEASE = false
+
+ifneq ($(IS_RELEASE),true)
+EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short=7 HEAD)
+PROJECT_VERSION=$(BASE_VERSION)-$(EXTRA_VERSION)
+else
+PROJECT_VERSION=$(BASE_VERSION)
+endif
+
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION ?= 825b2def64ab54e57f31a258d8dfd79aa6e2aa37
+FABRIC_NEXT_VERSION = 75ec399903e0dedabfdeda7a132b2441efc40ce7
+# When this tag is updated, we should also change bddtests/fixtures/.env
+# to support running tests without 'make'
+export FABRIC_NEXT_IMAGE_TAG = 1.1.0-0.0.1-snapshot-75ec399
+# Namespace for the fabric images used in BDD tests
+export FABRIC_NEXT_NS ?= securekey
+# Namespace for the fabric-snaps image created by 'make docker'
+DOCKER_OUTPUT_NS ?= securekey
 
 ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
 
-PROJECT_NAME = fabric-snaps
-PACKAGE_NAME = github.com/securekey/$(PROJECT_NAME)
+PROJECT_NAME = securekey/fabric-snaps
+PACKAGE_NAME = github.com/$(PROJECT_NAME)
 
 FABRIC_TOOLS_RELEASE=1.0.2
 
 #fabric base image parameters
 FABRIC_BASE_IMAGE_NS=securekey
 FABRIC_BASE_IMAGE=fabric-baseimage
-FABRIC_BASE_IMAGE_VERSION=x86_64-0.4.2
+FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.2
 
 GO_BUILD_TAGS ?= "experimental"
 
@@ -59,6 +77,11 @@ channel-artifacts:
 
 depend:
 	@scripts/dependencies.sh
+
+docker: all
+	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \
+	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_PEER_IMAGE) \
+	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
 checks: depend license lint spelling
 
