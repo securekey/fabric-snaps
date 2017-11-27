@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ff3ea46_c37f0113",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-11-27T20:35:55Z",
+      "side": 1,
+      "message": "is 75ec399 build information?\n\nhttps://semver.org point 10 uses a + for the separator of build information (e.g., since it cannot be compared)",
+      "range": {
+        "startLine": 33,
+        "startChar": 42,
+        "endLine": 33,
+        "endChar": 43
+      },
+      "revId": "1d5962c4d0aa7a2a71a44ad1aa5f5ac47e792313",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
