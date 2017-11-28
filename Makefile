@@ -80,7 +80,7 @@ depend:
 
 docker: all
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \
-	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_PEER_IMAGE) \
+	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
 checks: depend license lint spelling
