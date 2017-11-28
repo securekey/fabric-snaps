@@ -23,8 +23,6 @@ $ make integration-test
 Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file as well as any other configurations that the snap requires.
 
 ##### Build
-Note: We assume a working Golang(v1.9.2) and Docker(v17.09.0-ce) installation.
-
 The snaps present in this project currently depend on a custom version of fabric located at https://github.com/securekey/fabric-next
 This version of fabric contains certain features that have been cherry-picked, a dynamic build to enable Go plugins, and the 'experimental' build tag set. Please see the README located in the project mentioned above for instructions on how to build this.
 
