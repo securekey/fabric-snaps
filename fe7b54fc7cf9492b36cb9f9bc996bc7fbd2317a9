@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f0a6eee_67690a48",
+        "filename": "eventserver/pkg/server/eventprocessor.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2017-11-28T19:58:43Z",
+      "side": 1,
+      "message": "Is this possible?",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 2
+      },
+      "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
