@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "c4e7f468_13c3546b",
+        "filename": "eventserver/pkg/relay/eventrelay.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-28T23:25:18Z",
+      "side": 1,
+      "message": "Can these channels be typed?",
+      "range": {
+        "startLine": 69,
+        "startChar": 32,
+        "endLine": 69,
+        "endChar": 41
+      },
+      "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdb10ce6_7e313b9c",
+        "filename": "eventserver/pkg/relay/eventrelay.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2017-11-28T23:25:18Z",
+      "side": 1,
+      "message": "I think each of these \u0027sends\u0027 should be on a different go routine.\n\nIn a case where this blocks until the relay timeout is exhausted, clients further down this list will end up waiting for the event longer than they need to.",
+      "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f0a6eee_67690a48",
         "filename": "eventserver/pkg/server/eventprocessor.go",
         "patchSetId": 3
