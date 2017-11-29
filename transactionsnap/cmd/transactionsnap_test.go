@@ -20,9 +20,8 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	sdkcryptosuite "github.com/hyperledger/fabric-sdk-go/pkg/cryptosuite/bccsp"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
-	bccspFactory "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp"
+	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/protos/common"
 	protosUtils "github.com/hyperledger/fabric/protos/utils"
 
@@ -708,7 +707,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		return nil, fmt.Errorf("Error getting user context: %s", err)
 	}
 
-	cryptoSuite := sdkcryptosuite.GetSuite(bccspFactory.GetDefault())
+	cryptoSuite := client.GetSuite(bccspFactory.GetDefault())
 	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
 		&bccsp.SHAOpts{}, nil, cryptoSuite)
 	if err != nil {

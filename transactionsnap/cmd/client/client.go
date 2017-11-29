@@ -18,9 +18,9 @@ import (
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 
-	bccsp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/bccsp"
 	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric/bccsp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -369,7 +369,8 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 func (c *clientImpl) initialize() error {
 
 	sdkOptions := sdkFabApi.Options{
-		ConfigFile: c.config.GetConfigPath("") + "/config.yaml",
+		ConfigFile:      c.config.GetConfigPath("") + "/config.yaml",
+		ProviderFactory: &defaultCryptoSuiteProviderFactory{},
 	}
 
 	sdk, err := sdkFabApi.NewSDK(sdkOptions)
@@ -381,11 +382,6 @@ func (c *clientImpl) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Error getting config: %s", err)
 	}
-
-	if err != nil {
-		return fmt.Errorf("Error in init factories %v", err)
-	}
-	logger.Infof("Configured BCCSP %s provider \n", configProvider.SecurityProvider())
 
 	localPeer, err := c.config.GetLocalPeer()
 	if err != nil {
