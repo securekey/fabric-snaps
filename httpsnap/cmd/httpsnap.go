@@ -31,8 +31,8 @@ import (
 
 var logger = logging.NewLogger("httpsnap")
 
-//TODO temp var will be removed when configmanager implementation ready
-var configPath = ""
+// peerConfigPath location of core.yaml
+var peerConfigPath = ""
 
 //HTTPSnap implementation
 type HTTPSnap struct {
@@ -59,7 +59,7 @@ func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 // args[5] - Pin set (optional)
 func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
-	config, err := httpsnapConfig.NewConfig(configPath, stub)
+	config, err := httpsnapConfig.NewConfig(peerConfigPath, stub.GetChannelID())
 	if err != nil {
 		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
 		logger.Errorf(errMsg)

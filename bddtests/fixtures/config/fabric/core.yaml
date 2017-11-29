@@ -462,6 +462,7 @@ chaincode:
         vscc: enable
         qscc: enable
         rscc: disable
+        configurationsnap: enable
         httpsnap: enable
         txnsnap: enable
         txnsnapinvoker: enable
@@ -475,6 +476,11 @@ chaincode:
     # chaincode.system section above.
     systemPlugins:
       # example configuration:
+      - enabled: true
+        name: configurationsnap
+        path: /opt/extsysccs/configurationscc.so
+        invokableExternal: true
+        invokableCC2CC: true
       - enabled: true
         name: httpsnap
         path: /opt/extsysccs/httpsnap.so
