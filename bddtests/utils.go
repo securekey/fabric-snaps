@@ -80,3 +80,12 @@ func IsChaincodeInstalled(client api.FabricClient, peer api.Peer, name string) (
 	}
 	return false, nil
 }
+
+// GetByteArgs is a utility which converts []string to [][]bytes
+func GetByteArgs(argsArray []string) [][]byte {
+	txArgs := make([][]byte, len(argsArray))
+	for i, val := range argsArray {
+		txArgs[i] = []byte(val)
+	}
+	return txArgs
+}
