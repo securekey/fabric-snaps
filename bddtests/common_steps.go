@@ -18,13 +18,14 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	chmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/chmgmtclient"
+	resmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/resmgmtclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
-	"github.com/pkg/errors"
-
 	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
+	"github.com/pkg/errors"
 
 	"github.com/DATA-DOG/godog"
 )
@@ -157,7 +158,11 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
-		if err = sdkFabricTxnAdmin.JoinChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, channel); err != nil {
+		resMgmtClient, err := d.BDDContext.Sdk.NewResourceMgmtClient("Admin")
+		if err != nil {
+			return fmt.Errorf("Failed to create new resource management client: %s", err)
+		}
+		if err = resMgmtClient.JoinChannel(channelID); err != nil {
 			return fmt.Errorf("JoinChannel returned error: %v", err)
 		}
 	}
@@ -187,10 +192,25 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	}
 
 	// SendInstallCC
-	if err := sdkFabricTxnAdmin.SendInstallCC(d.BDDContext.Client,
-		ccID, ccPath, version, nil, processors, d.getDeployPath(ccType)); err != nil {
-		return fmt.Errorf("SendInstallProposal return error: %v", err)
+	resMgmtClient, err := d.BDDContext.Sdk.NewResourceMgmtClient("Admin")
+	if err != nil {
+		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
+
+	ccPkg, err := packager.NewCCPackage(ccPath, d.getDeployPath(ccType))
+	if err != nil {
+		return err
+	}
+
+	installRqst := resmgmt.InstallCCRequest{Name: ccID, Path: ccPath, Version: version, Package: ccPkg}
+	_, err = resMgmtClient.InstallCC(installRqst)
+	if err != nil {
+		return err
+	}
+	//if err := sdkFabricTxnAdmin.SendInstallCC(d.BDDContext.Client,
+	//	ccID, ccPath, version, nil, processors, d.getDeployPath(ccType)); err != nil {
+	//	return fmt.Errorf("SendInstallProposal return error: %v", err)
+	//}
 
 	argsArray := strings.Split(args, ",")
 

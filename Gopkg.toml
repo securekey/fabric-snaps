@@ -34,7 +34,7 @@
   name = "github.com/golang/protobuf"
 
 [[constraint]]
-  revision = "7f851a9c2d84b74a6f0785a2139af48478aee913"
+  revision = "f0b741bc130292abb3f5e9a26304cde91649470c"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
