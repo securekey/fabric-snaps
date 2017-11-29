@@ -9,6 +9,7 @@ package bddtests
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -22,6 +23,9 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+
 	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
@@ -225,7 +229,7 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 
 	defer eventHub.Disconnect()
 
-	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, d.getByteArgs(argsArray),
+	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, GetByteArgs(argsArray),
 		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), nil, []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
 		eventHub)
 
@@ -274,6 +278,24 @@ func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error 
 	return nil
 }
 
+func (d *CommonSteps) invokeCC(ccID string, channelID string, args string) error {
+
+	// Get Query value
+	argsArray := strings.Split(args, ",")
+
+	if channelID != "" && d.BDDContext.Channel.Name() != channelID {
+		return fmt.Errorf("Channel(%s) not created", channelID)
+	}
+
+	err := d.invokeChaincode(d.BDDContext.Client, d.BDDContext.Channel, ccID, argsArray, d.BDDContext.Channel.PrimaryPeer())
+
+	if err != nil {
+		return fmt.Errorf("invokeChaincode return error: %v", err)
+	}
+
+	return nil
+}
+
 func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
@@ -297,12 +319,12 @@ func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 
 // createAndSendTransactionProposal ...
 func (d *CommonSteps) createAndSendTransactionProposal(channel sdkApi.Channel, chainCodeID string,
-	args []string, targets []apitxn.ProposalProcessor, transientData map[string][]byte) ([]*apitxn.TransactionProposalResponse, string, error) {
+	args []string, targets []apitxn.ProposalProcessor, transientData map[string][]byte) ([]*apitxn.TransactionProposalResponse, apitxn.TransactionID, error) {
 
 	request := apitxn.ChaincodeInvokeRequest{
 		Targets:      targets,
 		Fcn:          args[0],
-		Args:         d.getByteArgs(args[1:]),
+		Args:         GetByteArgs(args[1:]),
 		TransientMap: transientData,
 		ChaincodeID:  chainCodeID,
 	}
@@ -315,19 +337,19 @@ func (d *CommonSteps) createAndSendTransactionProposal(channel sdkApi.Channel, c
 		transactionProposalResponses, txnID, err = channel.SendTransactionProposal(request)
 	}
 	if err != nil {
-		return nil, txnID.ID, err
+		return nil, txnID, err
 	}
 
 	for _, v := range transactionProposalResponses {
 		if v.Err != nil {
-			return nil, txnID.ID, fmt.Errorf("invoke Endorser %s returned error: %v", v.Endorser, v.Err)
+			return nil, txnID, fmt.Errorf("invoke Endorser %s returned error: %v", v.Endorser, v.Err)
 		}
 		if v.ProposalResponse.Response.Status != 200 {
-			return nil, txnID.ID, fmt.Errorf("invoke Endorser %s returned status: %v", v.Endorser, v.ProposalResponse.Response.Status)
+			return nil, txnID, fmt.Errorf("invoke Endorser %s returned status: %v", v.Endorser, v.ProposalResponse.Response.Status)
 		}
 	}
 
-	return transactionProposalResponses, txnID.ID, nil
+	return transactionProposalResponses, txnID, nil
 }
 
 func (d *CommonSteps) createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs []string, registerTxEvent bool) []string {
@@ -364,6 +386,112 @@ func (d *CommonSteps) queryChaincode(client sdkApi.FabricClient, channel sdkApi.
 	return string(transactionProposalResponses[0].ProposalResponse.GetResponse().Payload), nil
 }
 
+func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
+	if channelID != "" && d.BDDContext.Channel.Name() != channelID {
+		return fmt.Errorf("Channel(%s) not created", channelID)
+	}
+	snapsArray := strings.Split(snaps, ",")
+	for _, snap := range snapsArray {
+		var argsArray []string
+		configData, err := ioutil.ReadFile(fmt.Sprintf("./fixtures/config/snaps/%s/config.json", snap))
+		if err != nil {
+			return fmt.Errorf("file error: %v", err)
+		}
+		config := &configmanagerApi.ConfigMessage{MspID: "Org1MSP", Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "peer0.org1.example.com", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: snap, Config: configData}}}}}
+		configBytes, err := json.Marshal(config)
+		if err != nil {
+			return fmt.Errorf("cannot Marshal %s", err)
+		}
+		argsArray = append(argsArray, "save")
+		argsArray = append(argsArray, string(configBytes))
+		err = d.invokeChaincode(d.BDDContext.Client, d.BDDContext.Channel, "configurationsnap", argsArray, d.BDDContext.Channel.PrimaryPeer())
+		if err != nil {
+			return fmt.Errorf("invokeChaincode return error: %v", err)
+		}
+
+		configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
+		keyBytes, err := json.Marshal(&configKey)
+		if err != nil {
+			return fmt.Errorf("Could not marshal key: %v", err)
+		}
+		var queryArgsArray []string
+		queryArgsArray = append(queryArgsArray, "get")
+		queryArgsArray = append(queryArgsArray, string(keyBytes))
+		_, err = d.queryChaincode(d.BDDContext.Client, d.BDDContext.Channel, "configurationsnap", queryArgsArray, d.BDDContext.Channel.PrimaryPeer())
+		if err != nil {
+			return fmt.Errorf("QueryChaincode return error: %v", err)
+		}
+	}
+	return nil
+}
+
+// RegisterTxEvent registers on the given eventhub for the give transaction
+// returns a boolean channel which receives true when the event is complete
+// and an error channel for errors
+func (d *CommonSteps) RegisterTxEvent(txID apitxn.TransactionID, eventHub sdkApi.EventHub) (chan bool, chan error) {
+	done := make(chan bool)
+	fail := make(chan error)
+
+	eventHub.RegisterTxEvent(txID, func(txId string, errorCode pb.TxValidationCode, err error) {
+		if err != nil {
+			fail <- err
+		} else {
+			done <- true
+		}
+	})
+
+	return done, fail
+}
+
+//invokeChaincode ...
+func (d *CommonSteps) invokeChaincode(client sdkApi.FabricClient, channel sdkApi.Channel, chaincodeID string,
+	args []string, primaryPeer sdkApi.Peer) error {
+	transactionProposalResponses, txID, err := d.createAndSendTransactionProposal(channel,
+		chaincodeID, args, []apitxn.ProposalProcessor{primaryPeer}, nil)
+
+	if err != nil {
+		return fmt.Errorf("CreateAndSendTransactionProposal returned error: %v", err)
+	}
+
+	tx, err := channel.CreateTransaction(transactionProposalResponses)
+	if err != nil {
+		return errors.WithMessage(err, "CreateTransaction failed")
+	}
+
+	transactionResponse, err := channel.SendTransaction(tx)
+	if err != nil {
+		return errors.WithMessage(err, "SendTransaction failed")
+
+	}
+
+	eventHub, err := d.getEventHub()
+	if err != nil {
+		return err
+	}
+
+	if err := eventHub.Connect(); err != nil {
+		return fmt.Errorf("Failed eventHub.Connect() [%s]", err)
+	}
+
+	defer eventHub.Disconnect()
+
+	// Register for commit event
+	done, fail := d.RegisterTxEvent(txID, eventHub)
+
+	if transactionResponse.Err != nil {
+		return errors.Wrapf(transactionResponse.Err, "orderer %s failed", transactionResponse.Orderer)
+	}
+	select {
+	case <-done:
+	case cerr := <-fail:
+		return errors.Wrapf(cerr, "invoke failed for txid %s", txID)
+	case <-time.After(time.Second * 30):
+		return errors.Errorf("invoke didn't receive block event for txid %s", txID)
+	}
+	return nil
+
+}
+
 func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.beforeScenario)
 	s.AfterScenario(d.BDDContext.afterScenario)
@@ -372,12 +500,7 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 query chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.queryCC)
 	s.Step(`^C1 receive value "([^"]*)" from "([^"]*)"$`, d.checkQueryValue)
 	s.Step(`^response from "([^"]*)" to client C1 contains value "([^"]*)"$`, d.containsInQueryValue)
-}
+	s.Step(`^client C1 invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on p0$`, d.loadConfig)
+	s.Step(`^client C1 invokes chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.invokeCC)
 
-func (d *CommonSteps) getByteArgs(argsArray []string) [][]byte {
-	txArgs := make([][]byte, len(argsArray))
-	for i, val := range argsArray {
-		txArgs[i] = []byte(val)
-	}
-	return txArgs
 }

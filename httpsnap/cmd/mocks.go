@@ -10,7 +10,16 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-func newMockStub() *shim.MockStub {
+func newMockStub(channelID string) *shim.MockStub {
 	snap := new(HTTPSnap)
-	return shim.NewMockStub("httpsnap", snap)
+	stub := shim.NewMockStub("httpsnap", snap)
+	stub.ChannelID = channelID
+	return stub
+}
+
+func newConfigMockStub(channelID string) *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
 }
