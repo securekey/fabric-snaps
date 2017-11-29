@@ -19,8 +19,8 @@ import (
 const (
 	mspID             = "msp.one"
 	channelID         = "testChannel"
-	originalConfigStr = "\"ConfigForAppOne\""
-	refreshCongifgStr = "\"ConfigForAppOneWas Refreshed. Just for fun\""
+	originalConfigStr = "ConfigForAppOne"
+	refreshCongifgStr = "ConfigForAppOneWas Refreshed. Just for fun"
 	validMsg          = `{"MspID":"msp.one","Peers":
 		[{"PeerID":    
 				"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`

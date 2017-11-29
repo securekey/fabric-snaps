@@ -14,6 +14,7 @@ import (
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
 	"github.com/securekey/fabric-snaps/healthcheck"
 
@@ -44,9 +45,12 @@ var refreshInterval uint32 = 5
 type ConfigurationSnap struct {
 }
 
+// ConfigServiceImpl implementation
+var configServiceImpl *configmgmtService.ConfigServiceImpl
+
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
+	configServiceImpl = configmgmtService.Initialize(stub, "")
 	return shim.Success(nil)
 }
 
@@ -113,6 +117,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		logger.Errorf("Got error while saving cnfig %v", err)
 		return shim.Error(err.Error())
 	}
+
 	return shim.Success(nil)
 }
 
@@ -136,6 +141,8 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		logger.Errorf("Got error while marshalling config: %v", err)
 		return shim.Error(err.Error())
 	}
+	//TODO the refresh should delete from here when DEV-4253 done
+	configServiceImpl.Refresh(stub, configKey.MspID)
 	return shim.Success(payload)
 
 }

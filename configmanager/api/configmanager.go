@@ -7,8 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
-	"encoding/json"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -30,7 +28,7 @@ type ConfigKV struct {
 //AppConfig identifier has application name and config
 type AppConfig struct {
 	AppName string
-	Config  json.RawMessage
+	Config  string
 }
 
 //PeerConfig identifier has peer identifier and collection of application configurations

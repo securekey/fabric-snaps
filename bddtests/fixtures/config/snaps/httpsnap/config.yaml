@@ -2,10 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #############################################################
-
-
 # Configuration for HTTP Snap
-
 logging:
   level: debug
 tls:
@@ -32,7 +29,6 @@ tls:
     sE21cSaaPCmzV7bgQpIlpScQEyDMA1GCBso18g0vre+/3P3di+2avzWO1rC4C0qi
     U2WDORXEsfJxW0wnNdCzLeH+RBLeM4OVrzUW1LQ84g+WbB+sXUQ=
     -----END CERTIFICATE-----
-
   - |
     -----BEGIN CERTIFICATE-----
     MIIDQDCCAiigAwIBAgIQeffVJLMYJvaHEw38bqdmizANBgkqhkiG9w0BAQsFADAl
@@ -54,7 +50,6 @@ tls:
     PXAUjNDAXZLOPPY7mPhBAQ5eLOZn9DUiT0qigwwXORePHQ+qYnRV9RePhnqITodE
     V58+W7zyft+tPFCHR160tQMG4zA=
     -----END CERTIFICATE-----
-
   clientCert: |
      -----BEGIN CERTIFICATE-----
      MIIDgjCCAmqgAwIBAgIRAKnn0GLK+A+SDvxbPO6gFR0wDQYJKoZIhvcNAQELBQAw
@@ -149,7 +144,6 @@ tls:
        xl09FqTzfCfLbh5p4Mu1ogRT0lChY0kNtkJeLy2sD9CMF6D7/R0gfjBvFZMVFe4B
        gRb92Z4Q1ngB9HZ1Owyb4RnSbyo=
        -----END CERTIFICATE-----
-
      key: |
        -----BEGIN RSA PRIVATE KEY-----
        MIIEpQIBAAKCAQEA4J9v9DlrWl+UaP0JBWCOhKXfhNHh1VghED5hHERFmfsdVSU+

@@ -2,10 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #############################################################
-
-
 # Test configuration for config
-
 logging:
   level: debug
 tls:
@@ -31,7 +28,6 @@ tls:
     PXAUjNDAXZLOPPY7mPhBAQ5eLOZn9DUiT0qigwwXORePHQ+qYnRV9RePhnqITodE
     V58+W7zyft+tPFCHR160tQMG4zA=
     -----END CERTIFICATE-----
-
   - |
     -----BEGIN CERTIFICATE-----
     MIIDQDCCAiigAwIBAgIQeffVJLMYJvaHEw38bqdmizANBgkqhkiG9w0BAQsFADAl
@@ -53,7 +49,6 @@ tls:
     PXAUjNDAXZLOPPY7mPhBAQ5eLOZn9DUiT0qigwwXORePHQ+qYnRV9RePhnqITodE
     V58+W7zyft+tPFCHR160tQMG4zA=
     -----END CERTIFICATE-----
-
   clientCert: |
     -----BEGIN CERTIFICATE-----
     MIIDQDCCAiigAwIBAgIQShfOPJ8TBxx8/bhBOduxvzANBgkqhkiG9w0BAQsFADAl
@@ -147,7 +142,6 @@ tls:
        xl09FqTzfCfLbh5p4Mu1ogRT0lChY0kNtkJeLy2sD9CMF6D7/R0gfjBvFZMVFe4B
        gRb92Z4Q1ngB9HZ1Owyb4RnSbyo=
        -----END CERTIFICATE-----
-
      key: |
        -----BEGIN RSA PRIVATE KEY-----
        MIIEpQIBAAKCAQEA4J9v9DlrWl+UaP0JBWCOhKXfhNHh1VghED5hHERFmfsdVSU+
