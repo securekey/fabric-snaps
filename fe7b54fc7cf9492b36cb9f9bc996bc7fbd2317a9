@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e1e41a61_c758e8b3",
+        "filename": "eventserver/pkg/relay/eventrelay.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-29T14:19:58Z",
+      "side": 1,
+      "message": "Not easily - in the next commit (Local Event Service) I have a dispatcher that handles different types of events, i.e. pb.Event, ChannelServiceResponse, Registrations, and by leaving the channel generic I can funnel the event directly to the dispatcher without having to convert it to a different type.",
+      "parentUuid": "c4e7f468_13c3546b",
+      "range": {
+        "startLine": 69,
+        "startChar": 32,
+        "endLine": 69,
+        "endChar": 41
+      },
+      "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bdb10ce6_7e313b9c",
         "filename": "eventserver/pkg/relay/eventrelay.go",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2017-11-28T23:25:18Z",
       "side": 1,
       "message": "I think each of these \u0027sends\u0027 should be on a different go routine.\n\nIn a case where this blocks until the relay timeout is exhausted, clients further down this list will end up waiting for the event longer than they need to.",
+      "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14a7415a_4a710e68",
+        "filename": "eventserver/pkg/relay/eventrelay.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-11-29T14:19:58Z",
+      "side": 1,
+      "message": "I\u0027m trying to limit the number of Go routines that are started in this layer and let the client determine how to process the event. The event hub already starts a Go routing when sending the event to the relay. Since there are only two clients of the Event Relay (Local Event Service and Channel Server), I can ensure that the events are handled without blocking.",
+      "parentUuid": "bdb10ce6_7e313b9c",
       "revId": "fe7b54fc7cf9492b36cb9f9bc996bc7fbd2317a9",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
