@@ -97,6 +97,9 @@ func FeatureContext(s *godog.Suite) {
 
 	txnSnapSteps := NewTxnSnapSteps(context)
 	txnSnapSteps.registerSteps(s)
+
+	configurationSnapSteps := NewConfigurationSnapSteps(context)
+	configurationSnapSteps.registerSteps(s)
 }
 
 func initBDDConfig() {

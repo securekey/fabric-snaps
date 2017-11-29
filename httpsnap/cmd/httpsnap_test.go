@@ -8,6 +8,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,11 +18,14 @@ import (
 	"testing"
 	"time"
 
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/spf13/viper"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	httpsnapConfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 )
 
 var testHost = "0.0.0.0"
@@ -29,10 +33,12 @@ var testPort = 15484
 var jsonStr = []byte(`{"id":"123", "name": "Test Name"}`)
 var contentType = "application/json"
 var config api.Config
+var channelID = "testChannel"
+var mspID = "Org1MSP"
 
 func TestInit(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	res := stub.MockInit("txID", [][]byte{})
 	if res.Status != shim.OK {
@@ -42,7 +48,7 @@ func TestInit(t *testing.T) {
 
 func TestInvalidParameters(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	// Test required argument: function name
 	testRequiredArg(t, stub, [][]byte{}, "function name")
@@ -79,7 +85,7 @@ func TestInvalidParameters(t *testing.T) {
 
 func TestNamedClient(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	// Failed path: Use invalid named client 'xyz' to override default TLS settings
 	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr), []byte("xyz")}
@@ -101,7 +107,7 @@ func TestNamedClient(t *testing.T) {
 
 func TestCertPinning(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	// Happy path: Should get "Hello" back - one pin provided
 	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr), []byte(""), []byte("c2MiEtoRw7m1kc2r4GnVCT89OxqXK24PFiK02Qo1PIs=")}
@@ -126,7 +132,7 @@ func TestCertPinning(t *testing.T) {
 
 func TestJsonValidation(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	// Happy path: Validation is correct for both request and response (got "Hello" back)
 	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
@@ -153,7 +159,7 @@ func TestJsonValidation(t *testing.T) {
 
 func TestPost(t *testing.T) {
 
-	stub := newMockStub()
+	stub := newMockStub(channelID)
 
 	// Happy path: Should get "Hello" back - use default TLS settings
 	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
@@ -293,12 +299,23 @@ func initHTTPServerConfig() {
 }
 
 func TestMain(m *testing.M) {
-	var err error
-	configPath = "./sampleconfig"
-	config, err = httpsnapConfig.NewConfig(configPath, nil)
+	configData, err := ioutil.ReadFile("./sampleconfig/config.json")
 	if err != nil {
-		panic(fmt.Sprintf("Error initializing config: %s", err))
+		panic(fmt.Sprintf("File error: %v\n", err))
 	}
+	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: configData}}}}}
+	stub := newConfigMockStub(channelID)
+	configBytes, err := json.Marshal(config)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, mspID)
+	peerConfigPath = "./sampleconfig"
 
 	go startHTTPServer()
 
@@ -306,4 +323,15 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	os.Exit(m.Run())
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
 }
