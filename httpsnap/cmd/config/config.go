@@ -1,28 +1,23 @@
 /*
 Copyright SecureKey Technologies Inc. All Rights Reserved.
-
 SPDX-License-Identifier: Apache-2.0
 */
 
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"path/filepath"
 	"strings"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	deflogger "github.com/hyperledger/fabric-sdk-go/pkg/logging/deflogger"
-
-	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
-	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
-
 	"github.com/spf13/viper"
 )
 
 const (
+	configFileName     = "config"
 	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
 )
@@ -38,12 +33,21 @@ type config struct {
 }
 
 // NewConfig return config struct
-func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, error) {
-
+func NewConfig(configPathOverride string, channelID string) (httpsnapApi.Config, error) {
 	replacer := strings.NewReplacer(".", "_")
-	if peerConfigPath == "" {
-		peerConfigPath = "/etc/hyperledger/fabric"
+	configPath := "/opt/extsysccs/config/httpsnap"
+	peerConfigPath := "/etc/hyperledger/fabric"
+	if configPathOverride != "" {
+		configPath = configPathOverride
+		peerConfigPath = configPathOverride
 	}
+	//httpSnapConfig Config
+	httpSnapConfig := viper.New()
+	httpSnapConfig.AddConfigPath(configPath)
+	httpSnapConfig.SetConfigName(configFileName)
+	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
+	httpSnapConfig.AutomaticEnv()
+	httpSnapConfig.SetEnvKeyReplacer(replacer)
 	//peer Config
 	peerConfig := viper.New()
 	peerConfig.AddConfigPath(peerConfigPath)
@@ -51,28 +55,13 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	peerConfig.SetEnvPrefix(cmdRootPrefix)
 	peerConfig.AutomaticEnv()
 	peerConfig.SetEnvKeyReplacer(replacer)
-
-	err := peerConfig.ReadInConfig()
+	err := httpSnapConfig.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Fatal error reading peer config file: %s", err)
+		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
 	}
-
-	//httpSnapConfig Config
-	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
-	cacheInstance := configmgmtService.GetInstance()
-	jsonConfig, err := cacheInstance.Get(channelID, key)
+	err = peerConfig.ReadInConfig()
 	if err != nil {
-		return nil, err
-	}
-	httpSnapConfig := viper.New()
-	httpSnapConfig.SetConfigType("YAML")
-	httpSnapConfig.ReadConfig(bytes.NewBuffer(jsonConfig))
-	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
-	httpSnapConfig.AutomaticEnv()
-	httpSnapConfig.SetEnvKeyReplacer(replacer)
-
-	if err != nil {
-		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
+		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
 	}
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig}
 	err = c.initializeLogging()
@@ -81,6 +70,48 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	}
 	return c, nil
 }
+
+//[SNAPS-31] Http Snap - use configuration from the ledger
+//// NewConfig return config struct
+//func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, error) {
+//	replacer := strings.NewReplacer(".", "_")
+//	if peerConfigPath == "" {
+//		peerConfigPath = "/etc/hyperledger/fabric"
+//	}
+//	//peer Config
+//	peerConfig := viper.New()
+//	peerConfig.AddConfigPath(peerConfigPath)
+//	peerConfig.SetConfigName(peerConfigFileName)
+//	peerConfig.SetEnvPrefix(cmdRootPrefix)
+//	peerConfig.AutomaticEnv()
+//	peerConfig.SetEnvKeyReplacer(replacer)
+//	err := peerConfig.ReadInConfig()
+//	if err != nil {
+//		return nil, fmt.Errorf("Fatal error reading peer config file: %s", err)
+//	}
+//	//httpSnapConfig Config
+//	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
+//	cacheInstance := configmgmtService.GetInstance()
+//	jsonConfig, err := cacheInstance.Get(channelID, key)
+//	if err != nil {
+//		return nil, err
+//	}
+//	httpSnapConfig := viper.New()
+//	httpSnapConfig.SetConfigType("YAML")
+//	httpSnapConfig.ReadConfig(bytes.NewBuffer(jsonConfig))
+//	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
+//	httpSnapConfig.AutomaticEnv()
+//	httpSnapConfig.SetEnvKeyReplacer(replacer)
+//	if err != nil {
+//		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
+//	}
+//	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig}
+//	err = c.initializeLogging()
+//	if err != nil {
+//		return nil, fmt.Errorf("Error initializing logging: %s", err)
+//	}
+//	return c, nil
+//}
 
 // Helper function to initialize logging
 func (c *config) initializeLogging() error {
