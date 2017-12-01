@@ -225,7 +225,7 @@ peer:
                 KeyStore:
 
     # Path on the file system where peer will find MSP local configurations
-    mspConfigPath: msp/sampleconfig
+    mspConfigPath: sampleconfig/msp
 
     # Identifier of the local MSP
     # ----!!!!IMPORTANT!!!-!!!IMPORTANT!!!-!!!IMPORTANT!!!!----

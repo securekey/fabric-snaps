@@ -34,6 +34,7 @@ import (
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
 )
@@ -707,7 +708,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		return nil, fmt.Errorf("Error getting user context: %s", err)
 	}
 
-	cryptoSuite := client.GetSuite(bccspFactory.GetDefault())
+	cryptoSuite := factories.GetSuite(bccspFactory.GetDefault())
 	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
 		&bccsp.SHAOpts{}, nil, cryptoSuite)
 	if err != nil {

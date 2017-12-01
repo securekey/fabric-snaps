@@ -25,6 +25,7 @@ import (
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
@@ -370,7 +371,8 @@ func (c *clientImpl) initialize() error {
 
 	sdkOptions := sdkFabApi.Options{
 		ConfigFile:      c.config.GetConfigPath("") + "/config.yaml",
-		ProviderFactory: &defaultCryptoSuiteProviderFactory{},
+		ProviderFactory: &factories.DefaultCryptoSuiteProviderFactory{},
+		ContextFactory:  &factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()},
 	}
 
 	sdk, err := sdkFabApi.NewSDK(sdkOptions)

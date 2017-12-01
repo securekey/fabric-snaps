@@ -207,10 +207,6 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	if err != nil {
 		return err
 	}
-	//if err := sdkFabricTxnAdmin.SendInstallCC(d.BDDContext.Client,
-	//	ccID, ccPath, version, nil, processors, d.getDeployPath(ccType)); err != nil {
-	//	return fmt.Errorf("SendInstallProposal return error: %v", err)
-	//}
 
 	argsArray := strings.Split(args, ",")
 

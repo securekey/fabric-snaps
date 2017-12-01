@@ -66,4 +66,3 @@ orderers:
 organizations:
   peerorg1:
     mspid: Org1MSP
-    cryptoPath: sampleconfig/msp
