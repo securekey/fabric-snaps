@@ -105,7 +105,7 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub, mspID)
 
-	c, err = NewConfig("./", channelID)
+	c, err = NewConfig("../sampleconfig", channelID)
 	if err != nil {
 		panic(err.Error())
 	}
