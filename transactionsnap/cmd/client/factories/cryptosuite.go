@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package client
+package factories
 
 import (
 	"hash"
@@ -20,13 +20,13 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 )
 
-// defaultCryptoSuiteProviderFactory is will provide custom factory default bccsp cryptosuite
-type defaultCryptoSuiteProviderFactory struct {
+// DefaultCryptoSuiteProviderFactory is will provide custom factory default bccsp cryptosuite
+type DefaultCryptoSuiteProviderFactory struct {
 	defprovider.DefaultProviderFactory
 }
 
 // NewCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
-func (f *defaultCryptoSuiteProviderFactory) NewCryptoSuiteProvider(config apiconfig.Config) (apicryptosuite.CryptoSuite, error) {
+func (f *DefaultCryptoSuiteProviderFactory) NewCryptoSuiteProvider(config apiconfig.Config) (apicryptosuite.CryptoSuite, error) {
 	return GetSuite(factory.GetDefault()), nil
 }
 

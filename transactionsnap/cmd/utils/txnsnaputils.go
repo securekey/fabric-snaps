@@ -7,10 +7,17 @@ SPDX-License-Identifier: Apache-2.0
 package utils
 
 import (
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"fmt"
+	"io/ioutil"
 
+	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/utils"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	protos_utils "github.com/hyperledger/fabric/protos/utils"
+	"github.com/pkg/errors"
 )
 
 // GetCreatorFromSignedProposal ...
@@ -52,4 +59,32 @@ func GetByteArgs(argsArray []string) [][]byte {
 		txArgs[i] = []byte(val)
 	}
 	return txArgs
+}
+
+// ImportBCCSPKeyFromPEM attempts to create a private BCCSP key from a pem file keyFile
+func ImportBCCSPKeyFromPEM(keyFile string, myCSP apicryptosuite.CryptoSuite, temporary bool) (apicryptosuite.Key, error) {
+	keyBuff, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	key, err := utils.PEMtoPrivateKey(keyBuff, nil)
+	if err != nil {
+		return nil, errors.WithMessage(err, fmt.Sprintf("Failed parsing private key from %s", keyFile))
+	}
+	switch key.(type) {
+	case *ecdsa.PrivateKey:
+		priv, err := utils.PrivateKeyToDER(key.(*ecdsa.PrivateKey))
+		if err != nil {
+			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
+		}
+		sk, err := myCSP.KeyImport(priv, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: temporary})
+		if err != nil {
+			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
+		}
+		return sk, nil
+	case *rsa.PrivateKey:
+		return nil, errors.Errorf("Failed to import RSA key from %s; RSA private key import is not supported", keyFile)
+	default:
+		return nil, errors.Errorf("Failed to import key from %s: invalid secret key type", keyFile)
+	}
 }

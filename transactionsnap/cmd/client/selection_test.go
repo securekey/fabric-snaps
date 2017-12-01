@@ -72,12 +72,21 @@ var p10 = peer("peer10", org4)
 var p11 = peer("peer11", org5)
 var p12 = peer("peer12", org5)
 
+type sampleConfig struct {
+	api.Config
+}
+
+// Override GetMspConfigPath for relative path, just to avoid using new core.yaml for this purpose
+func (c *sampleConfig) GetMspConfigPath() string {
+	return "../sampleconfig/msp"
+}
+
 func TestMain(m *testing.M) {
 	c, err := config.NewConfig("../sampleconfig", nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	_, err = GetInstance(c)
+	_, err = GetInstance(&sampleConfig{c})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}

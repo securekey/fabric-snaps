@@ -36,20 +36,6 @@ client:
       # Specific to the underlying KeyValueStore that backs the crypto key store.
       path: /tmp/msp
 
-   # BCCSP config for the client. Used by GO SDK.
-  BCCSP:
-    security:
-      enabled: true
-      default:
-        provider: "SW"
-      hashAlgorithm: "SHA2"
-      softVerify: true
-      ephemeral: false
-      level: 256
-      pin: ""
-      label: ""
-      library: ""
-
 # Global configuration for peer, event service and orderer timeouts
   peer:
     timeout:
@@ -86,5 +72,3 @@ organizations:
   peerorg1:
     mspid: Org1MSP
 
-    # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
-    cryptoPath: /etc/hyperledger/msp/peer/

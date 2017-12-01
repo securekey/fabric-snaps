@@ -124,6 +124,11 @@ func (c *config) GetMspID() string {
 	return c.peerConfig.GetString("peer.localMspId")
 }
 
+// GetMspConfigPath returns the MSP config path for peer
+func (c *config) GetMspConfigPath() string {
+	return c.peerConfig.GetString("peer.mspConfigPath")
+}
+
 // GetTLSRootCertPath returns absolute path to the TLS root certificate
 func (c *config) GetTLSRootCertPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.rootcert.file"))
