@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86687380_147ce971",
+        "filename": "transactionsnap/cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-02T18:48:14Z",
+      "side": 1,
+      "message": "are we stilll going to use MSPConfigPath? following discussion on Friday Dec 1, ops will not use MSP directory structure to configure certs.",
+      "range": {
+        "startLine": 128,
+        "startChar": 17,
+        "endLine": 128,
+        "endChar": 33
+      },
+      "revId": "8e4e70891ae3ec17f170e60a98e0ba305a086d35",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
