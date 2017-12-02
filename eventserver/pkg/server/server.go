@@ -21,7 +21,7 @@ import (
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
 )
 
-var logger = flogging.MustGetLogger("eventsnap/service")
+var logger = flogging.MustGetLogger("eventserver")
 
 // ChannelServer implementation of the channel service
 type ChannelServer struct {

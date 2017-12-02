@@ -465,8 +465,12 @@ chaincode:
         configurationsnap: enable
         httpsnap: enable
         txnsnap: enable
-        txnsnapinvoker: enable
         mscc: enable
+        eventsnap: enable
+
+        # Snaps used in BDD tests
+        txnsnapinvoker: enable
+        eventconsumersnap: enable
 
     # System chaincode plugins: in addition to being imported and compiled
     # into fabric through core/chaincode/importsysccs.go, system chaincodes
@@ -492,13 +496,25 @@ chaincode:
         invokableExternal: true
         invokableCC2CC: true
       - enabled: true
+        name: mscc
+        path: /opt/extsysccs/membership.so
+        invokableExternal: true
+        invokableCC2CC: true
+      - enabled: true
+        name: eventsnap
+        path: /opt/extsysccs/eventsnap.so
+        invokableExternal: false
+        invokableCC2CC: false
+
+      # Snaps used in BDD tests
+      - enabled: true
         name: txnsnapinvoker
         path: /opt/extsysccs/txnsnapinvoker.so
         invokableExternal: true
         invokableCC2CC: true
       - enabled: true
-        name: mscc
-        path: /opt/extsysccs/membership.so
+        name: eventconsumersnap
+        path: /opt/extsysccs/eventconsumersnap.so
         invokableExternal: true
         invokableCC2CC: true
 
