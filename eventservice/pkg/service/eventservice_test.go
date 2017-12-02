@@ -419,7 +419,7 @@ func TestConcurrentEvents(t *testing.T) {
 	var numEvents uint = 1000
 	channelID := "mychannel"
 	opts := DefaultOpts()
-	opts.EventBufferSize = numEvents * 4
+	opts.EventConsumerBufferSize = numEvents * 4
 	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{BLOCKEVENT, FILTEREDBLOCKEVENT}, opts)
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)

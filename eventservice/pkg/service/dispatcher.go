@@ -39,25 +39,10 @@ type Dispatcher struct {
 
 // DispatcherOpts contains options for the dispatcher.
 type DispatcherOpts struct {
-	// BufferSize is the size of the event dispatcher channel buffer
-	BufferSize uint
-
-	// Timeout is the timeout to send an event to a subscriber.
-	// If < 0, if buffer full, unblocks immediately and does not send.
-	// If 0, if buffer full, will block and guarantee the event will be sent out.
-	// If > 0, if buffer full, blocks util timeout.
-	Timeout time.Duration
+	Opts
 
 	// AuthorizedEventTypes is an array of event types that the client is allowed to subscribe to.
 	AuthorizedEventTypes []EventType
-}
-
-// DefaultDispatcherOpts returns the default dispatcher options.
-func DefaultDispatcherOpts() *DispatcherOpts {
-	return &DispatcherOpts{
-		BufferSize: 100,
-		Timeout:    100 * time.Millisecond,
-	}
 }
 
 // Handler is the handler for a given event type.
@@ -69,11 +54,11 @@ func NewDispatcher(opts *DispatcherOpts) *Dispatcher {
 
 	dispatcher := &Dispatcher{
 		handlers:        make(map[reflect.Type]Handler),
-		eventch:         make(chan interface{}, opts.BufferSize),
+		eventch:         make(chan interface{}, opts.EventConsumerBufferSize),
 		txRegistrations: make(map[string]*txRegistration),
 		ccRegistrations: make(map[string]*ccRegistration),
 		authorized:      asMap(opts.AuthorizedEventTypes),
-		timeout:         opts.Timeout,
+		timeout:         opts.EventConsumerTimeout,
 	}
 	dispatcher.RegisterHandlers()
 	return dispatcher
