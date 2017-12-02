@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
-	eventrelay "github.com/securekey/fabric-snaps/eventserver/pkg/relay"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"google.golang.org/grpc"
 
