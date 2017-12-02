@@ -249,9 +249,3 @@ func checkEvent(t *testing.T, event interface{}, channelID string) {
 		t.Fatalf("expecting Event but got %s", reflect.TypeOf(event))
 	}
 }
-
-func MockOpts(mockEventHubProvider EventHubProvider) *Opts {
-	opts := DefaultOpts()
-	opts.eventHubProvider = mockEventHubProvider
-	return opts
-}
