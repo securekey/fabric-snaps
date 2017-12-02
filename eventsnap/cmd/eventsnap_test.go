@@ -11,9 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
-	eventrelay "github.com/securekey/fabric-snaps/eventserver/pkg/relay"
+	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
+	"github.com/securekey/fabric-snaps/mocks/event/mockeventhub"
 	"google.golang.org/grpc"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -36,13 +37,13 @@ func TestEventSnap(t *testing.T) {
 		t.Fatalf("Expecting error in init since no event hub address was specified but got OK")
 	}
 
-	mockEventHubs := make(map[string]*mocks.MockEventHub)
+	mockEventHubs := make(map[string]*mockeventhub.MockEventHub)
 
 	eventsnap = &eventSnap{
 		pserver: grpc.NewServer(),
 		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (eventrelay.EventHub, error) {
 			fmt.Printf("Creating mock event hub for channel %s\n", channelID)
-			mockeh := &mocks.MockEventHub{Adapter: adapter}
+			mockeh := mockeventhub.New(adapter)
 			mockEventHubs[channelID] = mockeh
 			return mockeh, nil
 		}),
@@ -98,8 +99,8 @@ func TestEventSnap(t *testing.T) {
 	}
 	defer eventService2.Unregister(reg2)
 
-	mockEventHubs[channelID1].ProduceEvent(mocks.NewMockBlockEvent(channelID1))
-	mockEventHubs[channelID2].ProduceEvent(mocks.NewMockBlockEvent(channelID2))
+	mockEventHubs[channelID1].ProduceEvent(mockevent.NewBlockEvent(channelID1))
+	mockEventHubs[channelID2].ProduceEvent(mockevent.NewBlockEvent(channelID2))
 
 	numExpected := 2
 	numReceived := 0

@@ -18,8 +18,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
-	eventrelay "github.com/securekey/fabric-snaps/eventserver/pkg/relay"
 	eventserver "github.com/securekey/fabric-snaps/eventserver/pkg/server"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
 

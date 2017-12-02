@@ -16,7 +16,8 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
-	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
+	"github.com/securekey/fabric-snaps/mocks/event/mockeventhub"
 )
 
 func TestEventRelayInvalidOpts(t *testing.T) {
@@ -31,9 +32,9 @@ func TestEventRelayInvalidOpts(t *testing.T) {
 func TestEventRelay(t *testing.T) {
 	channelID1 := "ch1"
 
-	var mockeh *mocks.MockEventHub
+	var mockeh *mockeventhub.MockEventHub
 	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
-		mockeh = &mocks.MockEventHub{
+		mockeh = &mockeventhub.MockEventHub{
 			Adapter:          adapter,
 			NumStartFailures: 1, // Simulate a failed startup the first time
 		}
@@ -56,18 +57,18 @@ func TestEventRelay(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Attempt to send an invalid BlockEvent (should be ignored)
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(
 		"", // No channel ID
 	))
 
 	// Attempt to send an invalid FilteredBlockEvent (should be ignored)
-	mockeh.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+	mockeh.ProduceEvent(mockevent.NewFilteredBlockEvent(
 		"", // No channel ID
-		mocks.NewMockFilteredTx("txid", pb.TxValidationCode_VALID),
+		mockevent.NewFilteredTx("txid", pb.TxValidationCode_VALID),
 	))
 
 	// Send a valid BlockEvent (should be relayed)
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(channelID1))
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(channelID1))
 
 	numExpected := 2
 	numReceived := 0
@@ -101,9 +102,9 @@ func TestEventRelay(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	mockeh.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+	mockeh.ProduceEvent(mockevent.NewFilteredBlockEvent(
 		channelID1,
-		mocks.NewMockFilteredTx("txid", pb.TxValidationCode_VALID),
+		mockevent.NewFilteredTx("txid", pb.TxValidationCode_VALID),
 	))
 
 	numReceived = 0
@@ -136,9 +137,9 @@ func TestEventRelay(t *testing.T) {
 func TestEventRelayBufferFull(t *testing.T) {
 	channelID1 := "ch1"
 
-	var mockeh *mocks.MockEventHub
+	var mockeh *mockeventhub.MockEventHub
 	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
-		mockeh = &mocks.MockEventHub{
+		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
 		return mockeh, nil
@@ -159,8 +160,8 @@ func TestEventRelayBufferFull(t *testing.T) {
 
 	// Send two events - only the first should be processed and the second should be immediately rejected
 	// since the channel size is set to 1
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(channelID1))
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(channelID1))
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(channelID1))
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(channelID1))
 
 	numExpected := 1
 	numReceived := 0
@@ -188,9 +189,9 @@ func TestEventRelayBufferFull(t *testing.T) {
 func TestEventRelayTimeout(t *testing.T) {
 	channelID1 := "ch1"
 
-	var mockeh *mocks.MockEventHub
+	var mockeh *mockeventhub.MockEventHub
 	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
-		mockeh = &mocks.MockEventHub{
+		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
 		return mockeh, nil
@@ -213,8 +214,8 @@ func TestEventRelayTimeout(t *testing.T) {
 	// Send two events - only the first should be processed and the second should
 	// time out since the event channel size is set to 1 and we're artificially be
 	// delaying the processing
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(channelID1))
-	mockeh.ProduceEvent(mocks.NewMockBlockEvent(channelID1))
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(channelID1))
+	mockeh.ProduceEvent(mockevent.NewBlockEvent(channelID1))
 
 	numExpected := 1
 	numReceived := 0
