@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package mocks
+package mockeventhub
 
 import (
 	"github.com/hyperledger/fabric/events/consumer"
@@ -17,6 +17,11 @@ type MockEventHub struct {
 	Adapter          consumer.EventAdapter
 	Interests        []*pb.Interest
 	NumStartFailures int
+}
+
+// New returns a new MockEventHub
+func New(adapter consumer.EventAdapter) *MockEventHub {
+	return &MockEventHub{Adapter: adapter}
 }
 
 // Start implements the Start() method on the relay.EventHub interface

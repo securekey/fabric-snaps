@@ -41,8 +41,8 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/protos/utils"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
-	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
 	client "github.com/securekey/fabric-snaps/eventserver/pkg/server/testclient"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -273,7 +273,7 @@ func contains(expectedEventTypes []pb.EventType, et pb.EventType) bool {
 }
 
 func createBlockEventsForTesting(t *testing.T, channelID string) (bevent *pb.Event, fbevent *pb.Event) {
-	return mocks.NewMockBlockEvent(channelID), mocks.NewMockFilteredBlockEvent(channelID)
+	return mockevent.NewBlockEvent(channelID), mockevent.NewFilteredBlockEvent(channelID)
 }
 
 type testCaseDeregister struct {
