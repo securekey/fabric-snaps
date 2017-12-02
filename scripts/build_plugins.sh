@@ -36,6 +36,7 @@ echo "Building plugins..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./httpsnap.so github.com/hyperledger/fabric/plugins/httpsnap/cmd
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./transactionsnap.so github.com/hyperledger/fabric/plugins/transactionsnap/cmd
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./membershipsnap.so github.com/hyperledger/fabric/plugins/membershipsnap/cmd
+go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventsnap.so github.com/hyperledger/fabric/plugins/eventsnap/cmd
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./txnsnapinvoker.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/txnsnapinvoker
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -ldflags "-X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.PublicKeyForLogging=SAMPLE-KEY-1234 -X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.KeyIDForLogging=SAMPLE-KEYID-1234"  -o ./configurationscc.so github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc
 
@@ -43,5 +44,6 @@ go build -tags $GO_BUILD_TAGS -buildmode=plugin -ldflags "-X github.com/hyperled
 cp httpsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp transactionsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp membershipsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
+cp eventsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp txnsnapinvoker.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
 cp configurationscc.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
