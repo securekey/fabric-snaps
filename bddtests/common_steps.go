@@ -54,6 +54,7 @@ var logger = logging.NewLogger("test-logger")
 var trxPR []*apitxn.TransactionProposalResponse
 var queryValue string
 var queryResult string
+var lastTxnID apitxn.TransactionID
 
 // NewCommonSteps create new CommonSteps struct
 func NewCommonSteps(context *BDDContext) *CommonSteps {
@@ -489,6 +490,12 @@ func (d *CommonSteps) invokeChaincode(client sdkApi.FabricClient, channel sdkApi
 
 }
 
+func (d *CommonSteps) wait(seconds int) error {
+	logger.Infof("Waiting [%d] seconds\n", seconds)
+	time.Sleep(time.Duration(seconds) * time.Second)
+	return nil
+}
+
 func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.BeforeScenario(d.BDDContext.beforeScenario)
 	s.AfterScenario(d.BDDContext.afterScenario)
@@ -499,5 +506,5 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^response from "([^"]*)" to client C1 contains value "([^"]*)"$`, d.containsInQueryValue)
 	s.Step(`^client C1 invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on p0$`, d.loadConfig)
 	s.Step(`^client C1 invokes chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.invokeCC)
-
+	s.Step(`^client C1 waits (\d+) seconds$`, d.wait)
 }
