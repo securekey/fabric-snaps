@@ -36,8 +36,10 @@ type Opts struct {
 	// EventHubRetryInterval is the time between retries when connecting to the event hub
 	EventHubRetryInterval time.Duration
 
-	// RelayTimeout is the timeout when relaying events to the registered event channel. If 0 then the
-	//   relay will fail immediately if the event channel is full.
+	// RelayTimeout is the timeout when relaying events to the registered event channel.
+	// If < 0, if buffer full, unblocks immediately and does not send.
+	// If 0, if buffer full, will block and guarantee the event will be sent out.
+	// If > 0, if buffer full, blocks util timeout.
 	RelayTimeout time.Duration
 
 	// eventHubProvider is the event hub provider (only used in unit tests)
@@ -48,7 +50,7 @@ type Opts struct {
 func DefaultOpts() *Opts {
 	return &Opts{
 		RegTimeout:            3 * time.Second,
-		RelayTimeout:          0,
+		RelayTimeout:          100 * time.Millisecond,
 		eventHubProvider:      defaultEHProvider,
 		EventHubRetryInterval: 2 * time.Second,
 	}
@@ -144,13 +146,16 @@ func (er *EventRelay) Recv(event *pb.Event) (bool, error) {
 	defer er.mutex.RUnlock()
 
 	for _, eventch := range er.eventChannels {
-		if er.relayTimeout == 0 {
+		if er.relayTimeout < 0 {
 			// Send will fail immediately if the channel buffer is full.
 			select {
 			case eventch <- event:
 			default:
 				logger.Warningf("Unable to relay event over channel since buffer is full.")
 			}
+		} else if er.relayTimeout == 0 {
+			// Send will block.
+			eventch <- event
 		} else {
 			// Send will fail after the relay timeout if the channel buffer is full.
 			select {

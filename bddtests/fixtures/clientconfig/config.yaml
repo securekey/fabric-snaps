@@ -81,6 +81,18 @@ channels:
       connection: 3s
       response: 5s
 
+channels:
+  mychannel:
+    orderers:
+      - orderer.example.com
+
+    peers:
+      peer0.org1.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
 orderers:
   orderer.example.com:
     url: grpcs://localhost:7050
