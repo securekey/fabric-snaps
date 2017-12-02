@@ -48,23 +48,21 @@ type EventService struct {
 
 // Opts provides options for the events client
 type Opts struct {
-	// EventBufferSize specifies the maximum number of events that can be buffered on an event channel,
-	// after which further events are rejected.
-	// Default: 100
-	EventBufferSize uint
+	// EventConsumerBufferSize is the size of the registered consumer's event channel.
+	EventConsumerBufferSize uint
 
-	// Timeout is the timeout to send an event to a subscriber.
+	// EventConsumerTimeout is the timeout when sending events to a registered consumer.
 	// If < 0, if buffer full, unblocks immediately and does not send.
 	// If 0, if buffer full, will block and guarantee the event will be sent out.
 	// If > 0, if buffer full, blocks util timeout.
-	Timeout time.Duration
+	EventConsumerTimeout time.Duration
 }
 
 // DefaultOpts returns client options set to default values
 func DefaultOpts() *Opts {
 	return &Opts{
-		EventBufferSize: 100,
-		Timeout:         100 * time.Millisecond,
+		EventConsumerBufferSize: 100,
+		EventConsumerTimeout:    100 * time.Millisecond,
 	}
 }
 
@@ -73,9 +71,8 @@ func NewService(opts *Opts, eventTypes []EventType) *EventService {
 	return NewServiceWithDispatcher(
 		NewDispatcher(
 			&DispatcherOpts{
+				Opts:                 *opts,
 				AuthorizedEventTypes: eventTypes,
-				BufferSize:           opts.EventBufferSize,
-				Timeout:              opts.Timeout,
 			},
 		),
 		opts,
@@ -89,7 +86,7 @@ func NewServiceWithDispatcher(dispatcher EventDispatcher, opts *Opts, eventTypes
 		eventTypes:      eventTypes,
 		opts:            *opts,
 		dispatcher:      dispatcher,
-		eventBufferSize: opts.EventBufferSize,
+		eventBufferSize: opts.EventConsumerBufferSize,
 	}
 }
 
