@@ -22,6 +22,30 @@
       "revId": "8e4e70891ae3ec17f170e60a98e0ba305a086d35",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "759db44a_edd7f8a5",
+        "filename": "transactionsnap/cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2017-12-03T00:36:32Z",
+      "side": 1,
+      "message": "This one is peer\u0027s mspConfigPath. This one is required if we are going to use peer\u0027s BCCSP.",
+      "parentUuid": "86687380_147ce971",
+      "range": {
+        "startLine": 128,
+        "startChar": 17,
+        "endLine": 128,
+        "endChar": 33
+      },
+      "revId": "8e4e70891ae3ec17f170e60a98e0ba305a086d35",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
