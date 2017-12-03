@@ -45,12 +45,8 @@ var refreshInterval uint32 = 5
 type ConfigurationSnap struct {
 }
 
-// ConfigServiceImpl implementation
-var configServiceImpl *configmgmtService.ConfigServiceImpl
-
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	configServiceImpl = configmgmtService.Initialize(stub, "")
 	return shim.Success(nil)
 }
 
@@ -141,8 +137,8 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		logger.Errorf("Got error while marshalling config: %v", err)
 		return shim.Error(err.Error())
 	}
-	//TODO the refresh should delete from here when DEV-4253 done
-	configServiceImpl.Refresh(stub, configKey.MspID)
+	//TODO the Initialize should delete from here when DEV-4253 done
+	configmgmtService.Initialize(stub, configKey.MspID)
 	return shim.Success(payload)
 
 }
