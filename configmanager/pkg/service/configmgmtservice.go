@@ -152,7 +152,10 @@ func (csi *ConfigServiceImpl) createCache(channelID string) {
 	csi.mtx.Lock()
 	defer csi.mtx.Unlock()
 	logger.Debugf("Created cache for channel %s", channelID)
-	instance.cacheMap[channelID] = gc.New(defaultExpirationTime, purgeExpiredTime)
+	_, exist := instance.cacheMap[channelID]
+	if !exist {
+		instance.cacheMap[channelID] = gc.New(defaultExpirationTime, purgeExpiredTime)
+	}
 }
 
 func (csi *ConfigServiceImpl) put(channelID string, key string, value []byte) {
