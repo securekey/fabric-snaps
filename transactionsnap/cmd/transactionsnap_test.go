@@ -34,6 +34,7 @@ import (
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
 )
@@ -707,7 +708,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		return nil, fmt.Errorf("Error getting user context: %s", err)
 	}
 
-	cryptoSuite := client.GetSuite(bccspFactory.GetDefault())
+	cryptoSuite := factories.GetSuite(bccspFactory.GetDefault())
 	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
 		&bccsp.SHAOpts{}, nil, cryptoSuite)
 	if err != nil {
@@ -746,6 +747,18 @@ func resetRegisterTxEventTimeout() {
 }
 
 func TestMain(m *testing.M) {
+
+	opts := &bccspFactory.FactoryOpts{
+		ProviderName: "SW",
+		SwOpts: &bccspFactory.SwOpts{
+			HashFamily:   "SHA2",
+			SecLevel:     256,
+			Ephemeral:    false,
+			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "sampleconfig/msp/keystore/"},
+		},
+	}
+	bccspFactory.InitFactories(opts)
+
 	configPath = "./sampleconfig"
 	config, err := config.NewConfig(configPath, nil)
 	if err != nil {

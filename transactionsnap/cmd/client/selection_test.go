@@ -18,6 +18,7 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -72,12 +73,33 @@ var p10 = peer("peer10", org4)
 var p11 = peer("peer11", org5)
 var p12 = peer("peer12", org5)
 
+type sampleConfig struct {
+	api.Config
+}
+
+// Override GetMspConfigPath for relative path, just to avoid using new core.yaml for this purpose
+func (c *sampleConfig) GetMspConfigPath() string {
+	return "../sampleconfig/msp"
+}
+
 func TestMain(m *testing.M) {
+
+	opts := &bccspFactory.FactoryOpts{
+		ProviderName: "SW",
+		SwOpts: &bccspFactory.SwOpts{
+			HashFamily:   "SHA2",
+			SecLevel:     256,
+			Ephemeral:    false,
+			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "../sampleconfig/msp/keystore/"},
+		},
+	}
+	bccspFactory.InitFactories(opts)
+
 	c, err := config.NewConfig("../sampleconfig", nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	_, err = GetInstance(c)
+	_, err = GetInstance(&sampleConfig{c})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}

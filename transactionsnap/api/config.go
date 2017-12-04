@@ -16,6 +16,7 @@ import (
 type Config interface {
 	GetLocalPeer() (*PeerConfig, error)
 	GetMspID() string
+	GetMspConfigPath() string
 	GetTLSRootCertPath() string
 	GetTLSCertPath() string
 	GetTLSKeyPath() string
