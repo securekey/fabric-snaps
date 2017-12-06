@@ -22,6 +22,30 @@
       "revId": "ccc47a9d419caf3becb1552c56d22d0ac80b65bc",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb817bcb_8539bffa",
+        "filename": "configurationsnap/cmd/configcli/querycmd/printer.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-06T21:54:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "075f6397_fcc1f0cd",
+      "range": {
+        "startLine": 61,
+        "startChar": 55,
+        "endLine": 61,
+        "endChar": 66
+      },
+      "revId": "ccc47a9d419caf3becb1552c56d22d0ac80b65bc",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
