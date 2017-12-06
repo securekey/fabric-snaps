@@ -51,6 +51,21 @@ client:
       label: ""
       library: ""
 
+
+
+channels:
+  # name of the channel
+  mychannel:
+    orderers:
+      - orderer.example.com
+    # Required. list of peers from participating orgs
+    peers:
+      peer0.org1.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
 # Global configuration for peer, event service and orderer timeouts
   peer:
     timeout:

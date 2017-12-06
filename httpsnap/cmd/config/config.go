@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	deflogger "github.com/hyperledger/fabric-sdk-go/pkg/logging/deflogger"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
@@ -79,9 +78,6 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 
 // Helper function to initialize logging
 func (c *config) initializeLogging() error {
-	if !logging.IsLoggerInitialized() {
-		logging.InitLogger(deflogger.GetLoggingProvider())
-	}
 	logLevel := c.httpSnapConfig.GetString("logging.level")
 
 	if logLevel == "" {
