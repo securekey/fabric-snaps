@@ -1,0 +1,51 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+client:
+  organization: org1
+
+  logging:
+    level: info
+
+organizations:
+  org1:
+    mspid: Org1MSP
+
+    peers:
+      - peer0.org1.example.com
+      - peer1.org1.example.com
+
+  org2:
+    mspid: Org2MSP
+
+    peers:
+      - peer0.org2.example.com
+      - peer1.org2.example.com
+
+peers:
+  peer0.org1.example.com:
+    url: grpcs://peer0.org1.example.com:7051
+    eventUrl: grpcs://peer0.org1.example.com:7053
+    tlsCACerts:
+      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
+
+  peer1.org1.example.com:
+    url: grpcs://peer1.org1.example.com:7051
+    eventUrl: grpcs://peer1.org1.example.com:7053
+    tlsCACerts:
+      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
+
+  peer0.org2.example.com:
+    url: grpcs://peer0.org2.example.com:7051
+    eventUrl: grpcs://peer0.org2.example.com:7053
+    tlsCACerts:
+      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem
+
+  peer1.org2.example.com:
+    url: grpcs://peer1.org2.example.com:7051
+    eventUrl: grpcs://peer1.org2.example.com:7053
+    tlsCACerts:
+      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem
