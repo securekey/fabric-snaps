@@ -1,0 +1,31 @@
+{
+  "MspID":"Org1MSP",
+  "Peers":[
+    {
+      "PeerID":"peer0.org1.example.com",
+      "App":[
+        {
+          "AppName":"app1",
+          "Config":"file://./org1-peer0-app1-config.yaml"
+        },
+        {
+          "AppName":"app2",
+          "Config":"file://./org1-peer0-app2-config.json"
+        }
+      ]
+    },
+    {
+      "PeerID":"peer1.org1.example.com",
+      "App":[
+        {
+          "AppName":"app1",
+          "Config":"file://./org1-peer1-app1-config.yaml"
+        },
+        {
+          "AppName":"app2",
+          "Config":"file://./org1-peer1-app2-config.json"
+        }
+      ]
+    }
+  ]
+}

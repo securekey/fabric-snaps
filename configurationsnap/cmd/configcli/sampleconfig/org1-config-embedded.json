@@ -1,0 +1,14 @@
+{
+  "MspID":"Org1MSP",
+  "Peers":[
+    {
+      "PeerID":"peer0.org1.example.com",
+      "App":[
+        {
+          "AppName":"myapp",
+          "Config":"embedded config"
+        }
+      ]
+    }
+  ]
+}

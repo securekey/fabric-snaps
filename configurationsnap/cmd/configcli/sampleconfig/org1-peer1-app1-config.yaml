@@ -1,0 +1,8 @@
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#############################################################
+
+app1config:
+  key1: value1 for peer1
+  key2: value2 for peer1
