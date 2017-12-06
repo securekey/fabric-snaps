@@ -138,6 +138,12 @@
   source = "github.com/securekey/fabric-sdk-go-next"
 
 [[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/looplab/fsm"
   packages = ["."]
@@ -249,6 +255,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
@@ -344,6 +356,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b26b42c96281c00bdc127c3d76f9bc789953b8505a985311da0c8f52c60e7bd7"
+  inputs-digest = "95165d72ddb3fd5106b9a896540eb5990958c7291bfb7c729bb2d73275120019"
   solver-name = "gps-cdcl"
   solver-version = 1
