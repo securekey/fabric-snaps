@@ -26,7 +26,6 @@ import (
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 
-	sdkFabricTxnAdmin "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/admin"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/pkg/errors"
@@ -225,9 +224,11 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 
 	defer eventHub.Disconnect()
 
-	err = sdkFabricTxnAdmin.SendInstantiateCC(d.BDDContext.Channel, ccID, GetByteArgs(argsArray),
-		ccPath, version, cauthdsl.SignedByMspMember("Org1MSP"), nil, []apitxn.ProposalProcessor{d.BDDContext.Channel.PrimaryPeer()},
-		eventHub)
+	instantiateRqst := resmgmt.InstantiateCCRequest{Name: ccID, Path: ccPath, Version: version, Args: GetByteArgs(argsArray), Policy: cauthdsl.SignedByMspMember("Org1MSP")}
+	instantiateOpts := resmgmt.InstantiateCCOpts{
+		Targets: peers,
+	}
+	err = resMgmtClient.InstantiateCCWithOpts(d.BDDContext.Channel.Name(), instantiateRqst, instantiateOpts)
 
 	return err
 }
