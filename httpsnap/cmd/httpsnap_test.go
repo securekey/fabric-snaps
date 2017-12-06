@@ -310,7 +310,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
 	//upload valid message to HL
-	err = uplaodConfigToHL(stub, configBytes)
+	err = uploadConfigToHL(stub, configBytes)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
@@ -325,8 +325,8 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-//uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+//uploadConfigToHL to upload key&config to repository
+func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

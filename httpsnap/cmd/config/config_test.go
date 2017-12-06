@@ -34,7 +34,12 @@ func TestGetClientCert(t *testing.T) {
 	verifyEqual(t, c.GetClientCert(), snapConfig.GetString("tls.clientCert"), "Failed to get client cert.")
 }
 func TestGetClientKey(t *testing.T) {
-	verifyEqual(t, c.GetClientKey(), snapConfig.GetString("tls.clientKey"), "Failed to get client key.")
+	key, err := c.GetClientKey()
+	if err != nil {
+		t.Fatalf("GetClientKey return error %v", err)
+	}
+
+	verifyEqual(t, key, "clientKey", "Failed to get client key.")
 }
 
 func TestGetNamedClientOverride(t *testing.T) {
@@ -99,7 +104,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
 	//upload valid message to HL
-	err = uplaodConfigToHL(stub, configBytes)
+	err = uploadConfigToHL(stub, configBytes)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
@@ -124,8 +129,8 @@ func getMockStub() *shim.MockStub {
 	return stub
 }
 
-//uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+//uploadConfigToHL to upload key&config to repository
+func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

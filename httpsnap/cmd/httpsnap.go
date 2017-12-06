@@ -239,7 +239,10 @@ func getTLSConfig(client string, config api.Config) (*tls.Config, error) {
 
 	// Default values
 	clientCert := config.GetClientCert()
-	clientKey := config.GetClientKey()
+	clientKey, err := config.GetClientKey()
+	if err != nil {
+		return nil, err
+	}
 	caCerts := config.GetCaCerts()
 
 	if client != "" {

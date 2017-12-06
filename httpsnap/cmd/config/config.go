@@ -8,6 +8,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -21,7 +22,6 @@ import (
 )
 
 const (
-	configFileName     = "config"
 	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
 )
@@ -56,19 +56,16 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	//httpSnapConfig Config
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
 	cacheInstance := configmgmtService.GetInstance()
-	jsonConfig, err := cacheInstance.Get(channelID, key)
+	configData, err := cacheInstance.Get(channelID, key)
 	if err != nil {
 		return nil, err
 	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
-	httpSnapConfig.ReadConfig(bytes.NewBuffer(jsonConfig))
+	httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(replacer)
-	if err != nil {
-		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
-	}
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig}
 	err = c.initializeLogging()
 	if err != nil {
@@ -93,8 +90,8 @@ func (c *config) initializeLogging() error {
 		return fmt.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetLevel("", level)
-	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel(""))
+	logging.SetLevel("httpsnap", level)
+	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel("httpsnap"))
 
 	return nil
 }
@@ -149,8 +146,12 @@ func (c *config) GetClientCert() string {
 }
 
 // GetClientKey returns client key
-func (c *config) GetClientKey() string {
-	return c.httpSnapConfig.GetString("tls.clientKey")
+func (c *config) GetClientKey() (string, error) {
+	fileData, err := ioutil.ReadFile(c.httpSnapConfig.GetString("tls.clientKey"))
+	if err != nil {
+		return "", err
+	}
+	return string(fileData), nil
 }
 
 // GetNamedClientOverridePath returns map of clientTLS
@@ -159,6 +160,13 @@ func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, er
 	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &clientTLS)
 	if err != nil {
 		return nil, err
+	}
+	for k, v := range clientTLS {
+		fileData, err := ioutil.ReadFile(v.Key)
+		if err != nil {
+			return nil, err
+		}
+		clientTLS[k].Key = string(fileData)
 	}
 
 	return clientTLS, nil

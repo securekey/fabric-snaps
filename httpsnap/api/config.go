@@ -34,7 +34,7 @@ type ClientTLS struct {
 type Config interface {
 	GetConfigPath(path string) string
 	GetClientCert() string
-	GetClientKey() string
+	GetClientKey() (string, error)
 	GetNamedClientOverride() (map[string]*ClientTLS, error)
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() []string
