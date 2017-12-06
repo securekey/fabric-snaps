@@ -10,12 +10,12 @@ tls:
   - "ca1"
   - "ca2"
   clientCert: "testCrt"
-  clientKey: "testKey"
+  clientKey: keys/tls/test-client.key
   namedClientOverride:
    abc:
      ca: "abcCA"
      crt: "abcCert"
-     key: "abcKey"
+     key: keys/tls/override/abc/abc.key
     
 schemas:
   - type: application/json

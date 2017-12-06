@@ -8,6 +8,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -149,8 +150,12 @@ func (c *config) GetClientCert() string {
 }
 
 // GetClientKey returns client key
-func (c *config) GetClientKey() string {
-	return c.httpSnapConfig.GetString("tls.clientKey")
+func (c *config) GetClientKey() (string, error) {
+	fileData, err := ioutil.ReadFile(c.httpSnapConfig.GetString("tls.clientKey"))
+	if err != nil {
+		return "", err
+	}
+	return string(fileData), nil
 }
 
 // GetNamedClientOverridePath returns map of clientTLS
@@ -159,6 +164,13 @@ func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, er
 	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &clientTLS)
 	if err != nil {
 		return nil, err
+	}
+	for k, v := range clientTLS {
+		fileData, err := ioutil.ReadFile(v.Key)
+		if err != nil {
+			return nil, err
+		}
+		clientTLS[k].Key = string(fileData)
 	}
 
 	return clientTLS, nil

@@ -34,7 +34,12 @@ func TestGetClientCert(t *testing.T) {
 	verifyEqual(t, c.GetClientCert(), snapConfig.GetString("tls.clientCert"), "Failed to get client cert.")
 }
 func TestGetClientKey(t *testing.T) {
-	verifyEqual(t, c.GetClientKey(), snapConfig.GetString("tls.clientKey"), "Failed to get client key.")
+	key, err := c.GetClientKey()
+	if err != nil {
+		t.Fatalf("GetClientKey return error %v", err)
+	}
+
+	verifyEqual(t, key, "clientKey", "Failed to get client key.")
 }
 
 func TestGetNamedClientOverride(t *testing.T) {
