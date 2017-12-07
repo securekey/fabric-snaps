@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -32,10 +33,13 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
 )
 
@@ -65,6 +69,8 @@ var endorserTestEventHost = "127.0.0.1"
 var endorserTestEventPort = 7053
 var membership api.MembershipManager
 var fcClient api.Client
+var channelID = "testChannel"
+var mspID = "Org1MSP"
 
 const (
 	org1 = "Org1MSP"
@@ -210,9 +216,8 @@ func TestNotSpecifiedChannel(t *testing.T) {
 		if response.Status != shim.ERROR {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
-		errorMsg := "Cannot create channel Error creating new channel: name is required"
-		if response.Message != errorMsg {
-			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+		if response.Message == "" {
+			t.Fatalf("Expecting error due to an misconfigured endorsers args")
 		}
 	}
 }
@@ -613,6 +618,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 	args[1] = []byte("testChannel")
 	args[2] = signedProposalBytes
 	//invoke transaction snap
+
 	response := stub.MockInvoke("TxID", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
@@ -754,17 +760,38 @@ func TestMain(m *testing.M) {
 			HashFamily:   "SHA2",
 			SecLevel:     256,
 			Ephemeral:    false,
-			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "sampleconfig/msp/keystore/"},
+			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
 		},
 	}
 	bccspFactory.InitFactories(opts)
 
-	configPath = "./sampleconfig"
-	config, err := config.NewConfig(configPath, nil)
+	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("File error: %v\n", err))
+	}
+	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
+		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
+				configmanagerApi.AppConfig{AppName: "txnsnap", Config: string(configData)}}}}}
+	stub := getMockStub()
+	configBytes, err := json.Marshal(configMsg)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, mspID)
+
+	peerConfigPath = "./sampleconfig"
+	config, err := config.NewConfig("./sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	configureClient(config)
+
+	fcClient = configureClient(config)
 
 	mockEndorserServer = fcmocks.StartEndorserServer(endorserTestURL)
 	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
@@ -772,14 +799,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fcClient, err = client.GetInstance(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	//	err = getInstanceOfFabricClient(config)
-	//	if err != nil {
-	//		panic(fmt.Sprintf("getInstanceOfFabricClient return error: %v", err))
-	//	}
+
 	testChannel, err := fcClient.NewChannel("testChannel")
 	if err != nil {
 		panic(fmt.Sprintf("NewChannel return error: %v", err))
@@ -801,6 +821,7 @@ func TestMain(m *testing.M) {
 	p1 = peer("grpc://peer1:7051", org1)
 	p2 = peer("grpc://peer2:7051", org1)
 	clientService = newClientServiceMock()
+
 	os.Exit(m.Run())
 }
 
@@ -832,4 +853,22 @@ func (cs *clientServiceMock) GetFabricClient(config api.Config) (api.Client, err
 // GetClientMembership return client membership
 func (cs *clientServiceMock) GetClientMembership(config api.Config) api.MembershipManager {
 	return membership
+}
+
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
 }
