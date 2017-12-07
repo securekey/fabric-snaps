@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "7a77f015_b1dbf16a",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-07T18:10:14Z",
+      "side": 1,
+      "message": "Why do you have TxService wrapping the TxServiceImpl? Why not just use TxServiceImpl directly?",
+      "range": {
+        "startLine": 37,
+        "startChar": 5,
+        "endLine": 37,
+        "endChar": 14
+      },
+      "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "120e38a3_927a4788",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-07T18:10:14Z",
+      "side": 1,
+      "message": "I would call it newTxService.",
+      "range": {
+        "startLine": 130,
+        "startChar": 5,
+        "endLine": 130,
+        "endChar": 23
+      },
+      "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920299a5_fe6dd699",
         "filename": "transactionsnap/cmd/transactionsnap.go",
         "patchSetId": 3
@@ -41,6 +87,52 @@
         "startChar": 1,
         "endLine": 131,
         "endChar": 10
+      },
+      "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e902b0d_a398f9d5",
+        "filename": "transactionsnap/cmd/txsnapservice/txsnapservice.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-07T18:10:14Z",
+      "side": 1,
+      "message": "Can you use errors.Wrap(err, \"Failed to initialize config\") instead?",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 23
+      },
+      "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee6397f5_f9345578",
+        "filename": "transactionsnap/cmd/txsnapservice/txsnapservice.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-07T18:10:14Z",
+      "side": 1,
+      "message": "Use errors.New",
+      "range": {
+        "startLine": 164,
+        "startChar": 9,
+        "endLine": 164,
+        "endChar": 19
       },
       "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
