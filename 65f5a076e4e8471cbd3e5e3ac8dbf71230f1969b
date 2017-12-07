@@ -16,6 +16,24 @@
       "revId": "65f5a076e4e8471cbd3e5e3ac8dbf71230f1969b",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bc0bbe2_852bebe7",
+        "filename": "eventsnap/cmd/eventsnap_test.go",
+        "patchSetId": 6
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-07T17:22:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b4771fd_ad180b6e",
+      "revId": "65f5a076e4e8471cbd3e5e3ac8dbf71230f1969b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
