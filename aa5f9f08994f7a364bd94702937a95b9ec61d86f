@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "2f64ddef_4bbf206f",
+        "filename": "transactionsnap/cmd/config/config.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2017-12-07T16:37:38Z",
+      "side": 1,
+      "message": "remove not used anymore",
+      "range": {
+        "startLine": 26,
+        "startChar": 1,
+        "endLine": 26,
+        "endChar": 15
+      },
+      "revId": "aa5f9f08994f7a364bd94702937a95b9ec61d86f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "920299a5_fe6dd699",
         "filename": "transactionsnap/cmd/transactionsnap.go",
         "patchSetId": 3
