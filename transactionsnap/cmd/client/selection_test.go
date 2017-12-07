@@ -7,7 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -19,14 +21,20 @@ import (
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
 
 var configImp = mocks.NewMockConfig()
+var channelID = "testChannel"
+var mspID = "Org1MSP"
 
 const (
 	org1  = "Org1MSP"
@@ -95,17 +103,56 @@ func TestMain(m *testing.M) {
 	}
 	bccspFactory.InitFactories(opts)
 
-	c, err := config.NewConfig("../sampleconfig", nil)
+	//
+	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("File error: %v\n", err))
+	}
+	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
+		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
+				configmanagerApi.AppConfig{AppName: "txnsnap", Config: string(configData)}}}}}
+	stub := getMockStub()
+	configBytes, err := json.Marshal(configMsg)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, mspID)
+
+	config, err := config.NewConfig("../sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	_, err = GetInstance(&sampleConfig{c})
+
+	_, err = GetInstance(&sampleConfig{config})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
 	os.Exit(m.Run())
 }
 
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
+}
 func TestGetEndorsersForChaincodeOneCC(t *testing.T) {
 	service := newMockSelectionService(
 		newMockMembershipManager().
