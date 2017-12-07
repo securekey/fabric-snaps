@@ -51,7 +51,7 @@ func GetInstance(config api.Config) (api.Client, error) {
 	var err error
 	once.Do(func() {
 		client = &clientImpl{selectionService: NewSelectionService(config), config: config}
-		initError := client.initialize()
+		initError := client.initialize(config.GetConfigBytes())
 		if initError != nil {
 			err = fmt.Errorf("Error initializing fabric client: %s", initError)
 		}
@@ -367,10 +367,11 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 	return nil
 }
 
-func (c *clientImpl) initialize() error {
+func (c *clientImpl) initialize(sdkConfig []byte) error {
 
 	sdkOptions := sdkFabApi.Options{
-		ConfigFile:      c.config.GetConfigPath("") + "/config.yaml",
+		ConfigByte:      sdkConfig,
+		ConfigType:      "yaml",
 		ProviderFactory: &factories.DefaultCryptoSuiteProviderFactory{},
 		ContextFactory:  &factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()},
 	}

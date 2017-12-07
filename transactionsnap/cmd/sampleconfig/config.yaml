@@ -16,16 +16,6 @@ txnsnap:
 client:
   organization: peerorg1
 
-  BCCSP:
-    security:
-       enabled: true
-       default:
-        provider: "SW"
-       hashAlgorithm: "SHA2"
-       softVerify: true
-       ephemeral: false
-       level: 256
-
   logging:
     level: info
 

@@ -24,6 +24,7 @@ type Config interface {
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string
 	GetPeerConfig() *viper.Viper
+	GetConfigBytes() []byte
 }
 
 // PeerConfig represents the server addresses of a fabric peer
