@@ -38,4 +38,5 @@ type Config interface {
 	GetNamedClientOverride() (map[string]*ClientTLS, error)
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() []string
+	IsSystemCertPoolEnabled() bool
 }

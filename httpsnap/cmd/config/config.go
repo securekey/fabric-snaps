@@ -141,6 +141,11 @@ func (c *config) GetClientCert() string {
 	return c.httpSnapConfig.GetString("tls.clientCert")
 }
 
+// IsSystemCertsPoolEnabled returns true if loading of the system cert pool is enabled
+func (c *config) IsSystemCertPoolEnabled() bool {
+	return c.httpSnapConfig.GetBool("tls.enableSystemCertPool")
+}
+
 // GetClientKey returns client key
 func (c *config) GetClientKey() (string, error) {
 	fileData, err := ioutil.ReadFile(c.httpSnapConfig.GetString("tls.clientKey"))
