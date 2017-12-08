@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2dd2c55_24da5db3",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2017-12-08T17:43:01Z",
+      "side": 1,
+      "message": "This isn\u0027t thread safe to set a global variable on each invoke. Each function should just call Get(channelID) directly. This function and the variable aren\u0027t necessary.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 203,
+        "endChar": 1
+      },
+      "revId": "9f6ae127e8b31d950f56b34725c59d9e3e02e8ea",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
