@@ -12,17 +12,26 @@ import (
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/pkg/errors"
+	configapi "github.com/securekey/fabric-snaps/configmanager/api"
+	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/spf13/viper"
 )
 
 var logger = flogging.MustGetLogger("eventsnap/config")
 
 const (
-	configName            = "config"
+	// EventSnapAppName is the name/ID of the eventsnap system chaincode
+	EventSnapAppName = "eventsnap"
+
 	peerConfigName        = "core"
 	envPrefix             = "core"
 	defaultPeerConfigPath = "/etc/hyperledger/fabric"
-	defaultConfigPath     = "/opt/extsysccs/config/eventsnap"
+
+	defaultEventHubRegTimeout        = 2 * time.Second
+	defaultEventRelayTimeout         = 2 * time.Second
+	defaultEventDispatcherBufferSize = 100
+	defaultEventConsumerBufferSize   = 100
+	defaultEventConsumerTimeout      = 10 * time.Millisecond
 )
 
 // EventSnapConfig contains the configuration for the EventSnap
@@ -64,49 +73,62 @@ type EventSnapConfig struct {
 	EventConsumerTimeout time.Duration
 }
 
-// New returns a new EventSnapConfig
-// TODO: Integrate with the Configuration Service
-func New(configPathOverride string) (*EventSnapConfig, error) {
-	var configPath string
+// New returns a new EventSnapConfig for the given channel
+func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 	var peerConfigPath string
-	if configPathOverride == "" {
-		configPath = defaultConfigPath
+	if peerConfigPathOverride == "" {
 		peerConfigPath = defaultPeerConfigPath
 	} else {
-		configPath = configPathOverride
-		peerConfigPath = configPathOverride
+		peerConfigPath = peerConfigPathOverride
 	}
 
-	logger.Infof("Initializing config - Path: %s, Peer Path: %s\n", configPath, peerConfigPath)
-
-	peerViper, err := newViper(peerConfigPath, peerConfigName, envPrefix)
+	peerConfig, err := newPeerViper(peerConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading peer config")
 	}
 
-	eventSnapViper, err := newViper(configPath, configName, envPrefix)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error reading event snap config")
+	peerID := peerConfig.GetString("peer.id")
+	mspID := peerConfig.GetString("peer.localMspId")
+
+	// Initialize from peer config
+	eventSnapConfig := &EventSnapConfig{
+		EventHubAddress:       peerConfig.GetString("peer.events.address"),
+		EventServerBufferSize: uint(peerConfig.GetInt("peer.channelserver.buffersize")),
+		EventServerTimeout:    peerConfig.GetDuration("peer.channelserver.timeout"),
+		EventServerTimeWindow: peerConfig.GetDuration("peer.channelserver.timewindow"),
 	}
 
-	return &EventSnapConfig{
-		EventHubAddress: peerViper.GetString("peer.events.address"),
+	if channelID != "" {
+		config, err := configservice.GetInstance().GetViper(channelID, configapi.ConfigKey{MspID: mspID, PeerID: peerID, AppName: EventSnapAppName}, configapi.YAML)
+		if err != nil {
+			return nil, errors.Wrap(err, "error getting event snap configuration")
+		}
+		if config == nil {
+			// No config yet. The peer must have just joined the channel.  Use default values for now.
+			// After the config has been uploaded to the ledger the new values will take effect.
+			logger.Warningf("Using default configuration for event snap since the configuration does not yet exist in the ledger for channel [%s]\n", channelID)
 
-		EventHubRegTimeout:        eventSnapViper.GetDuration("eventsnap.eventhub.regtimeout"),
-		EventRelayTimeout:         eventSnapViper.GetDuration("eventsnap.relay.timeout"),
-		EventDispatcherBufferSize: uint(eventSnapViper.GetInt("eventsnap.dispatcher.buffersize")),
-		EventConsumerBufferSize:   uint(eventSnapViper.GetInt("eventsnap.consumer.buffersize")),
-		EventConsumerTimeout:      eventSnapViper.GetDuration("eventsnap.consumer.timeout"),
-		EventServerBufferSize:     uint(eventSnapViper.GetInt("eventsnap.server.buffersize")),
-		EventServerTimeout:        eventSnapViper.GetDuration("eventsnap.server.timeout"),
-		EventServerTimeWindow:     eventSnapViper.GetDuration("eventsnap.server.timewindow"),
-	}, nil
+			eventSnapConfig.EventHubRegTimeout = defaultEventHubRegTimeout
+			eventSnapConfig.EventRelayTimeout = defaultEventRelayTimeout
+			eventSnapConfig.EventDispatcherBufferSize = defaultEventDispatcherBufferSize
+			eventSnapConfig.EventConsumerBufferSize = defaultEventConsumerBufferSize
+			eventSnapConfig.EventConsumerTimeout = defaultEventConsumerTimeout
+		} else {
+			eventSnapConfig.EventHubRegTimeout = config.GetDuration("eventsnap.eventhub.regtimeout")
+			eventSnapConfig.EventRelayTimeout = config.GetDuration("eventsnap.relay.timeout")
+			eventSnapConfig.EventDispatcherBufferSize = uint(config.GetInt("eventsnap.dispatcher.buffersize"))
+			eventSnapConfig.EventConsumerBufferSize = uint(config.GetInt("eventsnap.consumer.buffersize"))
+			eventSnapConfig.EventConsumerTimeout = config.GetDuration("eventsnap.consumer.timeout")
+		}
+	}
+
+	return eventSnapConfig, nil
 }
 
-func newViper(configPath, configName, envPrefix string) (*viper.Viper, error) {
+func newPeerViper(configPath string) (*viper.Viper, error) {
 	peerViper := viper.New()
 	peerViper.AddConfigPath(configPath)
-	peerViper.SetConfigName(configName)
+	peerViper.SetConfigName(peerConfigName)
 	peerViper.SetEnvPrefix(envPrefix)
 	peerViper.AutomaticEnv()
 	peerViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

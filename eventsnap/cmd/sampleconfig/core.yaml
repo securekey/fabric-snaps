@@ -4,7 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 peer:
+    id: peer1
+    localMspId: Org1MSP
+
     # EventHub related configuration
     events:
         # The address that the Event service will be enabled on the peer
         address: 0.0.0.0:7053
+
+    # Channel Service configuration - runs on the peer endpoint
+    channelserver:
+        # total number of events that could be buffered without blocking send
+        buffersize: 100
+
+        # timeout duration for producer to send an event.
+        # if < 0, if buffer full, unblocks immediately and not send
+        # if 0, if buffer full, will block and guarantee the event will be sent out
+        # if > 0, if buffer full, blocks till timeout
+        timeout: 10ms
+
+        # timewindow is the acceptable difference between the peer's current
+        # time and the client's time as specified in a registration event
+        timewindow: 15m

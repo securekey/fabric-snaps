@@ -11,8 +11,10 @@ import (
 	"testing"
 	"time"
 
+	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
 	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 	"github.com/securekey/fabric-snaps/mocks/event/mockeventhub"
 	"google.golang.org/grpc"
@@ -22,8 +24,20 @@ import (
 )
 
 func TestEventSnap(t *testing.T) {
+	mspID := "Org1MSP"
+	peerID := "peer1"
 	channelID1 := "ch1"
 	channelID2 := "ch2"
+
+	configStub1 := configmocks.NewMockStub(channelID1)
+	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch1.yaml"); err != nil {
+		t.Fatalf("Error saving config: %s", err)
+	}
+
+	configStub2 := configmocks.NewMockStub(channelID2)
+	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch2.yaml"); err != nil {
+		t.Fatalf("Error saving config: %s", err)
+	}
 
 	eventsnap := &eventSnap{
 		pserver: grpc.NewServer(),

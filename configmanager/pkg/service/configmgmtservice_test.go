@@ -8,6 +8,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/json"
 
 	"testing"
 
@@ -129,6 +130,63 @@ func TestGetCacheByMspID(t *testing.T) {
 		t.Fatalf("Expected error: 'Config Key is not valid Cannot create config key using empty PeerID'")
 	}
 
+}
+
+func TestGetViper(t *testing.T) {
+	mspID := "msp1"
+	peerID := "peer1"
+	appName := "app1"
+
+	appConfig := `
+someconfig:
+  somestring: SomeValue
+  someint: 10
+`
+	configMsg := &api.ConfigMessage{
+		MspID: mspID,
+		Peers: []api.PeerConfig{
+			api.PeerConfig{
+				PeerID: peerID,
+				App: []api.AppConfig{
+					api.AppConfig{
+						AppName: appName,
+						Config:  appConfig,
+					},
+				},
+			},
+		},
+	}
+
+	msgBytes, err := json.Marshal(configMsg)
+	if err != nil {
+		t.Fatalf("error marshalling message to JSON: %s", err)
+	}
+
+	stub := getMockStub()
+
+	if _, err := uplaodConfigToHL(t, stub, string(msgBytes)); err != nil {
+		t.Fatalf("cannot upload %s", err)
+	}
+
+	cacheInstance := Initialize(stub, mspID)
+
+	config, err := cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: "unknown app"}, api.YAML)
+	if err != nil {
+		t.Fatalf("error getting Viper config: %s", err)
+	}
+	if config != nil {
+		t.Fatalf("expecting nil config")
+	}
+	config, err = cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName}, api.YAML)
+	if err != nil {
+		t.Fatalf("expecting error for unknown config key but got none")
+	}
+	if value := config.GetInt("someconfig.someint"); value != 10 {
+		t.Fatalf("expected value to be [10] but got [%d]", value)
+	}
+	if value := config.GetString("someconfig.somestring"); value != "SomeValue" {
+		t.Fatalf("expected value to be [somevalue] but got [%s]", value)
+	}
 }
 
 func TestCacheWasNotInitialized(t *testing.T) {

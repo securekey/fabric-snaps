@@ -62,9 +62,24 @@ type ConfigManager interface {
 	Delete(configKey ConfigKey) error
 }
 
+// ConfigType indicates the type (format) of the configuration
+type ConfigType string
+
+const (
+	// YAML indicates that the configuration is in YAML format
+	YAML ConfigType = "YAML"
+
+	// JSON indicates that the configuration is in JSON format
+	JSON ConfigType = "JSON"
+)
+
 //ConfigService configuration service interface
 type ConfigService interface {
+	//Get returns the config bytes for the given channel and config key
 	Get(channelID string, configKey ConfigKey) ([]byte, error)
+	//GetViper returns a Viper instance that wraps the config for the given channel and config key.
+	// If the config key doesn't exist then nil is returned.
+	GetViper(channelID string, configKey ConfigKey, configType ConfigType) (*viper.Viper, error)
 }
 
 //IsValid validates config message
