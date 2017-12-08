@@ -56,13 +56,13 @@ func New() shim.Chaincode {
 func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Warningf("******** Init Event Snap on channel [%s]\n", stub.GetChannelID())
 
-	config, err := config.New(s.configPath)
+	channelID := stub.GetChannelID()
+	config, err := config.New(channelID, s.configPath)
 	if err != nil {
-		logger.Errorf("error initializing channel event server: %s", err)
-		return shim.Error(fmt.Sprintf("error initializing channel event server: %s", err))
+		logger.Warningf("Error initializing event snap: %s\n", err)
+		return shim.Error(fmt.Sprintf("error initializing event snap: %s", err))
 	}
 
-	channelID := stub.GetChannelID()
 	if channelID == "" {
 		// The channel server must be started on the first call to Init with no channel ID,
 		// since it needs to register with the peer server before the peer GRPC server starts

@@ -96,11 +96,14 @@ func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...s
 	bargs = append(bargs, []byte(channelID))
 	bargs = append(bargs, GetByteArgs(args)...)
 
-	response, err := chClient.Query(
+	response, err := chClient.QueryWithOpts(
 		apitxn.QueryRequest{
 			ChaincodeID: "eventconsumersnap",
 			Fcn:         fcn,
 			Args:        bargs,
+		},
+		apitxn.QueryOpts{
+			Timeout: 10 * time.Second,
 		},
 	)
 	if err != nil {
