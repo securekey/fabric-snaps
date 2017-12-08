@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/spf13/viper"
+
 	"sync"
 	"time"
 
@@ -66,7 +68,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	}
 	channelCache := csi.getCache(channelID)
 	if channelCache == nil {
-		return nil, errors.New("No cache exists for '%s' channelID")
+		return nil, errors.Errorf("no cache exists for channel '%s'", channelID)
 	}
 	//find item in cache
 	config, found := channelCache.Get(keyStr)
@@ -80,6 +82,24 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 		return nil, errors.Errorf("Error getting config from cache. %v", config)
 	}
 	return nil, nil
+}
+
+//GetViper configuration as Viper
+func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, error) {
+	configData, err := csi.Get(channelID, configKey)
+	if err != nil {
+		return nil, err
+	}
+	if len(configData) == 0 {
+		// No config found for the key. Return nil instead of an error so that the caller can differentiate between the two cases
+		return nil, nil
+	}
+
+	v := viper.New()
+	v.SetConfigType(string(configType))
+	v.ReadConfig(bytes.NewBuffer(configData))
+
+	return v, err
 }
 
 //Refresh adds new items into cache and refreshes existing ones only if value for key was changed

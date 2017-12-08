@@ -15,6 +15,7 @@ import (
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
 	"github.com/securekey/fabric-snaps/healthcheck"
 
@@ -47,6 +48,13 @@ type ConfigurationSnap struct {
 
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	if stub.GetChannelID() != "" {
+		config, err := config.New(stub.GetChannelID(), "")
+		if err != nil {
+			return shim.Error(fmt.Sprintf("error getting config for channel %s", stub.GetChannelID()))
+		}
+		configmgmtService.Initialize(stub, config.PeerMspID)
+	}
 	return shim.Success(nil)
 }
 
@@ -137,8 +145,6 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		logger.Errorf("Got error while marshalling config: %v", err)
 		return shim.Error(err.Error())
 	}
-	//TODO the Initialize should delete from here when DEV-4253 done
-	configmgmtService.Initialize(stub, configKey.MspID)
 	return shim.Success(payload)
 
 }

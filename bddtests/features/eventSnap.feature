@@ -36,6 +36,7 @@ Feature:  Event Snap
 
     Scenario: Register with Local Event Service for Block Events
         Given fabric has channel "mychannel" and p0 joined channel
+        And client C1 waits 5 seconds
 
         # First clean up from any previous tests
         And client C1 unregisters for block events on channel "mychannel"
