@@ -86,6 +86,13 @@ func TestGetCaCerts(t *testing.T) {
 	}
 }
 
+func TestIsSystemCertPoolEnabled(t *testing.T) {
+	enabled := c.IsSystemCertPoolEnabled()
+	if enabled == false {
+		t.Fatal("Expecting system cert pool enabled")
+	}
+}
+
 func verifyEqual(t *testing.T, value string, expected string, errMsg string) {
 	if value != expected {
 		t.Fatalf("%s. Expecting %s, got %s", errMsg, expected, value)

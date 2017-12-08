@@ -267,6 +267,14 @@ func getTLSConfig(client string, config api.Config) (*tls.Config, error) {
 
 	// Load CA certs
 	caCertPool := x509.NewCertPool()
+	if config.IsSystemCertPoolEnabled() {
+		var err error
+		if caCertPool, err = x509.SystemCertPool(); err != nil {
+			return nil, err
+		}
+		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
+	}
+
 	for _, cert := range caCerts {
 		caCertPool.AppendCertsFromPEM([]byte(cert))
 	}
