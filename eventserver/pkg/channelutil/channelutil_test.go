@@ -13,13 +13,13 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 )
 
 func TestChannelIDFromBlock(t *testing.T) {
 	channelID1 := "ch1"
 
-	channelID, err := ChannelIDFromBlock(mocks.NewMockBlock(channelID1))
+	channelID, err := ChannelIDFromBlock(mockevent.NewBlock(channelID1))
 	if err != nil {
 		t.Fatalf("error returned from ChannelIDFromBlock: %s", err)
 	}
@@ -31,7 +31,7 @@ func TestChannelIDFromBlock(t *testing.T) {
 func TestChannelIDFromFilteredBlock(t *testing.T) {
 	channelID1 := "ch1"
 
-	channelID, err := ChannelIDFromFilteredBlock(mocks.NewMockFilteredBlock(channelID1))
+	channelID, err := ChannelIDFromFilteredBlock(mockevent.NewFilteredBlock(channelID1))
 	if err != nil {
 		t.Fatalf("error returned from ChannelIDFromFilteredBlock: %s", err)
 	}
@@ -43,7 +43,7 @@ func TestChannelIDFromFilteredBlock(t *testing.T) {
 func TestChannelIDFromEvent(t *testing.T) {
 	channelID1 := "ch1"
 
-	channelID, err := ChannelIDFromEvent(mocks.NewMockFilteredBlockEvent(channelID1))
+	channelID, err := ChannelIDFromEvent(mockevent.NewFilteredBlockEvent(channelID1))
 	if err != nil {
 		t.Fatalf("error returned from ChannelIDFromEvent with filtered block event: %s", err)
 	}
@@ -51,7 +51,7 @@ func TestChannelIDFromEvent(t *testing.T) {
 		t.Fatalf("expecting channel ID %s but got %s", channelID1, channelID)
 	}
 
-	channelID, err = ChannelIDFromEvent(mocks.NewMockBlockEvent(channelID1))
+	channelID, err = ChannelIDFromEvent(mockevent.NewBlockEvent(channelID1))
 	if err != nil {
 		t.Fatalf("error returned from ChannelIDFromEvent with block event: %s", err)
 	}

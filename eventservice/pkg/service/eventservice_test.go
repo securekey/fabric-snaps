@@ -14,8 +14,9 @@ import (
 
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
-	"github.com/securekey/fabric-snaps/eventserver/pkg/mocks"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
+	"github.com/securekey/fabric-snaps/mocks/event/mockproducer"
 )
 
 type Outcome string
@@ -40,7 +41,7 @@ const (
 
 func TestInvalidUnregister(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{BLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{BLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -53,7 +54,7 @@ func TestInvalidUnregister(t *testing.T) {
 
 func TestBlockEvents(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{BLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{BLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -66,7 +67,7 @@ func TestBlockEvents(t *testing.T) {
 	}
 	defer eventService.Unregister(registration)
 
-	eventProducer.ProduceEvent(mocks.NewMockBlockEvent(channelID))
+	eventProducer.ProduceEvent(mockevent.NewBlockEvent(channelID))
 
 	select {
 	case _, ok := <-eventch:
@@ -79,7 +80,7 @@ func TestBlockEvents(t *testing.T) {
 }
 
 func TestBlockEventsUnauthorized(t *testing.T) {
-	eventService, eventProducer, err := newServiceWithMockConn("mychannel", []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer("mychannel", []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -93,7 +94,7 @@ func TestBlockEventsUnauthorized(t *testing.T) {
 
 func TestFilteredBlockEvents(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -111,10 +112,10 @@ func TestFilteredBlockEvents(t *testing.T) {
 	txID2 := "5678"
 	txCode2 := pb.TxValidationCode_ENDORSEMENT_POLICY_FAILURE
 
-	eventProducer.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+	eventProducer.ProduceEvent(mockevent.NewFilteredBlockEvent(
 		channelID,
-		mocks.NewMockFilteredTx(txID1, txCode1),
-		mocks.NewMockFilteredTx(txID2, txCode2),
+		mockevent.NewFilteredTx(txID1, txCode1),
+		mockevent.NewFilteredTx(txID2, txCode2),
 	))
 
 	select {
@@ -134,7 +135,7 @@ func TestFilteredBlockEvents(t *testing.T) {
 }
 
 func TestFilteredBlockEventsUnauthorized(t *testing.T) {
-	eventService, eventProducer, err := newServiceWithMockConn("mychannel", []EventType{}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer("mychannel", []EventType{}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -148,7 +149,7 @@ func TestFilteredBlockEventsUnauthorized(t *testing.T) {
 
 func TestBlockAndFilteredBlockEvents(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{BLOCKEVENT, FILTEREDBLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{BLOCKEVENT, FILTEREDBLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -167,10 +168,10 @@ func TestBlockAndFilteredBlockEvents(t *testing.T) {
 	txID2 := "5678"
 	txCode2 := pb.TxValidationCode_ENDORSEMENT_POLICY_FAILURE
 
-	eventProducer.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+	eventProducer.ProduceEvent(mockevent.NewFilteredBlockEvent(
 		channelID,
-		mocks.NewMockFilteredTx(txID1, txCode1),
-		mocks.NewMockFilteredTx(txID2, txCode2),
+		mockevent.NewFilteredTx(txID1, txCode1),
+		mockevent.NewFilteredTx(txID2, txCode2),
 	))
 
 	select {
@@ -195,11 +196,11 @@ func TestBlockAndFilteredBlockEvents(t *testing.T) {
 	}
 	defer eventService.Unregister(breg)
 
-	eventProducer.ProduceEvent(mocks.NewMockBlockEvent(channelID))
-	eventProducer.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+	eventProducer.ProduceEvent(mockevent.NewBlockEvent(channelID))
+	eventProducer.ProduceEvent(mockevent.NewFilteredBlockEvent(
 		channelID,
-		mocks.NewMockFilteredTx(txID1, txCode1),
-		mocks.NewMockFilteredTx(txID2, txCode2),
+		mockevent.NewFilteredTx(txID1, txCode1),
+		mockevent.NewFilteredTx(txID2, txCode2),
 	))
 	numEventsReceived := 0
 
@@ -228,7 +229,7 @@ func TestBlockAndFilteredBlockEvents(t *testing.T) {
 
 func TestTxStatusEvents(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -266,10 +267,10 @@ func TestTxStatusEvents(t *testing.T) {
 	defer eventService.Unregister(reg2)
 
 	eventProducer.ProduceEvent(
-		mocks.NewMockFilteredBlockEvent(
+		mockevent.NewFilteredBlockEvent(
 			channelID,
-			mocks.NewMockFilteredTx(txID1, txCode1),
-			mocks.NewMockFilteredTx(txID2, txCode2),
+			mockevent.NewFilteredTx(txID1, txCode1),
+			mockevent.NewFilteredTx(txID2, txCode2),
 		),
 	)
 
@@ -303,7 +304,7 @@ func TestTxStatusEvents(t *testing.T) {
 }
 
 func TestTxStatusEventsUnauthorized(t *testing.T) {
-	eventService, eventProducer, err := newServiceWithMockConn("mychannel", []EventType{}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer("mychannel", []EventType{}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -317,7 +318,7 @@ func TestTxStatusEventsUnauthorized(t *testing.T) {
 
 func TestCCEvents(t *testing.T) {
 	channelID := "mychannel"
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{FILTEREDBLOCKEVENT}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -364,11 +365,11 @@ func TestCCEvents(t *testing.T) {
 	defer eventService.Unregister(reg2)
 
 	eventProducer.ProduceEvent(
-		mocks.NewMockFilteredBlockEvent(
+		mockevent.NewFilteredBlockEvent(
 			channelID,
-			mocks.NewMockFilteredTxWithCCEvent("txid1", ccID1, event1),
-			mocks.NewMockFilteredTxWithCCEvent("txid2", ccID2, event2),
-			mocks.NewMockFilteredTxWithCCEvent("txid3", ccID2, event3),
+			mockevent.NewFilteredTxWithCCEvent("txid1", ccID1, event1),
+			mockevent.NewFilteredTxWithCCEvent("txid2", ccID2, event2),
+			mockevent.NewFilteredTxWithCCEvent("txid3", ccID2, event3),
 		),
 	)
 
@@ -402,7 +403,7 @@ func TestCCEvents(t *testing.T) {
 }
 
 func TestCCEventsUnauthorized(t *testing.T) {
-	eventService, eventProducer, err := newServiceWithMockConn("mychannel", []EventType{}, DefaultOpts())
+	eventService, eventProducer, err := NewServiceWithMockProducer("mychannel", []EventType{}, DefaultOpts())
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -420,7 +421,7 @@ func TestConcurrentEvents(t *testing.T) {
 	channelID := "mychannel"
 	opts := DefaultOpts()
 	opts.EventConsumerBufferSize = numEvents * 4
-	eventService, eventProducer, err := newServiceWithMockConn(channelID, []EventType{BLOCKEVENT, FILTEREDBLOCKEVENT}, opts)
+	eventService, eventProducer, err := NewServiceWithMockProducer(channelID, []EventType{BLOCKEVENT, FILTEREDBLOCKEVENT}, opts)
 	if err != nil {
 		t.Fatalf("error creating channel event client: %s", err)
 	}
@@ -451,7 +452,7 @@ func TestConcurrentEvents(t *testing.T) {
 	})
 }
 
-func testConcurrentBlockEvents(channelID string, numEvents uint, eventService eventapi.EventService, eventProducer *MockProducer) error {
+func testConcurrentBlockEvents(channelID string, numEvents uint, eventService eventapi.EventService, eventProducer *mockproducer.MockProducer) error {
 	registration, eventch, err := eventService.RegisterBlockEvent()
 	if err != nil {
 		return errors.Errorf("error registering for block events: %s", err)
@@ -460,7 +461,7 @@ func testConcurrentBlockEvents(channelID string, numEvents uint, eventService ev
 	go func() {
 		var i uint
 		for i = 0; i < numEvents+10; i++ {
-			eventProducer.ProduceEvent(mocks.NewMockBlockEvent(channelID))
+			eventProducer.ProduceEvent(mockevent.NewBlockEvent(channelID))
 		}
 	}()
 
@@ -491,7 +492,7 @@ func testConcurrentBlockEvents(channelID string, numEvents uint, eventService ev
 	return nil
 }
 
-func testConcurrentFilteredBlockEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *MockProducer) error {
+func testConcurrentFilteredBlockEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *mockproducer.MockProducer) error {
 	registration, eventch, err := eventService.RegisterFilteredBlockEvent()
 	if err != nil {
 		return errors.Errorf("error registering for filtered block events: %s", err)
@@ -501,9 +502,9 @@ func testConcurrentFilteredBlockEvents(channelID string, numEvents uint, eventSe
 	var i uint
 	for i = 0; i < numEvents; i++ {
 		txID := fmt.Sprintf("txid_fb_%d", i)
-		conn.ProduceEvent(mocks.NewMockFilteredBlockEvent(
+		conn.ProduceEvent(mockevent.NewFilteredBlockEvent(
 			channelID,
-			mocks.NewMockFilteredTx(txID, pb.TxValidationCode_VALID),
+			mockevent.NewFilteredTx(txID, pb.TxValidationCode_VALID),
 		))
 	}
 
@@ -540,7 +541,7 @@ func testConcurrentFilteredBlockEvents(channelID string, numEvents uint, eventSe
 	return nil
 }
 
-func testConcurrentCCEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *MockProducer) error {
+func testConcurrentCCEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *mockproducer.MockProducer) error {
 	ccID := "mycc1"
 	ccFilter := "event.*"
 	event1 := "event1"
@@ -554,9 +555,9 @@ func testConcurrentCCEvents(channelID string, numEvents uint, eventService event
 	for i = 0; i < numEvents+10; i++ {
 		txID := fmt.Sprintf("txid_cc_%d", i)
 		conn.ProduceEvent(
-			mocks.NewMockFilteredBlockEvent(
+			mockevent.NewFilteredBlockEvent(
 				channelID,
-				mocks.NewMockFilteredTxWithCCEvent(txID, ccID, event1),
+				mockevent.NewFilteredTxWithCCEvent(txID, ccID, event1),
 			),
 		)
 	}
@@ -587,7 +588,7 @@ func testConcurrentCCEvents(channelID string, numEvents uint, eventService event
 	return nil
 }
 
-func testConcurrentTxStatusEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *MockProducer) error {
+func testConcurrentTxStatusEvents(channelID string, numEvents uint, eventService eventapi.EventService, conn *mockproducer.MockProducer) error {
 	var wg sync.WaitGroup
 
 	wg.Add(int(numEvents))
@@ -611,9 +612,9 @@ func testConcurrentTxStatusEvents(channelID string, numEvents uint, eventService
 			defer eventService.Unregister(reg)
 
 			conn.ProduceEvent(
-				mocks.NewMockFilteredBlockEvent(
+				mockevent.NewFilteredBlockEvent(
 					channelID,
-					mocks.NewMockFilteredTx(txID, pb.TxValidationCode_VALID),
+					mockevent.NewFilteredTx(txID, pb.TxValidationCode_VALID),
 				),
 			)
 
@@ -673,13 +674,6 @@ func listenEvents(blockch <-chan *eventapi.BlockEvent, ccch <-chan *eventapi.CCE
 			return
 		}
 	}
-}
-
-func newServiceWithMockConn(channelID string, eventTypes []EventType, opts *Opts, prodOpts ...MockProducerOpt) (*EventService, *MockProducer, error) {
-	service := NewService(opts, eventTypes)
-	eventProducer := NewMockProducer(prodOpts...)
-	service.Start(eventProducer)
-	return service, eventProducer, nil
 }
 
 func checkTxStatusEvent(t *testing.T, event *eventapi.TxStatusEvent, expectedTxID string, expectedCode pb.TxValidationCode) {
