@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -73,6 +74,7 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 				chaincodeID: ccID,
 				channelID:   channelID,
 			},
+			Timeout: 10 * time.Second,
 		},
 	)
 	if err != nil {
