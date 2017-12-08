@@ -7,10 +7,17 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/spf13/viper"
 )
@@ -18,6 +25,8 @@ import (
 var txnSnapConfig *viper.Viper
 var coreConfig *viper.Viper
 var c transactionsnapApi.Config
+var channelID = "testChannel"
+var mspID = "Org1MSP"
 
 func TestGetMspID(t *testing.T) {
 	value := c.GetMspID()
@@ -144,16 +153,57 @@ func TestGetGRPCProtocol(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	var err error
-	c, err = NewConfig("../sampleconfig", nil)
+	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("File error: %v\n", err))
+	}
+	configStr := string(configData[:])
+	config := &configmanagerApi.ConfigMessage{MspID: mspID,
+		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
+				configmanagerApi.AppConfig{AppName: "txnsnap", Config: configStr}}}}}
+	stub := getMockStub()
+	configBytes, err := json.Marshal(config)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, mspID)
+
+	c, err = NewConfig("../sampleconfig", channelID)
 	if err != nil {
 		panic(err.Error())
 	}
+
+	coreConfig = c.GetPeerConfig()
+
 	txnSnapConfig = viper.New()
 	txnSnapConfig.SetConfigFile("../sampleconfig/config.yaml")
 	txnSnapConfig.ReadInConfig()
-	coreConfig = viper.New()
-	coreConfig.SetConfigFile("../sampleconfig/core.yaml")
-	coreConfig.ReadInConfig()
+
+	fmt.Printf("%+v\n", txnSnapConfig.AllKeys())
+
 	os.Exit(m.Run())
+
+}
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
 }

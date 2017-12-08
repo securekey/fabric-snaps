@@ -58,7 +58,7 @@ type Client interface {
 	// @param {Peer} The peer to query
 	// @returns {[]string} list of channels
 	// @returns {error} error, if any
-	QueryChannels(PeerConfig) ([]string, error)
+	QueryChannels(sdkApi.Peer) ([]string, error)
 
 	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
 	// @param {Channel} channel on which the transaction is taking place

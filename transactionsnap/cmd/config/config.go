@@ -7,16 +7,18 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
-	"fmt"
+	"bytes"
+	"go/build"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
-	"github.com/securekey/fabric-snaps/configmanager/pkg/client"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/spf13/viper"
 )
@@ -28,32 +30,21 @@ const (
 )
 
 var logger = logging.NewLogger("txn-snap-config")
+var defaultLogLevel = "info"
 
-// config implements Config interface
-type config struct {
-	peerConfig    *viper.Viper
-	txnSnapConfig *viper.Viper
+//Config implements Config interface
+type Config struct {
+	peerConfig         *viper.Viper
+	txnSnapConfig      *viper.Viper
+	txnSnapConfigBytes []byte
 }
 
-// NewConfig return config struct
-func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (transactionsnapApi.Config, error) {
-
+//NewConfig returns config struct
+func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Config, error) {
 	replacer := strings.NewReplacer(".", "_")
-	configPath := "/opt/extsysccs/config/txnsnap"
-	peerConfigPath := "/etc/hyperledger/fabric"
-
-	if configPathOverride != "" {
-		configPath = configPathOverride
-		peerConfigPath = configPathOverride
+	if peerConfigPath == "" {
+		peerConfigPath = "/etc/hyperledger/fabric"
 	}
-	//txnSnap Config
-	txnSnapConfig := viper.New()
-	txnSnapConfig.AddConfigPath(configPath)
-	txnSnapConfig.SetConfigName(configFileName)
-	txnSnapConfig.SetEnvPrefix(cmdRootPrefix)
-	txnSnapConfig.AutomaticEnv()
-	txnSnapConfig.SetEnvKeyReplacer(replacer)
-
 	//peer Config
 	peerConfig := viper.New()
 	peerConfig.AddConfigPath(peerConfigPath)
@@ -62,41 +53,55 @@ func NewConfig(configPathOverride string, stub shim.ChaincodeStubInterface) (tra
 	peerConfig.AutomaticEnv()
 	peerConfig.SetEnvKeyReplacer(replacer)
 
-	err := txnSnapConfig.ReadInConfig()
+	err := peerConfig.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
+		return nil, errors.Errorf("Fatal error reading peer config file: %s", err)
+	}
+	//txSnapConfig
+	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"),
+		PeerID: peerConfig.GetString("peer.id"), AppName: "txnsnap"}
+	cacheInstance := configmgmtService.GetInstance()
+	if cacheInstance == nil {
+		return nil, errors.New("Cannot create cache instance")
+	}
+	dataConfig, err := cacheInstance.Get(channelID, key)
+	if err != nil {
+		return nil, err
 	}
 
-	err = peerConfig.ReadInConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Fatal error reading config file: %s", err)
-	}
+	txnSnapConfig := viper.New()
+	txnSnapConfig.SetConfigType("YAML")
+	txnSnapConfig.ReadConfig(bytes.NewBuffer(dataConfig))
+	txnSnapConfig.SetEnvPrefix(cmdRootPrefix)
+	txnSnapConfig.AutomaticEnv()
+	txnSnapConfig.SetEnvKeyReplacer(replacer)
 
-	txnSnapConfig, err = client.NewTempConfigClient(txnSnapConfig).Get(stub, &configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "txnsnap"})
-	if err != nil {
-		return nil, fmt.Errorf("Fatal error from NewConfigClient: %s", err)
-	}
-	c := &config{peerConfig: peerConfig, txnSnapConfig: txnSnapConfig}
+	c := &Config{peerConfig: peerConfig, txnSnapConfig: txnSnapConfig, txnSnapConfigBytes: dataConfig}
 	err = c.initializeLogging()
 	if err != nil {
-		return nil, fmt.Errorf("Error initializing logging: %s", err)
+		return nil, errors.Errorf("Error initializing logging: %s", err)
 	}
 	return c, nil
 }
 
+//GetConfigBytes returns config bytes
+func (c *Config) GetConfigBytes() []byte {
+	return c.txnSnapConfigBytes
+}
+
 // GetLocalPeer returns address and ports for the peer running inside the
 // txn snap container
-func (c *config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
+func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
 	var peer = &transactionsnapApi.PeerConfig{}
 	var err error
 
 	peerAddress := c.peerConfig.GetString("peer.address")
 	if peerAddress == "" {
-		return nil, fmt.Errorf("Peer address not found in config")
+		return nil, errors.Errorf("Peer address not found in config")
 	}
 	eventAddress := c.peerConfig.GetString("peer.events.address")
 	if eventAddress == "" {
-		return nil, fmt.Errorf("Peer event address not found in config")
+		return nil, errors.Errorf("Peer event address not found in config")
 	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
 	peer.Host = c.GetGRPCProtocol() + splitPeerAddress[0]
@@ -113,43 +118,53 @@ func (c *config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
 	}
 	peer.MSPid = []byte(c.GetMspID())
 	if peer.MSPid == nil || string(peer.MSPid) == "" {
-		return nil, fmt.Errorf("Peer localMspId not found in config")
+		return nil, errors.Errorf("Peer localMspId not found in config")
 	}
 
 	return peer, nil
 }
 
 // GetMspID returns the MSP ID for the local peer
-func (c *config) GetMspID() string {
+func (c *Config) GetMspID() string {
 	return c.peerConfig.GetString("peer.localMspId")
 }
 
-// GetMspConfigPath returns the MSP config path for peer
-func (c *config) GetMspConfigPath() string {
-	return c.peerConfig.GetString("peer.mspConfigPath")
+//GetMspConfigPath returns the MSP config path for peer
+func (c *Config) GetMspConfigPath() string {
+	return substGoPath(c.peerConfig.GetString("peer.mspConfigPath"))
+}
+
+// substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
+// has multiple GOPATHs then the first is used.
+func substGoPath(s string) string {
+	gpDefault := build.Default.GOPATH
+	gps := filepath.SplitList(gpDefault)
+
+	return strings.Replace(s, "$GOPATH", gps[0], -1)
 }
 
 // GetTLSRootCertPath returns absolute path to the TLS root certificate
-func (c *config) GetTLSRootCertPath() string {
+func (c *Config) GetTLSRootCertPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.rootcert.file"))
 }
 
 // GetTLSCertPath returns absolute path to the TLS certificate
-func (c *config) GetTLSCertPath() string {
+func (c *Config) GetTLSCertPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.cert.file"))
 }
 
 // GetTLSKeyPath returns absolute path to the TLS key
-func (c *config) GetTLSKeyPath() string {
+func (c *Config) GetTLSKeyPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.key.file"))
 }
 
 // GetMembershipPollInterval get membership pollinterval
-func (c *config) GetMembershipPollInterval() time.Duration {
+func (c *Config) GetMembershipPollInterval() time.Duration {
 	return c.txnSnapConfig.GetDuration("txnsnap.membership.pollinterval")
 }
 
-func (c *config) GetGRPCProtocol() string {
+// GetGRPCProtocol to get grpc protocol
+func (c *Config) GetGRPCProtocol() string {
 	if c.peerConfig.GetBool("peer.tls.enabled") {
 		return "grpcs://"
 	}
@@ -160,30 +175,40 @@ func (c *config) GetGRPCProtocol() string {
 // relative to the config file
 // For example, if the config file is at /etc/hyperledger/config.yaml,
 // calling GetConfigPath("tls/cert") will return /etc/hyperledger/tls/cert
-func (c *config) GetConfigPath(path string) string {
+func (c *Config) GetConfigPath(path string) string {
 	basePath := filepath.Dir(c.txnSnapConfig.ConfigFileUsed())
 
 	if filepath.IsAbs(path) {
 		return path
 	}
-
 	return filepath.Join(basePath, path)
 }
 
-func (c *config) GetPeerConfig() *viper.Viper {
+//GetPeerConfig to get peers
+func (c *Config) GetPeerConfig() *viper.Viper {
 	return c.peerConfig
 }
 
+//GetTxnSnapConfig returns txnSnapConfig
+func (c *Config) GetTxnSnapConfig() *viper.Viper {
+	return c.txnSnapConfig
+}
+
 // initializeLogging initializes the logger
-func (c *config) initializeLogging() error {
-	level, err := logging.LogLevel(c.txnSnapConfig.GetString("txnsnap.loglevel"))
-	if err != nil {
-		return fmt.Errorf("Error initializing log level: %s", err)
+func (c *Config) initializeLogging() error {
+	logLevel := c.txnSnapConfig.GetString("txnsnap.loglevel")
+
+	if logLevel == "" {
+		logLevel = defaultLogLevel
 	}
 
-	logging.SetLevel("", level)                // default module
-	logging.SetLevel("txn-snap-config", level) // this current file's module
-	logger.Debugf("txnsnap Logger initialized. Default Log level: %s, txn-snap-config Log level: %s", logging.GetLevel(""), logging.GetLevel("txn-snap-config"))
+	level, err := logging.LogLevel(logLevel)
+	if err != nil {
+		return errors.Errorf("Error initializing log level: %s", err)
+	}
+
+	logging.SetLevel("", level)
+	logger.Debugf("Txnsnap logging initialized. Log level: %s", logging.GetLevel(""))
 
 	return nil
 }

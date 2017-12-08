@@ -17,6 +17,7 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/pkg/errors"
 
 	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -51,9 +52,9 @@ func GetInstance(config api.Config) (api.Client, error) {
 	var err error
 	once.Do(func() {
 		client = &clientImpl{selectionService: NewSelectionService(config), config: config}
-		initError := client.initialize()
+		initError := client.initialize(config.GetConfigBytes())
 		if initError != nil {
-			err = fmt.Errorf("Error initializing fabric client: %s", initError)
+			err = errors.Errorf("Error initializing fabric client: %s", initError)
 		}
 	})
 
@@ -77,16 +78,16 @@ func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 	defer c.Unlock()
 	channel, err := c.client.NewChannel(name)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating new channel: %s", err)
+		return nil, errors.Errorf("Error creating new channel: %s", err)
 	}
 	ordererConfig, err := c.client.Config().RandomOrdererConfig()
 	if err != nil {
-		return nil, fmt.Errorf("GetRandomOrdererConfig return error: %s", err)
+		return nil, errors.Errorf("GetRandomOrdererConfig return error: %s", err)
 	}
 
 	orderer, err := sdkFabApi.NewOrderer(ordererConfig.URL, ordererConfig.TLSCACerts.Path, "", c.client.Config())
 	if err != nil {
-		return nil, fmt.Errorf("Error adding orderer: %s", err)
+		return nil, errors.Errorf("Error adding orderer: %s", err)
 	}
 	channel.AddOrderer(orderer)
 
@@ -99,7 +100,7 @@ func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
 
 	channel := c.client.Channel(name)
 	if channel == nil {
-		return nil, fmt.Errorf("Channel %s has not been created", name)
+		return nil, errors.Errorf("Channel %s has not been created", name)
 	}
 
 	return channel, nil
@@ -120,7 +121,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 		peers, err = c.selectionService.GetEndorsersForChaincode(channel.Name(),
 			ccIDsForEndorsement...)
 		if err != nil {
-			return nil, fmt.Errorf("Error selecting endorsers: %s", err)
+			return nil, errors.Errorf("Error selecting endorsers: %s", err)
 		}
 	} else {
 		peers = targets
@@ -138,7 +139,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 		chaincodeID, channel.Name())
 
 	if len(args) == 0 {
-		return nil, fmt.Errorf(
+		return nil, errors.Errorf(
 			"Args cannot be empty. Args[0] is expected to be the function name")
 	}
 
@@ -152,11 +153,11 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 
 	responses, _, err := channel.SendTransactionProposal(request)
 	if err != nil {
-		return nil, fmt.Errorf("Error sending transaction proposal: %s", err)
+		return nil, errors.Errorf("Error sending transaction proposal: %s", err)
 	}
 
 	if len(responses) == 0 {
-		return nil, fmt.Errorf("Did not receive any endorsements")
+		return nil, errors.Errorf("Did not receive any endorsements")
 	}
 	var validResponses []*apitxn.TransactionProposalResponse
 	var errorCount int
@@ -171,7 +172,7 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 	}
 
 	if errorCount == len(responses) {
-		return nil, fmt.Errorf(strings.Join(errorResponses, "\n"))
+		return nil, errors.Errorf(strings.Join(errorResponses, "\n"))
 	}
 
 	return validResponses, nil
@@ -186,7 +187,7 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 
 	transaction, err := channel.CreateTransaction(responses)
 	if err != nil {
-		return fmt.Errorf("Error creating transaction: %s", err)
+		return errors.Errorf("Error creating transaction: %s", err)
 	}
 	done := make(chan bool)
 	fail := make(chan error)
@@ -194,48 +195,44 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 	if registerTxEvent {
 		localPeer, err := c.config.GetLocalPeer()
 		if err != nil {
-			return fmt.Errorf("GetLocalPeer return error [%v]", err)
+			return errors.Errorf("GetLocalPeer return error [%v]", err)
 		}
 		eventHub, err := sdkFabApi.NewEventHub(c.client)
 		if err != nil {
-			return fmt.Errorf("Failed sdkFabricTxn.GetDefaultImplEventHub() [%v]", err)
+			return errors.Errorf("Failed sdkFabricTxn.GetDefaultImplEventHub() [%v]", err)
 		}
 		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", localPeer.EventHost, localPeer.EventPort), "", "")
 		if err := eventHub.Connect(); err != nil {
-			return fmt.Errorf("Failed eventHub.Connect() [%v]", err)
+			return errors.Errorf("Failed eventHub.Connect() [%v]", err)
 		}
 		defer eventHub.Disconnect()
 		done, fail = c.registerTxEvent(txID, eventHub)
 	}
 	resp, err := channel.SendTransaction(transaction)
 	if err != nil {
-		return fmt.Errorf("Error sending transaction: %s", err)
+		return errors.Errorf("Error sending transaction: %s", err)
 	}
 
 	if resp.Err != nil {
-		return fmt.Errorf("Error sending transaction: %s", resp.Err.Error())
+		return errors.Errorf("Error sending transaction: %s", resp.Err.Error())
 	}
 
 	if registerTxEvent {
 		select {
 		case <-done:
 		case <-fail:
-			return fmt.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID.ID, fail)
+			return errors.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID.ID, fail)
 		case <-time.After(time.Second * registerTxEventTimeout):
-			return fmt.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID.ID)
+			return errors.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID.ID)
 		}
 	}
 
 	return nil
 }
 
-func (c *clientImpl) QueryChannels(peer api.PeerConfig) ([]string, error) {
-	p, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", peer.Host, peer.Port),
-		c.config.GetTLSRootCertPath(), "", c.client.Config())
-	if err != nil {
-		return nil, fmt.Errorf("Error creating peer: %s", err)
-	}
-	responses, err := c.client.QueryChannels(p)
+// /QueryChannels to query channels based on peer
+func (c *clientImpl) QueryChannels(peer sdkApi.Peer) ([]string, error) {
+	responses, err := c.client.QueryChannels(peer)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error querying channels on peer %+v : %s", peer, err)
@@ -367,10 +364,11 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 	return nil
 }
 
-func (c *clientImpl) initialize() error {
+func (c *clientImpl) initialize(sdkConfig []byte) error {
 
 	sdkOptions := sdkFabApi.Options{
-		ConfigFile:      c.config.GetConfigPath("") + "/config.yaml",
+		ConfigByte:      sdkConfig,
+		ConfigType:      "yaml",
 		ProviderFactory: &factories.DefaultCryptoSuiteProviderFactory{},
 		ContextFactory:  &factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()},
 	}

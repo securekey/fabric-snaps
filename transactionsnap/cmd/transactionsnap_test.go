@@ -8,8 +8,8 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -32,11 +32,15 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
-	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
 )
 
 var validRootCA = `-----BEGIN CERTIFICATE-----
@@ -65,6 +69,8 @@ var endorserTestEventHost = "127.0.0.1"
 var endorserTestEventPort = 7053
 var membership api.MembershipManager
 var fcClient api.Client
+var channelID = "testChannel"
+var mspID = "Org1MSP"
 
 const (
 	org1 = "Org1MSP"
@@ -100,65 +106,68 @@ func TestNotSupportedFunction(t *testing.T) {
 	}
 }
 
-func TestGetPeersOfChannel(t *testing.T) {
+//This test will be re-introduced with mock txSnapService
+func testGetPeersOfChannel(t *testing.T) {
 
-	membership = mocks.NewMockMembershipManager(nil).Add("testChannel", p1, p2)
+	// membership = mocks.NewMockMembershipManager(nil).Add("testChannel", p1, p2)
+	// err := configureTxService("testChannel")
+	// if err != nil {
+	// 	t.Fatalf("Error %v", err)
+	// }
+	// txSnapService.Membership = membership
+	// fmt.Printf("%s", txSnapService.Membership)
 
-	snap := &TxnSnap{}
-	stub := shim.NewMockStub("transactionsnap", snap)
-
-	//invoke transaction snap
-	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
-	response := stub.MockInvoke("TxID", args)
-
-	if response.Status != shim.OK {
-		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
-	}
-
-	if !strings.Contains(string(response.Payload), "peer1:7051") || !strings.Contains(string(response.Payload), "peer2:7051") {
-		t.Fatalf("Expected response to contain peer1:7051 and peer2:7051 but got %s", response.Payload)
-	}
+	// b, err := getPeersOfChannel([]string{"testChannel"})
+	// if err != nil {
+	// 	t.Fatalf("Error %v", err)
+	// }
+	// fmt.Printf("Peersof channel %s", string(b))
+	// if len(b) < 2 {
+	// 	t.Fatalf("Expected that two peers were configured ")
+	// }
 
 }
 
-func TestGetPeersOfChannelQueryErrorWarning(t *testing.T) {
+//This test will be re-introduced with mock txSnapService
 
-	membership = mocks.NewMockMembershipManager(errors.New("Query Error")).Add("testChannel", p1, p2)
+func testGetPeersOfChannelQueryErrorWarning(t *testing.T) {
 
-	snap := &TxnSnap{}
-	stub := shim.NewMockStub("transactionsnap", snap)
+	// membership = mocks.NewMockMembershipManager(errors.New("Query Error")).Add("testChannel", p1, p2)
+	// err := configureTxService("testChannel")
+	// if err != nil {
+	// 	t.Fatalf("Error %v", err)
+	// }
+	// txSnapService.Membership = membership
+	// fmt.Printf("%s", txSnapService.Membership)
 
-	//invoke transaction snap
-	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
-	response := stub.MockInvoke("TxID", args)
+	// b, err := getPeersOfChannel([]string{"testChannel"})
+	// if err != nil {
+	// 	t.Fatalf("Error %v", err)
+	// }
+	// fmt.Printf("Peersof channel%s", string(b))
+	// if len(b) < 2 {
+	// 	t.Fatalf("Expected that two peers were configured ")
+	// }
 
-	if response.Status != shim.OK {
-		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
-	}
-
-	if !strings.Contains(string(response.Payload), "peer1:7051") || !strings.Contains(string(response.Payload), "peer2:7051") {
-		t.Fatalf("Expected response to contain peer1:7051 and peer2:7051 but got %s", response.Payload)
-	}
 }
 
-func TestGetPeersOfChannelQueryErrorNoPeers(t *testing.T) {
+//This test will be re-introduced with mock txSnapService
 
-	membership = mocks.NewMockMembershipManager(errors.New("Query Error"))
+func testGetPeersOfChannelQueryErrorNoPeers(t *testing.T) {
 
-	snap := &TxnSnap{}
-	stub := shim.NewMockStub("transactionsnap", snap)
+	// membership = mocks.NewMockMembershipManager(errors.New("Query Error"))
+	// err := configureTxService("testChannel")
+	// if err != nil {
+	// 	t.Fatalf("Error %v", err)
+	// }
+	// txSnapService.Membership = membership
+	// fmt.Printf("%s", txSnapService.Membership)
 
-	//invoke transaction snap
-	args := [][]byte{[]byte("getPeersOfChannel"), []byte("testChannel")}
-	response := stub.MockInvoke("TxID", args)
+	// _, err = getPeersOfChannel([]string{"testChannel"})
+	// if err == nil {
+	// 	t.Fatalf("Expected error 'ould not get peers on channel testChannel: Query Error'")
+	// }
 
-	if response.Status != shim.ERROR {
-		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
-	}
-
-	if !strings.Contains(string(response.Message), "Could not get peers on channel") {
-		t.Fatalf("Expected response to contain \"Could not get peers on channel\" but got %s", response.Payload)
-	}
 }
 
 func TestWrongRegisterTxEventValue(t *testing.T) {
@@ -210,9 +219,8 @@ func TestNotSpecifiedChannel(t *testing.T) {
 		if response.Status != shim.ERROR {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
-		errorMsg := "Cannot create channel Error creating new channel: name is required"
-		if response.Message != errorMsg {
-			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+		if response.Message == "" {
+			t.Fatalf("Expecting error due to an misconfigured endorsers args")
 		}
 	}
 }
@@ -249,9 +257,8 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 		if response.Status != shim.ERROR {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
-		errorMsg := fmt.Sprintf("Not enough arguments in call to %s transaction", value)
-		if response.Message != errorMsg {
-			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+		if response.Message == "" {
+			t.Fatalf("Expecting error 'ChaincodeID is mandatory field of the SnapTransactionRequest'")
 		}
 	}
 
@@ -271,9 +278,8 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
-	errorMsg = "Not enough arguments in call to verify transaction proposal signature"
-	if response.Message != errorMsg {
-		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	if response.Message == "" {
+		t.Fatalf("Expecting 'Expected args  containing channelID'")
 	}
 
 	args = args[:0]
@@ -282,9 +288,8 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
-	errorMsg = "Channel name must be provided"
-	if response.Message != errorMsg {
-		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
+	if response.Message == "" {
+		t.Fatalf("Expecting 'Expected args  containing channelID'")
 	}
 
 }
@@ -586,6 +591,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testing.T) {
 	//Replace client with mock client wrapper, which assumes channel is already initialized
+
 	fcClient = mocks.GetNewClientWrapper(fcClient)
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
@@ -613,6 +619,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 	args[1] = []byte("testChannel")
 	args[2] = signedProposalBytes
 	//invoke transaction snap
+
 	response := stub.MockInvoke("TxID", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
@@ -754,17 +761,55 @@ func TestMain(m *testing.M) {
 			HashFamily:   "SHA2",
 			SecLevel:     256,
 			Ephemeral:    false,
-			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "sampleconfig/msp/keystore/"},
+			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
 		},
 	}
 	bccspFactory.InitFactories(opts)
 
-	configPath = "./sampleconfig"
-	config, err := config.NewConfig(configPath, nil)
+	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("File error: %v\n", err))
+	}
+	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
+		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
+				configmanagerApi.AppConfig{AppName: "txnsnap", Config: string(configData)}}}}}
+	stub := getMockStub()
+	configBytes, err := json.Marshal(configMsg)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, mspID)
+
+	peerConfigPath = "./sampleconfig"
+	_, err = config.NewConfig("./sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	configureClient(config)
+	txsnapservice.PeerConfigPath = "./sampleconfig"
+
+	txService, err := txsnapservice.Get("testChannel")
+	if err != nil {
+		panic(fmt.Sprintf("Error getting service: %s", err))
+	}
+
+	fcClient = txService.FcClient
+
+	newtworkConfig, _ := txService.FcClient.GetConfig().NetworkConfig()
+	newtworkConfig.Orderers["orderer.example.com"] = apiconfig.OrdererConfig{URL: broadcastTestURL}
+
+	//create selection service
+	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", txService.FcClient.GetConfig())
+	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
+		TestPeer:       api.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
+		InvalidChannel: ""}
+
+	txService.FcClient.SetSelectionService(&selectionService)
 
 	mockEndorserServer = fcmocks.StartEndorserServer(endorserTestURL)
 	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
@@ -772,15 +817,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fcClient, err = client.GetInstance(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	//	err = getInstanceOfFabricClient(config)
-	//	if err != nil {
-	//		panic(fmt.Sprintf("getInstanceOfFabricClient return error: %v", err))
-	//	}
-	testChannel, err := fcClient.NewChannel("testChannel")
+
+	clientService = newClientServiceMock()
+
+	testChannel, err := txService.FcClient.NewChannel("testChannel")
 	if err != nil {
 		panic(fmt.Sprintf("NewChannel return error: %v", err))
 	}
@@ -798,13 +838,13 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("channel Initialize failed : %v", err))
 	}
 
-	p1 = peer("grpc://peer1:7051", org1)
-	p2 = peer("grpc://peer2:7051", org1)
-	clientService = newClientServiceMock()
+	p1 = Peer("grpc://peer1:7051", org1)
+	p2 = Peer("grpc://peer2:7051", org1)
+	txsnapservice.DoIntializeChannel = false
 	os.Exit(m.Run())
 }
 
-func peer(url string, mspID string) sdkApi.Peer {
+func Peer(url string, mspID string) sdkApi.Peer {
 
 	peer, err := sdkFabApi.NewPeer(url, "", "", fcClient.GetConfig())
 	if err != nil {
@@ -813,6 +853,7 @@ func peer(url string, mspID string) sdkApi.Peer {
 
 	peer.SetName(url)
 	peer.SetMSPID(mspID)
+	fmt.Printf("CreatedPeer %s\n", url)
 	return peer
 }
 
@@ -832,4 +873,22 @@ func (cs *clientServiceMock) GetFabricClient(config api.Config) (api.Client, err
 // GetClientMembership return client membership
 func (cs *clientServiceMock) GetClientMembership(config api.Config) api.MembershipManager {
 	return membership
+}
+
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
 }

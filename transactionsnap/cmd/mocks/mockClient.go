@@ -73,8 +73,8 @@ func (c *MockClient) CommitTransaction(channel sdkApi.Channel, txres []*apitxn.T
 // @param {Peer} The peer to query
 // @returns {[]string} list of channels
 // @returns {error} error, if any
-func (c *MockClient) QueryChannels(config transactionsnapApi.PeerConfig) ([]string, error) {
-	return c.fcClient.QueryChannels(config)
+func (c *MockClient) QueryChannels(peer sdkApi.Peer) ([]string, error) {
+	return c.fcClient.QueryChannels(peer)
 }
 
 // VerifyTxnProposalSignature verify TxnProposalSignature against msp
