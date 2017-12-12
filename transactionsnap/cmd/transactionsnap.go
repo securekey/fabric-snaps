@@ -306,8 +306,8 @@ func newClientService() api.ClientService {
 }
 
 // GetFabricClient return fabric client
-func (cs *clientServiceImpl) GetFabricClient(config api.Config) (api.Client, error) {
-	fcClient, err := client.GetInstance(config)
+func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
+	fcClient, err := client.GetInstance(channelID, config)
 	if err != nil {
 		return nil, errors.Errorf("Cannot initialize client %v", err)
 	}

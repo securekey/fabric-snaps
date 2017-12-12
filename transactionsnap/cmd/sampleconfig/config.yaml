@@ -8,6 +8,15 @@
 txnsnap:
   loglevel: debug
 
+  # Cache expiry time and cache purge time in seconds
+  cache:
+    #CacheExpiryTime sets the expiration duration
+    #Items in cache will be expired after 'CacheExpiryTime'
+    expiryTime:  700
+    #CachePurgeExpiredTime the expired items clean up interval
+    #Items will be purged from cache 'CachePurgeExpiredTime'
+    purgeExpiredTime: 900
+
 # Membership list polling interval and tls flag
   membership:
     pollinterval: 3s
@@ -56,3 +65,5 @@ orderers:
 organizations:
   peerorg1:
     mspid: Org1MSP
+
+

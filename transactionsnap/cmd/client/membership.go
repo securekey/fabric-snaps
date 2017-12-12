@@ -110,7 +110,7 @@ func queryPeersOfChannel(channelID string, config api.Config) ([]sdkApi.Peer, er
 		return nil, fmt.Errorf("Error unmarshalling response: %s Raw Payload: %+v",
 			err, response.ProposalResponse.Response.Payload)
 	}
-	peers, err := parsePeerEndpoints(peerEndpoints, config)
+	peers, err := parsePeerEndpoints(channelID, peerEndpoints, config)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing peer endpoints: %s", err)
 	}
@@ -120,7 +120,7 @@ func queryPeersOfChannel(channelID string, config api.Config) ([]sdkApi.Peer, er
 
 func queryChaincode(channelID string, ccID string, args []string, config api.Config) (*apitxn.TransactionProposalResponse, error) {
 	logger.Debugf("queryChaincode channelID:%s", channelID)
-	client, err := GetInstance(config)
+	client, err := GetInstance(channelID, config)
 	if err != nil {
 		return nil, formatQueryError(channelID, err)
 	}
@@ -185,9 +185,9 @@ func queryChaincode(channelID string, ccID string, args []string, config api.Con
 	return response, nil
 }
 
-func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints, config api.Config) ([]sdkApi.Peer, error) {
+func parsePeerEndpoints(channelID string, endpoints *protosPeer.PeerEndpoints, config api.Config) ([]sdkApi.Peer, error) {
 	peers := []sdkApi.Peer{}
-	clientInstance, err := GetInstance(config)
+	clientInstance, err := GetInstance(channelID, config)
 	if err != nil {
 		return nil, err
 	}

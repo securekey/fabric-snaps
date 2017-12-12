@@ -222,7 +222,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 
-	fcClient, err = client.GetInstance(&sampleConfig{config})
+	fcClient, err = client.GetInstance(channelID, &sampleConfig{config})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
@@ -340,6 +340,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 	// sign proposal bytes
 	proposalBytes, err := proto.Marshal(proposal)
 	if err != nil {
+
 		return nil, fmt.Errorf("Error marshalling proposal: %v", err)
 	}
 

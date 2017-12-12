@@ -25,6 +25,8 @@ type Config interface {
 	GetConfigPath(path string) string
 	GetPeerConfig() *viper.Viper
 	GetConfigBytes() []byte
+	GetCacheExpiredTime() int
+	GetCachePurgeExpiredTime() int
 }
 
 // PeerConfig represents the server addresses of a fabric peer

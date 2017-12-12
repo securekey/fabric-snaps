@@ -19,6 +19,6 @@ type SnapTransactionRequest struct {
 
 // ClientService interface
 type ClientService interface {
-	GetFabricClient(config Config) (Client, error)
+	GetFabricClient(channelID string, config Config) (Client, error)
 	GetClientMembership(config Config) MembershipManager
 }
