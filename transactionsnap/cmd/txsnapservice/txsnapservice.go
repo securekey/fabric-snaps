@@ -80,6 +80,10 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 		return txService, err
 	}
 
+	if config == nil || config.GetConfigBytes() == nil {
+		return nil, fmt.Errorf("config from ledger is nil")
+	}
+
 	fcClient, err := txnSnapClient.GetInstance(&apiConfig{config})
 	if err != nil {
 		return nil, errors.Errorf("Cannot initialize client %v", err)
