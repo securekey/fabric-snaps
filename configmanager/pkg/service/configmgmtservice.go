@@ -109,7 +109,7 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) (bool, error) {
 	fmt.Printf("***Refresh %v\n", time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
-		return nil, errors.New("ConfigServiceImpl was not initialized")
+		return false, errors.New("ConfigServiceImpl was not initialized")
 	}
 	if len(csi.cacheMap) == 0 {
 		return false, errors.New("Cache was not initialized")
@@ -137,7 +137,7 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 //refreshCache only when value for key was updated or when key does not exist in repository
 func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) (bool, error) {
 	if csi == nil {
-		return nil, errors.New("ConfigServiceImpl was not initialized")
+		return false, errors.New("ConfigServiceImpl was not initialized")
 	}
 	if len(csi.cacheMap) == 0 {
 		return false, errors.New("Cache was not initialized")

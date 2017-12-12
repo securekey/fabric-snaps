@@ -55,7 +55,7 @@ GO_BUILD_TAGS ?= "experimental"
 FABRIC_SNAPS_POPULATE_VENDOR ?= true
 
 export GO_LDFLAGS=-s
-export GO_DEP_COMMIT=v0.3.0 # the version of dep that will be installed by depend-install (or in the CI)
+export GO_DEP_COMMIT=v0.3.2 # the version of dep that will be installed by depend-install (or in the CI)
 
 snaps: clean populate
 	@echo "Building snap plugins"
