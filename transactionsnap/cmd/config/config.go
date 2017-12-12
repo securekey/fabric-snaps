@@ -89,6 +89,28 @@ func (c *Config) GetConfigBytes() []byte {
 	return c.txnSnapConfigBytes
 }
 
+//GetCacheExpiredTime returns cache expired time
+func (c *Config) GetCacheExpiredTime() int {
+	ces := c.txnSnapConfig.GetString("txnsnap.cache.expiryTime")
+	cei, err := strconv.Atoi(ces)
+	if err != nil {
+		logger.Debugf("Cache expiry '%s' is not set properly, %v ", ces, err)
+		return -1
+	}
+	return cei
+}
+
+//GetCachePurgeExpiredTime returns cache expired time
+func (c *Config) GetCachePurgeExpiredTime() int {
+	ces := c.txnSnapConfig.GetString("txnsnap.cache.purgeExpiredTime")
+	cei, err := strconv.Atoi(ces)
+	if err != nil {
+		logger.Debugf("Cache expiry '%s' is not set properly, %v ", ces, err)
+		return -1
+	}
+	return cei
+}
+
 // GetLocalPeer returns address and ports for the peer running inside the
 // txn snap container
 func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {

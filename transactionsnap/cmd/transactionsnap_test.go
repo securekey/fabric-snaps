@@ -429,7 +429,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 		}
 		mockEventServer.SendMockEvent(&pbsdk.Event{Event: &pbsdk.Event_Block{Block: mockBlock}})
 	}()
-
+	time.Sleep(time.Second * 5)
 	//invoke transaction snap
 	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.ERROR {
@@ -659,8 +659,8 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	return args
 }
 
-func configureClient(config api.Config) api.Client {
-	fabricClient, err := client.GetInstance(config)
+func configureClient(channelID string, config api.Config) api.Client {
+	fabricClient, err := client.GetInstance(channelID, config)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing fabricClient: %s", err))
 	}
@@ -866,7 +866,7 @@ func newClientServiceMock() api.ClientService {
 }
 
 // GetFabricClient return fabric client
-func (cs *clientServiceMock) GetFabricClient(config api.Config) (api.Client, error) {
+func (cs *clientServiceMock) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
 	return fcClient, nil
 }
 

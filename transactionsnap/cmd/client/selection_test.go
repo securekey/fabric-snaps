@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
@@ -28,6 +29,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
@@ -103,7 +105,115 @@ func TestMain(m *testing.M) {
 	}
 	bccspFactory.InitFactories(opts)
 
-	//
+	//to upload config to HL for testChannel
+	uploadConfigPerChannelToHL(channelID)
+
+	os.Exit(m.Run())
+}
+
+func TestCachedItem(t *testing.T) {
+	isCached = false
+
+	chnlConfig, err := getConfig()
+	if err != nil {
+		t.Fatalf("Error initializing config: %v", err)
+	}
+	//get instance of client
+	_, err = GetInstance(channelID, &sampleConfig{chnlConfig})
+	if err != nil {
+		t.Fatalf("Error getting instance of config: %v", err)
+	}
+	if isCached {
+		t.Fatalf("This item should have been cached")
+	}
+	if cache != nil {
+		cache.Delete(channelID)
+	}
+
+}
+
+func TestGetInstanceWithNilConfig(t *testing.T) {
+	_, err := GetInstance(channelID, nil)
+	if err == nil {
+		t.Fatalf("Expected error: 'Config is nil. Cannot create instance of client'")
+	}
+
+	_, err = GetInstance("", nil)
+	if err == nil {
+		t.Fatalf("Expected error: 'Channel name is mandatory'")
+	}
+
+}
+
+func TestGettingCachedOnTwoChannels(t *testing.T) {
+
+	chnlConfig, err := getConfig()
+	if err != nil {
+		t.Fatalf("Error initializing config: %v", err)
+	}
+	//get instance of client
+	_, err = GetInstance(channelID, &sampleConfig{chnlConfig})
+	if err != nil {
+		t.Fatalf("Error getting instance of config: %v", err)
+	}
+	if isCached {
+		t.Fatalf("This item should NOT have been cached")
+	}
+
+	//initialize config for channel 2
+	chnlName := "chl2"
+	uploadConfigPerChannelToHL(chnlName)
+	//get config instance for testChannel
+	cfgClient, err := GetInstance(channelID, &sampleConfig{chnlConfig})
+	if err != nil {
+		t.Fatalf("Error getting instance of config: %v", err)
+	}
+	//get config instance for ch2
+	cfgClientCh2, err := GetInstance(chnlName, &sampleConfig{chnlConfig})
+	if err != nil {
+		t.Fatalf("Error getting instance of config: %v", err)
+	}
+	if cfgClient == nil {
+		t.Fatalf("Error getting config from cache for channelID %s: %v", channelID, err)
+	}
+
+	if cfgClientCh2 == nil {
+		t.Fatalf("Error getting config from cache for channelID %s: %v", chnlName, err)
+	}
+	//get directly from cache and check expiration
+	x, expiration, found := cache.GetWithExpiration(chnlName)
+	if !found {
+		t.Error("Cached item for chnlName was not found")
+	}
+	if x == nil {
+		t.Error("Config should not be nil")
+	}
+	if expiration.IsZero() {
+		t.Errorf("expiration should be greater then zero")
+	}
+	if expiration.UnixNano() < time.Now().UnixNano() {
+		t.Error("expiration for config is in the past")
+	}
+	//remove from cache
+	if cache != nil {
+		cache.Delete(channelID)
+		cache.Delete(chnlName)
+	}
+	//check if item was removed
+	x, expiration, found = cache.GetWithExpiration(chnlName)
+	if found {
+		t.Error("Cached item should not exist. It was deleted")
+	}
+	if x != nil {
+		t.Error("Config should be nil. Item was removed from cache")
+	}
+	if !expiration.IsZero() {
+		t.Errorf("expiration should be  zero")
+	}
+
+}
+
+func uploadConfigPerChannelToHL(chnlID string) {
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
@@ -112,11 +222,13 @@ func TestMain(m *testing.M) {
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
 				configmanagerApi.AppConfig{AppName: "txnsnap", Config: string(configData)}}}}}
-	stub := getMockStub()
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = chnlID
 	//upload valid message to HL
 	err = uplaodConfigToHL(stub, configBytes)
 	if err != nil {
@@ -124,35 +236,39 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub, mspID)
 
-	config, err := config.NewConfig("../sampleconfig", channelID)
+}
+
+func TestChangeCacheConfig(t *testing.T) {
+	//configureTestCache(1*time.Millisecond, 1*time.Millisecond)
+
+	chnlConfig, err := getConfig()
 	if err != nil {
-		panic(fmt.Sprintf("Error initializing config: %s", err))
+		t.Fatalf("Error initializing config: %v", err)
 	}
-
-	_, err = GetInstance(&sampleConfig{config})
+	//get instance of client
+	_, err = GetInstance(channelID, &sampleConfig{chnlConfig})
 	if err != nil {
-		panic(fmt.Sprintf("Client GetInstance return error %v", err))
+		t.Fatalf("Error getting instance of config: %v", err)
 	}
-	os.Exit(m.Run())
-}
-
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	stub.ChannelID = channelID
-	return stub
-}
-
-//uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
-	configManager := mgmt.NewConfigManager(stub)
-	if configManager == nil {
-		return fmt.Errorf("Cannot instantiate config manager")
+	if isCached {
+		t.Fatalf("This item should have been cached")
 	}
-	err := configManager.Save(config)
-	return err
+	time.Sleep(2 * time.Second)
+	_, err = GetInstance(channelID, &sampleConfig{chnlConfig})
+	if err != nil {
+		t.Fatalf("Error getting instance of config: %v", err)
+	}
+	//due to expiry time of 1ms this item should not come from cache
+	if isCached {
+		t.Fatalf("This item should have been cached")
+	}
+	if cache != nil {
+		cache.Delete(channelID)
+		cache.DeleteExpired()
+	}
 
 }
+
 func TestGetEndorsersForChaincodeOneCC(t *testing.T) {
 	service := newMockSelectionService(
 		newMockMembershipManager().
@@ -254,6 +370,31 @@ func verify(t *testing.T, service api.SelectionService, expectedPeerGroups []api
 			t.Fatalf("peer group %s is not one of the expected peer groups: %v", toString(peers), expectedPeerGroups)
 		}
 	}
+
+}
+
+func getConfig() (transactionsnapApi.Config, error) {
+	chnlConfig, err := config.NewConfig("../sampleconfig", channelID)
+	if err != nil {
+		return nil, err
+	}
+	return chnlConfig, nil
+}
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = channelID
+	return stub
+}
+
+//uplaodConfigToHL to upload key&config to repository
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
 
 }
 

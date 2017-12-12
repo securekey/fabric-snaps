@@ -19,12 +19,12 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/pkg/errors"
 
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	pb "github.com/hyperledger/fabric/protos/peer"
-
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	gc "github.com/patrickmn/go-cache"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
@@ -46,22 +46,52 @@ type clientImpl struct {
 
 var client *clientImpl
 var once sync.Once
+var cache *gc.Cache
+
+//isCached is used only for testing
+var isCached bool
 
 // GetInstance returns a singleton instance of the fabric client
-func GetInstance(config api.Config) (api.Client, error) {
-	var err error
-	once.Do(func() {
-		client = &clientImpl{selectionService: NewSelectionService(config), config: config}
-		initError := client.initialize(config.GetConfigBytes())
-		if initError != nil {
-			err = errors.Errorf("Error initializing fabric client: %s", initError)
-		}
-	})
-
-	if err != nil {
-		return nil, err
+func GetInstance(channelID string, config api.Config) (api.Client, error) {
+	if channelID == "" {
+		return nil, errors.New("Channel name is mandatory")
 	}
 
+	if config == nil {
+		return nil, errors.New("Config is nil. Cannot create instance of client")
+	}
+
+	cfgCacheExpiry := config.GetCacheExpiredTime()
+	cfgCachePurgeExpired := config.GetCachePurgeExpiredTime()
+	fmt.Printf("%d %d", cfgCacheExpiry, cfgCachePurgeExpired)
+	once.Do(func() {
+		logger.Debugf("Instantiate cache with %d and %d", cfgCacheExpiry, cfgCachePurgeExpired)
+		//Create cache
+		cache = gc.New(time.Duration(cfgCacheExpiry)*time.Second, time.Duration(cfgCachePurgeExpired)*time.Second)
+	})
+
+	//get client from cache
+	cachedConfig, found := cache.Get(channelID)
+	if found || cachedConfig != nil {
+		v, ok := cachedConfig.(api.Client)
+		if ok {
+			isCached = true
+			return v, nil
+		}
+		logger.Debugf("Error getting config for channel %s from cache", channelID)
+		return nil, errors.Errorf("Error getting config for channel %s from cache", channelID)
+	}
+
+	client = &clientImpl{selectionService: NewSelectionService(config), config: config}
+	initError := client.initialize(config.GetConfigBytes())
+	if initError != nil {
+		err := errors.Errorf("Error initializing fabric client: %s", initError)
+		return nil, err
+	}
+	//set to cache
+	logger.Debugf("Putting config for channel '%s' into cache ", channelID)
+	//set item to cache with the configured expiration time
+	cache.Set(channelID, client, time.Duration(cfgCacheExpiry)*time.Second)
 	return client, nil
 }
 
