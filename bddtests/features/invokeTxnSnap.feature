@@ -9,6 +9,7 @@ Feature:  Feature Invoke Transaction Snap
 	@smoke
 	Scenario: Invoke Transaction Snap getPeersOfChannel function
         Given fabric has channel "mychannel" and p0 joined channel
+		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
         When client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,getPeersOfChannel,mychannel" on p0
         And response from "txnsnapinvoker" to client C1 contains value p0
     @onetxn
