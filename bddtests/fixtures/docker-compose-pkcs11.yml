@@ -46,6 +46,8 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/tls/orderer/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/tls/orderer/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/tls/orderer/ca.crt]
+      - ORDERER_GENERAL_TLS_CLIENTAUTHENABLED=true
+      - ORDERER_GENERAL_TLS_CLIENTROOTCAS=[/etc/hyperledger/tls/orderer/ca.crt,/etc/hyperledger/mutual_tls/orderer/client_sdk_go-ca_root.pem]
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
     command: /bin/bash -c 'orderer'
     ports:
@@ -54,6 +56,7 @@ services:
         - ./channel:/etc/hyperledger/configtx
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/msp/orderer
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
+        - ./config/mutual_tls/ca:/etc/hyperledger/mutual_tls/orderer
   cli:
     container_name: cli
     image:  ${FABRIC_TOOLS_FIXTURE_IMAGE}:${FABRIC_TOOLS_FIXTURE_TAG}
@@ -103,6 +106,8 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/client_sdk_go-ca_root.pem
       # enable External SCCs
       - CORE_CHAINCODE_SYSTEMEXT_ENABLED=true
       # path of External SCCs to read CodeSpec objects
@@ -152,6 +157,9 @@ services:
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt:/etc/hyperledger/fabric/tls/orderer-ca-cert.pem
+        - ./config/mutual_tls/ca:/etc/hyperledger/mutual_tls/peer
+        # TODO: Move cert to ledger and key to HSM
+        - ./config/mutual_tls/client:/etc/hyperledger/mutual_tls/client
         # Tell Snap to use Peer's e-certs
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/keystore/a23272f898441edb0f415f028b3b3b42627d75e150dfbae23543234751814983_sk:/etc/hyperledger/fabric/testcerts/ecert/key.pem
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem:/etc/hyperledger/fabric/testcerts/ecert/cert.pem

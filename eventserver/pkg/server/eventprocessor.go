@@ -111,7 +111,7 @@ func (ep *eventProcessor) start() {
 }
 
 func (ep *eventProcessor) registerHandler(channelID string, ch *channelHandler) {
-	logger.Warningf("registering channel handler for channel: %s", channelID)
+	logger.Debugf("registering channel handler for channel: %s", channelID)
 
 	ep.RLock()
 	hl, ok := ep.registeredListeners[channelID]
