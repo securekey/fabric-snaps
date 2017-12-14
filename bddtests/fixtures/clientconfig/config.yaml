@@ -51,7 +51,14 @@ client:
       label: ""
       library: ""
 
+  tlsCerts:
+    # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+    systemCertPool: false
 
+    # [Optional]. Client key and cert for TLS handshake with peers and orderers
+    client:
+      keyfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/config/mutual_tls/client/client_sdk_go-key.pem
+      certfile: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/config/mutual_tls/client/client_sdk_go.pem
 
 channels:
   # name of the channel

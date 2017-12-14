@@ -12,7 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric/events/consumer"
+	"google.golang.org/grpc/credentials"
+
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
@@ -21,10 +22,10 @@ import (
 )
 
 func TestEventRelayInvalidOpts(t *testing.T) {
-	if _, err := New("", "localhost:7053", DefaultOpts()); err == nil {
+	if _, err := New("", "localhost:7053", nil, DefaultOpts()); err == nil {
 		t.Fatalf("expecting error for empty channel ID but got none")
 	}
-	if _, err := New("ch1", "", DefaultOpts()); err == nil {
+	if _, err := New("ch1", "", nil, DefaultOpts()); err == nil {
 		t.Fatalf("expecting error for empty event hub address but got none")
 	}
 }
@@ -33,7 +34,7 @@ func TestEventRelay(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, creds credentials.TransportCredentials) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter:          adapter,
 			NumStartFailures: 1, // Simulate a failed startup the first time
@@ -41,7 +42,7 @@ func TestEventRelay(t *testing.T) {
 		return mockeh, nil
 	})
 
-	eventRelay, err := New(channelID1, "localhost:7053", opts)
+	eventRelay, err := New(channelID1, "localhost:7053", nil, opts)
 	if err != nil {
 		t.Fatalf("error starting event relay: %s", err)
 	}
@@ -138,14 +139,14 @@ func TestEventRelayBufferFull(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
 		return mockeh, nil
 	})
 
-	eventRelay, err := New(channelID1, "localhost:7053", opts)
+	eventRelay, err := New(channelID1, "localhost:7053", nil, opts)
 	if err != nil {
 		t.Fatalf("error starting event relay: %s", err)
 	}
@@ -190,7 +191,7 @@ func TestEventRelayTimeout(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
@@ -198,7 +199,7 @@ func TestEventRelayTimeout(t *testing.T) {
 	})
 	opts.RelayTimeout = 250 * time.Millisecond
 
-	eventRelay, err := New(channelID1, "localhost:7053", opts)
+	eventRelay, err := New(channelID1, "localhost:7053", nil, opts)
 	if err != nil {
 		t.Fatalf("error starting event relay: %s", err)
 	}

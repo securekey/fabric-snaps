@@ -35,6 +35,16 @@ client:
       # Specific to the underlying KeyValueStore that backs the crypto key store.
       path: /tmp/msp
 
+  tlsCerts:
+    # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+    systemCertPool: false
+
+    # [Optional]. Client key and cert for TLS handshake with peers and orderers
+    client:
+
+      # Certificate location absolute path
+      keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
 
 orderers:
   orderer.example.com:

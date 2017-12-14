@@ -9,6 +9,9 @@ Feature:  Event Snap
     Scenario: Register with Local Event Service for Chaincode Events
         Given fabric has channel "mychannel" and p0 joined channel
         And client C1 waits 10 seconds
+        
+        And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
+        And client C1 waits 5 seconds
 
         # First clean up from any previous tests
         And client C1 unregisters for chaincode events on channel "mychannel" for chaincode "eventconsumersnap" and event filter "event1"
@@ -26,6 +29,9 @@ Feature:  Event Snap
     Scenario: Register with Local Event Service for Tx Status Events
         Given fabric has channel "mychannel" and p0 joined channel
 
+        And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
+        And client C1 waits 5 seconds
+
         # First clean up from any previous tests
         And client C1 deletes all Tx status events on channel "mychannel"
 
@@ -37,6 +43,9 @@ Feature:  Event Snap
 
     Scenario: Register with Local Event Service for Filtered Block Events
         Given fabric has channel "mychannel" and p0 joined channel
+
+        And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
+        And client C1 waits 5 seconds
 
         # First clean up from any previous tests
         And client C1 unregisters for filtered block events on channel "mychannel"
@@ -53,6 +62,9 @@ Feature:  Event Snap
 
     Scenario: Register with Local Event Service for Block Events
         Given fabric has channel "mychannel" and p0 joined channel
+        And client C1 waits 5 seconds
+
+        And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
         And client C1 waits 5 seconds
 
         # First clean up from any previous tests

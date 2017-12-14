@@ -12,15 +12,16 @@ import (
 	"time"
 
 	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 	"github.com/securekey/fabric-snaps/mocks/event/mockeventhub"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/events/consumer"
 )
 
 func TestEventSnap(t *testing.T) {
@@ -30,14 +31,10 @@ func TestEventSnap(t *testing.T) {
 	channelID2 := "ch2"
 
 	configStub1 := configmocks.NewMockStub(channelID1)
-	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch1.yaml"); err != nil {
-		t.Fatalf("Error saving config: %s", err)
-	}
+	service.Initialize(configStub1, mspID)
 
 	configStub2 := configmocks.NewMockStub(channelID2)
-	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch2.yaml"); err != nil {
-		t.Fatalf("Error saving config: %s", err)
-	}
+	service.Initialize(configStub2, mspID)
 
 	eventsnap := &eventSnap{
 		pserver: grpc.NewServer(),
@@ -55,7 +52,7 @@ func TestEventSnap(t *testing.T) {
 
 	eventsnap = &eventSnap{
 		pserver: grpc.NewServer(),
-		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (eventrelay.EventHub, error) {
+		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter eventrelay.EventAdapter, tlsCredentials credentials.TransportCredentials) (eventrelay.EventHub, error) {
 			fmt.Printf("Creating mock event hub for channel %s\n", channelID)
 			mockeh := mockeventhub.New(adapter)
 			mockEventHubs[channelID] = mockeh
@@ -82,6 +79,19 @@ func TestEventSnap(t *testing.T) {
 	if resp := stub.MockInit("txid4", nil); resp.Status != shim.OK {
 		t.Fatalf("Error in init: %s", resp.GetMessage())
 	}
+
+	// Delay adding the configuration
+	time.Sleep(8 * time.Second)
+
+	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch1.yaml"); err != nil {
+		t.Fatalf("Error saving config: %s", err)
+	}
+	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch2.yaml"); err != nil {
+		t.Fatalf("Error saving config: %s", err)
+	}
+
+	// Wait for the event snap to pick up the configuration
+	time.Sleep(6 * time.Second)
 
 	// Init again on same channel
 	if resp := stub.MockInit("txid5", nil); resp.Status == shim.OK {

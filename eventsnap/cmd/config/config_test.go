@@ -42,17 +42,15 @@ func TestConfig(t *testing.T) {
 	configStub1 := configmocks.NewMockStub(channelID1)
 	service.Initialize(configStub1, mspID)
 
-	// Test default values
+	// Test with no channel config
 	config, err := New(channelID1, "../sampleconfig")
 	if err != nil {
 		t.Fatalf("Error creating new config: %s", err)
 	}
+	if config.ChannelConfigLoaded() {
+		t.Fatalf("Expecting that channel config is not loaded")
+	}
 	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
-	checkUint(t, "EventConsumerBufferSize", config.EventConsumerBufferSize, defaultEventConsumerBufferSize)
-	checkDuration(t, "EventHubRegTimeout", config.EventHubRegTimeout, defaultEventHubRegTimeout)
-	checkDuration(t, "EventRelayTimeout", config.EventRelayTimeout, defaultEventRelayTimeout)
-	checkUint(t, "EventDispatcherBufferSize", config.EventDispatcherBufferSize, defaultEventDispatcherBufferSize)
-	checkDuration(t, "EventConsumerTimeout", config.EventConsumerTimeout, defaultEventConsumerTimeout)
 	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
 	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
 	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)

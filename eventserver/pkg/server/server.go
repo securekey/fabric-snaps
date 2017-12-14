@@ -44,7 +44,7 @@ func NewChannelServer(config *ChannelServerConfig) *ChannelServer {
 
 // Chat a new client on the channel
 func (c *ChannelServer) Chat(stream eventserverapi.Channel_ChatServer) error {
-	logger.Warningf("************ Initiating new Chat\n")
+	logger.Debugf("************ Initiating new Chat\n")
 
 	for {
 		in, err := stream.Recv()
@@ -68,13 +68,13 @@ func (c *ChannelServer) Chat(stream eventserverapi.Channel_ChatServer) error {
 
 // Send sends an event to the event processor
 func (c *ChannelServer) Send(evt *pb.Event) error {
-	logger.Warningf("************ Sending: %s\n", evt)
+	logger.Debugf("************ Sending: %s\n", evt)
 	return c.gEventProcessor.send(evt)
 }
 
 // HandleMessage handles the messages for the peer
 func (c *ChannelServer) handleMessage(stream eventserverapi.Channel_ChatServer, env *common.Envelope) error {
-	logger.Infof("******************* Handle Message\n")
+	logger.Debugf("******************* Handle Message\n")
 
 	csreq := &eventserverapi.ChannelServiceRequest{}
 	chdr, err := utils.UnmarshalEnvelopeOfType(env, common.HeaderType(eventserverapi.HeaderType_CHANNEL_SERVICE_REQUEST), csreq)
@@ -86,17 +86,17 @@ func (c *ChannelServer) handleMessage(stream eventserverapi.Channel_ChatServer, 
 		return err
 	}
 
-	logger.Infof("******************* Handling request: %s\n", csreq)
+	logger.Debugf("******************* Handling request: %s\n", csreq)
 
 	var response *eventserverapi.ChannelServiceResponse
 
 	if csreq.GetRegisterChannel() != nil {
-		logger.Infof("******************* Handling registration request\n")
+		logger.Debugf("******************* Handling registration request\n")
 		response = c.processRegistration(csreq.GetRegisterChannel().ChannelIds, csreq.GetRegisterChannel().Events, env)
 		if response.GetResult().Success {
 			for _, channelResult := range response.GetResult().ChannelResults {
 				c.createHandler(channelResult.ChannelId, channelResult.RegisteredEvents, stream)
-				logger.Warningf("******************* Successfully registered for events on channel: %s\n", channelResult.ChannelId)
+				logger.Debugf("******************* Successfully registered for events on channel: %s\n", channelResult.ChannelId)
 			}
 		} else {
 			logger.Errorf("******************* Error processing registration: %s\n", response.GetResult().ChannelResults)
