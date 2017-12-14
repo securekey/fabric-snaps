@@ -11,6 +11,15 @@ eventsnap:
         # event relay timeout
         timeout: 2s
 
+        tlsCerts:
+            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+            systemCertPool: false
+
+            # [Optional]. Client key and cert for TLS handshake with peers and orderers
+            client:
+                keyfile: tls/client_sdk_go-key.pem
+                certfile: tls/client_sdk_go.pem
+
     dispatcher:
         # total number of events that could be buffered without blocking send
         buffersize: 200

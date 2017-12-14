@@ -14,6 +14,17 @@ eventsnap:
         # If > 0, if buffer full, blocks util timeout.
         timeout: 1s
 
+        tlsCerts:
+            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+            systemCertPool: false
+
+            # [Optional]. Client key and cert for TLS handshake with peers and orderers
+            client:
+
+                # Certificate location absolute path
+                keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+                certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+
     server:
         # buffersize is the size of the registered consumer's event channel.
         buffersize: 100

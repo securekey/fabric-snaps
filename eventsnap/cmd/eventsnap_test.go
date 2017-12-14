@@ -18,9 +18,9 @@ import (
 	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 	"github.com/securekey/fabric-snaps/mocks/event/mockeventhub"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/events/consumer"
 )
 
 func TestEventSnap(t *testing.T) {
@@ -55,7 +55,7 @@ func TestEventSnap(t *testing.T) {
 
 	eventsnap = &eventSnap{
 		pserver: grpc.NewServer(),
-		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter consumer.EventAdapter) (eventrelay.EventHub, error) {
+		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter eventrelay.EventAdapter, tlsCredentials credentials.TransportCredentials) (eventrelay.EventHub, error) {
 			fmt.Printf("Creating mock event hub for channel %s\n", channelID)
 			mockeh := mockeventhub.New(adapter)
 			mockEventHubs[channelID] = mockeh
