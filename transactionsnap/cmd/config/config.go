@@ -8,6 +8,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"go/build"
 	"path/filepath"
 	"strconv"
@@ -68,7 +69,9 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	if err != nil {
 		return nil, err
 	}
-
+	if dataConfig == nil {
+		return nil, fmt.Errorf("config data is empty")
+	}
 	txnSnapConfig := viper.New()
 	txnSnapConfig.SetConfigType("YAML")
 	txnSnapConfig.ReadConfig(bytes.NewBuffer(dataConfig))
