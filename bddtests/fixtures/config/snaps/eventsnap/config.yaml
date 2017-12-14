@@ -7,6 +7,17 @@ eventsnap:
         # regtimeout is the timeout for registering for events with the Event Hub
         regtimeout: 3s
 
+        tlsCerts:
+            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+            systemCertPool: false
+
+            # [Optional]. Client key and cert for TLS handshake with peers and orderers
+            client:
+
+                # Certificate location absolute path
+                keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+                certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+
     relay:
         # timeout is the timeout when relaying events to the registered event channel.
         # If < 0, if buffer full, unblocks immediately and does not send.

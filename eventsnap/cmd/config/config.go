@@ -7,8 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 	"strings"
 	"time"
+
+	"google.golang.org/grpc/credentials"
 
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/pkg/errors"
@@ -71,6 +77,9 @@ type EventSnapConfig struct {
 	// If 0, if buffer full, will block and guarantee the event will be sent out.
 	// If > 0, if buffer full, blocks util timeout.
 	EventConsumerTimeout time.Duration
+
+	// TransportCredentials is the credentials used for connecting with peer event service
+	TransportCredentials credentials.TransportCredentials
 }
 
 // New returns a new EventSnapConfig for the given channel
@@ -119,6 +128,13 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 			eventSnapConfig.EventDispatcherBufferSize = uint(config.GetInt("eventsnap.dispatcher.buffersize"))
 			eventSnapConfig.EventConsumerBufferSize = uint(config.GetInt("eventsnap.consumer.buffersize"))
 			eventSnapConfig.EventConsumerTimeout = config.GetDuration("eventsnap.consumer.timeout")
+			tlsCredentials, err := getTLSCredentials(peerConfig, config)
+			if err != nil {
+				return nil, err
+			}
+
+			logger.Debugf("TLS Credentials: %s", tlsCredentials)
+			eventSnapConfig.TransportCredentials = tlsCredentials
 		}
 	}
 
@@ -137,4 +153,66 @@ func newPeerViper(configPath string) (*viper.Viper, error) {
 		return nil, err
 	}
 	return peerViper, nil
+}
+
+func getTLSCredentials(peerConfig, config *viper.Viper) (credentials.TransportCredentials, error) {
+
+	tlsCaCertPool := x509.NewCertPool()
+	if config.GetBool("eventsnap.eventhub.tlsCerts.systemCertPool") == true {
+		var err error
+		if tlsCaCertPool, err = x509.SystemCertPool(); err != nil {
+			return nil, err
+		}
+		logger.Debugf("Loaded system cert pool of size: %d", len(tlsCaCertPool.Subjects()))
+	}
+
+	logger.Debugf("tls rootcert: %s", peerConfig.GetString("peer.tls.rootcert.file"))
+
+	if peerConfig.GetString("peer.tls.rootcert.file") != "" {
+
+		rawData, err := ioutil.ReadFile(peerConfig.GetString("peer.tls.rootcert.file"))
+		if err != nil {
+			return nil, errors.Wrapf(err, "error reading peer tls root cert file")
+		}
+
+		block, _ := pem.Decode(rawData)
+		if block == nil {
+			return nil, errors.Wrapf(err, "pem data missing")
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parse certificate from block failed")
+		}
+
+		tlsCaCertPool.AddCert(cert)
+	}
+
+	logger.Debugf("server host override: %s", peerConfig.GetString("peer.tls.serverhostoverride"))
+
+	var sn string
+	if peerConfig.GetString("peer.tls.serverhostoverride") != "" {
+		sn = peerConfig.GetString("peer.tls.serverhostoverride")
+	}
+
+	logger.Debugf("tls client cert: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.certfile"))
+	logger.Debugf("tls client key: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
+
+	var certificates []tls.Certificate
+	if config.GetString("eventsnap.eventhub.tlsCerts.client.certfile") != "" {
+		clientCerts, err := tls.LoadX509KeyPair(config.GetString("eventsnap.eventhub.tlsCerts.client.certfile"), config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
+		if err != nil {
+			return nil, errors.Errorf("Error loading cert/key pair as TLS client credentials: %v", err)
+		}
+		certificates = []tls.Certificate{clientCerts}
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		Certificates: certificates,
+		RootCAs:      tlsCaCertPool,
+		ServerName:   sn,
+	})
+
+	return creds, nil
+
 }
