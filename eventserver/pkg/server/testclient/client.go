@@ -62,9 +62,9 @@ func NewChannelClient(peerAddress string, regTimeout time.Duration, adapter Chan
 // configured local peer
 func newChannelClientConnectionWithAddress(peerAddress string) (*grpc.ClientConn, error) {
 	if comm.TLSEnabled() {
-		return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForPeer())
+		return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForPeer(), nil)
 	}
-	return comm.NewClientConnectionWithAddress(peerAddress, true, false, nil)
+	return comm.NewClientConnectionWithAddress(peerAddress, true, false, nil, nil)
 }
 
 // Send takes a ChannelServiceRequest, creates a signed envelope, and sends it

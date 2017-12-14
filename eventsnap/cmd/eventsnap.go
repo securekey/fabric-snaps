@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -29,6 +30,10 @@ import (
 )
 
 var logger = flogging.MustGetLogger("eventSnap")
+
+const (
+	channelConfigCheckDuration = 5 * time.Second
+)
 
 var chnlServer *eventserver.ChannelServer
 var mutex sync.RWMutex
@@ -72,9 +77,16 @@ func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 			return shim.Error(err.Error())
 		}
 	} else {
-		if err := s.startChannelEvents(stub.GetChannelID(), config); err != nil {
-			logger.Error(err.Error())
-			return shim.Error(err.Error())
+		if config.ChannelConfigLoaded() {
+			if err := s.startChannelEvents(stub.GetChannelID(), config); err != nil {
+				logger.Error(err.Error())
+				return shim.Error(err.Error())
+			}
+		} else {
+			// Check the config periodically and start
+			// the event service when the config is available.
+			logger.Warningf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.\n", stub.GetChannelID())
+			go s.delayStartChannelEvents(stub.GetChannelID())
 		}
 	}
 
@@ -140,6 +152,24 @@ func (s *eventSnap) startChannelEvents(channelID string, config *config.EventSna
 
 	return nil
 }
+func (s *eventSnap) delayStartChannelEvents(channelID string) {
+	for {
+		time.Sleep(channelConfigCheckDuration)
+
+		logger.Infof("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
+		if config, err := config.New(channelID, s.configPath); err != nil {
+			logger.Warningf("Error reading configuration: %s\n", err)
+		} else if config.ChannelConfigLoaded() {
+			if err := s.startChannelEvents(channelID, config); err != nil {
+				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!\n", channelID, err.Error())
+			} else {
+				logger.Infof("Channel events successfully started for channel [%s].\n", channelID)
+			}
+			return
+		}
+		logger.Infof("... EventSnap configuration is not available yet for channel [%s]\n", channelID)
+	}
+}
 
 // startEventRelay starts an event relay for the given channel. The event relay
 // registers for block and filtered block events with the event hub and relays
@@ -156,7 +186,7 @@ func (s *eventSnap) startEventRelay(channelID string, config *config.EventSnapCo
 		opts.RelayTimeout = config.EventRelayTimeout
 	}
 
-	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, opts)
+	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, config.TransportCredentials, opts)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error creating event relay")
 	}
