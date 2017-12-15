@@ -45,24 +45,36 @@ type clientImpl struct {
 }
 
 var client *clientImpl
-var once sync.Once
+var clientMutex sync.RWMutex
 
 // GetInstance returns a singleton instance of the fabric client
 func GetInstance(config api.Config) (api.Client, error) {
-	var err error
-	once.Do(func() {
-		client = &clientImpl{selectionService: NewSelectionService(config), config: config}
-		initError := client.initialize(config.GetConfigBytes())
-		if initError != nil {
-			err = errors.Errorf("Error initializing fabric client: %s", initError)
-		}
-	})
+	var c *clientImpl
+	clientMutex.RLock()
+	c = client
+	clientMutex.RUnlock()
 
-	if err != nil {
-		return nil, err
+	if c != nil {
+		return c, nil
 	}
 
-	return client, nil
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
+
+	c = &clientImpl{selectionService: NewSelectionService(config), config: config}
+	err := c.initialize(config.GetConfigBytes())
+	if err != nil {
+		logger.Errorf("Error initializing client: %s\n", err)
+		return nil, errors.Wrap(err, "error initializing fabric client")
+	}
+
+	if c.client == nil {
+		logger.Errorf("Error: SDK client is nil!!!\n")
+		return nil, errors.Errorf("SDK client is nil")
+	}
+
+	client = c
+	return c, nil
 }
 
 func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
