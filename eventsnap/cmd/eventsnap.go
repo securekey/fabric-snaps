@@ -32,7 +32,7 @@ import (
 var logger = flogging.MustGetLogger("eventSnap")
 
 const (
-	channelConfigCheckDuration = 5 * time.Second
+	channelConfigCheckDuration = 1 * time.Second
 )
 
 var chnlServer *eventserver.ChannelServer

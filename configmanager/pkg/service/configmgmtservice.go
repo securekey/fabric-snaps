@@ -8,7 +8,6 @@ package service
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/spf13/viper"
 
@@ -52,7 +51,6 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 		instance.cacheMap = make(map[string]*gc.Cache)
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
 	})
-	instance.createCache(stub.GetChannelID())
 	instance.Refresh(stub, mspID)
 	return instance
 }
@@ -62,16 +60,15 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	if csi == nil {
 		return nil, errors.New("ConfigServiceImpl was not initialized")
 	}
-	if len(csi.cacheMap) == 0 {
-		return nil, errors.New("Cache was not initialized")
+
+	channelCache := csi.getCache(channelID)
+	if channelCache == nil {
+		return nil, nil
 	}
+
 	keyStr, err := mgmt.ConfigKeyToString(configKey)
 	if err != nil {
 		return nil, err
-	}
-	channelCache := csi.getCache(channelID)
-	if channelCache == nil {
-		return nil, errors.Errorf("no cache exists for channel '%s'", channelID)
 	}
 	//find item in cache
 	config, found := channelCache.Get(keyStr)
@@ -105,17 +102,14 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 	return v, err
 }
 
-//Refresh adds new items into cache and refreshes existing ones only if value for key was changed
-func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) (bool, error) {
-	fmt.Printf("***Refresh %v\n", time.Unix(time.Now().Unix(), 0))
+//Refresh adds new items into cache and refreshes existing ones
+func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) error {
+	logger.Debugf("***Refreshing %v\n", time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
-		return false, errors.New("ConfigServiceImpl was not initialized")
-	}
-	if len(csi.cacheMap) == 0 {
-		return false, errors.New("Cache was not initialized")
+		return errors.New("ConfigServiceImpl was not initialized")
 	}
 	if stub == nil {
-		return false, errors.New("Stub is nil")
+		return errors.New("Stub is nil")
 	}
 
 	configManager := mgmt.NewConfigManager(stub)
@@ -123,72 +117,43 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 	configKey := api.ConfigKey{MspID: mspID}
 	configMessages, err := configManager.Get(configKey)
 	if err != nil {
-		return false, errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
+		return errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
 	}
 
 	if len(configMessages) == 0 {
-		return false, errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
+		return errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
 	}
 
 	return csi.refreshCache(stub.GetChannelID(), configMessages)
-
 }
 
-//refreshCache only when value for key was updated or when key does not exist in repository
-func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) (bool, error) {
+func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) error {
 	if csi == nil {
-		return false, errors.New("ConfigServiceImpl was not initialized")
+		return errors.New("ConfigServiceImpl was not initialized")
 	}
-	if len(csi.cacheMap) == 0 {
-		return false, errors.New("Cache was not initialized")
-	}
-	var cacheChanged = false
-	for key, val := range configMessages {
-		//get item from cache based on channel and configKey
-		cachedConfig, err := csi.Get(channelID, val.Key)
-		if err != nil {
-			logger.Debugf("Error in get from cache: %s", err)
-			return false, err
-		}
+
+	cache := gc.New(defaultExpirationTime, purgeExpiredTime)
+
+	for _, val := range configMessages {
 		keyStr, err := mgmt.ConfigKeyToString(val.Key)
 		if err != nil {
-			return false, err
+			return err
 		}
-		if len(cachedConfig) == 0 {
-			//cache does not have this config - add it
-			logger.Debugf("Adding cache for channel: %s", channelID)
-			csi.put(channelID, keyStr, val.Value)
-			cacheChanged = true
-		}
-		if !bytes.Equal(cachedConfig, val.Value) {
-			//update only in case when config value is anew
-			logger.Debugf("Refreshing cache for key: %s", key)
-			csi.put(channelID, keyStr, val.Value)
-			cacheChanged = true
-		}
+		logger.Debugf("Adding [%s]=[%s] for channel [%s]\n", keyStr, val.Value, channelID)
+		cache.Set(keyStr, val.Value, gc.NoExpiration)
 	}
-	return cacheChanged, nil
+
+	logger.Debugf("Updating cache for channel %s", channelID)
+
+	csi.mtx.Lock()
+	defer csi.mtx.Unlock()
+	instance.cacheMap[channelID] = cache
+
+	return nil
 }
 
-//to add new config to cache or to update existing one
 func (csi *ConfigServiceImpl) getCache(channelID string) *gc.Cache {
 	csi.mtx.RLock()
 	defer csi.mtx.RUnlock()
 	return csi.cacheMap[channelID]
-}
-
-func (csi *ConfigServiceImpl) createCache(channelID string) {
-	csi.mtx.Lock()
-	defer csi.mtx.Unlock()
-	logger.Debugf("Created cache for channel %s", channelID)
-	_, exist := instance.cacheMap[channelID]
-	if !exist {
-		instance.cacheMap[channelID] = gc.New(defaultExpirationTime, purgeExpiredTime)
-	}
-}
-
-func (csi *ConfigServiceImpl) put(channelID string, key string, value []byte) {
-	cache := csi.getCache(channelID)
-	logger.Debugf("Putting in cache: %s %s %s", channelID, key, string(value[:]))
-	cache.Set(key, value, gc.NoExpiration)
 }

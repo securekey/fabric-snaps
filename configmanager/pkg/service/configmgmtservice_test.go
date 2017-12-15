@@ -102,7 +102,7 @@ func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	//do refresh cache
-	if _, err := cacheInstance.Refresh(stub, mspID); err != nil {
+	if err := cacheInstance.Refresh(stub, mspID); err != nil {
 		t.Fatalf("Error %v", err)
 	}
 	refreshedConfig, err := cacheInstance.Get(stub.GetChannelID(), key)
@@ -189,31 +189,6 @@ someconfig:
 	}
 }
 
-func TestCacheWasNotInitialized(t *testing.T) {
-	adminService := ConfigServiceImpl{}
-	stub := getMockStub()
-
-	//upload valid message to HL
-	_, err := uplaodConfigToHL(t, stub, validMsg)
-	if err != nil {
-		t.Fatalf("Cannot upload %s", err)
-	}
-	//do refresh cache
-	if _, err := adminService.Refresh(stub, mspID); err == nil {
-		t.Fatalf("Expected (Refresh) 'Cache was not initialized'")
-	}
-	configMessages := make([]*api.ConfigKV, 0)
-	if _, err := adminService.refreshCache(stub.GetChannelID(), configMessages); err == nil {
-		t.Fatalf("Expected (refreshCache) 'Cache was not initialized'")
-
-	}
-	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com.does.not.exist", AppName: "testAppName"}
-	if _, err := adminService.Get(stub.GetChannelID(), key); err == nil {
-		t.Fatalf("Expected (Get) 'Cache was not initialized'")
-	}
-
-}
-
 func TestTwoChannels(t *testing.T) {
 
 	stub := getMockStub()
@@ -228,7 +203,7 @@ func TestTwoChannels(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	//do refresh cacheRefresh
-	_, err = cacheInstance.Refresh(stub, mspID)
+	err = cacheInstance.Refresh(stub, mspID)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
@@ -259,7 +234,7 @@ func TestRefreshOnNilStub(t *testing.T) {
 
 	cacheInstance := Initialize(stub, mspID)
 	//do refresh cache
-	if _, err := cacheInstance.Refresh(nil, mspID); err == nil {
+	if err := cacheInstance.Refresh(nil, mspID); err == nil {
 		t.Fatalf("Error expected: 'Stub is nil'")
 	}
 
@@ -275,21 +250,11 @@ func TestRefreshCache(t *testing.T) {
 	configKV := api.ConfigKV{Key: key, Value: []byte("someValue")}
 	configMessages := []*api.ConfigKV{&configKV}
 
-	isRefreshed, err := cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
+	err := cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
 	if err != nil {
-		t.Fatalf("Expecting error 'Invalid config key' %v", err)
-	}
-	if !isRefreshed {
-		t.Fatalf("Cahce should be refreshed - config is different")
+		t.Fatalf("Error 'refreshing cache %s", err)
 	}
 
-	isRefreshed, err = cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
-	if err != nil {
-		t.Fatalf("Expecting error 'Invalid config key' %v", err)
-	}
-	if isRefreshed {
-		t.Fatalf("Cahce should be refreshed - config is different")
-	}
 	//new key
 	key.MspID = "msp.one.fake"
 	key.PeerID = "peer.zero.example.com"
@@ -297,12 +262,9 @@ func TestRefreshCache(t *testing.T) {
 	configKV = api.ConfigKV{Key: key, Value: []byte("someValue")}
 	configMessages = []*api.ConfigKV{&configKV}
 
-	isRefreshed, err = cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
+	err = cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
 	if err != nil {
-		t.Fatalf("Expecting error 'Invalid config key' %v", err)
-	}
-	if !isRefreshed {
-		t.Fatalf("Cahce should be refreshed - config is different")
+		t.Fatalf("Error 'refreshing cache %s", err)
 	}
 
 	//reset map
@@ -346,20 +308,15 @@ func TestMngmtServiceRefreshSameConfig(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	//do refresh cache
-	wasItRefreshed, err := cacheInstance.Refresh(stub, mspID)
+	err = cacheInstance.Refresh(stub, mspID)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	if !wasItRefreshed {
-		t.Fatalf("Cache should be refreshed")
-	}
+
 	//do it again
-	wasItRefreshed, err = cacheInstance.Refresh(stub, mspID)
+	err = cacheInstance.Refresh(stub, mspID)
 	if err != nil {
 		t.Fatalf("Error %v", err)
-	}
-	if wasItRefreshed {
-		t.Fatalf("Cache should NOT be refreshed")
 	}
 
 	stub.MockTransactionEnd("saveConfiguration")
@@ -377,7 +334,7 @@ func TestCreateSearchCriteriaForNonexistingMspID(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	//do refresh cache
-	if _, err := cacheInstance.Refresh(stub, mspID); err == nil {
+	if err := cacheInstance.Refresh(stub, mspID); err == nil {
 		//Found no configs for criteria ByMspID error
 		t.Fatalf("Expected error: 'Cannot create criteria for search by mspID &map[]'")
 	}
@@ -398,7 +355,7 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	//do refresh cache
-	if _, err := cacheInstance.Refresh(stub, mspID); err != nil {
+	if err := cacheInstance.Refresh(stub, mspID); err != nil {
 		//Found no configs for criteria ByMspID error
 		t.Fatalf("Error %v", err)
 	}
