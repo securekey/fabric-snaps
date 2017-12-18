@@ -45,7 +45,7 @@ func GetInstance() api.ConfigService {
 
 //Initialize will be called from config snap
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
-
+	logger.Debugf("ConfigManagerService was intiialized")
 	once.Do(func() {
 		instance = &ConfigServiceImpl{}
 		instance.cacheMap = make(map[string]*gc.Cache)
