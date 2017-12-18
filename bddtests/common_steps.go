@@ -9,6 +9,7 @@ package bddtests
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -304,11 +305,38 @@ func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
 
 	return nil
 }
-
+func (d *CommonSteps) copyConfigFile(src, dest string) error {
+	logger.Debugf("copying config files %s %s\n", src, dest)
+	in, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	defer in.Close()
+	out, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	defer func() {
+		cerr := out.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	if _, err = io.Copy(out, in); err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	err = out.Sync()
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	logger.Debugf("Config was copied\n")
+	return nil
+}
 func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
+	logger.Debugf("Query value %s and tested value %s", queryValue, value)
 	if !strings.Contains(queryValue, value) {
 		return fmt.Errorf("Query value(%s) doesn't contain expected value(%s)", queryValue, value)
 	}
@@ -507,4 +535,6 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on p0$`, d.loadConfig)
 	s.Step(`^client C1 invokes chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.invokeCC)
 	s.Step(`^client C1 waits (\d+) seconds$`, d.wait)
+	s.Step(`^client C1 copies "([^"]*)" to "([^"]*)"$`, d.copyConfigFile)
+
 }
