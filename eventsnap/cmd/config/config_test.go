@@ -7,11 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
+	"fmt"
+	"io/ioutil"
 	"testing"
 	"time"
 
 	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/spf13/viper"
 )
 
 func TestInvalidConfig(t *testing.T) {
@@ -38,6 +41,7 @@ func TestConfig(t *testing.T) {
 	peerID := "peer1"
 	channelID1 := "ch1"
 	channelID2 := "ch2"
+	channelID3 := "ch3"
 
 	configStub1 := configmocks.NewMockStub(channelID1)
 	service.Initialize(configStub1, mspID)
@@ -91,6 +95,29 @@ func TestConfig(t *testing.T) {
 	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
 	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
 	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)
+
+	// Test config on channel3
+	configStub3 := configmocks.NewMockStub(channelID3)
+	if err := configmocks.SaveConfigFromFile(configStub3, mspID, peerID, EventSnapAppName, "../sampleconfig/configch3.yaml"); err != nil {
+		t.Fatalf("Error saving config: %s", err)
+	}
+	config, err = New(channelID3, "../sampleconfig")
+	if err != nil {
+		t.Fatalf("Error creating new config: %s", err)
+	}
+	// try to load the config in a new viper instance and verify the cert pem is loaded
+	// as we don't have access to the cert/key in config.TransportCredentials
+	v := viper.New()
+	v.SetConfigFile("../sampleconfig/configch3.yaml")
+	v.ReadInConfig()
+	p := v.Get("eventsnap.eventhub.tlsCerts.client.certpem")
+
+	if p == "" {
+		t.Fatalf("certpem is empty when loading from viper")
+	}
+
+	cp, err := ioutil.ReadFile("tls/client_sdk_go.pem")
+	checkString(t, "eventhub.tlsCerts.client.certpem", p.(string), fmt.Sprintf("%s", cp))
 }
 
 func checkString(t *testing.T, field string, value string, expectedValue string) {

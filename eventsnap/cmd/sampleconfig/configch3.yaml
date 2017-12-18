@@ -4,8 +4,8 @@
 #
 eventsnap:
     eventhub:
-        # regtimeout is the timeout for registering for events with the Event Hub
-        regtimeout: 3s
+        # registration timeout
+        regtimeout: 2s
 
         tlsCerts:
             # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
@@ -13,12 +13,7 @@ eventsnap:
 
             # [Optional]. Client key and cert for TLS handshake with peers and orderers
             client:
-
-                # Certificate location absolute path
-                keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
-                # the eventsnap config now accepts certpem or certfile, if both are set,
-                # then certpem takes precedence. If both are missing, then tls is disabled
-                #certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+                keyfile: tls/client_sdk_go-key.pem
                 certpem: |
                   -----BEGIN CERTIFICATE-----
                   MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
@@ -38,38 +33,22 @@ eventsnap:
                   7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
                   3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
                   -----END CERTIFICATE-----
+                certfile: tls/client_sdk_go.pem
 
     relay:
-        # timeout is the timeout when relaying events to the registered event channel.
-        # If < 0, if buffer full, unblocks immediately and does not send.
-        # If 0, if buffer full, will block and guarantee the event will be sent out.
-        # If > 0, if buffer full, blocks util timeout.
-        timeout: 1s
-
-    server:
-        # buffersize is the size of the registered consumer's event channel.
-        buffersize: 100
-
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
-
-        # timewindow is the acceptable difference between the peer's current
-        # time and the client's time as specified in a registration event
-        timewindow: 15s
+        # event relay timeout
+        timeout: 2s
 
     dispatcher:
         # total number of events that could be buffered without blocking send
-        buffersize: 100
+        buffersize: 200
 
     consumer:
         # total number of events that could be buffered without blocking send
-        buffersize: 100
+        buffersize: 200
 
         # timeout duration for producer to send an event to the consumer.
         # if < 0, if buffer full, unblocks immediately and not send
         # if 0, if buffer full, will block and guarantee the event will be sent out
         # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
+        timeout: 20ms

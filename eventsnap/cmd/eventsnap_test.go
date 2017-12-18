@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 )
 
 func TestEventSnap(t *testing.T) {
+	ehMx := &sync.RWMutex{}
 	mspID := "Org1MSP"
 	peerID := "peer1"
 	channelID1 := "ch1"
@@ -55,7 +57,9 @@ func TestEventSnap(t *testing.T) {
 		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter eventrelay.EventAdapter, tlsCredentials credentials.TransportCredentials) (eventrelay.EventHub, error) {
 			fmt.Printf("Creating mock event hub for channel %s\n", channelID)
 			mockeh := mockeventhub.New(adapter)
+			ehMx.Lock()
 			mockEventHubs[channelID] = mockeh
+			ehMx.Unlock()
 			return mockeh, nil
 		}),
 		configPath: "./sampleconfig",
@@ -123,8 +127,10 @@ func TestEventSnap(t *testing.T) {
 	}
 	defer eventService2.Unregister(reg2)
 
+	ehMx.RLock()
 	mockEventHubs[channelID1].ProduceEvent(mockevent.NewBlockEvent(channelID1))
 	mockEventHubs[channelID2].ProduceEvent(mockevent.NewBlockEvent(channelID2))
+	ehMx.RUnlock()
 
 	numExpected := 2
 	numReceived := 0
