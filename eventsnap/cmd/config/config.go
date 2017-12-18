@@ -194,16 +194,31 @@ func getTLSCredentials(peerConfig, config *viper.Viper) (credentials.TransportCr
 		sn = peerConfig.GetString("peer.tls.serverhostoverride")
 	}
 
-	logger.Debugf("tls client cert: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.certfile"))
+	logger.Debugf("tls client embedded cert: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.certpem"))
+	logger.Debugf("tls client file cert: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.certfile"))
 	logger.Debugf("tls client key: %s", peerConfig.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
 
 	var certificates []tls.Certificate
-	if config.GetString("eventsnap.eventhub.tlsCerts.client.certfile") != "" {
-		clientCerts, err := tls.LoadX509KeyPair(config.GetString("eventsnap.eventhub.tlsCerts.client.certfile"), config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
-		if err != nil {
-			return nil, errors.Errorf("Error loading cert/key pair as TLS client credentials: %v", err)
+	if config.GetString("eventsnap.eventhub.tlsCerts.client") != "" {
+		// certpem is by default.. if it exists, load it, if not, check for certfile and load the cert
+		// if both are not found then assumption is tls is disabled
+		if config.GetString("eventsnap.eventhub.tlsCerts.client.certpem") != "" {
+			keyBytes, err := ioutil.ReadFile(config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
+			if err != nil {
+				return nil, errors.Errorf("Error reading key TLS client credentials: %v", err)
+			}
+			clientCerts, err := tls.X509KeyPair([]byte(config.GetString("eventsnap.eventhub.tlsCerts.client.certpem")), keyBytes)
+			if err != nil {
+				return nil, errors.Errorf("Error loading embedded cert/key pair as TLS client credentials: %v", err)
+			}
+			certificates = []tls.Certificate{clientCerts}
+		} else if config.GetString("eventsnap.eventhub.tlsCerts.client.certfile") != "" {
+			clientCerts, err := tls.LoadX509KeyPair(config.GetString("eventsnap.eventhub.tlsCerts.client.certfile"), config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
+			if err != nil {
+				return nil, errors.Errorf("Error loading cert/key pair as TLS client credentials: %v", err)
+			}
+			certificates = []tls.Certificate{clientCerts}
 		}
-		certificates = []tls.Certificate{clientCerts}
 	}
 
 	creds := credentials.NewTLS(&tls.Config{
