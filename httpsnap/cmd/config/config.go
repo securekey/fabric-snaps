@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -23,6 +24,7 @@ import (
 const (
 	peerConfigFileName = "core"
 	cmdRootPrefix      = "core"
+	defaultTimeout     = time.Second * 5
 )
 
 var logger = logging.NewLogger("httpsnap-config")
@@ -187,4 +189,30 @@ func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig,
 	}
 
 	return schemaConfig, nil
+}
+
+// TimeoutOrDefault reads connection timeouts for the given connection type
+func (c *config) TimeoutOrDefault(tt httpsnapApi.HTTPClientTimeoutType) time.Duration {
+	var timeout time.Duration
+	switch tt {
+	case httpsnapApi.Global:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.client.timeout")
+	case httpsnapApi.TransportTLSHandshake:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.transport.tlsHandshake")
+	case httpsnapApi.TransportResponseHeader:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.transport.responseHeader")
+	case httpsnapApi.TransportExpectContinue:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.transport.expectContinue")
+	case httpsnapApi.TransportIdleConn:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.transport.idleConn")
+	case httpsnapApi.DialerTimeout:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.dialer.timeout")
+	case httpsnapApi.DialerKeepAlive:
+		timeout = c.httpSnapConfig.GetDuration("httpclient.timeout.dialer.keepAlive")
+	}
+	if timeout == 0 {
+		timeout = defaultTimeout
+	}
+
+	return timeout
 }
