@@ -8,19 +8,17 @@ package main
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/core/policy"
-	"github.com/hyperledger/fabric/gossip/common"
-	"github.com/hyperledger/fabric/gossip/discovery"
-	"github.com/hyperledger/fabric/gossip/service"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	logging "github.com/op/go-logging"
-	"github.com/securekey/fabric-snaps/membershipsnap/cmd/api"
+	"github.com/pkg/errors"
+	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 )
 
 var logger = logging.MustGetLogger("membershipsnap")
@@ -32,18 +30,10 @@ const (
 	registerGossipFunction    = "registerGossip"
 )
 
-// mspMap manages a map of PKI IDs to MSP IDs
-type mspIDProvider interface {
-	GetMSPID(pkiID common.PKIidType) string
-}
-
 // MembershipSnap is the System Chaincode that provides information about peer membership
 type MembershipSnap struct {
-	policyChecker    policy.PolicyChecker
-	gossipService    service.GossipService
-	mspprovider      mspIDProvider
-	localMSPID       []byte
-	localPeerAddress string
+	policyChecker     policy.PolicyChecker
+	membershipService memserviceapi.Service
 }
 
 // New returns a new Membership Snap
@@ -51,24 +41,13 @@ func New() shim.Chaincode {
 	return &MembershipSnap{}
 }
 
-var initOnce sync.Once
-var mspProvider mspIDProvider
+type ccInitializer func(*MembershipSnap) error
 
-type ccInitializer func(*MembershipSnap, shim.ChaincodeStubInterface) error
-
-var initializer ccInitializer = func(mscc *MembershipSnap, stub shim.ChaincodeStubInterface) error {
-	initOnce.Do(func() {
-		mspProvider = newMSPIDMgr(service.GetGossipService())
-	})
-
-	localMSPID, err := mspmgmt.GetLocalMSP().GetIdentifier()
+var initializer ccInitializer = func(mscc *MembershipSnap) error {
+	service, err := memservice.Get()
 	if err != nil {
-		return fmt.Errorf("Error getting local MSP Identifier: %s", err)
-	}
-
-	peerEndpoint, err := peer.GetPeerEndpoint()
-	if err != nil {
-		return fmt.Errorf("Error reading peer endpoint: %s", err)
+		logger.Errorf("Error getting membership service: %s\n", err)
+		return errors.Wrap(err, "error getting membership service")
 	}
 
 	// Init policy checker for access control
@@ -78,22 +57,25 @@ var initializer ccInitializer = func(mscc *MembershipSnap, stub shim.ChaincodeSt
 		mspmgmt.NewLocalMSPPrincipalGetter(),
 	)
 
-	mscc.localMSPID = []byte(localMSPID)
-	mscc.localPeerAddress = peerEndpoint.Address
-	mscc.gossipService = service.GetGossipService()
-	mscc.mspprovider = mspProvider
 	mscc.policyChecker = policyChecker
+	mscc.membershipService = service
 
-	logger.Infof("Successfully initialized")
+	logger.Infof("Successfully initialized membership snap")
 
 	return nil
 }
 
 // Init is called once when the chaincode started the first time
 func (t *MembershipSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	err := initializer(t, stub)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Error initializing Membership Snap: %s", err))
+	if stub.GetChannelID() == "" {
+		logger.Infof("Initializing membership snap...\n")
+		err := initializer(t)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Error initializing Membership Snap: %s", err))
+		}
+		logger.Infof("... successfully initialized membership snap\n")
+	} else {
+		logger.Infof("Initializing membership snap - nothing to do for channel [%s]\n", stub.GetChannelID())
 	}
 	return shim.Success(nil)
 }
@@ -126,16 +108,16 @@ func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 }
 
-//getAllPeers retrieves all of the peers (excluding this one) that are currently alive
+//getAllPeers retrieves all of the peers that are currently alive
 func (t *MembershipSnap) getAllPeers(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-	payload, err := t.marshalEndpoints(t.gossipService.Peers(), true)
+	payload, err := t.marshalEndpoints(t.membershipService.GetAllPeers())
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	return shim.Success(payload)
 }
 
-//getPeersOfChannel retrieves all of the peers (excluding this one) that are currently alive and joined to the given channel
+//getPeersOfChannel retrieves all of the peers that are currently alive and joined to the given channel
 func (t *MembershipSnap) getPeersOfChannel(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if len(args) == 0 {
 		return shim.Error("Expecting channel ID")
@@ -146,15 +128,12 @@ func (t *MembershipSnap) getPeersOfChannel(stub shim.ChaincodeStubInterface, arg
 		return shim.Error("Expecting channel ID")
 	}
 
-	localPeerJoined := false
-	for _, ch := range peer.GetChannelsInfo() {
-		if ch.ChannelId == channelID {
-			localPeerJoined = true
-			break
-		}
+	endpoints, err := t.membershipService.GetPeersOfChannel(channelID)
+	if err != nil {
+		return shim.Error(err.Error())
 	}
 
-	payload, err := t.marshalEndpoints(t.gossipService.PeersOfChannel(common.ChainID(channelID)), localPeerJoined)
+	payload, err := t.marshalEndpoints(endpoints)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -162,28 +141,8 @@ func (t *MembershipSnap) getPeersOfChannel(stub shim.ChaincodeStubInterface, arg
 	return shim.Success(payload)
 }
 
-func (t *MembershipSnap) marshalEndpoints(members []discovery.NetworkMember, includeLocalPeer bool) ([]byte, error) {
-	peerEndpoints := &api.PeerEndpoints{}
-	for _, member := range members {
-		peerEndpoints.Endpoints = append(peerEndpoints.Endpoints, &api.PeerEndpoint{
-			Endpoint:         member.Endpoint,
-			InternalEndpoint: member.InternalEndpoint,
-			MSPid:            []byte(t.mspprovider.GetMSPID(member.PKIid)),
-		})
-	}
-
-	if includeLocalPeer {
-		// Add self since Gossip only contains other peers
-		self := &api.PeerEndpoint{
-			Endpoint:         t.localPeerAddress,
-			InternalEndpoint: t.localPeerAddress,
-			MSPid:            t.localMSPID,
-		}
-
-		peerEndpoints.Endpoints = append(peerEndpoints.Endpoints, self)
-	}
-
-	payload, err := proto.Marshal(peerEndpoints)
+func (t *MembershipSnap) marshalEndpoints(endpoints []*memserviceapi.PeerEndpoint) ([]byte, error) {
+	payload, err := proto.Marshal(&memserviceapi.PeerEndpoints{Endpoints: endpoints})
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling peer endpoints: %v", err)
 	}

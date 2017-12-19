@@ -16,7 +16,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/ledger/ledgermgmt"
 	"github.com/hyperledger/fabric/core/peer"
-	"github.com/securekey/fabric-snaps/membershipsnap/cmd/api"
+	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +40,7 @@ var (
 
 func TestErrorInInit(t *testing.T) {
 	stub := shim.NewMockStub("MembershipSnap", New())
-	initializer = func(mscc *MembershipSnap, stub shim.ChaincodeStubInterface) error {
+	initializer = func(mscc *MembershipSnap) error {
 		return fmt.Errorf("some error")
 	}
 
@@ -86,12 +87,12 @@ func TestGetAllPeers(t *testing.T) {
 		t.Fatalf("mscc invoke(getAllPeers) - unexpected nil payload in response")
 	}
 
-	endpoints := &api.PeerEndpoints{}
+	endpoints := &memserviceapi.PeerEndpoints{}
 	if err := proto.Unmarshal(res.Payload, endpoints); err != nil {
 		t.Fatalf("mscc invoke(getAllPeers) - error unmarshalling payload: %s", err)
 	}
 
-	expected := []*api.PeerEndpoint{
+	expected := []*memserviceapi.PeerEndpoint{
 		newEndpoint(localAddress, localAddress, msp1),
 	}
 
@@ -106,13 +107,13 @@ func TestGetAllPeers(t *testing.T) {
 	stub = newMockStub(
 		identity, identityDeserializer,
 		msp1, localAddress,
-		newMSPNetworkMembers(
+		memservice.NewMSPNetworkMembers(
 			msp2,
-			newNetworkMember(pkiID2, address2, internalAddress2),
+			memservice.NewNetworkMember(pkiID2, address2, internalAddress2),
 		),
-		newMSPNetworkMembers(
+		memservice.NewMSPNetworkMembers(
 			msp3,
-			newNetworkMember(pkiID3, address3, internalAddress3),
+			memservice.NewNetworkMember(pkiID3, address3, internalAddress3),
 		),
 	)
 
@@ -125,12 +126,12 @@ func TestGetAllPeers(t *testing.T) {
 		t.Fatalf("mscc invoke(getAllPeers) - unexpected nil payload in response")
 	}
 
-	endpoints = &api.PeerEndpoints{}
+	endpoints = &memserviceapi.PeerEndpoints{}
 	if err := proto.Unmarshal(res.Payload, endpoints); err != nil {
 		t.Fatalf("mscc invoke(getAllPeers) - error unmarshalling payload: %s", err)
 	}
 
-	expected = []*api.PeerEndpoint{
+	expected = []*memserviceapi.PeerEndpoint{
 		newEndpoint(localAddress, localAddress, msp1),
 		newEndpoint(address2, internalAddress2, msp2),
 		newEndpoint(address3, internalAddress3, msp3),
@@ -158,13 +159,13 @@ func TestGetPeersOfChannel(t *testing.T) {
 	stub := newMockStub(
 		identity, identityDeserializer,
 		msp1, localAddress,
-		newMSPNetworkMembers(
+		memservice.NewMSPNetworkMembers(
 			msp2,
-			newNetworkMember(pkiID2, address2, internalAddress2),
+			memservice.NewNetworkMember(pkiID2, address2, internalAddress2),
 		),
-		newMSPNetworkMembers(
+		memservice.NewMSPNetworkMembers(
 			msp3,
-			newNetworkMember(pkiID3, address3, internalAddress3),
+			memservice.NewNetworkMember(pkiID3, address3, internalAddress3),
 		),
 	)
 
@@ -190,12 +191,12 @@ func TestGetPeersOfChannel(t *testing.T) {
 		t.Fatalf("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
 	}
 
-	endpoints := &api.PeerEndpoints{}
+	endpoints := &memserviceapi.PeerEndpoints{}
 	if err := proto.Unmarshal(res.Payload, endpoints); err != nil {
 		t.Fatalf("mscc invoke(getPeersOfChannel) - error unmarshalling payload: %s", err)
 	}
 
-	expected := []*api.PeerEndpoint{
+	expected := []*memserviceapi.PeerEndpoint{
 		newEndpoint(address2, internalAddress2, msp2),
 		newEndpoint(address3, internalAddress3, msp3),
 	}
@@ -219,12 +220,12 @@ func TestGetPeersOfChannel(t *testing.T) {
 		t.Fatalf("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
 	}
 
-	endpoints = &api.PeerEndpoints{}
+	endpoints = &memserviceapi.PeerEndpoints{}
 	if err := proto.Unmarshal(res.Payload, endpoints); err != nil {
 		t.Fatalf("mscc invoke(getPeersOfChannel) - error unmarshalling payload: %s", err)
 	}
 
-	expected = []*api.PeerEndpoint{
+	expected = []*memserviceapi.PeerEndpoint{
 		newEndpoint(localAddress, localAddress, msp1),
 		newEndpoint(address2, internalAddress2, msp2),
 		newEndpoint(address3, internalAddress3, msp3),
@@ -252,7 +253,7 @@ func TestAccessControl(t *testing.T) {
 	assert.True(t, strings.HasPrefix(res.Message, "\"getPeersOfChannel\" request failed authorization check"), "Unexpected error message: %s", res.Message)
 }
 
-func checkEndpoints(expected []*api.PeerEndpoint, actual []*api.PeerEndpoint) error {
+func checkEndpoints(expected []*memserviceapi.PeerEndpoint, actual []*memserviceapi.PeerEndpoint) error {
 	fmt.Printf("Expected: %v, Actual: %v\n", expected, actual)
 
 	if len(expected) != len(actual) {
@@ -268,7 +269,7 @@ func checkEndpoints(expected []*api.PeerEndpoint, actual []*api.PeerEndpoint) er
 	return nil
 }
 
-func validate(actual []*api.PeerEndpoint, expected *api.PeerEndpoint) error {
+func validate(actual []*memserviceapi.PeerEndpoint, expected *memserviceapi.PeerEndpoint) error {
 	for _, endpoint := range actual {
 		if endpoint.Endpoint == expected.Endpoint && endpoint.InternalEndpoint == expected.InternalEndpoint {
 			if !bytes.Equal(endpoint.MSPid, expected.MSPid) {
@@ -280,8 +281,8 @@ func validate(actual []*api.PeerEndpoint, expected *api.PeerEndpoint) error {
 	return fmt.Errorf("endpoint %s not found in list of endpoints", expected)
 }
 
-func newEndpoint(endpoint string, internalEndpoint string, mspID []byte) *api.PeerEndpoint {
-	return &api.PeerEndpoint{
+func newEndpoint(endpoint string, internalEndpoint string, mspID []byte) *memserviceapi.PeerEndpoint {
+	return &memserviceapi.PeerEndpoint{
 		Endpoint:         endpoint,
 		InternalEndpoint: internalEndpoint,
 		MSPid:            mspID,

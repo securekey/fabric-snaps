@@ -11,7 +11,7 @@ It has these top-level messages:
 	PeerEndpoint
 	PeerEndpoints
 */
-package api
+package membership
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
@@ -33,6 +33,8 @@ type PeerEndpoint struct {
 	Endpoint         string `protobuf:"bytes,1,opt,name=Endpoint,json=endpoint" json:"Endpoint,omitempty"`
 	InternalEndpoint string `protobuf:"bytes,2,opt,name=InternalEndpoint,json=internalEndpoint" json:"InternalEndpoint,omitempty"`
 	MSPid            []byte `protobuf:"bytes,3,opt,name=MSPid,json=mSPid,proto3" json:"MSPid,omitempty"`
+	LedgerHeight     uint64 `protobuf:"varint,4,opt,name=ledger_height,json=ledgerHeight" json:"ledger_height,omitempty"`
+	LeftChannel      bool   `protobuf:"varint,5,opt,name=left_channel,json=leftChannel" json:"left_channel,omitempty"`
 }
 
 func (m *PeerEndpoint) Reset()                    { *m = PeerEndpoint{} }
