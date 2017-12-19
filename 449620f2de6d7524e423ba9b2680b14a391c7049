@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8719abc8_ebb24007",
+        "filename": "bddtests/fixtures/config/snaps/configurationsnap/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-12-19T18:52:10Z",
+      "side": 1,
+      "message": "You can define this as duration (e.g. 5s) and read it as duration.",
+      "revId": "449620f2de6d7524e423ba9b2680b14a391c7049",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
