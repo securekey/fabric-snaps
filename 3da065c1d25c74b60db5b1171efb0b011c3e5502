@@ -22,6 +22,30 @@
       "revId": "3da065c1d25c74b60db5b1171efb0b011c3e5502",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "edba5631_cb093a94",
+        "filename": "bddtests/fixtures/config/snaps/eventsnap/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2017-12-19T18:27:35Z",
+      "side": 1,
+      "message": "Correct, server will reject the request because we are not setting client credentials for mutual auth.",
+      "parentUuid": "a2d13eb2_627e1af1",
+      "range": {
+        "startLine": 20,
+        "startChar": 75,
+        "endLine": 20,
+        "endChar": 90
+      },
+      "revId": "3da065c1d25c74b60db5b1171efb0b011c3e5502",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
