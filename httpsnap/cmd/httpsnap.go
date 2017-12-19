@@ -153,14 +153,22 @@ func getData(url string, requestContentType string, requestBody string, namedCli
 	}
 
 	tlsConfig.BuildNameToCertificate()
-	var transport *http.Transport
-	if len(pins) > 0 {
-		transport = &http.Transport{TLSClientConfig: tlsConfig, DialTLS: verifyPinDialer(tlsConfig, pins)}
-	} else {
-		transport = &http.Transport{TLSClientConfig: tlsConfig}
+	transport := &http.Transport{TLSHandshakeTimeout: config.TimeoutOrDefault(api.TransportTLSHandshake),
+		ResponseHeaderTimeout: config.TimeoutOrDefault(api.TransportResponseHeader),
+		ExpectContinueTimeout: config.TimeoutOrDefault(api.TransportExpectContinue),
+		IdleConnTimeout:       config.TimeoutOrDefault(api.TransportIdleConn),
+		DisableCompression:    true,
+		TLSClientConfig:       tlsConfig,
 	}
 
-	client := &http.Client{Transport: transport}
+	if len(pins) > 0 {
+		transport.DialTLS = verifyPinDialer(tlsConfig, pins, config)
+	}
+
+	client := &http.Client{
+		Timeout:   config.TimeoutOrDefault(api.Global),
+		Transport: transport,
+	}
 
 	resp, err := client.Post(url, requestContentType, bytes.NewBuffer([]byte(requestBody)))
 	if err != nil {
@@ -198,10 +206,16 @@ func getData(url string, requestContentType string, requestBody string, namedCli
 // Dialer is custom dialer to verify cert against pinset
 type Dialer func(network, addr string) (net.Conn, error)
 
-func verifyPinDialer(tlsConfig *tls.Config, pins []string) Dialer {
+func verifyPinDialer(tlsConfig *tls.Config, pins []string, config api.Config) Dialer {
 
 	return func(network, addr string) (net.Conn, error) {
-		c, err := tls.Dial(network, addr, tlsConfig)
+
+		d := &net.Dialer{
+			Timeout:   config.TimeoutOrDefault(api.DialerTimeout),
+			KeepAlive: config.TimeoutOrDefault(api.DialerKeepAlive),
+		}
+
+		c, err := tls.DialWithDialer(d, network, addr, tlsConfig)
 		if err != nil {
 			return nil, err
 		}

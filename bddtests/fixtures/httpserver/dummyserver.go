@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -50,8 +51,11 @@ func startTestHTTPServer() {
 	tlsConfig.BuildNameToCertificate()
 
 	server := &http.Server{
-		Addr:      viper.GetString("http.listen.address"),
-		TLSConfig: tlsConfig,
+		Addr:              viper.GetString("http.listen.address"),
+		TLSConfig:         tlsConfig,
+		ReadTimeout:       5 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      10 * time.Second,
 	}
 
 	fmt.Println("Calling ListenAndServeTLS...")

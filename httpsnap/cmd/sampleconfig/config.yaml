@@ -5,6 +5,18 @@
 # Test configuration for config
 logging:
   level: debug
+httpclient:
+  timeout: 
+    client:
+      timeout: 10s
+    transport:
+      tlsHandshake: 3s
+      responseHeader: 5s
+      expectContinue: 5s
+      idleConn: 10s
+    dialer:
+      timeout: 10s
+      keepAlive: 10s
 tls:
   enableSystemCertPool: true
   caCerts:

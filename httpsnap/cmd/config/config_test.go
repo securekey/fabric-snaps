@@ -93,6 +93,45 @@ func TestIsSystemCertPoolEnabled(t *testing.T) {
 	}
 }
 
+func TestTimeouts(t *testing.T) {
+
+	timeout := c.TimeoutOrDefault(httpsnapApi.Global)
+	if timeout.Seconds() != 10 {
+		t.Fatalf("Failed to retrieve global client timeout. Expected: 10, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.TransportTLSHandshake)
+	if timeout.Seconds() != 3 {
+		t.Fatalf("Failed to retrieve transport TLS handshake timeout. Expected: 3, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.TransportResponseHeader)
+	if timeout.Seconds() != 5 {
+		t.Fatalf("Failed to retrieve transport response header timeout. Expected: 5, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.TransportExpectContinue)
+	if timeout.Seconds() != 5 {
+		t.Fatalf("Failed to retrieve transport expect continue timeout. Expected: 5, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.TransportIdleConn)
+	if timeout.Seconds() != 10 {
+		t.Fatalf("Failed to retrieve transport idle connection timeout. Expected: 10, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.DialerTimeout)
+	if timeout.Seconds() != 10 {
+		t.Fatalf("Failed to retrieve dialer timeout. Expected: 10, got %f", timeout.Seconds())
+	}
+
+	timeout = c.TimeoutOrDefault(httpsnapApi.TransportIdleConn)
+	if timeout.Seconds() != 10 {
+		t.Fatalf("Failed to retrieve dialer keep alive. Expected: 10, got %f", timeout.Seconds())
+	}
+
+}
+
 func verifyEqual(t *testing.T, value string, expected string, errMsg string) {
 	if value != expected {
 		t.Fatalf("%s. Expecting %s, got %s", errMsg, expected, value)

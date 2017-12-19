@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
+import "time"
+
 // SchemaConfig defines request and response schemas for content type
 type SchemaConfig struct {
 	// Content type
@@ -30,6 +32,20 @@ type ClientTLS struct {
 	Key string
 }
 
+// HTTPClientTimeoutType enumerates the different types of timeouts used by http client
+type HTTPClientTimeoutType int
+
+// Timeouts used by HTTP client
+const (
+	Global HTTPClientTimeoutType = iota
+	TransportTLSHandshake
+	TransportResponseHeader
+	TransportExpectContinue
+	TransportIdleConn
+	DialerTimeout
+	DialerKeepAlive
+)
+
 // Config configuration interface
 type Config interface {
 	GetConfigPath(path string) string
@@ -39,4 +55,5 @@ type Config interface {
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() []string
 	IsSystemCertPoolEnabled() bool
+	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 }
