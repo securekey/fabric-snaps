@@ -200,7 +200,7 @@ func getTLSCredentials(peerConfig, config *viper.Viper) (credentials.TransportCr
 
 	var certificates []tls.Certificate
 	// certpem is by default.. if it exists, load it, if not, check for certfile and load the cert
-	// if both are not found then assumption is tls is disabled
+	// if both are not found then assumption is the client is not providing any cert to the server
 	if config.GetString("eventsnap.eventhub.tlsCerts.client.certpem") != "" {
 		keyBytes, err := ioutil.ReadFile(config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
 		if err != nil {
