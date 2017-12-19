@@ -46,6 +46,30 @@
       "revId": "3da065c1d25c74b60db5b1171efb0b011c3e5502",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62fa51c1_5e070a6e",
+        "filename": "bddtests/fixtures/config/snaps/eventsnap/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-19T20:48:16Z",
+      "side": 1,
+      "message": "yes, TLS is disabled for the client, regardless if the server requires TLS or not.",
+      "parentUuid": "edba5631_cb093a94",
+      "range": {
+        "startLine": 20,
+        "startChar": 75,
+        "endLine": 20,
+        "endChar": 90
+      },
+      "revId": "3da065c1d25c74b60db5b1171efb0b011c3e5502",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
