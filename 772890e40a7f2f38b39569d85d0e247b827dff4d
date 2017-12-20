@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "086e2f0a_8cc7a7a7",
+        "filename": "transactionsnap/api/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-20T19:20:08Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 19,
+        "startChar": 57,
+        "endLine": 19,
+        "endChar": 58
+      },
+      "revId": "772890e40a7f2f38b39569d85d0e247b827dff4d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7acf101d_656e5ba2",
+        "filename": "transactionsnap/cmd/client/peerfilter/minblockheight/minblockheight.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-20T19:20:08Z",
+      "side": 1,
+      "message": "this logs an error but the processing continues and will return true.. is this the expected behaviour or should it simply return false ?",
+      "range": {
+        "startLine": 49,
+        "startChar": 2,
+        "endLine": 49,
+        "endChar": 102
+      },
+      "revId": "772890e40a7f2f38b39569d85d0e247b827dff4d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd6ddf70_6c27ef19",
+        "filename": "transactionsnap/cmd/mocks/mockClient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-20T19:20:08Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 48,
+        "startChar": 29,
+        "endLine": 48,
+        "endChar": 35
+      },
+      "revId": "772890e40a7f2f38b39569d85d0e247b827dff4d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
