@@ -48,6 +48,8 @@ func (f *peerFilter) Accept(p sdkApi.Peer) bool {
 	if err != nil {
 		logger.Errorf("Error getting ledger height for channel [%s] on local peer: %s.\n", f.channelID, err)
 	} else {
+		// Need to subtract 1 from the block height since the block height (LedgerHeight) that's included
+		// in the Gossip Network Member is really the block number (i.e. they subtract 1 also)
 		height = bcInfo.Height - 1
 	}
 
