@@ -22,7 +22,7 @@ type MockSelectionService struct {
 
 //GetEndorsersForChaincode return endorsers for chaincode
 func (m *MockSelectionService) GetEndorsersForChaincode(channelID string,
-	chaincodeIDs ...string) ([]sdkApi.Peer, error) {
+	peerFilter api.PeerFilter, chaincodeIDs ...string) ([]sdkApi.Peer, error) {
 	if channelID == m.InvalidChannel {
 		return nil, fmt.Errorf("Invalid channel")
 	}

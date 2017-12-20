@@ -16,6 +16,24 @@ import (
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 )
 
+// EndorseTxRequest contains the parameters for the EndoreseTransaction function
+type EndorseTxRequest struct {
+	// ChaincodeID identifies the chaincode to invoke
+	ChaincodeID string
+	// Args to pass to the chaincode. Args[0] is the function name
+	Args []string
+	// TransientData map (optional)
+	TransientData map[string][]byte
+	// Targets for the transaction (optional)
+	Targets []sdkApi.Peer
+	// ChaincodeIDs contains all of the chaincodes that should be included
+	// when evaluating endorsement policy (including the chaincode being invoked).
+	// If empty then only the invoked chaincode is included. (optional)
+	ChaincodeIDs []string
+	// PeerFilter filters out peers using application-specific logic (optional)
+	PeerFilter PeerFilter
+}
+
 // Client is a wrapper interface around the fabric client
 // It enables multithreaded access to the client
 type Client interface {
@@ -35,15 +53,10 @@ type Client interface {
 	// EndorseTransaction request endorsement from the peers on this channel
 	// for a transaction with the given parameters
 	// @param {Channel} channel on which we want to transact
-	// @param {string} chaincodeID identifies the chaincode to invoke
-	// @param {[]string} args to pass to the chaincode. Args[0] is the function name
-	// @param {[]Peer} (optional) targets for transaction
-	// @param {map[string][]byte} transientData map
-	// @param {[]string} ccIDs For Endorsement selection
+	// @param {EndorseTxRequest} reuest identifies the chaincode to invoke
 	// @returns {[]TransactionProposalResponse} responses from endorsers
 	// @returns {error} error, if any
-	EndorseTransaction(sdkApi.Channel, string, []string, map[string][]byte,
-		[]sdkApi.Peer, []string) ([]*apitxn.TransactionProposalResponse, error)
+	EndorseTransaction(channel sdkApi.Channel, request *EndorseTxRequest) ([]*apitxn.TransactionProposalResponse, error)
 
 	// CommitTransaction submits the given endorsements on the specified channel for
 	// commit
@@ -107,7 +120,7 @@ type CCDataProvider interface {
 type SelectionService interface {
 	// GetEndorsersForChaincode returns a set of peers that should satisfy the endorsement
 	// policies of all of the given chaincodes
-	GetEndorsersForChaincode(channelID string, chaincodeIDs ...string) ([]sdkApi.Peer, error)
+	GetEndorsersForChaincode(channelID string, peerFilter PeerFilter, chaincodeIDs ...string) ([]sdkApi.Peer, error)
 	GetPeerForEvents(channelID string) (*PeerConfig, error)
 }
 
@@ -128,7 +141,7 @@ type PeerGroupResolver interface {
 	// Resolve returns a PeerGroup ensuring that all of the peers in the group are
 	// in the given set of available peers
 	// This method should never return nil but may return a PeerGroup that contains no peers.
-	Resolve() PeerGroup
+	Resolve(peerFilter PeerFilter) PeerGroup
 }
 
 // LoadBalancePolicy is used to pick a peer group from a given set of peer groups
@@ -187,12 +200,27 @@ type Collapsable interface {
 	Collapse() Group
 }
 
+// ChannelPeer extends Peer and adds channel-specific information
+type ChannelPeer interface {
+	sdkApi.Peer
+
+	// ChannelID returns the channel ID
+	ChannelID() string
+
+	// BlockHeight returns the block height of the peer
+	// for the current channel.
+	BlockHeight() uint64
+
+	// GetBlockHeight returns the block height of the peer for
+	// the given channel. Returns 0 if the peer is not joined
+	// to the channel or if the info is not available.
+	GetBlockHeight(channelID string) uint64
+}
+
 // ChannelMembership defines membership for a channel
 type ChannelMembership struct {
 	// Peers on the channel
-	Peers []sdkApi.Peer
-	// PollingEnabled is polling for membership enabled for this channel
-	PollingEnabled bool
+	Peers []ChannelPeer
 	// QueryError Error from the last query/polling operation
 	QueryError error
 }
@@ -204,7 +232,6 @@ type MembershipManager interface {
 	// peers on the channel. It also returns the last known membership list
 	// in case there was a polling error
 	// @param {string} name of the channel
-	// @param {bool} enable membership polling for this channel
 	// @returns {ChannelMembership} channel membership object
-	GetPeersOfChannel(string, bool) ChannelMembership
+	GetPeersOfChannel(string) ChannelMembership
 }

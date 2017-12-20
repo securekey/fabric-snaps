@@ -19,9 +19,10 @@ import (
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
-	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/peerfilter"
 	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
 
@@ -123,8 +124,26 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 		ccargs = append(ccargs, string(ccArg))
 	}
 	logger.Debug("Endorser args:", ccargs)
-	tpxResponse, err := txs.FcClient.EndorseTransaction(channel, snapTxRequest.ChaincodeID,
-		ccargs, snapTxRequest.TransientMap, peers, snapTxRequest.CCIDsForEndorsement)
+
+	var peerFilter api.PeerFilter
+	if snapTxRequest.PeerFilter != nil {
+		logger.Infof("Using peer filter [%s]\n", snapTxRequest.PeerFilter.Type)
+		var err error
+		peerFilter, err = peerfilter.New(snapTxRequest.PeerFilter)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating Peer Filter")
+		}
+	}
+
+	request := &api.EndorseTxRequest{
+		ChaincodeID:   snapTxRequest.ChaincodeID,
+		Args:          ccargs,
+		TransientData: snapTxRequest.TransientMap,
+		ChaincodeIDs:  snapTxRequest.CCIDsForEndorsement,
+		Targets:       peers,
+		PeerFilter:    peerFilter,
+	}
+	tpxResponse, err := txs.FcClient.EndorseTransaction(channel, request)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +272,7 @@ func (txs *TxServiceImpl) GetPeersOfChannel(args []string, membership api.Member
 	channel := args[0]
 	logger.Debugf("Retrieving peers on channel: %s", channel)
 
-	channelMembership := membership.GetPeersOfChannel(channel, true)
+	channelMembership := membership.GetPeersOfChannel(channel)
 	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
 		return nil, fmt.Errorf("Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
 	}

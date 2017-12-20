@@ -21,7 +21,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
-	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
+	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	client "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
 )
@@ -132,7 +132,7 @@ func getPeersOfChannel(args []string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	channelMembership := srvc.Membership.GetPeersOfChannel(channel, true)
+	channelMembership := srvc.Membership.GetPeersOfChannel(channel)
 	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
 		return nil, errors.Errorf("Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
 	}

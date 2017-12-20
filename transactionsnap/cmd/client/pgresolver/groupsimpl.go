@@ -29,7 +29,7 @@ func NewGroup(items []api.Item) api.Group {
 }
 
 // NewPeerGroup returns a new PeerGroup
-func NewPeerGroup(peers ...sdkApi.Peer) api.PeerGroup {
+func NewPeerGroup(peers ...api.ChannelPeer) api.PeerGroup {
 	return &peerGroup{peers: asPeerWrappers(peers)}
 }
 
@@ -201,7 +201,7 @@ func (g *groupsImpl) String() string {
 
 // peerWrapper wraps a Peer and implements the String() function (to help in debugging).
 type peerWrapper struct {
-	target sdkApi.Peer
+	target api.ChannelPeer
 }
 
 func (pw *peerWrapper) String() string {
@@ -310,7 +310,7 @@ func (pg *mspPeerGroup) GetName() string {
 	return pg.mspID
 }
 
-func asPeerWrappers(peers []sdkApi.Peer) []*peerWrapper {
+func asPeerWrappers(peers []api.ChannelPeer) []*peerWrapper {
 	items := make([]*peerWrapper, len(peers))
 	for i, peer := range peers {
 		items[i] = &peerWrapper{target: peer}
