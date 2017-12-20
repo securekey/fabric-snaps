@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "d33aa3cc_b77bae35",
+        "filename": "configurationsnap/cmd/configurationscc/config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e1679b2_1e2537d2",
+      "range": {
+        "startLine": 30,
+        "startChar": 4,
+        "endLine": 30,
+        "endChar": 26
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5090033_ce36387e",
         "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
         "patchSetId": 4
@@ -59,6 +83,30 @@
       "writtenOn": "2017-12-20T17:10:54Z",
       "side": 1,
       "message": "use peerConfigPath",
+      "range": {
+        "startLine": 62,
+        "startChar": 39,
+        "endLine": 62,
+        "endChar": 43
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afefc5c0_a1e22667",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d5090033_ce36387e",
       "range": {
         "startLine": 62,
         "startChar": 39,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "30e8f571_d2c8891a",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f81737c_0c7a41af",
+      "range": {
+        "startLine": 128,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 9
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68ab753f_765e8846",
         "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
         "patchSetId": 4
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "c1ec52a1_b95def1c",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68ab753f_765e8846",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 54
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42c3070d_b9a73a59",
         "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
         "patchSetId": 4
@@ -128,6 +224,30 @@
       "writtenOn": "2017-12-20T17:10:54Z",
       "side": 1,
       "message": "use peerConfigPath",
+      "range": {
+        "startLine": 186,
+        "startChar": 38,
+        "endLine": 186,
+        "endChar": 42
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8656247c_089037b6",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:11:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42c3070d_b9a73a59",
       "range": {
         "startLine": 186,
         "startChar": 38,
