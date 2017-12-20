@@ -140,6 +140,9 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 			if err != nil {
 				logger.Errorf("Error getting ledger height for channel [%s] on local peer. Ledger height will be set to 0.\n", channelID)
 			} else {
+				// Need to subtract 1 from the block height since the LedgerHeight in the
+				// Gossip NetworkMember is really the block number (i.e. they subtract 1 also)
+				// So, we need to make it match.
 				ledgerHeight = bcInfo.Height - 1
 			}
 		}

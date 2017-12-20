@@ -13,7 +13,7 @@ type PeerFilterType string
 
 const (
 	// MinBlockHeightPeerFilterType is a peer filter that selects peers
-	// whose block height is least the height of the local peer on which
+	// whose block height is at least the height of the local peer on which
 	// the TxSnap is being invoked.
 	// Required Args:
 	// - arg[0]: Channel ID

@@ -45,7 +45,7 @@ func (c *MockClient) GetChannel(name string) (sdkApi.Channel, error) {
 // EndorseTransaction request endorsement from the peers on this channel
 // for a transaction with the given parameters
 // @param {Channel} channel on which we want to transact
-// @param {EndorseTxRequest} reuest identifies the chaincode to invoke
+// @param {EndorseTxRequest} request identifies the chaincode to invoke
 // @returns {[]TransactionProposalResponse} responses from endorsers
 // @returns {error} error, if any
 func (c *MockClient) EndorseTransaction(channel sdkApi.Channel, request *transactionsnapApi.EndorseTxRequest) (

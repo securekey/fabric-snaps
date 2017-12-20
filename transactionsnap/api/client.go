@@ -16,7 +16,7 @@ import (
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 )
 
-// EndorseTxRequest contains the parameters for the EndoreseTransaction function
+// EndorseTxRequest contains the parameters for the EndorseTransaction function
 type EndorseTxRequest struct {
 	// ChaincodeID identifies the chaincode to invoke
 	ChaincodeID string

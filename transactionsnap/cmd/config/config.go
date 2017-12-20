@@ -25,9 +25,11 @@ import (
 )
 
 const (
-	configFileName     = "config"
-	peerConfigFileName = "core"
-	cmdRootPrefix      = "core"
+	configFileName              = "config"
+	peerConfigFileName          = "core"
+	cmdRootPrefix               = "core"
+	defaultSelectionMaxAttempts = 1
+	defaultSelectionInterval    = time.Second
 )
 
 var logger = logging.NewLogger("txn-snap-config")
@@ -201,13 +203,21 @@ func (c *Config) GetTxnSnapConfig() *viper.Viper {
 // at retrieving at least one endorsing peer group, while waiting the
 // specified interval between attempts.
 func (c *Config) GetEndorserSelectionMaxAttempts() int {
-	return c.txnSnapConfig.GetInt("txnsnap.selection.maxattempts")
+	maxAttempts := c.txnSnapConfig.GetInt("txnsnap.selection.maxattempts")
+	if maxAttempts == 0 {
+		return defaultSelectionMaxAttempts
+	}
+	return maxAttempts
 }
 
 // GetEndorserSelectionInterval is the amount of time to wait between
 // attempts at retrieving at least one endorsing peer group.
 func (c *Config) GetEndorserSelectionInterval() time.Duration {
-	return c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
+	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
+	if interval == 0 {
+		return defaultSelectionInterval
+	}
+	return interval
 }
 
 // initializeLogging initializes the logger
