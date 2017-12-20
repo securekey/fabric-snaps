@@ -188,6 +188,19 @@ peer:
             leaderAliveThreshold: 10s
             # Time between peer sends propose message and declares itself as a leader (sends declaration message) (unit: second)
             leaderElectionDuration: 5s
+        pvtData:
+            # pullRetryThreshold determines the maximum duration of time private data corresponding for a given block
+            # would be attempted to be pulled from peers until the block would be committed without the private data
+            pullRetryThreshold: 60s
+            # As private data enters the transient store, it is associated with the peer's ledger's height at that time.
+            # transientstoreMaxBlockRetention defines the maximum difference between the current ledger's height upon commit,
+            # and the private data residing inside the transient store that is guaranteed not to be purged.
+            # Private data is purged from the transient store when blocks with sequences that are multiples
+            # of transientstoreMaxBlockRetention are committed.
+            transientstoreMaxBlockRetention: 1000
+            # pushAckTimeout is the maximum time to wait for an acknowledgement from each peer
+            # at private data push at endorsement time.
+            pushAckTimeout: 3s            
 
     # EventHub related configuration
     events:
@@ -217,6 +230,14 @@ peer:
 
         # The server name use to verify the hostname returned by TLS handshake
         serverhostoverride:
+
+    # Authentication contains configuration parameters related to authenticating
+    # client messages
+    authentication:
+        # the acceptable difference between the current server time and the
+        # client's time as specified in a client request message
+        timewindow: 15m
+ 
 
     # Path on the file system where peer will store data (eg ledger). This
     # location must be access control protected to prevent unintended
