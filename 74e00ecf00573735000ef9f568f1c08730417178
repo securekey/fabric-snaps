@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4f4737c9_9df047b1",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:12:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58fd8ee5_aa29d8a7",
+      "range": {
+        "startLine": 48,
+        "startChar": 45,
+        "endLine": 48,
+        "endChar": 46
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e1679b2_1e2537d2",
         "filename": "configurationsnap/cmd/configurationscc/config/config.go",
         "patchSetId": 4
@@ -294,6 +318,30 @@
       "writtenOn": "2017-12-20T17:10:54Z",
       "side": 1,
       "message": "not need it here",
+      "range": {
+        "startLine": 102,
+        "startChar": 8,
+        "endLine": 102,
+        "endChar": 13
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "199bb107_b0fe1afb",
+        "filename": "transactionsnap/cmd/txsnapservice/txsnapservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T19:12:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11f0932e_721523af",
       "range": {
         "startLine": 102,
         "startChar": 8,
