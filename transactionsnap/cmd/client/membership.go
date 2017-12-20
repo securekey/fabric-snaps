@@ -8,109 +8,52 @@ package client
 
 import (
 	"fmt"
-	"strings"
 	"sync"
-	"time"
 
-	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/pkg/errors"
+	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
-	protosPeer "github.com/securekey/fabric-snaps/transactionsnap/api/membership"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
-)
-
-const (
-	peerProviderSCC      = "mscc"
-	peerProviderfunction = "getPeersOfChannel"
 )
 
 var manager *membershipManagerImpl
 var membershipSyncOnce sync.Once
 
-const (
-	defaultPollInterval = 5 * time.Second
-)
-
 type membershipManagerImpl struct {
-	sync.RWMutex
-	peersOfChannel map[string]api.ChannelMembership
-	config         api.Config
+	config api.Config
 }
 
 // GetMembershipInstance returns an instance of the membership manager
 func GetMembershipInstance(config api.Config) api.MembershipManager {
 	membershipSyncOnce.Do(func() {
-		peersOfChannel := make(map[string]api.ChannelMembership)
-		manager = &membershipManagerImpl{peersOfChannel: peersOfChannel, config: config}
-		go manager.pollPeersOfChannel()
+		manager = &membershipManagerImpl{
+			config: config,
+		}
 	})
 	return manager
 }
 
-func (m *membershipManagerImpl) GetPeersOfChannel(channel string,
-	enablePolling bool) api.ChannelMembership {
-	m.RLock()
-	membership := m.peersOfChannel[channel]
-	m.RUnlock()
-
-	if membership.Peers == nil {
-		peers, err := queryPeersOfChannel(channel, m.config)
-		membership = api.ChannelMembership{
-			Peers:      peers,
-			QueryError: err,
-		}
-	}
-	membership.PollingEnabled = enablePolling
-
-	m.Lock()
-	defer m.Unlock()
-	m.peersOfChannel[channel] = membership
-
-	return membership
-}
-
-func (m *membershipManagerImpl) pollPeersOfChannel() {
-	pollInterval := m.config.GetMembershipPollInterval()
-	if pollInterval == 0 {
-		pollInterval = defaultPollInterval
-	}
-	// Start polling
-	for {
-		logger.Debug("Polling peers on all known channels")
-		for channel, membership := range m.peersOfChannel {
-			if !membership.PollingEnabled {
-				continue
-			}
-
-			peers, err := queryPeersOfChannel(channel, m.config)
-			if err != nil {
-				logger.Warnf("Error polling peers of channel %s: %s", channel, err)
-			}
-
-			m.Lock()
-			m.peersOfChannel[channel] = api.ChannelMembership{Peers: peers, QueryError: err}
-			m.Unlock()
-		}
-		time.Sleep(time.Second * pollInterval)
+func (m *membershipManagerImpl) GetPeersOfChannel(channel string) api.ChannelMembership {
+	peers, err := queryPeersOfChannel(channel, m.config)
+	return api.ChannelMembership{
+		Peers:      peers,
+		QueryError: err,
 	}
 }
 
-func queryPeersOfChannel(channelID string, config api.Config) ([]sdkApi.Peer, error) {
-	response, err := queryChaincode(channelID, peerProviderSCC, []string{peerProviderfunction, channelID}, config)
+func queryPeersOfChannel(channelID string, config api.Config) ([]api.ChannelPeer, error) {
+	memService, err := memservice.Get()
 	if err != nil {
-		return nil, fmt.Errorf("error querying for peers on channel [%s]: %s", channelID, err)
+		return nil, errors.Wrap(err, "error getting membership service")
 	}
 
-	// return unmarshalled response
-	peerEndpoints := &protosPeer.PeerEndpoints{}
-	err = proto.Unmarshal(response.ProposalResponse.Response.Payload, peerEndpoints)
+	peerEndpoints, err := memService.GetPeersOfChannel(channelID)
 	if err != nil {
-		return nil, fmt.Errorf("Error unmarshalling response: %s Raw Payload: %+v",
-			err, response.ProposalResponse.Response.Payload)
+		return nil, errors.Wrapf(err, "error querying for peers on channel [%s]", channelID)
 	}
-	peers, err := parsePeerEndpoints(peerEndpoints, config)
+	peers, err := parsePeerEndpoints(channelID, peerEndpoints, config)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing peer endpoints: %s", err)
 	}
@@ -118,88 +61,21 @@ func queryPeersOfChannel(channelID string, config api.Config) ([]sdkApi.Peer, er
 
 }
 
-func queryChaincode(channelID string, ccID string, args []string, config api.Config) (*apitxn.TransactionProposalResponse, error) {
-	logger.Debugf("queryChaincode channelID:%s", channelID)
-	client, err := GetInstance(config)
-	if err != nil {
-		return nil, formatQueryError(channelID, err)
-	}
-
-	channel, err := client.NewChannel(channelID)
-	if err != nil {
-		return nil, formatQueryError(channelID, err)
-	}
-	err = client.InitializeChannel(channel)
-	if err != nil {
-		return nil, formatQueryError(channelID, err)
-	}
-
-	// Query the anchor peers in order until we get a response
-	var queryErrors []string
-	var response *apitxn.TransactionProposalResponse
-	anchors := channel.AnchorPeers()
-	if anchors == nil || len(anchors) == 0 {
-		return nil, fmt.Errorf("GetAnchorPeers didn't return any peer")
-	}
-	for _, anchor := range anchors {
-		// Load anchor peer
-		//orgCertPool, err := client.GetTLSRootsForOrg(, channel)
-		anchor.Host = config.GetGRPCProtocol() + anchor.Host
-		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", anchor.Host,
-			anchor.Port), config.GetTLSRootCertPath(), "", client.GetConfig())
-		if err != nil {
-			queryErrors = append(queryErrors, err.Error())
-			continue
-		}
-		// Send query to anchor peer
-		request := apitxn.ChaincodeInvokeRequest{
-			Targets:      []apitxn.ProposalProcessor{peer},
-			Fcn:          args[0],
-			Args:         utils.GetByteArgs(args[1:]),
-			TransientMap: nil,
-			ChaincodeID:  ccID,
-		}
-
-		responses, _, err := channel.SendTransactionProposal(request)
-		if err != nil {
-			queryErrors = append(queryErrors, err.Error())
-			continue
-		} else if responses[0].Err != nil {
-			queryErrors = append(queryErrors, responses[0].Err.Error())
-			continue
-		} else {
-			// Valid response obtained, stop querying
-			response = responses[0]
-			break
-		}
-	}
-	logger.Debugf("queryErrors: %v", queryErrors)
-
-	// If all queries failed, return error
-	if len(queryErrors) == len(anchors) {
-		return nil, fmt.Errorf(
-			"Error querying peers from all configured anchors for channel %s: %s",
-			channelID, strings.Join(queryErrors, "\n"))
-	}
-
-	return response, nil
-}
-
-func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints, config api.Config) ([]sdkApi.Peer, error) {
-	peers := []sdkApi.Peer{}
+func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, config api.Config) ([]api.ChannelPeer, error) {
+	var peers []api.ChannelPeer
 	clientInstance, err := GetInstance(config)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, endpoint := range endpoints.GetEndpoints() {
+	for _, endpoint := range endpoints {
 		enpoint := config.GetGRPCProtocol() + endpoint.GetEndpoint()
 		peer, err := sdkFabApi.NewPeer(enpoint, "", "", clientInstance.GetConfig())
 		if err != nil {
 			return nil, fmt.Errorf("Error creating new peer: %s", err)
 		}
 		peer.SetMSPID(string(endpoint.GetMSPid()))
-		peers = append(peers, peer)
+		peers = append(peers, NewChannelPeer(peer, channelID, endpoint.LedgerHeight))
 	}
 
 	return peers, nil
@@ -207,4 +83,58 @@ func parsePeerEndpoints(endpoints *protosPeer.PeerEndpoints, config api.Config) 
 
 func formatQueryError(channel string, err error) error {
 	return fmt.Errorf("Error querying peers on channel %s: %s", channel, err)
+}
+
+// ChannelPeerImpl implements ChannelPeer
+type ChannelPeerImpl struct {
+	sdkApi.Peer
+	channelID   string
+	blockHeight uint64
+}
+
+// NewChannelPeer creates a new ChannelPeer
+func NewChannelPeer(peer sdkApi.Peer, channelID string, blockHeight uint64) *ChannelPeerImpl {
+	return &ChannelPeerImpl{
+		Peer:        peer,
+		channelID:   channelID,
+		blockHeight: blockHeight,
+	}
+}
+
+// ChannelID returns the channel ID of the ChannelPeer
+func (p *ChannelPeerImpl) ChannelID() string {
+	return p.channelID
+}
+
+// BlockHeight returns the block height of the peer in the channel
+func (p *ChannelPeerImpl) BlockHeight() uint64 {
+	return p.blockHeight
+}
+
+// GetBlockHeight returns the block height of the peer in the specified channel
+func (p *ChannelPeerImpl) GetBlockHeight(channelID string) uint64 {
+	if channelID == p.channelID {
+		return p.blockHeight
+	}
+
+	mem := manager.GetPeersOfChannel(channelID)
+	if mem.QueryError != nil {
+		logger.Errorf("Error querying for peers of channel [%s]: %s\n", channelID, mem.QueryError)
+		return 0
+	}
+
+	for _, peer := range mem.Peers {
+		if peer.URL() == p.URL() {
+			return peer.BlockHeight()
+		}
+	}
+
+	logger.Warnf("Peer [%s] not found for channel [%s]\n", p.URL(), channelID)
+
+	return 0
+}
+
+// String returns the string representation of the ChannelPeer
+func (p *ChannelPeerImpl) String() string {
+	return fmt.Sprintf("[%s] - [%s] - Height[%d]\n", p.MSPID(), p.URL(), p.BlockHeight())
 }

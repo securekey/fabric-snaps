@@ -15,7 +15,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
@@ -246,7 +245,7 @@ func verify(t *testing.T, service api.SelectionService, expectedPeerGroups []api
 	defer logging.SetLevel(module, level)
 
 	for i := 0; i < len(expectedPeerGroups); i++ {
-		peers, err := service.GetEndorsersForChaincode(channelID, chaincodeIDs...)
+		peers, err := service.GetEndorsersForChaincode(channelID, nil, chaincodeIDs...)
 		if err != nil {
 			t.Fatalf("error getting endorsers: %s", err)
 		}
@@ -287,18 +286,19 @@ func containsPeer(peers []apifabclient.Peer, peer apifabclient.Peer) bool {
 	return false
 }
 
-func pg(peers ...apifabclient.Peer) api.PeerGroup {
+func pg(peers ...api.ChannelPeer) api.PeerGroup {
 	return pgresolver.NewPeerGroup(peers...)
 }
 
-func peer(name string, mspID string) apifabclient.Peer {
+func peer(name string, mspID string) api.ChannelPeer {
 	peer, err := sdkFabApi.NewPeer(name+":7051", "", "", configImp)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
 	peer.SetName(name)
 	peer.SetMSPID(mspID)
-	return peer
+	// TODO: Set ChannelID and LedgerHeight
+	return NewChannelPeer(peer, "", 0)
 }
 
 func newMockSelectionService(membershipManager api.MembershipManager, ccDataProvider api.CCDataProvider, lbp api.LoadBalancePolicy) api.SelectionService {
@@ -311,19 +311,19 @@ func newMockSelectionService(membershipManager api.MembershipManager, ccDataProv
 }
 
 type mockMembershipManager struct {
-	peerConfigs map[string][]sdkApi.Peer
+	peerConfigs map[string][]api.ChannelPeer
 }
 
-func (m *mockMembershipManager) GetPeersOfChannel(channelID string, poll bool) api.ChannelMembership {
-	return api.ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
+func (m *mockMembershipManager) GetPeersOfChannel(channelID string) api.ChannelMembership {
+	return api.ChannelMembership{Peers: m.peerConfigs[channelID]}
 }
 
 func newMockMembershipManager() *mockMembershipManager {
-	return &mockMembershipManager{peerConfigs: make(map[string][]sdkApi.Peer)}
+	return &mockMembershipManager{peerConfigs: make(map[string][]api.ChannelPeer)}
 }
 
-func (m *mockMembershipManager) add(channelID string, peers ...sdkApi.Peer) *mockMembershipManager {
-	m.peerConfigs[channelID] = []sdkApi.Peer(peers)
+func (m *mockMembershipManager) add(channelID string, peers ...api.ChannelPeer) *mockMembershipManager {
+	m.peerConfigs[channelID] = []api.ChannelPeer(peers)
 	return m
 }
 

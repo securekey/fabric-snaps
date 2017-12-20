@@ -45,17 +45,12 @@ func (c *MockClient) GetChannel(name string) (sdkApi.Channel, error) {
 // EndorseTransaction request endorsement from the peers on this channel
 // for a transaction with the given parameters
 // @param {Channel} channel on which we want to transact
-// @param {string} chaincodeID identifies the chaincode to invoke
-// @param {[]string} args to pass to the chaincode. Args[0] is the function name
-// @param {[]Peer} (optional) targets for transaction
-// @param {map[string][]byte} transientData map
-// @param {[]string} ccIDs For Endorsement selection
+// @param {EndorseTxRequest} reuest identifies the chaincode to invoke
 // @returns {[]TransactionProposalResponse} responses from endorsers
 // @returns {error} error, if any
-func (c *MockClient) EndorseTransaction(channel sdkApi.Channel, chaincodeID string,
-	args []string, transientData map[string][]byte, targets []sdkApi.Peer, ccIDsForEndorsement []string) (
+func (c *MockClient) EndorseTransaction(channel sdkApi.Channel, request *transactionsnapApi.EndorseTxRequest) (
 	[]*apitxn.TransactionProposalResponse, error) {
-	return c.fcClient.EndorseTransaction(channel, chaincodeID, args, transientData, targets, ccIDsForEndorsement)
+	return c.fcClient.EndorseTransaction(channel, request)
 }
 
 // CommitTransaction submits the given endorsements on the specified channel for

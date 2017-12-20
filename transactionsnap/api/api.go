@@ -15,6 +15,7 @@ type SnapTransactionRequest struct {
 	EndorserArgs        [][]byte          // optional args for endorsement
 	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
 	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
+	PeerFilter          *PeerFilterOpts   // optional peer filter
 }
 
 // ClientService interface

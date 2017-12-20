@@ -118,25 +118,48 @@ func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
 	return channel, nil
 }
 
-func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID string,
-	args []string, transientData map[string][]byte, targets []sdkApi.Peer, ccIDsForEndorsement []string) (
+func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, endorseRequest *api.EndorseTxRequest) (
 	[]*apitxn.TransactionProposalResponse, error) {
+
+	if len(endorseRequest.Args) == 0 {
+		return nil, errors.Errorf(
+			"Args cannot be empty. Args[0] is expected to be the function name")
+	}
+
 	var peers []sdkApi.Peer
 	var processors []apitxn.ProposalProcessor
 	var err error
 
-	if targets == nil {
-		if len(ccIDsForEndorsement) == 0 {
-			ccIDsForEndorsement = append(ccIDsForEndorsement, chaincodeID)
+	var ccIDsForEndorsement []string
+	if endorseRequest.Targets == nil {
+		if len(endorseRequest.ChaincodeIDs) == 0 {
+			ccIDsForEndorsement = append(ccIDsForEndorsement, endorseRequest.ChaincodeID)
+		} else {
+			ccIDsForEndorsement = endorseRequest.ChaincodeIDs
 		}
+
 		// Select endorsers
-		peers, err = c.selectionService.GetEndorsersForChaincode(channel.Name(),
-			ccIDsForEndorsement...)
-		if err != nil {
-			return nil, errors.Errorf("Error selecting endorsers: %s", err)
+		remainingAttempts := c.config.GetEndorserSelectionMaxAttempts()
+		logger.Infof("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
+		for len(peers) == 0 && remainingAttempts > 0 {
+			peers, err = c.selectionService.GetEndorsersForChaincode(channel.Name(),
+				endorseRequest.PeerFilter, ccIDsForEndorsement...)
+			if err != nil {
+				return nil, errors.Errorf("error selecting endorsers: %s", err)
+			}
+			if len(peers) == 0 {
+				remainingAttempts--
+				logger.Warnf("No endorsers. [%d] remaining attempts...", remainingAttempts)
+				time.Sleep(c.config.GetEndorserSelectionInterval())
+			}
+		}
+
+		if len(peers) == 0 {
+			logger.Errorf("No suitable endorsers found for transaction.")
+			return nil, errors.New("no suitable endorsers found for transaction")
 		}
 	} else {
-		peers = targets
+		peers = endorseRequest.Targets
 	}
 
 	for _, peer := range peers {
@@ -148,19 +171,14 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, chaincodeID stri
 	defer c.RUnlock()
 
 	logger.Debugf("Requesting endorsements from %s, on channel %s",
-		chaincodeID, channel.Name())
-
-	if len(args) == 0 {
-		return nil, errors.Errorf(
-			"Args cannot be empty. Args[0] is expected to be the function name")
-	}
+		endorseRequest.ChaincodeID, channel.Name())
 
 	request := apitxn.ChaincodeInvokeRequest{
 		Targets:      processors,
-		Fcn:          args[0],
-		Args:         utils.GetByteArgs(args[1:]),
-		TransientMap: transientData,
-		ChaincodeID:  chaincodeID,
+		Fcn:          endorseRequest.Args[0],
+		Args:         utils.GetByteArgs(endorseRequest.Args[1:]),
+		TransientMap: endorseRequest.TransientData,
+		ChaincodeID:  endorseRequest.ChaincodeID,
 	}
 
 	responses, _, err := channel.SendTransactionProposal(request)

@@ -197,6 +197,19 @@ func (c *Config) GetTxnSnapConfig() *viper.Viper {
 	return c.txnSnapConfig
 }
 
+// GetEndorserSelectionMaxAttempts returns the maximum number of attempts
+// at retrieving at least one endorsing peer group, while waiting the
+// specified interval between attempts.
+func (c *Config) GetEndorserSelectionMaxAttempts() int {
+	return c.txnSnapConfig.GetInt("txnsnap.selection.maxattempts")
+}
+
+// GetEndorserSelectionInterval is the amount of time to wait between
+// attempts at retrieving at least one endorsing peer group.
+func (c *Config) GetEndorserSelectionInterval() time.Duration {
+	return c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
+}
+
 // initializeLogging initializes the logger
 func (c *Config) initializeLogging() error {
 	logLevel := c.txnSnapConfig.GetString("txnsnap.loglevel")

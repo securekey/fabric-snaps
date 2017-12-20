@@ -11,7 +11,6 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -73,7 +72,7 @@ func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalanceP
 	}, nil
 }
 
-func (c *peerGroupResolver) Resolve() api.PeerGroup {
+func (c *peerGroupResolver) Resolve(peerFilter api.PeerFilter) api.PeerGroup {
 	peerGroups := c.getPeerGroups()
 
 	if logging.IsEnabledFor(module, apilogging.DEBUG) {
@@ -93,7 +92,21 @@ func (c *peerGroupResolver) Resolve() api.PeerGroup {
 		logger.Debugf(s)
 	}
 
-	return c.lbp.Choose(peerGroups)
+	var pgroups []api.PeerGroup
+	for _, pg := range peerGroups {
+		include := true
+		for _, p := range pg.Peers() {
+			if peerFilter != nil && !peerFilter.Accept(p) {
+				include = false
+				logger.Infof("Peer [%s] is not accepted by the filter and therefore peer group will be excluded.\n", p.URL())
+				break
+			}
+		}
+		if include {
+			pgroups = append(pgroups, pg)
+		}
+	}
+	return c.lbp.Choose(pgroups)
 }
 
 func (c *peerGroupResolver) getPeerGroups() []api.PeerGroup {
@@ -139,9 +152,9 @@ func mustGetPeerGroup(g api.Group) api.PeerGroup {
 		return pg
 	}
 
-	var peers []sdkApi.Peer
+	var peers []api.ChannelPeer
 	for _, item := range g.Items() {
-		if pg, ok := item.(sdkApi.Peer); ok {
+		if pg, ok := item.(api.ChannelPeer); ok {
 			peers = append(peers, pg)
 		} else {
 			panic(fmt.Sprintf("expecting item to be a Peer but found: %s", reflect.TypeOf(item)))

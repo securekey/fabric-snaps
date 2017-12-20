@@ -7,31 +7,30 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 // MockMembershipManager implements mock membership manager
 type MockMembershipManager struct {
-	peerConfigs map[string][]sdkApi.Peer
+	peerConfigs map[string][]api.ChannelPeer
 	err         error
 }
 
 // GetPeersOfChannel is mock implementation of GetPeersOfChannel
-func (m *MockMembershipManager) GetPeersOfChannel(channelID string, poll bool) api.ChannelMembership {
+func (m *MockMembershipManager) GetPeersOfChannel(channelID string) api.ChannelMembership {
 	if m.err != nil {
 		return api.ChannelMembership{Peers: m.peerConfigs[channelID], QueryError: m.err}
 	}
-	return api.ChannelMembership{Peers: m.peerConfigs[channelID], PollingEnabled: poll}
+	return api.ChannelMembership{Peers: m.peerConfigs[channelID]}
 }
 
 // NewMockMembershipManager creates new mock membership manager
 func NewMockMembershipManager(err error) *MockMembershipManager {
-	return &MockMembershipManager{peerConfigs: make(map[string][]sdkApi.Peer), err: err}
+	return &MockMembershipManager{peerConfigs: make(map[string][]api.ChannelPeer), err: err}
 }
 
 //Add adds peers for channel
-func (m *MockMembershipManager) Add(channelID string, peers ...sdkApi.Peer) *MockMembershipManager {
-	m.peerConfigs[channelID] = []sdkApi.Peer(peers)
+func (m *MockMembershipManager) Add(channelID string, peers ...api.ChannelPeer) *MockMembershipManager {
+	m.peerConfigs[channelID] = []api.ChannelPeer(peers)
 	return m
 }

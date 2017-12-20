@@ -11,18 +11,22 @@ import (
 	"math/rand"
 	"net"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
+	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
+	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
 const (
@@ -50,7 +54,7 @@ func NewSelectionService(config api.Config) api.SelectionService {
 	}
 }
 
-func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
+func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string, peerFilter api.PeerFilter,
 	chaincodeIDs ...string) ([]sdkApi.Peer, error) {
 
 	if len(chaincodeIDs) == 0 {
@@ -61,12 +65,12 @@ func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string,
 	if err != nil {
 		return nil, fmt.Errorf("Error getting peer group resolver for chaincodes [%v] on channel [%s]: %s", chaincodeIDs, channelID, err)
 	}
-	return resolver.Resolve().Peers(), nil
+	return resolver.Resolve(peerFilter).Peers(), nil
 }
 
 func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*api.PeerConfig, error) {
 	peerConfig := &api.PeerConfig{}
-	channelMembership := s.membershipManager.GetPeersOfChannel(channelID, false)
+	channelMembership := s.membershipManager.GetPeersOfChannel(channelID)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
 		// Query error and there is no cached membership list
 		return peerConfig, channelMembership.QueryError
@@ -168,7 +172,7 @@ func (s *selectionServiceImpl) getPolicyGroupForCC(channelID, ccID string) (api.
 
 func (s *selectionServiceImpl) getAvailablePeers(channelID string, mspID string) []sdkApi.Peer {
 	var peers []sdkApi.Peer
-	channelMembership := s.membershipManager.GetPeersOfChannel(channelID, true)
+	channelMembership := s.membershipManager.GetPeersOfChannel(channelID)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
 		// Query error and there is no cached membership list
 		logger.Errorf("unable to get membership for channel [%s]: %s", channelID, channelMembership.QueryError)
@@ -263,4 +267,70 @@ func newResolverKey(channelID string, chaincodeIDs ...string) *resolverKey {
 		}
 	}
 	return &resolverKey{channelID: channelID, chaincodeIDs: arr, key: key}
+}
+func queryChaincode(channelID string, ccID string, args []string, config api.Config) (*apitxn.TransactionProposalResponse, error) {
+	logger.Debugf("queryChaincode channelID:%s", channelID)
+	client, err := GetInstance(config)
+	if err != nil {
+		return nil, formatQueryError(channelID, err)
+	}
+
+	channel, err := client.NewChannel(channelID)
+	if err != nil {
+		return nil, formatQueryError(channelID, err)
+	}
+	err = client.InitializeChannel(channel)
+	if err != nil {
+		return nil, formatQueryError(channelID, err)
+	}
+
+	// Query the anchor peers in order until we get a response
+	var queryErrors []string
+	var response *apitxn.TransactionProposalResponse
+	anchors := channel.AnchorPeers()
+	if anchors == nil || len(anchors) == 0 {
+		return nil, fmt.Errorf("GetAnchorPeers didn't return any peer")
+	}
+	for _, anchor := range anchors {
+		// Load anchor peer
+		//orgCertPool, err := client.GetTLSRootsForOrg(, channel)
+		anchor.Host = config.GetGRPCProtocol() + anchor.Host
+		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", anchor.Host,
+			anchor.Port), config.GetTLSRootCertPath(), "", client.GetConfig())
+		if err != nil {
+			queryErrors = append(queryErrors, err.Error())
+			continue
+		}
+		// Send query to anchor peer
+		request := apitxn.ChaincodeInvokeRequest{
+			Targets:      []apitxn.ProposalProcessor{peer},
+			Fcn:          args[0],
+			Args:         utils.GetByteArgs(args[1:]),
+			TransientMap: nil,
+			ChaincodeID:  ccID,
+		}
+
+		responses, _, err := channel.SendTransactionProposal(request)
+		if err != nil {
+			queryErrors = append(queryErrors, err.Error())
+			continue
+		} else if responses[0].Err != nil {
+			queryErrors = append(queryErrors, responses[0].Err.Error())
+			continue
+		} else {
+			// Valid response obtained, stop querying
+			response = responses[0]
+			break
+		}
+	}
+	logger.Debugf("queryErrors: %v", queryErrors)
+
+	// If all queries failed, return error
+	if len(queryErrors) == len(anchors) {
+		return nil, fmt.Errorf(
+			"Error querying peers from all configured anchors for channel %s: %s",
+			channelID, strings.Join(queryErrors, "\n"))
+	}
+
+	return response, nil
 }

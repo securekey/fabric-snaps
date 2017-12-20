@@ -8,8 +8,9 @@ txnsnap:
   loglevel: debug
 
 # Membership list polling interval and tls flag
-  membership:
-    pollinterval: 3s
+  selection:
+    maxattempts: 20
+    interval: 1s
 
 
 # Configurations for the fabric client

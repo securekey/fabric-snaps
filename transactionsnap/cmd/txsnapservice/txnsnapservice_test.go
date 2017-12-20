@@ -72,7 +72,7 @@ const (
 	org2 = "Org2MSP"
 )
 
-var p1, p2 sdkApi.Peer
+var p1, p2 api.ChannelPeer
 
 type sampleConfig struct {
 	api.Config
@@ -264,7 +264,7 @@ func TestMain(m *testing.M) {
 
 }
 
-func peer(url string, mspID string) sdkApi.Peer {
+func peer(url string, mspID string) api.ChannelPeer {
 
 	peer, err := sdkFabApi.NewPeer(url, "", "", fcClient.GetConfig())
 	if err != nil {
@@ -274,7 +274,8 @@ func peer(url string, mspID string) sdkApi.Peer {
 	peer.SetName(url)
 	peer.SetMSPID(mspID)
 	fmt.Printf("\npeer %v\n", peer)
-	return peer
+	// TODO: Set ChannelID and BlockHeight
+	return client.NewChannelPeer(peer, "", 0)
 }
 
 // newTransactionProposal creates a proposal for transaction. This involves assembling the proposal
