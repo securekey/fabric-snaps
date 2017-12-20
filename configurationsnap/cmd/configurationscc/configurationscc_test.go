@@ -9,10 +9,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configapi "github.com/securekey/fabric-snaps/configurationsnap/api"
@@ -104,6 +109,7 @@ func testHealthcheck(t *testing.T, stub *shim.MockStub) {
 
 func invoke(stub *shim.MockStub, args [][]byte) ([]byte, error) {
 	res := stub.MockInvoke("1", args)
+	stub.ChannelID = "testChannel"
 	if res.Status != shim.OK {
 		return nil, fmt.Errorf("MockInvoke failed %s", string(res.Message))
 	}
@@ -115,6 +121,7 @@ func newMockStub(configErr error, httpErr error) *shim.MockStub {
 }
 
 func TestSave(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
 	_, stub := saveConfigsForTesting(t)
 
 	funcName := []byte("get")
@@ -138,6 +145,8 @@ func TestSave(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
 	response, stub := saveConfigsForTesting(t)
 	//get configuration - pass config key that has only MspID field set
 	//implicitly designed criteria by MspID
@@ -180,6 +189,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
 	_, stub := saveConfigsForTesting(t)
 	funcName := []byte("delete")
 	configKey := mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "peer.zero.example.com", AppName: "testAppName"}
@@ -389,6 +400,7 @@ func getBytes(function string, args []string) [][]byte {
 
 func saveConfigsForTesting(t *testing.T) ([]byte, *shim.MockStub) {
 	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub.ChannelID = "testChannel"
 	funcName := []byte("save")
 	payload := []byte(validMsgMultiplePeersAndApps)
 	response, err := invoke(stub, [][]byte{funcName, payload})
@@ -396,4 +408,46 @@ func saveConfigsForTesting(t *testing.T) ([]byte, *shim.MockStub) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 	return response, stub
+}
+
+func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+	configManager := mgmt.NewConfigManager(stub)
+	if configManager == nil {
+		return fmt.Errorf("Cannot instantiate config manager")
+	}
+	err := configManager.Save(config)
+	return err
+
+}
+
+func TestMain(m *testing.M) {
+
+	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("File error: %v\n", err))
+	}
+	fmt.Printf("Configuration for config snap %s", string(configData))
+	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
+		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+			PeerID: "peer1", App: []configmanagerApi.AppConfig{
+				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
+	stub := getMockStub()
+	configBytes, err := json.Marshal(configMsg)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	//upload valid message to HL
+	err = uplaodConfigToHL(stub, configBytes)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub, "Org1MSP")
+
+	os.Exit(m.Run())
+}
+func getMockStub() *shim.MockStub {
+	stub := shim.NewMockStub("testConfigState", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	stub.ChannelID = "testChannel"
+	return stub
 }
