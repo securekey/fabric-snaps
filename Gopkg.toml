@@ -52,7 +52,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[constraint]]
   name = "github.com/spf13/viper"
-  revision = "1a0c4a370c3e8286b835467d2dfcdaf636c3538b"
+  branch="master"
 
 [[constraint]]
   branch = "master"

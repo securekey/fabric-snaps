@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
-	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
@@ -25,25 +23,55 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
+type mockConfigProvider struct {
+	configs map[string]*config.EventSnapConfig
+	mutex   sync.RWMutex
+}
+
+func newMockConfigProvider() *mockConfigProvider {
+	return &mockConfigProvider{configs: make(map[string]*config.EventSnapConfig)}
+}
+
+func (cfgprovider *mockConfigProvider) setConfig(channelID string, cfg *config.EventSnapConfig) {
+	cfgprovider.mutex.Lock()
+	defer cfgprovider.mutex.Unlock()
+	cfgprovider.configs[channelID] = cfg
+}
+
+func (cfgprovider *mockConfigProvider) GetConfig(channelID string) (*config.EventSnapConfig, error) {
+	cfgprovider.mutex.RLock()
+	defer cfgprovider.mutex.RUnlock()
+	return cfgprovider.configs[channelID], nil
+}
+
 func TestEventSnap(t *testing.T) {
 	ehMx := &sync.RWMutex{}
-	mspID := "Org1MSP"
-	peerID := "peer1"
 	channelID1 := "ch1"
 	channelID2 := "ch2"
 
-	configStub1 := configmocks.NewMockStub(channelID1)
-	service.Initialize(configStub1, mspID)
+	config0, err := newMockConfig("", "./sampleconfig", "emptyAddress")
+	if err != nil {
+		fmt.Printf("Error %v", err)
+	}
+	fmt.Printf("Config 0 %v", config0)
+	config1, err := newMockConfig(channelID1, "./sampleconfig", "")
+	if err != nil {
+		fmt.Printf("Error %v", err)
+	}
+	fmt.Printf("Config 1 %v\n", config1)
+	config2, err := newMockConfig(channelID2, "./sampleconfig", "")
+	if err != nil {
+		fmt.Printf("Error %v", err)
+	}
 
-	configStub2 := configmocks.NewMockStub(channelID2)
-	service.Initialize(configStub2, mspID)
-
+	configProvider := newMockConfigProvider()
+	configProvider.setConfig("ch1", config0)
 	eventsnap := &eventSnap{
-		pserver: grpc.NewServer(),
+		pserver:        grpc.NewServer(),
+		configProvider: configProvider,
 	}
 
 	stub := shim.NewMockStub("eventsnap", eventsnap)
-
 	// Invalid options
 	stub.ChannelID = channelID1
 	if resp := stub.MockInit("txid2", nil); resp.Status == shim.OK {
@@ -51,7 +79,7 @@ func TestEventSnap(t *testing.T) {
 	}
 
 	mockEventHubs := make(map[string]*mockeventhub.MockEventHub)
-
+	configProvider.setConfig("", config0)
 	eventsnap = &eventSnap{
 		pserver: grpc.NewServer(),
 		eropts: eventrelay.MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter eventrelay.EventAdapter, tlsCredentials credentials.TransportCredentials) (eventrelay.EventHub, error) {
@@ -62,7 +90,7 @@ func TestEventSnap(t *testing.T) {
 			ehMx.Unlock()
 			return mockeh, nil
 		}),
-		configPath: "./sampleconfig",
+		configProvider: configProvider,
 	}
 
 	stub = shim.NewMockStub("eventsnap", eventsnap)
@@ -74,12 +102,14 @@ func TestEventSnap(t *testing.T) {
 
 	// Initialize with channel
 	stub.ChannelID = channelID1
+	configProvider.setConfig("ch1", config1)
 	if resp := stub.MockInit("txid3", nil); resp.Status != shim.OK {
 		t.Fatalf("Error in init: %s", resp.GetMessage())
 	}
 
 	// Another channel
 	stub.ChannelID = channelID2
+	configProvider.setConfig("ch2", config2)
 	if resp := stub.MockInit("txid4", nil); resp.Status != shim.OK {
 		t.Fatalf("Error in init: %s", resp.GetMessage())
 	}
@@ -87,12 +117,8 @@ func TestEventSnap(t *testing.T) {
 	// Delay adding the configuration
 	time.Sleep(8 * time.Second)
 
-	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch1.yaml"); err != nil {
-		t.Fatalf("Error saving config: %s", err)
-	}
-	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, "./sampleconfig/configch2.yaml"); err != nil {
-		t.Fatalf("Error saving config: %s", err)
-	}
+	configProvider.setConfig(channelID1, config1)
+	configProvider.setConfig(channelID2, config1)
 
 	// Wait for the event snap to pick up the configuration
 	time.Sleep(6 * time.Second)
@@ -158,4 +184,31 @@ func TestEventSnap(t *testing.T) {
 			}
 		}
 	}
+}
+
+func newMockConfig(channelID string, configPath string, option string) (*config.EventSnapConfig, error) {
+
+	peerCfg, err := config.New("", configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	switch option {
+	case "emptyAddress":
+		peerCfg.EventHubAddress = ""
+		peerCfg.ChannelConfigLoaded = true
+
+	default:
+		if peerCfg != nil && channelID != "" {
+			peerCfg.ChannelConfigLoaded = true
+			peerCfg.EventHubRegTimeout = time.Duration(1 * time.Second)
+			peerCfg.EventHubRegTimeout = time.Duration(1 * time.Second)
+			peerCfg.EventRelayTimeout = time.Duration(1 * time.Second)
+			peerCfg.EventDispatcherBufferSize = uint(100)
+			peerCfg.EventConsumerBufferSize = uint(100)
+			peerCfg.EventConsumerTimeout = time.Duration(10 * time.Millisecond)
+		}
+	}
+
+	return peerCfg, nil
 }

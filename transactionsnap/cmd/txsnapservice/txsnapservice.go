@@ -100,7 +100,6 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 
 //EndorseTransaction use to endorse the transaction
 func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) ([]*apitxn.TransactionProposalResponse, error) {
-
 	if snapTxRequest == nil {
 		return nil, errors.Errorf("SnapTxRequest is required")
 
@@ -213,10 +212,7 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(channelID string, signedPro
 	if channelID == "" {
 		return fmt.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
 	}
-	// channel, err := txs.FcClient.NewChannel(channelID)
-	// if err != nil {
-	// 	return fmt.Errorf("Cannot create channel %v", err)
-	// }
+
 	channel, err := txs.getChannel(channelID)
 	if err != nil {
 		return fmt.Errorf("Cannot create channel %v", err)
@@ -225,7 +221,6 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(channelID string, signedPro
 	if signedProposal == nil {
 		return fmt.Errorf("Signed proposal is missing")
 	}
-	//	err = txs.FcClient.InitializeChannel(channel)
 	err = txs.initializeChannel(channel)
 	if err != nil {
 		return fmt.Errorf("Cannot initialize channel %v", err)
@@ -238,26 +233,6 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(channelID string, signedPro
 	err = txs.FcClient.VerifyTxnProposalSignature(channel, proposalBytes)
 	if err != nil {
 		return fmt.Errorf("VerifyTxnProposalSignature returned error: %v", err)
-	}
-	return nil
-}
-
-//CommitTransactionAsync used to commit transaction asynchronously
-func (txs *TxServiceImpl) CommitTransactionAsync(channelID string, tpResponses []*apitxn.TransactionProposalResponse) error {
-
-	// channel, err := txs.FcClient.NewChannel(channelID)
-	// if err != nil {
-	// 	//what code should be returned here
-	// 	return fmt.Errorf("Cannot create channel %v", err)
-	// }
-	channel, err := txs.getChannel(channelID)
-	if err != nil {
-		return fmt.Errorf("Cannot create channel %v", err)
-	}
-	err = txs.FcClient.CommitTransaction(channel, tpResponses, false, registerTxEventTimeout)
-
-	if err != nil {
-		return fmt.Errorf("CommitTransaction returned error: %v", err)
 	}
 	return nil
 }

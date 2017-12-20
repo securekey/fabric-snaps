@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	keyDivider = "!"
+	//KeyDivider is used to separate key parts
+	KeyDivider = "!"
 )
 
 //CreateConfigKey creates key using mspID, peerID and appName
@@ -46,13 +47,13 @@ func ConfigKeyToString(configKey api.ConfigKey) (string, error) {
 	if err := ValidateConfigKey(configKey); err != nil {
 		return "", errors.Errorf("Config Key is not valid %v", err)
 	}
-	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName}, keyDivider), nil
+	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName}, KeyDivider), nil
 }
 
 //StringToConfigKey converts string to ConfigKey{}
 func StringToConfigKey(key string) (api.ConfigKey, error) {
 	ck := api.ConfigKey{}
-	keyParts := strings.Split(key, keyDivider)
+	keyParts := strings.Split(key, KeyDivider)
 	if len(keyParts) < 3 {
 		return ck, errors.Errorf("Invalid config key %v", key)
 	}

@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -38,6 +37,10 @@ const (
 var chnlServer *eventserver.ChannelServer
 var mutex sync.RWMutex
 
+type configProvider interface {
+	GetConfig(channelID string) (*config.EventSnapConfig, error)
+}
+
 // eventSnap starts the Channel Event Server which allows clients to register
 // for channel events. It also registers a local event service on the peer so that other
 // snaps may register for channel events directly.
@@ -46,13 +49,26 @@ type eventSnap struct {
 	pserver *grpc.Server
 	// eropts is only set during unit testing
 	eropts *eventrelay.Opts
-	// configPath is only set during unit testing
-	configPath string
+	// config is only set during unit testing
+	configProvider configProvider
+}
+
+type cfgProvider struct {
 }
 
 // New returns a new Event Snap
 func New() shim.Chaincode {
-	return &eventSnap{}
+	return &eventSnap{configProvider: &cfgProvider{}}
+}
+
+func (cfgprovider *cfgProvider) GetConfig(channelID string) (*config.EventSnapConfig, error) {
+
+	esconfig, err := config.New(channelID, "")
+	if err != nil {
+		logger.Warningf("Error initializing event snap: %s\n", err)
+		return nil, errors.Wrap(err, "error initializing event snap ")
+	}
+	return esconfig, nil
 }
 
 // Init initializes the Event Snap.
@@ -62,23 +78,23 @@ func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Warningf("******** Init Event Snap on channel [%s]\n", stub.GetChannelID())
 
 	channelID := stub.GetChannelID()
-	config, err := config.New(channelID, s.configPath)
+
+	esconfig, err := s.configProvider.GetConfig(channelID)
 	if err != nil {
-		logger.Warningf("Error initializing event snap: %s\n", err)
-		return shim.Error(fmt.Sprintf("error initializing event snap: %s", err))
+		return shim.Error(err.Error())
 	}
 
 	if channelID == "" {
 		// The channel server must be started on the first call to Init with no channel ID,
 		// since it needs to register with the peer server before the peer GRPC server starts
 		// serving requests.
-		if err := s.startChannelServer(config); err != nil {
+		if err := s.startChannelServer(esconfig); err != nil {
 			logger.Error(err.Error())
 			return shim.Error(err.Error())
 		}
 	} else {
-		if config.ChannelConfigLoaded() {
-			if err := s.startChannelEvents(stub.GetChannelID(), config); err != nil {
+		if esconfig.ChannelConfigLoaded {
+			if err := s.startChannelEvents(stub.GetChannelID(), esconfig); err != nil {
 				logger.Error(err.Error())
 				return shim.Error(err.Error())
 			}
@@ -157,9 +173,9 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 		time.Sleep(channelConfigCheckDuration)
 
 		logger.Infof("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
-		if config, err := config.New(channelID, s.configPath); err != nil {
+		if config, err := config.New(channelID, ""); err != nil {
 			logger.Warningf("Error reading configuration: %s\n", err)
-		} else if config.ChannelConfigLoaded() {
+		} else if config.ChannelConfigLoaded {
 			if err := s.startChannelEvents(channelID, config); err != nil {
 				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!\n", channelID, err.Error())
 			} else {

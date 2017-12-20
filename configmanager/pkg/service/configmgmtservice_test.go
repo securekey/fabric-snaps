@@ -171,8 +171,8 @@ someconfig:
 	cacheInstance := Initialize(stub, mspID)
 
 	config, err := cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: "unknown app"}, api.YAML)
-	if err != nil {
-		t.Fatalf("error getting Viper config: %s", err)
+	if err == nil {
+		t.Fatalf("Expected: Getting channel cache from ledge ")
 	}
 	if config != nil {
 		t.Fatalf("expecting nil config")
@@ -267,25 +267,6 @@ func TestRefreshCache(t *testing.T) {
 		t.Fatalf("Error 'refreshing cache %s", err)
 	}
 
-	//reset map
-	// configMessages = make(map[string][]byte)
-
-	// key := "msp.one!peer.zero.example.com!testAppName"
-	// configMessages[key] = []byte("someValue")
-	// //key value does not exist - combination will be saved
-	// if _, err := cacheInstance.refreshCache(stub.GetChannelID(), &configMessages); err != nil {
-	// 	t.Fatalf("Expecting error 'Invalid config key'")
-	// }
-	//key value exists - it will not be refreshed
-	// if _, err := cacheInstance.refreshCache(stub.GetChannelID(), &configMessages); err != nil {
-	// 	t.Fatalf("Expecting error 'Invalid config key'")
-	// }
-	// configMessages[key] = []byte("after This Cache Should be Refreshed")
-	// //key value exists - it will not be refreshed
-	// if _, err := cacheInstance.refreshCache(stub.GetChannelID(), &configMessages); err != nil {
-	// 	t.Fatalf("Expecting error 'Invalid config key'")
-	// }
-
 }
 
 func TestUploadingInvalidConfig(t *testing.T) {
@@ -344,11 +325,11 @@ func TestCreateSearchCriteriaForNonexistingMspID(t *testing.T) {
 }
 
 func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
-	adminService := GetInstance()
 
 	stub := getMockStub()
 
 	cacheInstance := Initialize(stub, mspID)
+	adminService := GetInstance()
 	//upload valid message to HL
 	_, err := uplaodConfigToHL(t, stub, validMsg)
 	if err != nil {
@@ -359,10 +340,17 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 		//Found no configs for criteria ByMspID error
 		t.Fatalf("Error %v", err)
 	}
-	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com.does.not.exist", AppName: "testAppName"}
-	originalConfig, err := adminService.Get(stub.GetChannelID(), key)
+	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	_, err = cacheInstance.Get(stub.GetChannelID(), key)
 	if err != nil {
 		t.Fatalf("Error %v", err)
+	}
+
+	key = api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com.does.not.exist", AppName: "testAppName"}
+	originalConfig, err := adminService.Get(stub.GetChannelID(), key)
+	//key does not exist in cache - should come from ledger
+	if err == nil {
+		t.Fatalf("Expected: 'Cannot obtain ledger for channel testChannel'")
 	}
 	if len(originalConfig) > 0 {
 		t.Fatalf("Expected nil config content for non existing key")
@@ -372,15 +360,15 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 
 }
 
-// func TestGetWithInvalidKey(t *testing.T) {
-// 	adminService := ConfigServiceImpl{}
+func TestGetWithInvalidKey(t *testing.T) {
+	adminService := ConfigServiceImpl{}
 
-// 	key := api.ConfigKey{MspID: "", PeerID: "peer.zero.example.com", AppName: "testAppName"}
-// 	_, err := adminService.Get("channelID", key)
-// 	if err == nil {
-// 		t.Fatalf("Error expected 'Cannot create config key using empty MspId'")
-// 	}
-// }
+	key := api.ConfigKey{MspID: "", PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	_, err := adminService.Get("channelID", key)
+	if err == nil {
+		t.Fatalf("Error expected 'Cannot obtain ledger for channel'")
+	}
+}
 
 //uplaodConfigToHL to upload key&config to repository
 func uplaodConfigToHL(t *testing.T, stub *shim.MockStub, message string) ([]*api.ConfigKV, error) {

@@ -47,11 +47,11 @@ func TestConfig(t *testing.T) {
 	service.Initialize(configStub1, mspID)
 
 	// Test with no channel config
-	config, err := New(channelID1, "../sampleconfig")
+	config, err := New("", "../sampleconfig")
 	if err != nil {
 		t.Fatalf("Error creating new config: %s", err)
 	}
-	if config.ChannelConfigLoaded() {
+	if config.ChannelConfigLoaded {
 		t.Fatalf("Expecting that channel config is not loaded")
 	}
 	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
