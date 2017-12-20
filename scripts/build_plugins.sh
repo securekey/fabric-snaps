@@ -20,6 +20,7 @@ git checkout $FABRIC_NEXT_VERSION
 ./fabric_cherry_picks.sh >/dev/null
 cd /opt/gopath/src/github.com/hyperledger/fabric
 git apply /opt/gopath/src/github.com/hyperledger/fabric-next/patches/peerCLITLS.patch
+git apply /opt/gopath/src/github.com/hyperledger/fabric-next/patches/gossipViperImport.patch
 
 cd  /opt/gopath/src/github.com/securekey/fabric-snaps
 
