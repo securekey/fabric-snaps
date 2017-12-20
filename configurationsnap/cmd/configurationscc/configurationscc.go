@@ -7,23 +7,31 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
+	"github.com/cloudflare/cfssl/log"
 	errors "github.com/pkg/errors"
-
-	"github.com/gogo/protobuf/proto"
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
-	protosMSP "github.com/hyperledger/fabric/protos/msp"
-	pb "github.com/hyperledger/fabric/protos/peer"
-	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
-	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
-	"github.com/securekey/fabric-snaps/healthcheck"
 
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	protosMSP "github.com/hyperledger/fabric/protos/msp"
+	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	configapi "github.com/securekey/fabric-snaps/configurationsnap/api"
+	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
+	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
+
+	"github.com/securekey/fabric-snaps/healthcheck"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
 )
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
@@ -33,27 +41,33 @@ var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb
 	"save":                   save,
 	"get":                    get,
 	"delete":                 delete,
+	"refresh":                refresh,
 }
 
 var availableFunctions = functionSet()
 
 var logger = shim.NewLogger("configuration-snap")
 
-//default cache refresh interval is 5 seconds
-var refreshInterval uint32 = 5
-
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
 }
 
+var peerConfigPath = ""
+
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
-		config, err := config.New(stub.GetChannelID(), "")
+
+		peerMspID, err := config.GetPeerMSPID("")
 		if err != nil {
-			return shim.Error(fmt.Sprintf("error getting config for channel %s", stub.GetChannelID()))
+			return shim.Error(fmt.Sprintf("error getting peer's msp id %v", err))
 		}
-		configmgmtService.Initialize(stub, config.PeerMspID)
+		logger.Debugf("******** Call initialize for [%s]\n", peerMspID)
+		configmgmtService.Initialize(stub, peerMspID)
+		interval := time.Duration(config.GetDefaultRefreshInterval()) * time.Second
+		periodicRefresh(stub.GetChannelID(), interval)
+
 	}
 	return shim.Success(nil)
 }
@@ -111,12 +125,12 @@ func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 //save - saves configuration passed in args
 func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-	config := args[0]
-	if len(config) == 0 {
+	configbt := args[0]
+	if len(configbt) == 0 {
 		return shim.Error("Config is empty-cannot be saved")
 	}
 	cmngr := mgmt.NewConfigManager(stub)
-	err := cmngr.Save(config)
+	err := cmngr.Save(configbt)
 	if err != nil {
 		logger.Errorf("Got error while saving cnfig %v", err)
 		return shim.Error(err.Error())
@@ -146,7 +160,7 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		return shim.Error(err.Error())
 	}
 	//TODO the Initialize should delete from here when DEV-4253 done
-	configmgmtService.Initialize(stub, configKey.MspID)
+	//configmgmtService.Initialize(stub, configKey.MspID)
 	return shim.Success(payload)
 }
 
@@ -165,6 +179,82 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	}
 	return shim.Success(nil)
+}
+
+func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+
+	peerMspID, err := config.GetPeerMSPID("")
+	if err != nil {
+		return shim.Error(fmt.Sprintf("error getting peer's msp id %v", err))
+	}
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+	instance.Refresh(stub, peerMspID)
+	return shim.Success(nil)
+}
+
+func periodicRefresh(channelID string, refreshInterval time.Duration) {
+	logger.Debugf("***Periodic refresh called on  [%d]\n", refreshInterval)
+	refreshInt := config.GetDefaultRefreshInterval()
+	go func() {
+		for {
+			time.Sleep(refreshInterval)
+			sendRefreshRequest(channelID)
+			config, err := config.New(channelID, peerConfigPath)
+			if err != nil {
+				log.Debugf("Got error while creating config for channel %v\n", channelID)
+			}
+			if config == nil {
+				refreshInterval = refreshInt
+			} else {
+				refreshInterval = config.RefreshInterval
+
+			}
+		}
+	}()
+}
+
+func sendRefreshRequest(channelID string) {
+	logger.Debugf("***Sending request refresh for channel %s", channelID)
+
+	txService, err := txsnapservice.Get(channelID)
+	if err != nil {
+		fmt.Printf("Cannot get txService: %v", err)
+	}
+	if txService.Config != nil {
+		sendEndorseRequest(channelID, txService)
+	}
+
+}
+
+func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
+	peerConfig, err := txService.Config.GetLocalPeer()
+	if err != nil {
+		fmt.Printf("Cannot get local peer: %v", err)
+	}
+	s := []string{peerConfig.Host, strconv.Itoa(peerConfig.Port)}
+	peerURL := strings.Join(s, ":")
+
+	targetPeer, err := fabapi.NewPeer(peerURL, txService.Config.GetTLSRootCertPath(), "", txService.ClientConfig())
+	if err != nil {
+		fmt.Printf("Error creating target peer: %v", err)
+	}
+	args := [][]byte{[]byte("refresh")}
+	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil, false)
+	txService.EndorseTransaction(txSnapReq, []sdkApi.Peer{targetPeer})
+}
+
+func createTransactionSnapRequest(chaincodeID string, chnlID string,
+	endorserArgs [][]byte, transientMap map[string][]byte,
+	ccIDsForEndorsement []string, registerTxEvent bool) *api.SnapTransactionRequest {
+
+	return &api.SnapTransactionRequest{ChannelID: chnlID,
+		ChaincodeID:         chaincodeID,
+		TransientMap:        transientMap,
+		EndorserArgs:        endorserArgs,
+		CCIDsForEndorsement: ccIDsForEndorsement,
+		RegisterTxEvent:     registerTxEvent}
+
 }
 
 //getKey gets config key from args
