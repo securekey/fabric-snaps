@@ -76,7 +76,7 @@ type EventSnapConfig struct {
 	TransportCredentials credentials.TransportCredentials
 
 	// channelConfigLoaded indicates whether the channel-specific configuration was loaded
-	channelConfigLoaded bool
+	ChannelConfigLoaded bool
 }
 
 // New returns a new EventSnapConfig for the given channel
@@ -115,7 +115,7 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 		if config != nil {
 
 			logger.Debugf("Using configuration from ledger for event snap for channel [%s]\n", channelID)
-			eventSnapConfig.channelConfigLoaded = true
+			eventSnapConfig.ChannelConfigLoaded = true
 			eventSnapConfig.EventHubRegTimeout = config.GetDuration("eventsnap.eventhub.regtimeout")
 			eventSnapConfig.EventRelayTimeout = config.GetDuration("eventsnap.relay.timeout")
 			eventSnapConfig.EventDispatcherBufferSize = uint(config.GetInt("eventsnap.dispatcher.buffersize"))
@@ -132,12 +132,6 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 	}
 
 	return eventSnapConfig, nil
-}
-
-// ChannelConfigLoaded returns true if the channel-specific configuration
-// was loaded. If false then the channel configuration was not available.
-func (c *EventSnapConfig) ChannelConfigLoaded() bool {
-	return c.channelConfigLoaded
 }
 
 func newPeerViper(configPath string) (*viper.Viper, error) {
