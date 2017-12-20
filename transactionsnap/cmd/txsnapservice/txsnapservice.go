@@ -99,7 +99,6 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 
 //EndorseTransaction use to endorse the transaction
 func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) ([]*apitxn.TransactionProposalResponse, error) {
-
 	if snapTxRequest == nil {
 		return nil, errors.Errorf("SnapTxRequest is required")
 
