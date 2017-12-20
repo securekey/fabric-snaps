@@ -27,10 +27,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = d169ab565d6c8540123052cc3d07760055febbe0
+FABRIC_NEXT_VERSION = af53e759020fea8b6fde4ebed0ec7ddc6c91631a
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.1.0-0.0.2-snapshot-d169ab5
+export FABRIC_NEXT_IMAGE_TAG = 1.1.0-0.0.2-snapshot-af53e75
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -43,7 +43,7 @@ DEV_IMAGES = $(shell docker images dev-* -q)
 PROJECT_NAME = securekey/fabric-snaps
 PACKAGE_NAME = github.com/$(PROJECT_NAME)
 
-FABRIC_TOOLS_RELEASE=1.0.2
+FABRIC_TOOLS_RELEASE=1.1.0-0.0.2-snapshot-af53e75
 
 #fabric base image parameters
 FABRIC_BASE_IMAGE_NS=securekey
@@ -72,7 +72,7 @@ channel-artifacts:
 	@echo "Generating test channel .tx files"
 	@docker run -i \
 		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
-		hyperledger/fabric-tools:$(ARCH)-$(FABRIC_TOOLS_RELEASE) \
+		securekey/fabric-tools:$(ARCH)-$(FABRIC_TOOLS_RELEASE) \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
 depend:
