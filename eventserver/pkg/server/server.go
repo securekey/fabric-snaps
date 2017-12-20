@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/aclmgmt"
+	aclres "github.com/hyperledger/fabric/core/aclmgmt/resources"
 	"github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/protos/utils"
@@ -142,16 +143,16 @@ func (c *ChannelServer) processRegistration(channelIDs []string, interestedEvent
 		} else {
 			for _, interest := range interestedEvents {
 				if interest.EventType == pb.EventType_BLOCK {
-					if err := checkACL(aclmgmt.BLOCKEVENT, channelID, env); err != nil {
+					if err := checkACL(aclres.BLOCKEVENT, channelID, env); err != nil {
 						logger.Errorf("%s", err)
 					} else {
-						channelRegisteredEvents = append(channelRegisteredEvents, aclmgmt.BLOCKEVENT)
+						channelRegisteredEvents = append(channelRegisteredEvents, aclres.BLOCKEVENT)
 					}
 				} else if interest.EventType == pb.EventType_FILTEREDBLOCK {
-					if err := checkACL(aclmgmt.FILTEREDBLOCKEVENT, channelID, env); err != nil {
+					if err := checkACL(aclres.FILTEREDBLOCKEVENT, channelID, env); err != nil {
 						logger.Errorf("%s", err)
 					} else {
-						channelRegisteredEvents = append(channelRegisteredEvents, aclmgmt.FILTEREDBLOCKEVENT)
+						channelRegisteredEvents = append(channelRegisteredEvents, aclres.FILTEREDBLOCKEVENT)
 					}
 				} else {
 					logger.Debugf("ignoring unexpected event type %s in registration request", interest.EventType)

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hyperledger/fabric/core/aclmgmt"
+	aclres "github.com/hyperledger/fabric/core/aclmgmt/resources"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
@@ -90,12 +90,12 @@ func (ep *eventProcessor) start() {
 				eptr := *e
 				switch eptr.Event.(type) {
 				case *pb.Event_Block:
-					if !h.interestedEvents[aclmgmt.BLOCKEVENT] {
+					if !h.interestedEvents[aclres.BLOCKEVENT] {
 						logger.Errorf("block event not allowed for channel [%s]\n", channelID)
 						return
 					}
 				case *pb.Event_FilteredBlock:
-					if !h.interestedEvents[aclmgmt.FILTEREDBLOCKEVENT] {
+					if !h.interestedEvents[aclres.FILTEREDBLOCKEVENT] {
 						logger.Errorf("filtered block event not allowed for channel [%s]\n", channelID)
 						return
 					}
