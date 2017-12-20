@@ -9,6 +9,7 @@ package bddtests
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -234,6 +235,26 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	return err
 }
 
+func (d *CommonSteps) queryCCForError(ccID string, channelID string, args string) error {
+	argsArray := strings.Split(args, ",")
+
+	if channelID != "" && d.BDDContext.Channel.Name() != channelID {
+		return fmt.Errorf("Channel(%s) not created", channelID)
+	}
+
+	var err error
+	if channelID != "" {
+		queryResult, err = d.queryChaincode(d.BDDContext.Client, d.BDDContext.Channel, ccID, argsArray, d.BDDContext.Channel.PrimaryPeer())
+	} else {
+		queryResult, err = d.queryChaincode(d.BDDContext.Client, nil, ccID, argsArray, d.BDDContext.Channel.PrimaryPeer())
+	}
+	if err == nil {
+		return fmt.Errorf("Expected error here 'invoke Endorser  returned error....'")
+	}
+
+	return nil
+}
+
 func (d *CommonSteps) queryCC(ccID string, channelID string, args string) error {
 
 	// Get Query value
@@ -305,10 +326,38 @@ func (d *CommonSteps) checkQueryValue(value string, ccID string) error {
 	return nil
 }
 
+func (d *CommonSteps) copyConfigFile(src, dest string) error {
+	logger.Debugf("copying config files %s %s\n", src, dest)
+	in, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	defer in.Close()
+	out, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	defer func() {
+		cerr := out.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	if _, err = io.Copy(out, in); err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	err = out.Sync()
+	if err != nil {
+		return fmt.Errorf("%v", err)
+	}
+	logger.Debugf("Config was copied\n")
+	return nil
+}
 func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
+	logger.Debugf("Query value %s and tested value %s", queryValue, value)
 	if !strings.Contains(queryValue, value) {
 		return fmt.Errorf("Query value(%s) doesn't contain expected value(%s)", queryValue, value)
 	}
@@ -407,18 +456,6 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 			return fmt.Errorf("invokeChaincode return error: %v", err)
 		}
 
-		configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
-		keyBytes, err := json.Marshal(&configKey)
-		if err != nil {
-			return fmt.Errorf("Could not marshal key: %v", err)
-		}
-		var queryArgsArray []string
-		queryArgsArray = append(queryArgsArray, "get")
-		queryArgsArray = append(queryArgsArray, string(keyBytes))
-		_, err = d.queryChaincode(d.BDDContext.Client, d.BDDContext.Channel, "configurationsnap", queryArgsArray, d.BDDContext.Channel.PrimaryPeer())
-		if err != nil {
-			return fmt.Errorf("QueryChaincode return error: %v", err)
-		}
 	}
 	return nil
 }
@@ -507,4 +544,7 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on p0$`, d.loadConfig)
 	s.Step(`^client C1 invokes chaincode "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.invokeCC)
 	s.Step(`^client C1 waits (\d+) seconds$`, d.wait)
+	s.Step(`^client C1 copies "([^"]*)" to "([^"]*)"$`, d.copyConfigFile)
+	s.Step(`^client C1 query chaincode with error "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.queryCCForError)
+
 }
