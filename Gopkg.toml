@@ -20,6 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[constraint]]
   name = "github.com/DATA-DOG/godog"
@@ -38,7 +39,7 @@
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
-  revision = "8becdf080399963ab3e2d5bd1dd19c3f69f455f0"
+  revision = "f0ad5510827f01e2184e3a5059c8236ce85226b2"
   name = "github.com/hyperledger/fabric"
 
 [[constraint]]
@@ -72,13 +73,15 @@
 
 # Temporary downstream overrides due to sirupsen/logrus case sensitivity
 [[override]]
-name = "github.com/docker/docker"
-source = "github.com/moby/moby"
-branch = "master"
+  name = "github.com/docker/docker"
+  source = "github.com/moby/moby"
+  branch = "master"
+  #revision = "bad654b00c954e31007c5004629e236c06ca4046"
 
 [[override]]
-name = "github.com/opencontainers/runc"
-branch = "master"
+  name = "github.com/opencontainers/runc"
+  branch = "master"
+  #revision = "8033a839758ab9a4ed4fb590d1bb005a1c5a164e"
 
 [[override]]
   name = "github.com/Knetic/govaluate"
@@ -87,6 +90,7 @@ branch = "master"
 [[override]]
   name = "github.com/Shopify/sarama"
   revision = "c01858abb625b73a3af51d0798e4ad42c8147093"
+  #revision = "6a8d89d71d22bbdc14b6cb52778889a710be19a7"
 
 [[override]]
   name = "github.com/davecgh/go-spew"
@@ -140,6 +144,19 @@ branch = "master"
   name = "github.com/cloudflare/cfssl"
   revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"
 
+[[override]]
+  name = "github.com/milagro-crypto/amcl"
+  branch = "dep"
+  source = "github.com/troyronda/amcl"
+
+#  name = "github.com/milagro-crypto/amcl"
+#  branch = "master"
+#  revision = "281d0829b307c911bb2f14f2fedc414a257cb8c8"
+
+[[override]]
+  name = "github.com/spf13/viper"
+  revision = "1a0c4a370c3e8286b835467d2dfcdaf636c3538b"
+  
 [[override]]
   name = "github.com/hyperledger/fabric-sdk-go"
   source = "github.com/securekey/fabric-sdk-go-next"
