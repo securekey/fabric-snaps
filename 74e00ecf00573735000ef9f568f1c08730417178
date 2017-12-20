@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58fd8ee5_aa29d8a7",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-20T16:58:45Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 48,
+        "startChar": 45,
+        "endLine": 48,
+        "endChar": 46
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88130869_def9bcf3",
+        "filename": "transactionsnap/cmd/txsnapservice/txsnapservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2017-12-20T16:58:45Z",
+      "side": 1,
+      "message": "does it have to be Warn level in this function?",
+      "range": {
+        "startLine": 102,
+        "startChar": 8,
+        "endLine": 102,
+        "endChar": 13
+      },
+      "revId": "74e00ecf00573735000ef9f568f1c08730417178",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
