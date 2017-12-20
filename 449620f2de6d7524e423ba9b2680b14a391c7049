@@ -16,6 +16,24 @@
       "revId": "449620f2de6d7524e423ba9b2680b14a391c7049",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ede26372_f982d75b",
+        "filename": "bddtests/fixtures/config/snaps/configurationsnap/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-20T17:24:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8719abc8_ebb24007",
+      "revId": "449620f2de6d7524e423ba9b2680b14a391c7049",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
