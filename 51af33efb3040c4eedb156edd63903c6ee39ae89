@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6118edd3_a2e74d94",
+        "filename": "bddtests/fixtures/docker-compose.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2017-12-21T19:03:42Z",
+      "side": 1,
+      "message": "we forgot to remove this...",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 75
+      },
+      "revId": "51af33efb3040c4eedb156edd63903c6ee39ae89",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
