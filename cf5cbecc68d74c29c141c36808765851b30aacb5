@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f420e70c_13b7929f",
+        "filename": "bddtests/fixtures/config/snaps/txnsnap/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2017-12-21T22:11:48Z",
+      "side": 1,
+      "message": "I think this should be path to key (not actual key)",
+      "range": {
+        "startLine": 49,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 53
+      },
+      "revId": "cf5cbecc68d74c29c141c36808765851b30aacb5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
