@@ -16,7 +16,6 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	logging "github.com/op/go-logging"
-	gc "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
@@ -24,16 +23,13 @@ import (
 
 var logger = logging.MustGetLogger("configmngmt-service")
 
+type cache map[string][]byte
+
 //ConfigServiceImpl used to create cache instance
 type ConfigServiceImpl struct {
 	mtx      sync.RWMutex
-	cacheMap map[string]*gc.Cache
+	cacheMap map[string]cache
 }
-
-const (
-	defaultExpirationTime = 300
-	purgeExpiredTime      = 600
-)
 
 var instance *ConfigServiceImpl
 var once sync.Once
@@ -48,7 +44,7 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 
 	once.Do(func() {
 		instance = &ConfigServiceImpl{}
-		instance.cacheMap = make(map[string]*gc.Cache)
+		instance.cacheMap = make(map[string]cache)
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
 	})
 	instance.Refresh(stub, mspID)
@@ -70,18 +66,8 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	if err != nil {
 		return nil, err
 	}
-	//find item in cache
-	config, found := channelCache.Get(keyStr)
-	if found {
-		v, ok := config.([]byte)
-		if ok {
-			return v, nil
-		}
-		//cannot serialize config context
-		logger.Debugf("Error getting config from cache. %v", config)
-		return nil, errors.Errorf("Error getting config from cache. %v", config)
-	}
-	return nil, nil
+
+	return channelCache[keyStr], nil
 }
 
 //GetViper configuration as Viper
@@ -104,7 +90,7 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 //Refresh adds new items into cache and refreshes existing ones
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) error {
-	logger.Debugf("***Refreshing %v\n", time.Unix(time.Now().Unix(), 0))
+	logger.Infof("***Refreshing %v\n", time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
 		return errors.New("ConfigServiceImpl was not initialized")
 	}
@@ -132,27 +118,28 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 		return errors.New("ConfigServiceImpl was not initialized")
 	}
 
-	cache := gc.New(defaultExpirationTime, purgeExpiredTime)
+	logger.Infof("Updating cache for channel %s\n", channelID)
+
+	cache := make(map[string][]byte)
 
 	for _, val := range configMessages {
 		keyStr, err := mgmt.ConfigKeyToString(val.Key)
 		if err != nil {
 			return err
 		}
-		logger.Debugf("Adding [%s]=[%s] for channel [%s]\n", keyStr, val.Value, channelID)
-		cache.Set(keyStr, val.Value, gc.NoExpiration)
+		logger.Infof("Adding [%s]=[%s] for channel [%s]\n", keyStr, val.Value, channelID)
+		cache[keyStr] = val.Value
 	}
-
-	logger.Debugf("Updating cache for channel %s", channelID)
 
 	csi.mtx.Lock()
 	defer csi.mtx.Unlock()
 	instance.cacheMap[channelID] = cache
 
+	logger.Infof("Updated cache for channel %s\n", channelID)
 	return nil
 }
 
-func (csi *ConfigServiceImpl) getCache(channelID string) *gc.Cache {
+func (csi *ConfigServiceImpl) getCache(channelID string) cache {
 	csi.mtx.RLock()
 	defer csi.mtx.RUnlock()
 	return csi.cacheMap[channelID]
