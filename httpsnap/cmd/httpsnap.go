@@ -170,6 +170,8 @@ func getData(url string, requestContentType string, requestBody string, namedCli
 		Transport: transport,
 	}
 
+	logger.Debugf("Requesting %s from url=%s", requestBody, url)
+
 	resp, err := client.Post(url, requestContentType, bytes.NewBuffer([]byte(requestBody)))
 	if err != nil {
 		logger.Errorf("POST failed. url=%s, err=%s", url, err)
