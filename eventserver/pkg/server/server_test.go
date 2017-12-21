@@ -31,6 +31,7 @@ import (
 	"github.com/hyperledger/fabric/common/localmsp"
 	"github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/aclmgmt"
+	aclres "github.com/hyperledger/fabric/core/aclmgmt/resources"
 	"github.com/hyperledger/fabric/core/config"
 	"github.com/hyperledger/fabric/core/ledger"
 	coreutil "github.com/hyperledger/fabric/core/testutil"
@@ -61,13 +62,13 @@ func (m *mockACLProvider) CheckACL(resName string, channelID string, idinfo inte
 	if channelID == "restrictedchannel" {
 		return m.retErr
 	}
-	if strings.Contains(channelID, "filteredchannel") && resName == aclmgmt.BLOCKEVENT {
+	if strings.Contains(channelID, "filteredchannel") && resName == aclres.BLOCKEVENT {
 		return m.retErr
 	}
 	return nil
 }
 
-func (m *mockACLProvider) GenerateSimulationResults(txEnvelop *common.Envelope, simulator ledger.TxSimulator) error {
+func (m *mockACLProvider) GenerateSimulationResults(txEnvelop *common.Envelope, simulator ledger.TxSimulator, flag bool) error {
 	return nil
 }
 
