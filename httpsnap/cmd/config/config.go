@@ -8,6 +8,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -150,7 +151,7 @@ func (c *config) IsSystemCertPoolEnabled() bool {
 
 // GetClientKey returns client key
 func (c *config) GetClientKey() (string, error) {
-	fileData, err := ioutil.ReadFile(c.httpSnapConfig.GetString("tls.clientKey"))
+	fileData, err := ioutil.ReadFile(substGoPath(c.httpSnapConfig.GetString("tls.clientKey")))
 	if err != nil {
 		return "", err
 	}
@@ -165,7 +166,7 @@ func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, er
 		return nil, err
 	}
 	for k, v := range clientTLS {
-		fileData, err := ioutil.ReadFile(v.Key)
+		fileData, err := ioutil.ReadFile(substGoPath(v.Key))
 		if err != nil {
 			return nil, err
 		}
@@ -215,4 +216,13 @@ func (c *config) TimeoutOrDefault(tt httpsnapApi.HTTPClientTimeoutType) time.Dur
 	}
 
 	return timeout
+}
+
+// substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
+// has multiple GOPATHs then the first is used.
+func substGoPath(s string) string {
+	gpDefault := build.Default.GOPATH
+	gps := filepath.SplitList(gpDefault)
+
+	return strings.Replace(s, "$GOPATH", gps[0], -1)
 }
