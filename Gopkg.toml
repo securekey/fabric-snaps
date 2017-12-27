@@ -35,7 +35,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "github.com/golang/protobuf"
 
 [[constraint]]
-  revision = "a25460c0a17a11e19aee7b86c42058521983651e"
+  revision = "57a0d97869187683d5acbd3d42f019ddaa069ff1"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
