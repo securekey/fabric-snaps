@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5096d84d_cd238e86",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-01-02T17:22:05Z",
+      "side": 1,
+      "message": "hard coded values",
+      "range": {
+        "startLine": 44,
+        "startChar": 4,
+        "endLine": 44,
+        "endChar": 8
+      },
+      "revId": "2400c566a86d72c1557aaecaa973b2338998ac44",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
