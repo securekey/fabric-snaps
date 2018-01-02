@@ -62,6 +62,9 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	if err != nil {
 		return nil, err
 	}
+	if configData == nil {
+		return nil, fmt.Errorf("config data is empty")
+	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
 	httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
