@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f31918b3_e5b9183d",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-03T21:18:38Z",
+      "side": 1,
+      "message": "Should first try peer.tls.cert.client* and then fallback to the nonclient* if client not specified.",
+      "range": {
+        "startLine": 171,
+        "startChar": 17,
+        "endLine": 171,
+        "endChar": 34
+      },
+      "revId": "ba9b95996ec50f95105ee257557995ff26c8eac9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3058d111_b2c7a00a",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-03T21:18:38Z",
+      "side": 1,
+      "message": "See previous comment",
+      "range": {
+        "startLine": 180,
+        "startChar": 17,
+        "endLine": 180,
+        "endChar": 33
+      },
+      "revId": "ba9b95996ec50f95105ee257557995ff26c8eac9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "262ae85a_83484c96",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-03T21:18:38Z",
+      "side": 1,
+      "message": "See previous comment",
+      "range": {
+        "startLine": 189,
+        "startChar": 17,
+        "endLine": 189,
+        "endChar": 35
+      },
+      "revId": "ba9b95996ec50f95105ee257557995ff26c8eac9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
