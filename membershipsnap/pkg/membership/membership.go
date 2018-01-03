@@ -15,6 +15,8 @@ import (
 	"github.com/hyperledger/fabric/gossip/discovery"
 	"github.com/hyperledger/fabric/gossip/service"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
+	cb "github.com/hyperledger/fabric/protos/common"
+	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 )
@@ -29,10 +31,23 @@ type mspIDProvider interface {
 	GetMSPID(pkiID common.PKIidType) string
 }
 
+// channelsInfoProvider provides info about all channels that
+// the peer is joined to
+type channelsInfoProvider interface {
+	GetChannelsInfo() []*pb.ChannelInfo
+}
+
+// blockchainInfoProvider provides block chain info for a given channel
+type blockchainInfoProvider interface {
+	GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error)
+}
+
 // Service provides functions to query peers
 type Service struct {
 	gossipService    service.GossipService
 	mspProvider      mspIDProvider
+	chInfoProvider   channelsInfoProvider
+	bciProvider      blockchainInfoProvider
 	localMSPID       []byte
 	localPeerAddress string
 }
@@ -71,16 +86,19 @@ func newService() (*Service, error) {
 	}
 
 	gossipService := service.GetGossipService()
-	return newServiceWithOpts(peerEndpoint.Address, []byte(localMSPID), gossipService, newMSPIDMgr(gossipService)), nil
+	return newServiceWithOpts(peerEndpoint.Address, []byte(localMSPID), gossipService, newMSPIDMgr(gossipService), &peerChInfoProvider{}, &peerBCInfoProvider{}), nil
 }
 
 // newServiceWithOpts returns a new Membership Service using the given options
-func newServiceWithOpts(localPeerAddress string, localMSPID []byte, gossipService service.GossipService, mspProvider mspIDProvider) *Service {
+func newServiceWithOpts(localPeerAddress string, localMSPID []byte, gossipService service.GossipService,
+	mspProvider mspIDProvider, chInfoProvider channelsInfoProvider, bciProvider blockchainInfoProvider) *Service {
 	return &Service{
 		localPeerAddress: localPeerAddress,
 		localMSPID:       localMSPID,
 		gossipService:    gossipService,
 		mspProvider:      mspProvider,
+		chInfoProvider:   chInfoProvider,
+		bciProvider:      bciProvider,
 	}
 }
 
@@ -95,7 +113,7 @@ func (s *Service) GetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndp
 		return nil, errors.Errorf("channel ID must be provided")
 	}
 	localPeerJoined := false
-	for _, ch := range peer.GetChannelsInfo() {
+	for _, ch := range s.chInfoProvider.GetChannelsInfo() {
 		if ch.ChannelId == channelID {
 			localPeerJoined = true
 			break
@@ -132,11 +150,9 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 
 	if includeLocalPeer {
 		// Add self since Gossip only contains other peers
-
 		var ledgerHeight uint64
 		if channelID != "" {
-			ledger := peer.GetLedger(channelID)
-			bcInfo, err := ledger.GetBlockchainInfo()
+			bcInfo, err := s.bciProvider.GetBlockchainInfo(channelID)
 			if err != nil {
 				logger.Errorf("Error getting ledger height for channel [%s] on local peer. Ledger height will be set to 0.\n", channelID)
 			} else {
@@ -159,4 +175,22 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 	}
 
 	return peerEndpoints
+}
+
+type peerChInfoProvider struct {
+}
+
+// GetChannelsInfo delegates to the peer to return an array with
+// information about all channels for this peer
+func (p *peerChInfoProvider) GetChannelsInfo() []*pb.ChannelInfo {
+	return peer.GetChannelsInfo()
+}
+
+type peerBCInfoProvider struct {
+	bcInfo map[string]*cb.BlockchainInfo
+}
+
+// GetBlockchainInfo delegates to the peer to return basic info about the blockchain
+func (l *peerBCInfoProvider) GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error) {
+	return peer.GetLedger(channelID).GetBlockchainInfo()
 }

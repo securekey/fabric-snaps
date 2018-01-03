@@ -16,6 +16,7 @@ import (
 	policymocks "github.com/hyperledger/fabric/core/policy/mocks"
 	"github.com/hyperledger/fabric/gossip/api"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 
 	"github.com/hyperledger/fabric/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -28,7 +29,7 @@ import (
 // - localMSPID is the ID of the peer's local MSP
 // - localPeerAddress is the address (host:port) of the local peer
 // - members contains zero or more MSP network members
-func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer, localMSPID api.OrgIdentityType, localPeerAddress string, members ...memservice.MspNetworkMembers) *shim.MockStub {
+func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer, localMSPID api.OrgIdentityType, localPeerAddress string, bcInfo []*mockbcinfo.ChannelBCInfo, members ...memservice.MspNetworkMembers) *shim.MockStub {
 	// Override the MSCC initializer in order to inject our mocks
 	initializer = func(mscc *MembershipSnap) error {
 		policyChecker := policy.NewPolicyChecker(
@@ -47,7 +48,7 @@ func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer,
 		}
 
 		mscc.policyChecker = policyChecker
-		mscc.membershipService = memservice.NewServiceWithMocks(localMSPID, localPeerAddress, members...)
+		mscc.membershipService = memservice.NewServiceWithMocks(localMSPID, localPeerAddress, bcInfo, members...)
 
 		return nil
 	}

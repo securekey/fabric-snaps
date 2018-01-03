@@ -18,6 +18,7 @@ import (
 	"github.com/hyperledger/fabric/core/peer"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,6 +37,10 @@ var (
 	internalAddress1 = "internalhost1:1000"
 	internalAddress2 = "internalhost2:1000"
 	internalAddress3 = "internalhost3:1000"
+
+	blockHeight1 = uint64(1000)
+	blockHeight2 = uint64(1100)
+	blockHeight3 = uint64(1200)
 )
 
 func TestErrorInInit(t *testing.T) {
@@ -56,7 +61,7 @@ func TestInvokeInvalidFunction(t *testing.T) {
 	sProp, identityDeserializer := newMockSignedProposal(identity)
 
 	args := [][]byte{}
-	stub := newMockStub(identity, identityDeserializer, msp1, address1)
+	stub := newMockStub(identity, identityDeserializer, msp1, address1, mockbcinfo.ChannelBCInfos())
 	if res := stub.MockInvokeWithSignedProposal("txID", args, sProp); res.Status == shim.OK {
 		t.Fatalf("mscc invoke expecting error for invalid number of args")
 	}
@@ -75,7 +80,7 @@ func TestGetAllPeers(t *testing.T) {
 
 	identity := newMockIdentity()
 	sProp, identityDeserializer := newMockSignedProposal(identity)
-	stub := newMockStub(identity, identityDeserializer, msp1, localAddress)
+	stub := newMockStub(identity, identityDeserializer, msp1, localAddress, mockbcinfo.ChannelBCInfos())
 
 	args := [][]byte{[]byte(getAllPeersFunction)}
 	res := stub.MockInvokeWithSignedProposal("txID", args, sProp)
@@ -106,14 +111,14 @@ func TestGetAllPeers(t *testing.T) {
 
 	stub = newMockStub(
 		identity, identityDeserializer,
-		msp1, localAddress,
+		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
 		memservice.NewMSPNetworkMembers(
 			msp2,
-			memservice.NewNetworkMember(pkiID2, address2, internalAddress2),
+			memservice.NewNetworkMember(pkiID2, address2, internalAddress2, 0),
 		),
 		memservice.NewMSPNetworkMembers(
 			msp3,
-			memservice.NewNetworkMember(pkiID3, address3, internalAddress3),
+			memservice.NewNetworkMember(pkiID3, address3, internalAddress3, 0),
 		),
 	)
 
@@ -148,6 +153,7 @@ func TestGetPeersOfChannel(t *testing.T) {
 
 	channelID := "testchannel"
 	localAddress := "host3:1000"
+	localBlockHeight := blockHeight2
 
 	peer.MockInitialize()
 	defer ledgermgmt.CleanupTestEnv()
@@ -158,14 +164,14 @@ func TestGetPeersOfChannel(t *testing.T) {
 
 	stub := newMockStub(
 		identity, identityDeserializer,
-		msp1, localAddress,
+		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
 		memservice.NewMSPNetworkMembers(
 			msp2,
-			memservice.NewNetworkMember(pkiID2, address2, internalAddress2),
+			memservice.NewNetworkMember(pkiID2, address2, internalAddress2, blockHeight1),
 		),
 		memservice.NewMSPNetworkMembers(
 			msp3,
-			memservice.NewNetworkMember(pkiID3, address3, internalAddress3),
+			memservice.NewNetworkMember(pkiID3, address3, internalAddress3, blockHeight2),
 		),
 	)
 
@@ -241,13 +247,13 @@ func TestAccessControl(t *testing.T) {
 	sProp, identityDeserializer := newMockSignedProposal([]byte("invalididentity"))
 
 	// getAllPeers
-	stub := newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000")
+	stub := newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
 	res := stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getAllPeersFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
 	assert.True(t, strings.HasPrefix(res.Message, "\"getAllPeers\" request failed authorization check"), "Unexpected error message: %s", res.Message)
 
 	// getPeersOfChannel
-	stub = newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000")
+	stub = newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
 	res = stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getPeersOfChannelFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
 	assert.True(t, strings.HasPrefix(res.Message, "\"getPeersOfChannel\" request failed authorization check"), "Unexpected error message: %s", res.Message)

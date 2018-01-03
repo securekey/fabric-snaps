@@ -18,24 +18,40 @@ import (
 	"github.com/hyperledger/fabric/gossip/discovery"
 	"github.com/hyperledger/fabric/gossip/filter"
 	"github.com/hyperledger/fabric/gossip/service"
-	"github.com/hyperledger/fabric/protos/common"
+	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/gossip"
 	"github.com/hyperledger/fabric/protos/ledger/rwset"
 	msppb "github.com/hyperledger/fabric/protos/msp"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/mocks/mockchinfo"
 )
 
 // NewServiceWithMocks creates a membership service with the given mocks.
 // - localMSPID is the ID of the peer's local MSP
 // - localPeerAddress is the address (host:port) of the local peer
+// - bcInfo is an array of block chain info for all the channels to which the peer is joined
 // - members contains zero or more MSP network members
-func NewServiceWithMocks(localMSPID api.OrgIdentityType, localPeerAddress string, members ...MspNetworkMembers) *Service {
+func NewServiceWithMocks(localMSPID api.OrgIdentityType, localPeerAddress string, bcInfo []*mockbcinfo.ChannelBCInfo, members ...MspNetworkMembers) *Service {
 	m := make(map[string]string)
 	for _, member := range members {
 		for _, netMember := range member.NetworkMembers {
 			m[string(netMember.PKIid)] = string(member.MspID)
 		}
 	}
-	return newServiceWithOpts(localPeerAddress, localMSPID, newMockGossipService(members...), newmockMSPIDMgr(m))
+
+	var channelIDs []string
+	for _, info := range bcInfo {
+		channelIDs = append(channelIDs, info.ChannelID)
+	}
+
+	return newServiceWithOpts(
+		localPeerAddress,
+		localMSPID,
+		newMockGossipService(members...),
+		newmockMSPIDMgr(m),
+		mockchinfo.NewProvider(channelIDs...),
+		mockbcinfo.NewProvider(bcInfo...),
+	)
 }
 
 type mockGossipService struct {
@@ -64,7 +80,7 @@ func (s *mockGossipService) InitializeChannel(string, []string, service.Support)
 	panic("not implemented")
 }
 
-func (s *mockGossipService) GetBlock(chainID string, index uint64) *common.Block {
+func (s *mockGossipService) GetBlock(chainID string, index uint64) *cb.Block {
 	panic("not implemented")
 }
 
@@ -156,11 +172,14 @@ func newMockIdentity() []byte {
 }
 
 // NewNetworkMember creates a new NetworkMember instance
-func NewNetworkMember(pkiID gcommon.PKIidType, endpoint, internalEndpoint string) discovery.NetworkMember {
+func NewNetworkMember(pkiID gcommon.PKIidType, endpoint, internalEndpoint string, ledgerHeight uint64) discovery.NetworkMember {
 	return discovery.NetworkMember{
 		PKIid:            pkiID,
 		Endpoint:         endpoint,
 		InternalEndpoint: internalEndpoint,
+		Properties: &gossip.Properties{
+			LedgerHeight: ledgerHeight,
+		},
 	}
 }
 

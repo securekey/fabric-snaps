@@ -11,9 +11,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric/core/ledger/ledgermgmt"
-	"github.com/hyperledger/fabric/core/peer"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 )
 
 var (
@@ -31,6 +30,10 @@ var (
 	internalAddress1 = "internalhost1:1000"
 	internalAddress2 = "internalhost2:1000"
 	internalAddress3 = "internalhost3:1000"
+
+	blockHeight1 = uint64(1000)
+	blockHeight2 = uint64(1100)
+	blockHeight3 = uint64(1200)
 )
 
 // TestGetAllPeers tests Invoke with the "getAllPeers" function.
@@ -38,13 +41,11 @@ func TestGetAllPeers(t *testing.T) {
 	localAddress := address1
 
 	// First test with no members (except for self)
-	memService := NewServiceWithMocks(
-		msp1, localAddress,
-	)
+	memService := NewServiceWithMocks(msp1, localAddress, mockbcinfo.ChannelBCInfos())
 
 	endpoints := memService.GetAllPeers()
 	expected := []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1),
+		newEndpoint(localAddress, localAddress, msp1, 0),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -53,22 +54,22 @@ func TestGetAllPeers(t *testing.T) {
 
 	// Second test with two members plus self
 	memService = NewServiceWithMocks(
-		msp1, localAddress,
+		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
 		NewMSPNetworkMembers(
 			msp2,
-			NewNetworkMember(pkiID2, address2, internalAddress2),
+			NewNetworkMember(pkiID2, address2, internalAddress2, 0),
 		),
 		NewMSPNetworkMembers(
 			msp3,
-			NewNetworkMember(pkiID3, address3, internalAddress3),
+			NewNetworkMember(pkiID3, address3, internalAddress3, 0),
 		),
 	)
 
 	endpoints = memService.GetAllPeers()
 	expected = []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1),
-		newEndpoint(address2, internalAddress2, msp2),
-		newEndpoint(address3, internalAddress3, msp3),
+		newEndpoint(localAddress, localAddress, msp1, 0),
+		newEndpoint(address2, internalAddress2, msp2, 0),
+		newEndpoint(address3, internalAddress3, msp3, 0),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -78,24 +79,20 @@ func TestGetAllPeers(t *testing.T) {
 
 // TestGetPeersOfChannel tests Invoke with the "getPeersOfChannel" function.
 func TestGetPeersOfChannel(t *testing.T) {
-	t.Skipf("TestGetPeersOfChannel is skipped since MockCreateChain doesn't work with Viper 1.0.0.")
-
 	channelID := "testchannel"
 	localAddress := "host3:1000"
-
-	peer.MockInitialize()
-	defer ledgermgmt.CleanupTestEnv()
+	localBlockHeight := blockHeight1
 
 	// Test on channel that peer hasn't joined
 	memService := NewServiceWithMocks(
-		msp1, localAddress,
+		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
 		NewMSPNetworkMembers(
 			msp2,
-			NewNetworkMember(pkiID2, address2, internalAddress2),
+			NewNetworkMember(pkiID2, address2, internalAddress2, blockHeight2),
 		),
 		NewMSPNetworkMembers(
 			msp3,
-			NewNetworkMember(pkiID3, address3, internalAddress3),
+			NewNetworkMember(pkiID3, address3, internalAddress3, blockHeight3),
 		),
 	)
 
@@ -110,28 +107,9 @@ func TestGetPeersOfChannel(t *testing.T) {
 	}
 
 	expected := []*memserviceapi.PeerEndpoint{
-		newEndpoint(address2, internalAddress2, msp2),
-		newEndpoint(address3, internalAddress3, msp3),
-	}
-
-	if err := checkEndpoints(expected, endpoints); err != nil {
-		t.Fatalf("mscc invoke(getPeersOfChannel) - %s", err)
-	}
-
-	// Join the peer to the channel
-	if err := peer.MockCreateChain(channelID); err != nil {
-		t.Fatalf("unexpected error when creating mock channel: %s", err)
-	}
-
-	endpoints, err = memService.GetPeersOfChannel(channelID)
-	if err != nil {
-		t.Fatalf("getPeersOfChannel - unexpected error: %s", err)
-	}
-
-	expected = []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1),
-		newEndpoint(address2, internalAddress2, msp2),
-		newEndpoint(address3, internalAddress3, msp3),
+		newEndpoint(localAddress, localAddress, msp1, localBlockHeight),
+		newEndpoint(address2, internalAddress2, msp2, blockHeight2),
+		newEndpoint(address3, internalAddress3, msp3, blockHeight3),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -161,16 +139,20 @@ func validate(actual []*memserviceapi.PeerEndpoint, expected *memserviceapi.Peer
 			if !bytes.Equal(endpoint.MSPid, expected.MSPid) {
 				return fmt.Errorf("the MSP ID [%s] of the endpoint does not match the expected MSP ID [%s]", endpoint.MSPid, expected.MSPid)
 			}
+			if endpoint.LedgerHeight != expected.LedgerHeight {
+				return fmt.Errorf("the ledger height [%d] of the endpoint does not match the expected ledger height [%d]", endpoint.LedgerHeight, expected.LedgerHeight)
+			}
 			return nil
 		}
 	}
 	return fmt.Errorf("endpoint %s not found in list of endpoints", expected)
 }
 
-func newEndpoint(endpoint string, internalEndpoint string, mspID []byte) *memserviceapi.PeerEndpoint {
+func newEndpoint(endpoint string, internalEndpoint string, mspID []byte, ledgerHeight uint64) *memserviceapi.PeerEndpoint {
 	return &memserviceapi.PeerEndpoint{
 		Endpoint:         endpoint,
 		InternalEndpoint: internalEndpoint,
 		MSPid:            mspID,
+		LedgerHeight:     ledgerHeight,
 	}
 }
