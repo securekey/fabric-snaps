@@ -19,14 +19,37 @@ $ make integration-test
 ```
 
 ##### Configure
-(TODO: update this once config moves to the ledger)
-Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file as well as any other configurations that the snap requires.
+Each snap relies on the Configuration Snap to read configuration from the ledger. The configuration for each application(or snap) is done on a per-MSP basis.
+A ConfigCLI tool is provided to update, delete or query these application configurations. Please refer to the [docs](configurationsnap/cmd/configcli/README.md) for sample usage of this tool.
+
+Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file and other configurations that the application may need.
+
+Here is a sample configuration JSON that may be provided to the CLI tool to configure the snaps in this repository:
+```
+{
+    "MspID":"Org1MSP",
+    "Peers":[{
+        "PeerID":"peer0.org1.example.com",
+        "App":[{
+            "AppName":"txnsnap",
+            "Config":"file://./transactionsnap/cmd/sampleconfig/config.yaml"
+        },
+        {
+            "AppName":"httpsnap",
+            "Config":"file://./httpsnap/cmd/sampleconfig/config.yaml"
+        },
+        {
+            "AppName":"eventsnap",
+            "Config":"file://./eventsnap/cmd/sampleconfig/configch1.yaml"
+        }]
+    }
+  ]
+}
+```
 
 ##### Build
 The snaps present in this project currently depend on a custom version of fabric located at https://github.com/securekey/fabric-next
 This version of fabric contains certain features that have been cherry-picked, a dynamic build to enable Go plugins, and the 'experimental' build tag set. Please see the README located in the project mentioned above for instructions on how to build this.
-
-*Note:* The tagged version of fabric-snaps being used must match the corresponding tag in fabric-next. e.g v17.11.1 of fabric-snaps is compatible with v17.11.1 of fabric-next.
 
 To build snaps:
 ```
