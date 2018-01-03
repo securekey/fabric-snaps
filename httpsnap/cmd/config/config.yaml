@@ -6,6 +6,7 @@
 logging:
   level: debug
 tls:
+  usePeerConfig: true
   enableSystemCertPool: true  
   caCerts:
   - "ca1"

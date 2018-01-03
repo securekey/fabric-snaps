@@ -218,15 +218,24 @@ func (httpServiceImpl *HTTPServiceImpl) GeneratePin(c *x509.Certificate) string 
 
 func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config) (*tls.Config, error) {
 
-	// Default values
-	clientCert := config.GetClientCert()
-	clientKey, err := config.GetClientKey()
-	if err != nil {
-		return nil, err
-	}
-	caCerts := config.GetCaCerts()
+	if config.IsPeerTLSConfigEnabled() {
+		//Use peer's TLS config
+		clientCert, err := config.GetPeerClientCert()
+		if err != nil {
+			return nil, errors.Errorf("failed to read client cert from peer, error: %v", err)
+		}
 
-	if client != "" {
+		clientKey, err := config.GetPeerClientKey()
+		if err != nil {
+			return nil, errors.Errorf("failed to read client key from peer, error: %v", err)
+		}
+
+		caCerts, err := config.GetPeerTLSRootCert()
+
+		return httpServiceImpl.prepareTLSConfig(clientCert, clientKey, caCerts, config.IsSystemCertPoolEnabled())
+
+	} else if client != "" {
+		//Use client TLS config override in https snap config
 		clientOverrideCrtMap, err := config.GetNamedClientOverride()
 		if err != nil {
 			return nil, err
@@ -235,11 +244,27 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		if clientOverrideCrt == nil {
 			return nil, errors.Errorf("client[%s] crt not found", client)
 		}
-		clientCert = clientOverrideCrt.Crt
-		clientKey = clientOverrideCrt.Key
-		caCerts = []string{clientOverrideCrt.Ca}
+		clientCert := clientOverrideCrt.Crt
+		clientKey := clientOverrideCrt.Key
+		caCerts := []string{clientOverrideCrt.Ca}
+
+		return httpServiceImpl.prepareTLSConfig(clientCert, clientKey, caCerts, config.IsSystemCertPoolEnabled())
+
+	} else {
+		// Use default TLS config in https snap config
+		clientCert := config.GetClientCert()
+		clientKey, err := config.GetClientKey()
+		if err != nil {
+			return nil, errors.Errorf("failed to read client key from config, error: %v", err)
+		}
+		caCerts := config.GetCaCerts()
+
+		return httpServiceImpl.prepareTLSConfig(clientCert, clientKey, caCerts, config.IsSystemCertPoolEnabled())
 	}
 
+}
+
+func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfig(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, error) {
 	// Load client cert
 	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
 	if err != nil {
@@ -248,7 +273,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	// Load CA certs
 	caCertPool := x509.NewCertPool()
-	if config.IsSystemCertPoolEnabled() {
+	if systemCertPoolEnabled {
 		var err error
 		if caCertPool, err = x509.SystemCertPool(); err != nil {
 			return nil, err
@@ -265,7 +290,6 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      caCertPool,
 	}, nil
-
 }
 
 func (httpServiceImpl *HTTPServiceImpl) validate(contentType string, schema string, body string) error {
