@@ -32,10 +32,14 @@ var logger = logging.NewLogger("httpsnap-config")
 var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var defaultLogLevel = "info"
 
+// FilePathSeparator separator defined by os.Separator.
+const FilePathSeparator = string(filepath.Separator)
+
 // config implements Config interface
 type config struct {
 	peerConfig     *viper.Viper
 	httpSnapConfig *viper.Viper
+	peerConfigPath string
 }
 
 // NewConfig return config struct
@@ -68,7 +72,7 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(replacer)
-	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig}
+	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
 	err = c.initializeLogging()
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing logging: %s", err)
@@ -156,6 +160,50 @@ func (c *config) GetClientKey() (string, error) {
 		return "", err
 	}
 	return string(fileData), nil
+}
+
+// IsPeerTLSConfigEnabled returns true if peer TLS config is enabled
+func (c *config) IsPeerTLSConfigEnabled() bool {
+	return c.httpSnapConfig.GetBool("tls.usePeerConfig")
+}
+
+// GetPeerClientCert returns client tls cert
+func (c *config) GetPeerClientCert() (string, error) {
+	fileData, err := ioutil.ReadFile(c.translatePeerPath(c.peerConfig.GetString("peer.tls.cert.file")))
+	if err != nil {
+		return "", err
+	}
+	return string(fileData), nil
+}
+
+// GetPeerClientKey returns client tls key
+func (c *config) GetPeerClientKey() (string, error) {
+	fileData, err := ioutil.ReadFile(c.translatePeerPath(c.peerConfig.GetString("peer.tls.key.file")))
+	if err != nil {
+		return "", err
+	}
+	return string(fileData), nil
+}
+
+// GetPeerClientKey returns client tls key
+func (c *config) GetPeerTLSRootCert() (string, error) {
+	rootCertLocation := c.peerConfig.GetString("peer.tls.rootcert.file")
+	if rootCertLocation == "" {
+		return "", nil
+	}
+	fileData, err := ioutil.ReadFile(c.translatePeerPath(rootCertLocation))
+	if err != nil {
+		return "", err
+	}
+	return string(fileData), nil
+}
+
+// translatePeerPath Translates a relative path into a fully qualified path, fully qualified path will be ignored
+func (c *config) translatePeerPath(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(c.peerConfigPath, path)
 }
 
 // GetNamedClientOverridePath returns map of clientTLS

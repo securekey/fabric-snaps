@@ -18,6 +18,7 @@ httpclient:
       timeout: 10s
       keepAlive: 10s
 tls:
+  usePeerConfig: false
   enableSystemCertPool: true
   caCerts:
   - |
