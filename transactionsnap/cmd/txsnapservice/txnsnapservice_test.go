@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks/mockchpeer"
+
 	"github.com/gogo/protobuf/proto"
 	apiconfig "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
@@ -86,7 +88,7 @@ func (c *sampleConfig) GetMspConfigPath() string {
 var txService TxServiceImpl
 
 func TestEndorseTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -95,14 +97,14 @@ func TestEndorseTransaction(t *testing.T) {
 	if txnProposalResponse == nil {
 		t.Fatalf("Expected proposal response")
 	}
-	snapTxReq = createTransactionSnapRequest("endorsetransaction", "ccid", "", false)
+	snapTxReq = createTransactionSnapRequest("endorsetransaction", "ccid", "", false, nil)
 	fmt.Printf("%v\n", txService)
 	_, err = txService.EndorseTransaction(&snapTxReq, nil)
 	if err == nil {
 		t.Fatalf("ChannelID is required field")
 	}
 
-	snapTxReq = createTransactionSnapRequest("endorsetransaction", "", "testChannel", false)
+	snapTxReq = createTransactionSnapRequest("endorsetransaction", "", "testChannel", false, nil)
 	fmt.Printf("%v\n", txService)
 	_, err = txService.EndorseTransaction(&snapTxReq, nil)
 	if err == nil {
@@ -111,8 +113,25 @@ func TestEndorseTransaction(t *testing.T) {
 
 }
 
+func TestEndorseTransactionWithPeerFilter(t *testing.T) {
+	peerFilterOpts := &api.PeerFilterOpts{
+		Type: api.MinBlockHeightPeerFilterType,
+		Args: []string{channelID},
+	}
+
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, peerFilterOpts)
+	fmt.Printf("%v\n", txService)
+	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error endorsing transaction %v", err)
+	}
+	if txnProposalResponse == nil {
+		t.Fatalf("Expected proposal response")
+	}
+}
+
 func TestCommitTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -147,7 +166,7 @@ func TestCommitTransaction(t *testing.T) {
 }
 
 func TestEndorseCommitTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -265,17 +284,7 @@ func TestMain(m *testing.M) {
 }
 
 func peer(url string, mspID string) api.ChannelPeer {
-
-	peer, err := sdkFabApi.NewPeer(url, "", "", fcClient.GetConfig())
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create peer: %v)", err))
-	}
-
-	peer.SetName(url)
-	peer.SetMSPID(mspID)
-	fmt.Printf("\npeer %v\n", peer)
-	// TODO: Set ChannelID and BlockHeight
-	return client.NewChannelPeer(peer, "", 0)
+	return mockchpeer.New(url, mspID, "", 0)
 }
 
 // newTransactionProposal creates a proposal for transaction. This involves assembling the proposal
@@ -390,7 +399,7 @@ func configureClient(fabricClient api.Client, config api.Config, sdkConfig []byt
 	return fabricClient
 }
 
-func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, registerTxEvent bool) api.SnapTransactionRequest {
+func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, registerTxEvent bool, peerFilter *api.PeerFilterOpts) api.SnapTransactionRequest {
 
 	transientMap := make(map[string][]byte)
 	transientMap["key"] = []byte("transientvalue")
@@ -406,7 +415,9 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 		TransientMap:        transientMap,
 		EndorserArgs:        endorserArgs,
 		CCIDsForEndorsement: ccIDsForEndorsement,
-		RegisterTxEvent:     registerTxEvent}
+		RegisterTxEvent:     registerTxEvent,
+		PeerFilter:          peerFilter,
+	}
 
 	return snapTxReq
 

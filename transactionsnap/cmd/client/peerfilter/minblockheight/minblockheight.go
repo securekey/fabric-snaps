@@ -12,6 +12,7 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	peer "github.com/hyperledger/fabric/core/peer"
+	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
@@ -21,14 +22,27 @@ var logger = logging.NewLogger("transaction-snap/peerfilter/minblockheight")
 // selects peers whose block height is at least the height
 // of the local peer on which the TxSnap is being invoked.
 func New(args []string) (api.PeerFilter, error) {
+	return newWithOpts(args, &peerBlockchainInfoProvider{})
+}
+
+func newWithOpts(args []string, bcInfoProvider blockchainInfoProvider) (*peerFilter, error) {
 	if len(args) == 0 {
 		return nil, errors.New("expecting channel ID arg")
 	}
-	return &peerFilter{channelID: args[0]}, nil
+	return &peerFilter{
+		channelID:      args[0],
+		bcInfoProvider: bcInfoProvider,
+	}, nil
+}
+
+// blockchainInfoProvider provides block chain info for a given channel
+type blockchainInfoProvider interface {
+	GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error)
 }
 
 type peerFilter struct {
-	channelID string
+	channelID      string
+	bcInfoProvider blockchainInfoProvider
 }
 
 // Accept returns true if the given peer's block height is
@@ -41,8 +55,7 @@ func (f *peerFilter) Accept(p sdkApi.Peer) bool {
 		return false
 	}
 
-	ledger := peer.GetLedger(f.channelID)
-	bcInfo, err := ledger.GetBlockchainInfo()
+	bcInfo, err := f.bcInfoProvider.GetBlockchainInfo(f.channelID)
 
 	var height uint64
 	if err != nil {
@@ -62,4 +75,13 @@ func (f *peerFilter) Accept(p sdkApi.Peer) bool {
 	}
 
 	return accepted
+}
+
+type peerBlockchainInfoProvider struct {
+	bcInfo map[string]*cb.BlockchainInfo
+}
+
+// GetBlockchainInfo delegates to the peer to return basic info about the blockchain
+func (l *peerBlockchainInfoProvider) GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error) {
+	return peer.GetLedger(channelID).GetBlockchainInfo()
 }

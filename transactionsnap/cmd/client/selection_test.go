@@ -27,6 +27,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/channelpeer"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	config "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
@@ -297,8 +298,7 @@ func peer(name string, mspID string) api.ChannelPeer {
 	}
 	peer.SetName(name)
 	peer.SetMSPID(mspID)
-	// TODO: Set ChannelID and LedgerHeight
-	return NewChannelPeer(peer, "", 0)
+	return channelpeer.New(peer, "", 0, nil)
 }
 
 func newMockSelectionService(membershipManager api.MembershipManager, ccDataProvider api.CCDataProvider, lbp api.LoadBalancePolicy) api.SelectionService {
