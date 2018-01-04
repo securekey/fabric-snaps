@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"sync"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/pkg/errors"
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/channelpeer"
 )
 
 var manager *membershipManagerImpl
@@ -75,7 +75,7 @@ func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, 
 			return nil, fmt.Errorf("Error creating new peer: %s", err)
 		}
 		peer.SetMSPID(string(endpoint.GetMSPid()))
-		peers = append(peers, NewChannelPeer(peer, channelID, endpoint.LedgerHeight))
+		peers = append(peers, channelpeer.New(peer, channelID, endpoint.LedgerHeight, manager))
 	}
 
 	return peers, nil
@@ -83,58 +83,4 @@ func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, 
 
 func formatQueryError(channel string, err error) error {
 	return fmt.Errorf("Error querying peers on channel %s: %s", channel, err)
-}
-
-// ChannelPeerImpl implements ChannelPeer
-type ChannelPeerImpl struct {
-	sdkApi.Peer
-	channelID   string
-	blockHeight uint64
-}
-
-// NewChannelPeer creates a new ChannelPeer
-func NewChannelPeer(peer sdkApi.Peer, channelID string, blockHeight uint64) *ChannelPeerImpl {
-	return &ChannelPeerImpl{
-		Peer:        peer,
-		channelID:   channelID,
-		blockHeight: blockHeight,
-	}
-}
-
-// ChannelID returns the channel ID of the ChannelPeer
-func (p *ChannelPeerImpl) ChannelID() string {
-	return p.channelID
-}
-
-// BlockHeight returns the block height of the peer in the channel
-func (p *ChannelPeerImpl) BlockHeight() uint64 {
-	return p.blockHeight
-}
-
-// GetBlockHeight returns the block height of the peer in the specified channel
-func (p *ChannelPeerImpl) GetBlockHeight(channelID string) uint64 {
-	if channelID == p.channelID {
-		return p.blockHeight
-	}
-
-	mem := manager.GetPeersOfChannel(channelID)
-	if mem.QueryError != nil {
-		logger.Errorf("Error querying for peers of channel [%s]: %s\n", channelID, mem.QueryError)
-		return 0
-	}
-
-	for _, peer := range mem.Peers {
-		if peer.URL() == p.URL() {
-			return peer.BlockHeight()
-		}
-	}
-
-	logger.Warnf("Peer [%s] not found for channel [%s]\n", p.URL(), channelID)
-
-	return 0
-}
-
-// String returns the string representation of the ChannelPeer
-func (p *ChannelPeerImpl) String() string {
-	return fmt.Sprintf("[%s] - [%s] - Height[%d]\n", p.MSPID(), p.URL(), p.BlockHeight())
 }
