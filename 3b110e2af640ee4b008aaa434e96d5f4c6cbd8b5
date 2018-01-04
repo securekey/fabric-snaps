@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab5b1dc8_4d10faac",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-04T15:50:48Z",
+      "side": 1,
+      "message": "Should return here since txService will be nil if err !\u003d nil.",
+      "revId": "3b110e2af640ee4b008aaa434e96d5f4c6cbd8b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bc78a20_d5519af4",
+        "filename": "eventsnap/cmd/eventsnap.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-04T15:50:48Z",
+      "side": 1,
+      "message": "Warning should be removed since there is an identical warning below",
+      "revId": "3b110e2af640ee4b008aaa434e96d5f4c6cbd8b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46bd24b6_cb0c0076",
+        "filename": "eventsnap/cmd/eventsnap.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-04T15:50:48Z",
+      "side": 1,
+      "message": "Just return err here since Init already has the same error message.",
+      "revId": "3b110e2af640ee4b008aaa434e96d5f4c6cbd8b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cf8987f_30043d23",
+        "filename": "eventsnap/cmd/eventsnap_test.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-04T15:50:48Z",
+      "side": 1,
+      "message": "Instead of passing in the same \u0027sampleConfig\u0027 file, you can configure three different files that have the options that you\u0027re hard-coding below. This function will be simplified since you won\u0027t need to switch on an option, you\u0027ll just need to set ChannelConfigLoaded\u003dtrue if channelID !\u003d \"\".",
+      "revId": "3b110e2af640ee4b008aaa434e96d5f4c6cbd8b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
