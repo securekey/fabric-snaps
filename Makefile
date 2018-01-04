@@ -36,7 +36,7 @@ export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
 DOCKER_OUTPUT_NS ?= securekey
 
-ARCH=$(shell uname -m)
+export ARCH=$(shell uname -m)
 CONTAINER_IDS = $(shell docker ps -a -q)
 DEV_IMAGES = $(shell docker images dev-* -q)
 
