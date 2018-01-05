@@ -85,7 +85,7 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 		return nil, fmt.Errorf("config from ledger is nil")
 	}
 
-	fcClient, err := txnSnapClient.GetInstance(&apiConfig{config})
+	fcClient, err := txnSnapClient.GetInstance(channelID, &apiConfig{config})
 	if err != nil {
 		return nil, errors.Errorf("Cannot initialize client %v", err)
 	}
@@ -146,7 +146,6 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 	if err != nil {
 		return nil, err
 	}
-
 	return tpxResponse, nil
 }
 
@@ -305,8 +304,8 @@ func newClientService() api.ClientService {
 }
 
 // GetFabricClient return fabric client
-func (cs *clientServiceImpl) GetFabricClient(config api.Config) (api.Client, error) {
-	fcClient, err := txnSnapClient.GetInstance(config)
+func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
+	fcClient, err := txnSnapClient.GetInstance(channelID, config)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot initialize client %v", err)
 	}

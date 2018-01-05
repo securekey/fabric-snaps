@@ -21,7 +21,8 @@ import (
 )
 
 var logger = flogging.MustGetLogger("configurationscc/config")
-var defaultRefreshInterval time.Duration = 10
+var defaultRefreshInterval = 10 * time.Second
+var minimumRefreshInterval = 5 * time.Second
 
 const (
 	peerConfigName        = "core"
@@ -85,10 +86,12 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		if err != nil {
 			log.Warning("Cannot convert refresh interval to int")
 			//use default value
-			refreshInterval = defaultRefreshInterval
+			if refreshInterval < minimumRefreshInterval {
+				refreshInterval = minimumRefreshInterval
+			}
 		}
 	}
-	log.Debug("Refresh Intrval: %d", refreshInterval)
+	log.Debug("Refresh Intrval: %.0f", refreshInterval)
 
 	// Initialize from peer config
 	config := &Config{
@@ -133,12 +136,16 @@ func GetPeerID(peerConfigPathOverride string) (string, error) {
 	}
 	peerID := peerConfig.GetString("peer.id")
 	return peerID, nil
-
 }
 
-//GetDefaultRefreshInterval get fdefault interval
+//GetDefaultRefreshInterval get default interval
 func GetDefaultRefreshInterval() time.Duration {
 	return defaultRefreshInterval
+}
+
+//GetMinimumRefreshInterval get minimum refresh interval
+func GetMinimumRefreshInterval() time.Duration {
+	return minimumRefreshInterval
 }
 
 func newPeerViper(configPath string) (*viper.Viper, error) {

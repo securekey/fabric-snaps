@@ -12,7 +12,6 @@ Feature:  Event Snap
         And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0        
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
         And client C1 waits 15 seconds
 
         # First clean up from any previous tests
@@ -34,7 +33,6 @@ Feature:  Event Snap
         And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
         And client C1 waits 15 seconds
 
 
@@ -53,7 +51,6 @@ Feature:  Event Snap
         And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
         And client C1 waits 15 seconds
 
 
@@ -76,7 +73,6 @@ Feature:  Event Snap
         And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
         And client C1 waits 15 seconds
 
         # First clean up from any previous tests

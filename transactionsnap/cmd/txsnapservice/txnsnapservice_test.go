@@ -241,7 +241,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 
-	fcClient, err = client.GetInstance(&sampleConfig{config})
+	fcClient, err = client.GetInstance("testchannel", &sampleConfig{config})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
