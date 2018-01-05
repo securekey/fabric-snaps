@@ -270,7 +270,7 @@ func newResolverKey(channelID string, chaincodeIDs ...string) *resolverKey {
 }
 func queryChaincode(channelID string, ccID string, args []string, config api.Config) (*apitxn.TransactionProposalResponse, error) {
 	logger.Debugf("queryChaincode channelID:%s", channelID)
-	client, err := GetInstance(config)
+	client, err := GetInstance(channelID, config)
 	if err != nil {
 		return nil, formatQueryError(channelID, err)
 	}

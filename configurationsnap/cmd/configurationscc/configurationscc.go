@@ -41,6 +41,7 @@ var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb
 	"save":                   save,
 	"get":                    get,
 	"delete":                 delete,
+	"refresh":                refresh,
 }
 
 var availableFunctions = functionSet()
@@ -66,10 +67,9 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 		if err != nil {
 			return shim.Error(fmt.Sprintf("error getting peer's  id %v", err))
 		}
-		logger.Debugf("******** Call initialize for [%s][%s]\n", peerMspID, peerID)
-
+		interval := config.GetDefaultRefreshInterval()
+		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
 		configmgmtService.Initialize(stub, peerMspID)
-		interval := time.Duration(config.GetDefaultRefreshInterval()) * time.Second
 		periodicRefresh(stub.GetChannelID(), peerID, peerMspID, interval)
 	}
 	return shim.Success(nil)
@@ -144,12 +144,6 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 //get - gets configuration using configkey as criteria
 func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-	//get without args will be called to initiate config cache
-	if args == nil || len(args) == 0 {
-		logger.Debug("Get was invoked without args - going to refresh")
-		refresh(stub, nil)
-		return shim.Success([]byte(""))
-	}
 
 	configKey, err := getKey(args)
 	if err != nil {

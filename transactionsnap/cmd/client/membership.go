@@ -63,7 +63,7 @@ func queryPeersOfChannel(channelID string, config api.Config) ([]api.ChannelPeer
 
 func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, config api.Config) ([]api.ChannelPeer, error) {
 	var peers []api.ChannelPeer
-	clientInstance, err := GetInstance(config)
+	clientInstance, err := GetInstance(channelID, config)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,6 @@ Feature:  Test configuration snap Features
   		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
 
 		#Valid configuration
 		And "test" chaincode "example_cc" version "v1" from path "github.com/example_cc" is installed and instantiated with args "init,a,100,b,200"
@@ -32,3 +31,4 @@ Feature:  Test configuration snap Features
 		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/config.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
         When client C1 query chaincode with error "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc1,invoke,query,b" on p0
 		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/configreset.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
+		And client C1 waits 20 seconds

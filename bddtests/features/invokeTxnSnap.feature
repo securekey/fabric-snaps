@@ -12,7 +12,6 @@ Feature:  Feature Invoke Transaction Snap
 		And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
 	    And client C1 waits 15 seconds
 		
 		When client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,getPeersOfChannel,mychannel" on p0
@@ -23,7 +22,6 @@ Feature:  Feature Invoke Transaction Snap
 		And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
 	    And client C1 waits 15 seconds
 
 
@@ -37,7 +35,6 @@ Feature:  Feature Invoke Transaction Snap
 		And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
- 		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
        And client C1 waits 15 seconds
 
 
@@ -51,7 +48,6 @@ Feature:  Feature Invoke Transaction Snap
 		And client C1 invokes configuration snap on channel "mychannel" to load "eventsnap" configuration on p0
    		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 invokes configuration snap on channel "mychannel" to load "httpsnap" configuration on p0
 	    And client C1 waits 15 seconds
   
 	   

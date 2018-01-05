@@ -660,7 +660,7 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 }
 
 func configureClient(config api.Config) api.Client {
-	fabricClient, err := client.GetInstance(config)
+	fabricClient, err := client.GetInstance("testchannel", config)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing fabricClient: %s", err))
 	}
@@ -866,7 +866,7 @@ func newClientServiceMock() api.ClientService {
 }
 
 // GetFabricClient return fabric client
-func (cs *clientServiceMock) GetFabricClient(config api.Config) (api.Client, error) {
+func (cs *clientServiceMock) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
 	return fcClient, nil
 }
 

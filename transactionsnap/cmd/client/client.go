@@ -44,14 +44,21 @@ type clientImpl struct {
 	config           api.Config
 }
 
-var client *clientImpl
+var cachedClient map[string]*clientImpl
+
+//var client *clientImpl
 var clientMutex sync.RWMutex
+var once sync.Once
 
 // GetInstance returns a singleton instance of the fabric client
-func GetInstance(config api.Config) (api.Client, error) {
+func GetInstance(channelID string, config api.Config) (api.Client, error) {
+	if channelID == "" {
+		return nil, errors.Errorf("Channel is required")
+	}
 	var c *clientImpl
+	c.initializeCache()
 	clientMutex.RLock()
-	c = client
+	c = cachedClient[channelID] //client from cache
 	clientMutex.RUnlock()
 
 	if c != nil {
@@ -72,9 +79,17 @@ func GetInstance(config api.Config) (api.Client, error) {
 		logger.Errorf("Error: SDK client is nil!!!\n")
 		return nil, errors.Errorf("SDK client is nil")
 	}
-
-	client = c
+	//put client into cache
+	cachedClient[channelID] = c
 	return c, nil
+}
+
+//initializeCache used to initialize client cache
+func (c *clientImpl) initializeCache() {
+	once.Do(func() {
+		logger.Debugf("Client cache was created")
+		cachedClient = make(map[string]*clientImpl)
+	})
 }
 
 func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
