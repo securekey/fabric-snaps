@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84940f16_33c24dde",
+        "filename": "configurationsnap/cmd/configurationscc/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-05T20:47:15Z",
+      "side": 1,
+      "message": "This can be simplified as:\n\nvar defaultRefreshInterval \u003d 10 * time.Second",
+      "revId": "e016f4ea262c01fda9684d2bd835fc0f49991e27",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16186ee0_491600fb",
+        "filename": "configurationsnap/cmd/configurationscc/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-05T20:47:15Z",
+      "side": 1,
+      "message": "No need to parse",
+      "revId": "e016f4ea262c01fda9684d2bd835fc0f49991e27",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
