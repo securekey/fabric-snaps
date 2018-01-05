@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afdcc0b8_2767a742",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-05T19:07:36Z",
+      "side": 1,
+      "message": "https://github.com/hyperledger/fabric/blob/master/sampleconfig/core.yaml#L277\nit\u0027s not clear that rootcert is equivalent to clientRootCAs",
+      "range": {
+        "startLine": 208,
+        "startChar": 46,
+        "endLine": 208,
+        "endChar": 68
+      },
+      "revId": "487b4a7439ed9cc7ca336a8f9c5f4df37a60b9d0",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
