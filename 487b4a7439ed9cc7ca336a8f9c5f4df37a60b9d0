@@ -22,6 +22,29 @@
       "revId": "487b4a7439ed9cc7ca336a8f9c5f4df37a60b9d0",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dad98ed_61b0d5ac",
+        "filename": "httpsnap/cmd/config/config.yaml",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-05T19:44:10Z",
+      "side": 1,
+      "message": "even when usePeerConfig is enabled, we should still prefer embedded config if it is specified.",
+      "range": {
+        "startLine": 9,
+        "startChar": 17,
+        "endLine": 9,
+        "endChar": 21
+      },
+      "revId": "487b4a7439ed9cc7ca336a8f9c5f4df37a60b9d0",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
