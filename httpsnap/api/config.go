@@ -49,11 +49,10 @@ const (
 // Config configuration interface
 type Config interface {
 	GetConfigPath(path string) string
-	GetClientCert() string
-	GetClientKey() (string, error)
+	GetClientCert() (string, error)
 	GetNamedClientOverride() (map[string]*ClientTLS, error)
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
-	GetCaCerts() []string
+	GetCaCerts() ([]string, error)
 	IsSystemCertPoolEnabled() bool
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 }

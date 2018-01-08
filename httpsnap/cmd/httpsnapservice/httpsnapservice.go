@@ -17,7 +17,20 @@ import (
 	"net/http"
 	"net/url"
 
+	"fmt"
+
+	"encoding/pem"
+
+	"crypto"
+	"io"
+
+	"crypto/rsa"
+
+	"crypto/ecdsa"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
@@ -218,15 +231,10 @@ func (httpServiceImpl *HTTPServiceImpl) GeneratePin(c *x509.Certificate) string 
 
 func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config) (*tls.Config, error) {
 
-	// Default values
-	clientCert := config.GetClientCert()
-	clientKey, err := config.GetClientKey()
-	if err != nil {
-		return nil, err
-	}
-	caCerts := config.GetCaCerts()
+	bccspSuite := factory.GetDefault()
 
 	if client != "" {
+		//Use client TLS config override in https snap config
 		clientOverrideCrtMap, err := config.GetNamedClientOverride()
 		if err != nil {
 			return nil, err
@@ -235,11 +243,45 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		if clientOverrideCrt == nil {
 			return nil, errors.Errorf("client[%s] crt not found", client)
 		}
-		clientCert = clientOverrideCrt.Crt
-		clientKey = clientOverrideCrt.Key
-		caCerts = []string{clientOverrideCrt.Ca}
+		clientCert := clientOverrideCrt.Crt
+		clientKey := clientOverrideCrt.Key
+		caCerts := []string{clientOverrideCrt.Ca}
+
+		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, clientKey, caCerts, config.IsSystemCertPoolEnabled())
+
 	}
 
+	// Use default TLS config in https snap config
+	clientCert, err := config.GetClientCert()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get client cert from httpsnap config")
+	}
+
+	caCerts, err := config.GetCaCerts()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get ca certs from httpsnap config")
+	}
+
+	//Get Key from Pem bytes
+	key, err := httpServiceImpl.getCryptoSuiteKeyFromPem([]byte(clientCert), bccspSuite)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get key from client cert")
+	}
+
+	//Get private key using SKI
+	pk, err := bccspSuite.GetKey(key.SKI())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get private key from SKI")
+	}
+
+	//TODO: delete this fmt line
+	fmt.Println("\n\n\n##### Private key found is", pk, err)
+
+	return httpServiceImpl.prepareTLSConfigFromPrivateKey(bccspSuite, pk, clientCert, caCerts, config.IsSystemCertPoolEnabled())
+
+}
+
+func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, error) {
 	// Load client cert
 	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
 	if err != nil {
@@ -248,7 +290,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	// Load CA certs
 	caCertPool := x509.NewCertPool()
-	if config.IsSystemCertPoolEnabled() {
+	if systemCertPoolEnabled {
 		var err error
 		if caCertPool, err = x509.SystemCertPool(); err != nil {
 			return nil, err
@@ -265,7 +307,72 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      caCertPool,
 	}, nil
+}
 
+func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuite bccsp.BCCSP, clientKey bccsp.Key, clientCert string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, error) {
+	// Load client cert
+	tlscert, err := x509KeyPair([]byte(clientCert), clientKey, bccspSuite)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load CA certs
+	caCertPool := x509.NewCertPool()
+	if systemCertPoolEnabled {
+		var err error
+		if caCertPool, err = x509.SystemCertPool(); err != nil {
+			return nil, err
+		}
+		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
+	}
+
+	for _, cert := range caCerts {
+		caCertPool.AppendCertsFromPEM([]byte(cert))
+	}
+
+	// Setup HTTPS client
+	return &tls.Config{
+		Certificates: []tls.Certificate{tlscert},
+		RootCAs:      caCertPool,
+	}, nil
+}
+
+func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCSP) (tls.Certificate, error) {
+
+	fail := func(err error) (tls.Certificate, error) { return tls.Certificate{}, err }
+
+	var cert tls.Certificate
+	var skippedBlockTypes []string
+	for {
+		var certDERBlock *pem.Block
+		certDERBlock, certPEMBlock = pem.Decode(certPEMBlock)
+		if certDERBlock == nil {
+			break
+		}
+		if certDERBlock.Type == "CERTIFICATE" {
+			cert.Certificate = append(cert.Certificate, certDERBlock.Bytes)
+		} else {
+			skippedBlockTypes = append(skippedBlockTypes, certDERBlock.Type)
+		}
+	}
+
+	var err error
+	// We are parsing public key for TLS to find its type
+	x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+	if err != nil {
+		return fail(err)
+	}
+
+	switch x509Cert.PublicKey.(type) {
+	case *rsa.PublicKey:
+		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, &rsa.PublicKey{}}
+	case *ecdsa.PublicKey:
+		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, &ecdsa.PublicKey{}}
+	default:
+		return fail(errors.New("tls: unknown public key algorithm"))
+	}
+
+	return cert, nil
 }
 
 func (httpServiceImpl *HTTPServiceImpl) validate(contentType string, schema string, body string) error {
@@ -299,4 +406,48 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 
 	}
 	return nil
+}
+
+func (httpServiceImpl *HTTPServiceImpl) getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, error) {
+	if idBytes == nil {
+		return nil, errors.New("getCryptoSuiteKeyFromPem error: nil idBytes")
+	}
+
+	// Decode the pem bytes
+	pemCert, _ := pem.Decode(idBytes)
+	if pemCert == nil {
+		return nil, errors.Errorf("getCryptoSuiteKeyFromPem error: could not decode pem bytes [%v]", idBytes)
+	}
+
+	// get a cert
+	cert, err := x509.ParseCertificate(pemCert.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "getCryptoSuiteKeyFromPem error: failed to parse x509 cert")
+	}
+
+	// get the public key in the right format
+	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
+
+	return certPubK, nil
+}
+
+//PrivateKey is signer implementation for golang client TLS
+type PrivateKey struct {
+	bccsp     bccsp.BCCSP
+	key       bccsp.Key
+	publicKey crypto.PublicKey
+}
+
+// Public returns the public key corresponding to priv.
+func (priv *PrivateKey) Public() crypto.PublicKey {
+	return priv.publicKey
+}
+
+// Sign signs msg with priv, reading randomness from rand. If opts is a
+// *PSSOptions then the PSS algorithm will be used, otherwise PKCS#1 v1.5 will
+// be used. This method is intended to support keys where the private part is
+// kept in, for example, a hardware module. Common uses should use the Sign*
+// functions in this package.
+func (priv *PrivateKey) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) ([]byte, error) {
+	return priv.bccsp.Sign(priv.key, msg, opts)
 }

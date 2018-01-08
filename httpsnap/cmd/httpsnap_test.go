@@ -25,12 +25,14 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 var jsonStr = []byte(`{"id":"123", "name": "Test Name"}`)
 var contentType = "application/json"
 var channelID = "testChannel"
+var peerTLSChannelID = "testPeerTLSChannel"
 var mspID = "Org1MSP"
 
 func TestInit(t *testing.T) {
@@ -83,6 +85,18 @@ func TestInvalidParameters(t *testing.T) {
 func TestUsingHttpService(t *testing.T) {
 
 	stub := newMockStub(channelID)
+	// Happy path: Should get "Hello" back - use default TLS settings
+	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
+	verifySuccess(t, stub, args, "Hello")
+	// Failed Path: Connect to Google
+	args = [][]byte{[]byte("invoke"), []byte("https://www.google.ca"), []byte(contentType), []byte(jsonStr)}
+	verifyFailure(t, stub, args, "Invoke should have failed to connect to google")
+
+}
+
+func TestUsingHttpServiceOnPeerTLSConfig(t *testing.T) {
+
+	stub := newMockStub(peerTLSChannelID)
 	// Happy path: Should get "Hello" back - use default TLS settings
 	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
@@ -210,12 +224,42 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
 	configmgmtService.Initialize(stub, mspID)
+
+	//configdata for second channel for which peer TLS config is enabled
+	configDataStr := string(configData)
+	configDataStr = strings.Replace(configDataStr, "usePeerConfig: false", "usePeerConfig: true", -1)
+	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: configDataStr}}}}}
+	configBytes2, err := json.Marshal(config2)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	stub2 := newConfigMockStub(peerTLSChannelID)
+	//upload valid message to HL
+	err = uploadConfigToHL(stub2, configBytes2)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+
+	configmgmtService.Initialize(stub2, mspID)
+
 	httpsnapservice.PeerConfigPath = "./sampleconfig"
 
 	go startHTTPServer()
 
 	// Allow HTTP server to start
 	time.Sleep(2 * time.Second)
+
+	//Setup bccsp factory
+	opts := &factory.FactoryOpts{
+		ProviderName: "SW",
+		SwOpts: &factory.SwOpts{
+			HashFamily:   "SHA2",
+			SecLevel:     256,
+			Ephemeral:    false,
+			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
+		},
+	}
+	factory.InitFactories(opts)
 
 	os.Exit(m.Run())
 }
