@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a05831a5_46b33c1b",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-01-08T20:30:59Z",
+      "side": 1,
+      "message": "Remove this debug statement?",
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
