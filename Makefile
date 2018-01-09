@@ -63,6 +63,7 @@ snaps: clean populate
 	@docker run -i --rm \
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
+		-e IS_RELEASE=$(IS_RELEASE) \
 		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
 		$(FABRIC_BASE_IMAGE_NS)/$(FABRIC_BASE_IMAGE):$(FABRIC_BASE_IMAGE_VERSION) \
 		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/build_plugins.sh"

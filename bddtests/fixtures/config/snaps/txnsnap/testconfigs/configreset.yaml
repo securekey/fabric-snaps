@@ -5,7 +5,7 @@
 
 # Configurations for txn snap
 txnsnap:
-  loglevel: debug
+  loglevel: info
 
 # Membership list polling interval and tls flag
   membership:

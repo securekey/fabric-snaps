@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var logger = logging.NewLogger("transaction-fabric-client-factories")
+var logger = logging.NewLogger("txnsnap")
 
 // CredentialManagerProviderFactory is will provide custom context factory for SDK
 type CredentialManagerProviderFactory struct {

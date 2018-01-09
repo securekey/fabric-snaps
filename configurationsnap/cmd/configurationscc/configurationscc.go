@@ -6,7 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +20,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/logging/modulledlogger"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -28,6 +33,7 @@ import (
 	configapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
+	privateLogger "github.com/securekey/private-logger/pkg/logger"
 
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -46,7 +52,7 @@ var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb
 
 var availableFunctions = functionSet()
 
-var logger = shim.NewLogger("configuration-snap")
+var logger = logging.NewLogger("configurationsnap")
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
@@ -56,6 +62,10 @@ var peerConfigPath = ""
 
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	err := setLogger()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("error setLogger %v", err))
+	}
 	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
 
@@ -303,6 +313,42 @@ func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
 // New chaincode implementation
 func New() shim.Chaincode {
 	return &ConfigurationSnap{}
+}
+
+func setLogger() error {
+	callback := func() ([]byte, string, error) {
+		certBytes, err := base64.StdEncoding.DecodeString(configdata.PublicKeyForLogging)
+		if err != nil {
+			return nil, "", err
+		}
+		return certBytes, configdata.KeyIDForLogging, nil
+	}
+	m := make(map[privateLogger.Level]bool)
+	encryptLogging, err := strconv.ParseBool(configdata.EncryptLogging)
+	if err != nil {
+		return errors.Errorf("error ParseBool(%v) %v", encryptLogging, err)
+	}
+	m[privateLogger.DebugLevel] = encryptLogging
+	m[privateLogger.InfoLevel] = encryptLogging
+	m[privateLogger.WarnLevel] = encryptLogging
+	m[privateLogger.ErrorLevel] = encryptLogging
+
+	privateLogger, err := privateLogger.New(os.Stdout, privateLogger.DebugLevel, callback, 1, m, true)
+	if err != nil {
+		return err
+	}
+	modulledlogger.InitModulledLogger(&snapLoggingProvider{logger: privateLogger})
+	return nil
+}
+
+//snapLoggingProvider
+type snapLoggingProvider struct {
+	logger *privateLogger.Logger
+}
+
+//GetLogger returns default logger implementation
+func (l *snapLoggingProvider) GetLogger(module string) apilogging.Logger {
+	return l.logger.WithPackageName(module)
 }
 
 func main() {

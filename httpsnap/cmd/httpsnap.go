@@ -28,8 +28,7 @@ func New() shim.Chaincode {
 
 // Init snap
 func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
-	logger.Info("Snap configuration loaded.")
+	logger.Info("Http snap loaded.")
 	return shim.Success(nil)
 }
 

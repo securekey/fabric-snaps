@@ -5,4 +5,5 @@
 #
 cache:
     refreshInterval: 5s
-
+logging:
+  level: debug
