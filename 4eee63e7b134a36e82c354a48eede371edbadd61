@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5d942a4e_b45be07d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-01-09T15:42:34Z",
+      "side": 1,
+      "message": "So logic will be -\u003ein case of \u0027tls.userPeerConfig \u003d true\u0027 :  if bccsp has key then use from there otherwise read bytes from core.yaml \u0027tls.clientkey\u0027\nif \u0027tls.userPeerConfig \u003dfalse\u0027 -\u003e No need to try core.yaml at all",
+      "parentUuid": "f523c567_4c0fc508",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 32
+      },
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d0cffa85_73ed7c2d",
         "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
         "patchSetId": 5
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "b390e723_cb57cf21",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-01-09T15:42:34Z",
+      "side": 1,
+      "message": "You are right, will use the same logic as public key SKI.",
+      "parentUuid": "d0cffa85_73ed7c2d",
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a05831a5_46b33c1b",
         "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
         "patchSetId": 5
@@ -53,6 +95,24 @@
       "writtenOn": "2018-01-08T20:30:59Z",
       "side": 1,
       "message": "Remove this debug statement?",
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fc76449_a7de2f3d",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-01-09T15:42:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a05831a5_46b33c1b",
       "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
