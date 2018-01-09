@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f523c567_4c0fc508",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-09T14:43:51Z",
+      "side": 1,
+      "message": "if bccsp doesn\u0027t have key AND usePeerConfig is enabled then fallback to core.yaml\u0027s TLS key path should be used.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 32
+      },
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a05831a5_46b33c1b",
         "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
         "patchSetId": 5
