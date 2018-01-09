@@ -16,7 +16,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
-var logger = logging.NewLogger("transaction-snap/peerfilter/minblockheight")
+var logger = logging.NewLogger("txnsnap")
 
 // New creates a new Min Block Height peer filter. This filter
 // selects peers whose block height is at least the height

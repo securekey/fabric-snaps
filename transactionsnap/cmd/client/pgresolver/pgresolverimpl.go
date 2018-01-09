@@ -11,15 +11,13 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
-var module = "pg-resolver"
-var logger = logging.NewLogger(module)
+var logger = logging.NewLogger("txnsnap")
 
 type peerGroupResolver struct {
 	mspGroups []api.Group
@@ -48,23 +46,19 @@ func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, pe
 
 // NewPeerGroupResolver returns a new PeerGroupResolver
 func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalancePolicy) (api.PeerGroupResolver, error) {
-	if logging.IsEnabledFor(module, apilogging.DEBUG) {
-		logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
-	}
+	logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
 
 	mspGroups := groupHierarchy.Reduce()
 
-	if logging.IsEnabledFor(module, apilogging.DEBUG) {
-		s := "\n***** Org Groups:\n"
-		for i, g := range mspGroups {
-			s += fmt.Sprintf("%s", g)
-			if i+1 < len(mspGroups) {
-				s += fmt.Sprintf("  OR\n")
-			}
+	s := "\n***** Org Groups:\n"
+	for i, g := range mspGroups {
+		s += fmt.Sprintf("%s", g)
+		if i+1 < len(mspGroups) {
+			s += fmt.Sprintf("  OR\n")
 		}
-		s += fmt.Sprintf("\n")
-		logger.Debugf(s)
 	}
+	s += fmt.Sprintf("\n")
+	logger.Debugf(s)
 
 	return &peerGroupResolver{
 		mspGroups: mspGroups,
@@ -75,22 +69,20 @@ func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalanceP
 func (c *peerGroupResolver) Resolve(peerFilter api.PeerFilter) api.PeerGroup {
 	peerGroups := c.getPeerGroups()
 
-	if logging.IsEnabledFor(module, apilogging.DEBUG) {
-		s := ""
-		if len(peerGroups) == 0 {
-			s = "\n\n***** No Available Peer Groups\n"
-		} else {
-			s = "\n\n***** Available Peer Groups:\n"
-			for i, grp := range peerGroups {
-				s += fmt.Sprintf("%d - %s", i, grp)
-				if i+1 < len(peerGroups) {
-					s += fmt.Sprintf(" OR\n")
-				}
+	s := ""
+	if len(peerGroups) == 0 {
+		s = "\n\n***** No Available Peer Groups\n"
+	} else {
+		s = "\n\n***** Available Peer Groups:\n"
+		for i, grp := range peerGroups {
+			s += fmt.Sprintf("%d - %s", i, grp)
+			if i+1 < len(peerGroups) {
+				s += fmt.Sprintf(" OR\n")
 			}
-			s += fmt.Sprintf("\n")
 		}
-		logger.Debugf(s)
+		s += fmt.Sprintf("\n")
 	}
+	logger.Debugf(s)
 
 	var pgroups []api.PeerGroup
 	for _, pg := range peerGroups {

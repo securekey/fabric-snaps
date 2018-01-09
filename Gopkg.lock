@@ -65,6 +65,12 @@
   version = "v0.3.2"
 
 [[projects]]
+  name = "github.com/dvsekhvalnov/jose2go"
+  packages = [".","aes","arrays","base64url","compact","kdf","keys/ecc","padding"]
+  revision = "f21a8cedbbae609f623613ec8f81125c243212e6"
+  version = "v1.3"
+
+[[projects]]
   name = "github.com/eapache/go-resiliency"
   packages = ["breaker"]
   revision = "b86b1ec0dd4209a588dc1285cdd471e73525c0b3"
@@ -139,8 +145,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
-  packages = ["api/apiconfig","api/apicryptosuite","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","api/apitxn/chmgmtclient","api/apitxn/resmgmtclient","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/bccsp","internal/github.com/hyperledger/fabric/bccsp/factory","internal/github.com/hyperledger/fabric/bccsp/pkcs11","internal/github.com/hyperledger/fabric/bccsp/signer","internal/github.com/hyperledger/fabric/bccsp/sw","internal/github.com/hyperledger/fabric/bccsp/utils","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","internal/github.com/hyperledger/fabric/core/ledger/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/protos/utils","internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/comm","pkg/config/urlutil","pkg/cryptosuite","pkg/cryptosuite/bccsp","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/ccpackager/gopackager","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/chclient","pkg/fabric-txn/chmgmtclient","pkg/fabric-txn/discovery/staticdiscovery","pkg/fabric-txn/internal","pkg/fabric-txn/resmgmtclient","pkg/fabric-txn/selection/staticselection","pkg/logging","pkg/logging/deflogger","pkg/logging/utils","test/metadata","third_party/github.com/hyperledger/fabric/common/cauthdsl","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer"]
-  revision = "57a0d97869187683d5acbd3d42f019ddaa069ff1"
+  packages = ["api/apiconfig","api/apicryptosuite","api/apifabca","api/apifabclient","api/apilogging","api/apitxn","api/apitxn/chmgmtclient","api/apitxn/resmgmtclient","def/fabapi","def/fabapi/context","def/fabapi/context/defprovider","def/fabapi/opt","internal/github.com/hyperledger/fabric-ca/api","internal/github.com/hyperledger/fabric-ca/lib","internal/github.com/hyperledger/fabric-ca/lib/tls","internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge","internal/github.com/hyperledger/fabric-ca/util","internal/github.com/hyperledger/fabric/bccsp","internal/github.com/hyperledger/fabric/bccsp/factory/sw","internal/github.com/hyperledger/fabric/bccsp/signer","internal/github.com/hyperledger/fabric/bccsp/sw","internal/github.com/hyperledger/fabric/bccsp/utils","internal/github.com/hyperledger/fabric/common/channelconfig","internal/github.com/hyperledger/fabric/common/crypto","internal/github.com/hyperledger/fabric/common/util","internal/github.com/hyperledger/fabric/events/consumer","internal/github.com/hyperledger/fabric/msp","internal/github.com/hyperledger/fabric/protos/orderer","internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge","internal/github.com/hyperledger/fabric/sdkpatch/logbridge","pkg/config","pkg/config/comm","pkg/config/urlutil","pkg/cryptosuite","pkg/cryptosuite/bccsp/sw","pkg/cryptosuite/bccsp/wrapper","pkg/errors","pkg/fabric-ca-client","pkg/fabric-client","pkg/fabric-client/ccpackager/gopackager","pkg/fabric-client/channel","pkg/fabric-client/credentialmgr","pkg/fabric-client/events","pkg/fabric-client/events/consumer","pkg/fabric-client/identity","pkg/fabric-client/internal","pkg/fabric-client/internal/txnproc","pkg/fabric-client/keyvaluestore","pkg/fabric-client/mocks","pkg/fabric-client/orderer","pkg/fabric-client/peer","pkg/fabric-client/signingmgr","pkg/fabric-txn/chclient","pkg/fabric-txn/chmgmtclient","pkg/fabric-txn/discovery/staticdiscovery","pkg/fabric-txn/internal","pkg/fabric-txn/resmgmtclient","pkg/fabric-txn/selection/staticselection","pkg/logging","pkg/logging/decorator","pkg/logging/modulledlogger","pkg/logging/utils","test/metadata","third_party/github.com/hyperledger/fabric/common/cauthdsl","third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil","third_party/github.com/hyperledger/fabric/core/ledger/util","third_party/github.com/hyperledger/fabric/protos/common","third_party/github.com/hyperledger/fabric/protos/ledger/rwset","third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset","third_party/github.com/hyperledger/fabric/protos/msp","third_party/github.com/hyperledger/fabric/protos/orderer","third_party/github.com/hyperledger/fabric/protos/peer","third_party/github.com/hyperledger/fabric/protos/utils"]
+  revision = "035a14cf52ac4dcc095f527e9bb919f455b39185"
   source = "github.com/securekey/fabric-sdk-go-next"
 
 [[projects]]
@@ -206,6 +212,12 @@
   revision = "68e00e906b27f92454736fe010ddcfa1181868e4"
 
 [[projects]]
+  name = "github.com/patrickmn/go-cache"
+  packages = ["."]
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  version = "v2.1.0"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "16398bac157da96aa88f98a2df640c7f32af1da2"
@@ -236,6 +248,18 @@
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
   revision = "ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8"
+
+[[projects]]
+  name = "github.com/rs/xid"
+  packages = ["."]
+  revision = "02dd45c33376f85d1064355dc790dcc4850596b1"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/securekey/private-logger"
+  packages = ["api","pkg/crypto","pkg/logger"]
+  revision = "7824146e26c0b5d5381c0e3adfe24b52939a731f"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -310,7 +334,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ocsp","pkcs12","pkcs12/internal/rc2","sha3","ssh/terminal"]
+  packages = ["ed25519","ed25519/internal/edwards25519","ocsp","pkcs12","pkcs12/internal/rc2","sha3","ssh/terminal"]
   revision = "2bcb7b5baf829ed280ed1fd7320ad473b6849d60"
 
 [[projects]]
@@ -349,6 +373,12 @@
   revision = "b3ddf786825de56a4178401b7e174ee332173b66"
 
 [[projects]]
+  name = "gopkg.in/square/go-jose.v2"
+  packages = [".","cipher","json"]
+  revision = "f8f38de21b4dcd69d0413faf231983f5fd6634b1"
+  version = "v2.1.3"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -357,6 +387,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4f0fc182d1d19bce76bb12bdfdd0848cace08446883cac723f31920754ebfd9a"
+  inputs-digest = "841fce611b72292b35bb998ddd3615c9e13687cc4a79b5d1a5af0d36a2e29789"
   solver-name = "gps-cdcl"
   solver-version = 1

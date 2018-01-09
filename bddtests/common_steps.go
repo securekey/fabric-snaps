@@ -357,7 +357,7 @@ func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 	if queryValue == "" {
 		return fmt.Errorf("QueryValue is empty")
 	}
-	logger.Debugf("Query value %s and tested value %s", queryValue, value)
+	logger.Infof("Query value %s and tested value %s", queryValue, value)
 	if !strings.Contains(queryValue, value) {
 		return fmt.Errorf("Query value(%s) doesn't contain expected value(%s)", queryValue, value)
 	}

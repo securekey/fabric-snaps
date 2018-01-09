@@ -30,8 +30,7 @@ import (
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
 )
 
-var module = "transaction-fabric-client"
-var logger = logging.NewLogger(module)
+var logger = logging.NewLogger("txnsnap")
 
 const (
 	txnSnapUser = "Txn-Snap-User"

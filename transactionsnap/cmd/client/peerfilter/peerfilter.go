@@ -13,7 +13,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/peerfilter/minblockheight"
 )
 
-var logger = logging.NewLogger("transaction-snap/peerfilter")
+var logger = logging.NewLogger("txnsnap")
 
 // New creates a new peer filter according to the given options
 func New(opts *api.PeerFilterOpts) (api.PeerFilter, error) {

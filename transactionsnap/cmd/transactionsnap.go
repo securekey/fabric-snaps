@@ -44,7 +44,7 @@ type clientServiceImpl struct {
 
 var clientService = newClientService()
 
-var logger = logging.NewLogger("transaction-snap")
+var logger = logging.NewLogger("txnsnap")
 
 // New chaincode implementation
 func New() shim.Chaincode {
@@ -53,7 +53,7 @@ func New() shim.Chaincode {
 
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
+	logger.Info("Transaction snap loaded.")
 	return shim.Success(nil)
 }
 

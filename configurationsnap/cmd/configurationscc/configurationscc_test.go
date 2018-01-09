@@ -421,7 +421,8 @@ func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
 }
 
 func TestMain(m *testing.M) {
-
+	configdata.PublicKeyForLogging = `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKGuBJrXykqkOmC9uSZ0jaVRgyg1Cu2pafGrYO61xmvJQ2QkUO/Tr1kUeT1oY0fyMrnLwejoMWtm2ID0G+QsTqA==`
+	configdata.EncryptLogging = "true"
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))

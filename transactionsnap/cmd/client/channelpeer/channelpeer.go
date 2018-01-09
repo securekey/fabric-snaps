@@ -14,7 +14,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
-var logger = logging.NewLogger("transaction-fabric-client/channelpeer")
+var logger = logging.NewLogger("txnsnap")
 
 // channelPeer implements ChannelPeer
 type channelPeer struct {

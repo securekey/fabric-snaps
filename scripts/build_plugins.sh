@@ -40,7 +40,7 @@ go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./transactionsnap.so github.c
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./membershipsnap.so github.com/hyperledger/fabric/plugins/membershipsnap/cmd
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventsnap.so github.com/hyperledger/fabric/plugins/eventsnap/cmd
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./txnsnapinvoker.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/txnsnapinvoker
-go build -tags $GO_BUILD_TAGS -buildmode=plugin -ldflags "-X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.PublicKeyForLogging=SAMPLE-KEY-1234 -X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.KeyIDForLogging=SAMPLE-KEYID-1234"  -o ./configurationscc.so github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc
+go build -tags $GO_BUILD_TAGS -buildmode=plugin -ldflags "-X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.PublicKeyForLogging=MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKGuBJrXykqkOmC9uSZ0jaVRgyg1Cu2pafGrYO61xmvJQ2QkUO/Tr1kUeT1oY0fyMrnLwejoMWtm2ID0G+QsTqA== -X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.KeyIDForLogging=loggingPublicKey -X github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc/configdata.EncryptLogging=$IS_RELEASE"  -o ./configurationscc.so github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventconsumersnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/eventconsumersnap
 
 

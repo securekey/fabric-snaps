@@ -26,7 +26,7 @@ import (
 	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 )
 
-var logger = logging.NewLogger("tx-service")
+var logger = logging.NewLogger("txnsnap")
 var registerTxEventTimeout time.Duration = 30
 
 //PeerConfigPath use for testing

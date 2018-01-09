@@ -1,27 +1,27 @@
-#
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
-#
+#############################################################
 
 # Configurations for txn snap
 txnsnap:
-  loglevel: debug
+  loglevel: info
 
 # Membership list polling interval and tls flag
-  selection:
-    maxattempts: 5
-    interval: 2s
+  membership:
+    pollinterval: 3s
+
 
 # Configurations for the fabric client
+
 client:
+
+  # Which organization does this application instance belong to? The value must be the name of an org
+  # defined under "organizations"
   organization: peerorg1
 
   logging:
     level: info
-
-  cryptoconfig:
-    path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
@@ -36,6 +36,7 @@ client:
       # Specific to the underlying KeyValueStore that backs the crypto key store.
       path: /tmp/msp
 
+
   tlsCerts:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
     systemCertPool: false
@@ -47,9 +48,24 @@ client:
       keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
       certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
 
+# Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      queryResponse: 30s
+      executeTxResponse: 30s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 3s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 5s
+
 orderers:
   orderer.example.com:
-    url: grpc://orderer.example.com:7050
+    url: 
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -59,7 +75,7 @@ orderers:
 
     tlsCACerts:
       # Certificate location absolute path
-      path: "sampleconfig/tls/orderer-ca-cert.pem"
+      path: /etc/hyperledger/fabric/tls/orderer-ca-cert.pem
 
 #
 # list of participating organizations in this network

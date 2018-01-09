@@ -17,11 +17,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -184,16 +182,14 @@ func (s *selectionServiceImpl) getAvailablePeers(channelID string, mspID string)
 		}
 	}
 
-	if logging.IsEnabledFor(module, apilogging.DEBUG) {
-		str := ""
-		for i, peer := range peers {
-			str += peer.URL()
-			if i+1 < len(peers) {
-				str += ","
-			}
+	str := ""
+	for i, peer := range peers {
+		str += peer.URL()
+		if i+1 < len(peers) {
+			str += ","
 		}
-		logger.Debugf("Available peers:\n%s\n", str)
 	}
+	logger.Debugf("Available peers:\n%s\n", str)
 
 	return peers
 }

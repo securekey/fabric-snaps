@@ -28,8 +28,7 @@ const (
 	defaultTimeout     = time.Second * 5
 )
 
-var logger = logging.NewLogger("httpsnap-config")
-var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
+var logger = logging.NewLogger("httpsnap")
 var defaultLogLevel = "info"
 
 // config implements Config interface
@@ -93,7 +92,7 @@ func (c *config) initializeLogging() error {
 	}
 
 	logging.SetLevel("httpsnap", level)
-	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel("httpsnap"))
+	logger.Infof("Httpsnap logging initialized. Log level: %v", logLevel)
 
 	return nil
 }
