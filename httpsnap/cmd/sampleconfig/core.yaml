@@ -199,6 +199,18 @@ peer:
             file: tls/server.key
         rootcert:
             file: tls/ca.crt
+        # Set of root certificate authorities used to verify client certificates
+        clientRootCAs:
+            files:
+              - tls/ca.crt
+        # Private key used for TLS when making client connections.  If
+        # not set, peer.tls.key.file will be used instead
+        clientKey:
+            file: tls/test-client.key
+        # X.509 certificate used for TLS when making client connections.
+        # If not set, peer.tls.cert.file will be used instead
+        clientCert:
+            file: tls/test-client-cert.crt
 
         # The server name use to verify the hostname returned by TLS handshake
         serverhostoverride:

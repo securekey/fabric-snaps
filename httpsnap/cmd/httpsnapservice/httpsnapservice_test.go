@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -135,7 +136,7 @@ func TestPost(t *testing.T) {
 	value = os.Getenv("CORE_TLS_CLIENTCERT")
 	os.Setenv("CORE_TLS_CLIENTCERT", "invalid.crt")
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", ContentType: contentType,
-		RequestBody: string(jsonStr)}, "failed to find any PEM data in certificate input")
+		RequestBody: string(jsonStr)}, "could not decode pem bytes")
 	os.Setenv("CORE_TLS_CLIENTCERT", value)
 
 }
@@ -258,6 +259,18 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub, mspID)
 	PeerConfigPath = "../sampleconfig"
+
+	//Setup bccsp factory
+	opts := &factory.FactoryOpts{
+		ProviderName: "SW",
+		SwOpts: &factory.SwOpts{
+			HashFamily:   "SHA2",
+			SecLevel:     256,
+			Ephemeral:    false,
+			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: "../sampleconfig/msp/keystore"},
+		},
+	}
+	factory.InitFactories(opts)
 
 	go startHTTPServer()
 

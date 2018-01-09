@@ -18,6 +18,7 @@ httpclient:
       timeout: 10s
       keepAlive: 10s
 tls:
+  usePeerConfig: false
   enableSystemCertPool: true
   caCerts:
   - |
@@ -83,7 +84,6 @@ tls:
     xl09FqTzfCfLbh5p4Mu1ogRT0lChY0kNtkJeLy2sD9CMF6D7/R0gfjBvFZMVFe4B
     gRb92Z4Q1ngB9HZ1Owyb4RnSbyo=
     -----END CERTIFICATE-----
-  clientKey: $GOPATH/src/github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig/tls/test-client.key
   namedClientOverride:
    abc:
      ca: |
@@ -128,7 +128,6 @@ tls:
        xl09FqTzfCfLbh5p4Mu1ogRT0lChY0kNtkJeLy2sD9CMF6D7/R0gfjBvFZMVFe4B
        gRb92Z4Q1ngB9HZ1Owyb4RnSbyo=
        -----END CERTIFICATE-----
-     key: $GOPATH/src/github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig/tls/override/abc/abc.key
 schemas:
   - type: application/json
     request: '{

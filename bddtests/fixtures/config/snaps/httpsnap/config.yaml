@@ -6,6 +6,7 @@
 logging:
   level: debug
 tls:
+  usePeerConfig: false
   enableSystemCertPool: true
   caCerts:
   - |
@@ -73,7 +74,6 @@ tls:
      mVgUL3uzdQNrbnoVJWOp9WRe6k1smBdxQjj9fzb1Ihy0G8z2HsOX/LynBlcZBRmK
      xxVeCvq347WT+FkFRQK6o2HdriSSrxSRRmHUDqSQbyYciNxAHNA=
      -----END CERTIFICATE-----
-  clientKey: /opt/extsysccs/config/httpsnap/tls/test-client.key
   namedClientOverride:
    abc:
      ca: |
@@ -118,7 +118,6 @@ tls:
        xl09FqTzfCfLbh5p4Mu1ogRT0lChY0kNtkJeLy2sD9CMF6D7/R0gfjBvFZMVFe4B
        gRb92Z4Q1ngB9HZ1Owyb4RnSbyo=
        -----END CERTIFICATE-----
-     key: /opt/extsysccs/config/httpsnap/tls/override/abc/abc.key
 schemas:
   - type: application/json
     request: '{

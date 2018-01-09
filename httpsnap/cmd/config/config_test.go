@@ -20,6 +20,8 @@ import (
 
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -28,18 +30,15 @@ var c httpsnapApi.Config
 
 var relConfigPath = "/fabric-snaps/httpsnap/cmd/config/"
 var channelID = "testChannel"
+var peerConfigChannelID = "testChannel-peerConfig"
 var mspID = "Org1MSP"
 
 func TestGetClientCert(t *testing.T) {
-	verifyEqual(t, c.GetClientCert(), snapConfig.GetString("tls.clientCert"), "Failed to get client cert.")
-}
-func TestGetClientKey(t *testing.T) {
-	key, err := c.GetClientKey()
+	clientCert, err := c.GetClientCert()
 	if err != nil {
-		t.Fatalf("GetClientKey return error %v", err)
+		t.Fatal("Not supposed to get error for getting client cert")
 	}
-
-	verifyEqual(t, key, "clientKey", "Failed to get client key.")
+	verifyEqual(t, clientCert, snapConfig.GetString("tls.clientCert"), "Failed to get client cert.")
 }
 
 func TestGetNamedClientOverride(t *testing.T) {
@@ -52,7 +51,6 @@ func TestGetNamedClientOverride(t *testing.T) {
 	}
 	verifyEqual(t, clientMap["abc"].Ca, "abcCA", "Failed to get client override CA.")
 	verifyEqual(t, clientMap["abc"].Crt, "abcCert", "Failed to get client override Crt.")
-	verifyEqual(t, clientMap["abc"].Key, "abcKey", "Failed to get client override Key.")
 
 }
 
@@ -80,7 +78,10 @@ func TestGetShemaConfig(t *testing.T) {
 }
 
 func TestGetCaCerts(t *testing.T) {
-	values := c.GetCaCerts()
+	values, err := c.GetCaCerts()
+	if err != nil {
+		t.Fatal("Not supposed to get error for getting ca certs")
+	}
 	if len(values) != 2 {
 		t.Fatalf("Expecting 2 certs, got %d", len(values))
 	}
@@ -144,7 +145,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
 	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: string(configData)}}}}}
-	stub := getMockStub()
+	stub := getMockStub(channelID)
 	configBytes, err := json.Marshal(config)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
@@ -155,6 +156,24 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
 	configmgmtService.Initialize(stub, mspID)
+
+	//Setup config for second channel where use peer tls config is enabled
+	configDataStr := string(configData)
+	configDataStr = strings.Replace(configDataStr, "usePeerConfig: false", "usePeerConfig: true", -1)
+	configDataStr = strings.Replace(configDataStr, "caCerts:", "caCerts-invalid:", -1)
+	configDataStr = strings.Replace(configDataStr, "clientCert:", "clientCert-invalid:", -1)
+	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: configDataStr}}}}}
+	configBytes2, err := json.Marshal(config2)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
+	}
+	stub2 := getMockStub(peerConfigChannelID)
+	//upload valid message to HL
+	err = uploadConfigToHL(stub2, configBytes2)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot upload %s\n", err))
+	}
+	configmgmtService.Initialize(stub2, mspID)
 
 	c, err = NewConfig("../sampleconfig", channelID)
 	if err != nil {
@@ -168,7 +187,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func getMockStub() *shim.MockStub {
+func getMockStub(channelID string) *shim.MockStub {
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
 	stub.ChannelID = channelID
@@ -191,6 +210,42 @@ func TestNoConfig(t *testing.T) {
 	_, err := NewConfig("abc", channelID)
 	if err == nil {
 		t.Fatalf("Init config should have failed.")
+	}
+
+}
+
+func TestTLSPeerConfig(t *testing.T) {
+	peerTLSPrefix := "-----BEGIN CERTIFICATE-----"
+	testConfig, err := NewConfig("../sampleconfig", peerConfigChannelID)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	//Test get client cert
+	clientCert, err := testConfig.GetClientCert()
+	if err != nil {
+		t.Fatalf("Not supposed to get error while getting client cert when 'tls.usePeerConfig' enabled and 'tls.clientCert' is missing, but got : %v", err)
+	}
+	if clientCert == "" {
+		t.Fatal("Got empty peer config client cert when 'tls.usePeerConfig' enabled and 'tls.clientCert' is missing")
+	}
+	if !strings.HasPrefix(clientCert, peerTLSPrefix) {
+		t.Fatalf("Supposed to get peer config client cert when 'tls.usePeerConfig' enabled and 'tls.clientCert' is missing, but got %v", clientCert)
+	}
+
+	//Test get ca certs
+	caCerts, err := testConfig.GetCaCerts()
+	if err != nil {
+		t.Fatalf("Not supposed to get error while getting ca certs when 'tls.usePeerConfig' enabled and 'tls.caCerts' is missing, but got : %v", err)
+	}
+	if len(caCerts) == 0 {
+		t.Fatal("Got empty peer config ca certs when 'tls.usePeerConfig' enabled and 'tls.caCerts' is missing")
+	}
+
+	for _, cacert := range caCerts {
+		if !strings.HasPrefix(cacert, peerTLSPrefix) {
+			t.Fatalf("Supposed to get peer config client cert when 'tls.usePeerConfig' enabled and 'tls.caCerts' is missing, but got %v", cacert)
+		}
 	}
 
 }
