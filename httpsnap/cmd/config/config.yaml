@@ -6,17 +6,16 @@
 logging:
   level: debug
 tls:
+  allowPeerConfig: true
   enableSystemCertPool: true  
   caCerts:
   - "ca1"
   - "ca2"
   clientCert: "testCrt"
-  clientKey: keys/tls/test-client.key
   namedClientOverride:
    abc:
      ca: "abcCA"
      crt: "abcCert"
-     key: keys/tls/override/abc/abc.key
 
 httpclient:
   timeout: 
