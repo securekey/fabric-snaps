@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "d0cffa85_73ed7c2d",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1000069
+      },
+      "writtenOn": "2018-01-09T14:59:05Z",
+      "side": 1,
+      "message": "Override should follow the same logic (read the private key from cert\u0027s public key PKI first)",
+      "revId": "4eee63e7b134a36e82c354a48eede371edbadd61",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a05831a5_46b33c1b",
         "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
         "patchSetId": 5
