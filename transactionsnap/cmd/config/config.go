@@ -32,7 +32,7 @@ const (
 	defaultSelectionInterval    = time.Second
 )
 
-var logger = logging.NewLogger("txn-snap-config")
+var logger = logging.NewLogger("txnsnap")
 var defaultLogLevel = "info"
 
 //Config implements Config interface
@@ -233,8 +233,8 @@ func (c *Config) initializeLogging() error {
 		return errors.Errorf("Error initializing log level: %s", err)
 	}
 
-	logging.SetLevel("", level)
-	logger.Debugf("Txnsnap logging initialized. Log level: %s", logging.GetLevel(""))
+	logging.SetLevel("txnsnap", level)
+	logger.Infof("Txnsnap logging initialized. Log level: %v", logLevel)
 
 	return nil
 }

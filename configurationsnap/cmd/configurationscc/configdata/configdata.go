@@ -16,3 +16,6 @@ var PublicKeyForLogging string
 
 //KeyIDForLogging key id matching public key for private logging
 var KeyIDForLogging string
+
+//EncryptLogging encrypt logging flag
+var EncryptLogging string

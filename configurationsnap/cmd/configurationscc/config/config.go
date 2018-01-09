@@ -13,15 +13,16 @@ import (
 	"time"
 
 	"github.com/cloudflare/cfssl/log"
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/spf13/viper"
 )
 
-var logger = flogging.MustGetLogger("configurationscc/config")
+var logger = logging.NewLogger("configurationsnap")
 var defaultRefreshInterval time.Duration = 10
+var defaultLogLevel = "info"
 
 const (
 	peerConfigName        = "core"
@@ -38,6 +39,8 @@ type Config struct {
 	PeerMspID string
 	//cache refresh interval
 	RefreshInterval time.Duration
+	//configuration snap config
+	configurationSnapConfig *viper.Viper
 }
 
 // New returns a new config snap configuration for the given channel
@@ -64,6 +67,7 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		return nil, errors.New("Cannot create cache instance")
 	}
 	var refreshInterval = defaultRefreshInterval
+	customConfig := viper.New()
 	if channelID != "" {
 		log.Debug("Getting config for channel: %s", channelID)
 
@@ -75,7 +79,6 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 			return nil, fmt.Errorf("config data is empty")
 		}
 		replacer := strings.NewReplacer(".", "_")
-		customConfig := viper.New()
 		customConfig.SetConfigType("YAML")
 		customConfig.ReadConfig(bytes.NewBuffer(dataConfig))
 		customConfig.SetEnvPrefix(envPrefix)
@@ -92,12 +95,36 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 
 	// Initialize from peer config
 	config := &Config{
-		PeerID:          peerID,
-		PeerMspID:       mspID,
-		RefreshInterval: refreshInterval,
+		PeerID:                  peerID,
+		PeerMspID:               mspID,
+		RefreshInterval:         refreshInterval,
+		configurationSnapConfig: customConfig,
+	}
+	err = config.initializeLogging()
+	if err != nil {
+		return nil, fmt.Errorf("Error initializing logging: %s", err)
 	}
 
 	return config, nil
+}
+
+// Helper function to initialize logging
+func (c *Config) initializeLogging() error {
+	logLevel := c.configurationSnapConfig.GetString("logging.level")
+
+	if logLevel == "" {
+		logLevel = defaultLogLevel
+	}
+
+	level, err := logging.LogLevel(logLevel)
+	if err != nil {
+		return fmt.Errorf("Error initializing log level: %s", err)
+	}
+
+	logging.SetLevel("configurationsnap", level)
+	logger.Debugf("configurationsnap logging initialized. Log level: %s", logLevel)
+
+	return nil
 }
 
 //GetPeerMSPID returns peerMspID

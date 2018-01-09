@@ -24,7 +24,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var logger = logging.NewLogger("http-service")
+var logger = logging.NewLogger("httpsnap")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""

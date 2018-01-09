@@ -35,6 +35,7 @@ find ./vendor -name '*_test.go' -delete
 echo "Deleting dependencies that have a mismatch with fabric..."
 # This is required because govendor allows different versions of subpackages while godep does not
 rm -rf ./vendor/golang.org/x/crypto/sha3/
+rm -rf ./vendor/golang.org/x/crypto/ssh/terminal
 rm -rf ./vendor/golang.org/x/net/context/
 rm -rf ./vendor/golang.org/x/sys/unix/
 
