@@ -20,8 +20,6 @@ import (
 
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
-	configapi "github.com/securekey/fabric-snaps/configurationsnap/api"
-	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,8 +48,6 @@ func TestInvoke(t *testing.T) {
 
 	testInvalidFunctionName(t, stub)
 
-	testGetPublicKeyForLogging(t, stub)
-
 	testHealthcheck(t, stub)
 }
 
@@ -67,32 +63,6 @@ func testInvalidFunctionName(t *testing.T, stub *shim.MockStub) {
 	_, err = invoke(stub, [][]byte{[]byte("test")})
 	if err == nil {
 		t.Fatalf("Should have failed due to wrong function name")
-	}
-
-}
-
-func testGetPublicKeyForLogging(t *testing.T, stub *shim.MockStub) {
-
-	testKey := "Sample-Key"
-	testKeyID := "Sample-KeyID"
-	configdata.PublicKeyForLogging = testKey
-	configdata.KeyIDForLogging = testKeyID
-
-	// Retrieve public key for logging
-	registrationBytes, err := invoke(stub, [][]byte{[]byte("getPublicKeyForLogging")})
-	if err != nil {
-		t.Fatalf("Failed to get public key for logging, reason :%v", err)
-	}
-
-	response := &configapi.PublicKeyForLogging{}
-	json.Unmarshal(registrationBytes, response)
-
-	if response.PublicKey != testKey {
-		t.Fatalf("Unexpected public key found, expected '%s' but got '%s'", testKey, response.PublicKey)
-	}
-
-	if response.KeyID != testKeyID {
-		t.Fatalf("Unexpected key id found, expected '%s' but got '%s'", testKeyID, response.KeyID)
 	}
 
 }

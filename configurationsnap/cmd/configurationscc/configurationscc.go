@@ -25,9 +25,7 @@ import (
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	configapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
-	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/configdata"
 
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -36,12 +34,11 @@ import (
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
 var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb.Response{
-	"getPublicKeyForLogging": getPublicKeyForLogging,
-	"healthCheck":            healthCheck,
-	"save":                   save,
-	"get":                    get,
-	"delete":                 delete,
-	"refresh":                refresh,
+	"healthCheck": healthCheck,
+	"save":        save,
+	"get":         get,
+	"delete":      delete,
+	"refresh":     refresh,
 }
 
 var availableFunctions = functionSet()
@@ -101,18 +98,6 @@ func functionSet() string {
 		functionNames = functionNames + " " + name
 	}
 	return functionNames
-}
-
-// getPublicKeyForLogging returns public key used for logging encryption
-func getPublicKeyForLogging(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-
-	configBytes, err := json.Marshal(&configapi.PublicKeyForLogging{PublicKey: configdata.PublicKeyForLogging, KeyID: configdata.KeyIDForLogging})
-
-	if err != nil {
-		shim.Error(fmt.Sprintf("failed to marshal public key logging config data. %v ", err))
-	}
-
-	return shim.Success(configBytes)
 }
 
 // healthCheck is the health check function of this ConfigurationSnap
