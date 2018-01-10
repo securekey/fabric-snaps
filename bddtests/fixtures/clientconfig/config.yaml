@@ -133,7 +133,9 @@ organizations:
     mspid: Org1MSP
 
     # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
-    #cryptoPath:  peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    # for PROD with no cert access through volume mappings, use 'users' and embed user certs/keys directly, do not use 'cryptoPath'
+    # for DEV mode, cryptoPath below works as an alternative
+    #cryptoPath:  fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
     users:
       Admin:
         key:
