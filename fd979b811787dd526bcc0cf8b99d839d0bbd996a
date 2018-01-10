@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08561d57_f9d9a793",
+        "filename": "transactionsnap/cmd/client/factories/credentialmgr.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-10T22:25:29Z",
+      "side": 1,
+      "message": "Enrollment cert should be retrieved first, and private key should be retrieved as is: getCryptoSuiteKeyFromPem() etc.",
+      "revId": "fd979b811787dd526bcc0cf8b99d839d0bbd996a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05b5725a_7f688d35",
+        "filename": "transactionsnap/cmd/client/factories/credentialmgr.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-10T22:25:29Z",
+      "side": 1,
+      "message": "You probably don\u0027t need getPrivateKey() functionality since we don\u0027t support keys in ledger. Talk to Troy.",
+      "revId": "fd979b811787dd526bcc0cf8b99d839d0bbd996a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
