@@ -61,9 +61,10 @@ func NewChannelClient(peerAddress string, regTimeout time.Duration, adapter Chan
 // newChannelClientConnectionWithAddress returns a new grpc.ClientConn to the
 // configured local peer
 func newChannelClientConnectionWithAddress(peerAddress string) (*grpc.ClientConn, error) {
-	if comm.TLSEnabled() {
-		return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForPeer(), nil)
-	}
+	// TODO: Disable TLS support since this uses deprecated methods -this server will be deprecated anyway
+	// if comm.TLSEnabled() {
+	// 	return comm.NewClientConnectionWithAddress(peerAddress, true, true, comm.InitTLSForPeer(), nil)
+	// }
 	return comm.NewClientConnectionWithAddress(peerAddress, true, false, nil, nil)
 }
 

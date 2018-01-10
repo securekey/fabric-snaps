@@ -17,6 +17,7 @@ limitations under the License.
 package relay
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -30,6 +31,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/common/util"
+	cutil "github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/comm"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	ehpb "github.com/hyperledger/fabric/protos/peer"
@@ -46,6 +48,7 @@ type EventsClient struct {
 	stream         ehpb.Events_ChatClient
 	adapter        EventAdapter
 	tlsCredentials credentials.TransportCredentials
+	tlsCertHash    []byte
 }
 
 // RegistrationConfig holds the information to be used when registering for
@@ -56,7 +59,7 @@ type RegistrationConfig struct {
 }
 
 //NewEventsClient Returns a new grpc.ClientConn to the configured local PEER.
-func NewEventsClient(peerAddress string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (*EventsClient, error) {
+func NewEventsClient(peerAddress string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (*EventsClient, error) {
 	var err error
 	if regTimeout < 100*time.Millisecond {
 		regTimeout = 100 * time.Millisecond
@@ -65,7 +68,14 @@ func NewEventsClient(peerAddress string, regTimeout time.Duration, adapter Event
 		regTimeout = 60 * time.Second
 		err = fmt.Errorf("regTimeout > 60, setting to 60 sec")
 	}
-	return &EventsClient{sync.RWMutex{}, peerAddress, regTimeout, nil, adapter, tlsCredentials}, err
+	return &EventsClient{
+		RWMutex:        sync.RWMutex{},
+		peerAddress:    peerAddress,
+		regTimeout:     regTimeout,
+		adapter:        adapter,
+		tlsCredentials: credentials.NewTLS(tlsConfig),
+		tlsCertHash:    tlsCertHash(tlsConfig.Certificates),
+	}, err
 }
 
 //newEventsClientConnectionWithAddress Returns a new grpc.ClientConn to the configured local PEER.
@@ -116,7 +126,12 @@ func (ec *EventsClient) RegisterAsync(config *RegistrationConfig) error {
 	if err != nil {
 		return fmt.Errorf("error getting creator from MSP: %s", err)
 	}
-	emsg := &ehpb.Event{Event: &ehpb.Event_Register{Register: &ehpb.Register{Events: config.InterestedEvents}}, Creator: creator, Timestamp: config.Timestamp}
+	emsg := &ehpb.Event{
+		Event:       &ehpb.Event_Register{Register: &ehpb.Register{Events: config.InterestedEvents}},
+		Creator:     creator,
+		Timestamp:   config.Timestamp,
+		TlsCertHash: ec.tlsCertHash,
+	}
 
 	if err = ec.send(emsg); err != nil {
 		consumerLogger.Errorf("error on Register send %s\n", err)
@@ -269,4 +284,12 @@ func getCreatorFromLocalMSP() ([]byte, error) {
 		return nil, fmt.Errorf("error serializing the signer: %s", err)
 	}
 	return creator, nil
+}
+
+func tlsCertHash(certs []tls.Certificate) []byte {
+	cert := certs[0]
+	if len(cert.Certificate) == 0 {
+		return nil
+	}
+	return cutil.ComputeSHA256(cert.Certificate[0])
 }

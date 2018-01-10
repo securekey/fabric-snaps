@@ -7,10 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package relay
 
 import (
+	"crypto/tls"
 	"sync"
 	"time"
-
-	"google.golang.org/grpc/credentials"
 
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
@@ -27,7 +26,7 @@ type EventHub interface {
 }
 
 // EventHubProvider is a function that creates a new EventHub implementation
-type EventHubProvider func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error)
+type EventHubProvider func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (EventHub, error)
 
 // Opts provides the event relay options
 type Opts struct {
@@ -70,16 +69,16 @@ type EventRelay struct {
 	mutex                 sync.RWMutex
 	ehmutex               sync.RWMutex
 	eventChannels         []chan<- interface{}
-	tlsCredentials        credentials.TransportCredentials
+	tlsConfig             *tls.Config
 }
 
 // defaultEHProvider creates a new EventHub client
-var defaultEHProvider EventHubProvider = func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error) {
-	return NewEventsClient(address, regTimeout, adapter, tlsCredentials)
+var defaultEHProvider EventHubProvider = func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (EventHub, error) {
+	return NewEventsClient(address, regTimeout, adapter, tlsConfig)
 }
 
 // New creates a new event relay on the given channel.
-func New(channelID string, eventHubAddress string, tlsCredentials credentials.TransportCredentials, opts *Opts) (*EventRelay, error) {
+func New(channelID string, eventHubAddress string, tlsConfig *tls.Config, opts *Opts) (*EventRelay, error) {
 	if channelID == "" {
 		return nil, errors.New("channelID is required")
 	}
@@ -97,7 +96,7 @@ func New(channelID string, eventHubAddress string, tlsCredentials credentials.Tr
 		relayTimeout:          opts.RelayTimeout,
 		ehProvider:            opts.eventHubProvider,
 		eventHubRetryInterval: opts.EventHubRetryInterval,
-		tlsCredentials:        tlsCredentials,
+		tlsConfig:             tlsConfig,
 	}, nil
 }
 
@@ -197,7 +196,7 @@ func (er *EventRelay) connectEventHub() {
 		return
 	}
 
-	client, err := er.ehProvider(er.channelID, er.eventHubAddress, er.regTimeout, er, er.tlsCredentials)
+	client, err := er.ehProvider(er.channelID, er.eventHubAddress, er.regTimeout, er, er.tlsConfig)
 	if err != nil {
 		logger.Errorf("Error creating new events client: %s\n", err)
 		return
