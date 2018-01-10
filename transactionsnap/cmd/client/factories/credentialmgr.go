@@ -19,8 +19,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi/context/defprovider"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/bccsp"
+
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 )
 
@@ -46,6 +47,8 @@ func (f *CredentialManagerProviderFactory) NewCredentialManager(orgName string, 
 // credentialManager is used for retriving user's signing identity (ecert + private key)
 type credentialManager struct {
 	orgName        string
+	embeddedUsers  map[string]apiconfig.TLSKeyPair
+	keyDir         string
 	certDir        string
 	config         apiconfig.Config
 	cryptoProvider apicryptosuite.CryptoSuite
@@ -55,11 +58,6 @@ type credentialManager struct {
 // @param {string} orgName - organisation id
 // @returns {CredentialManager} new credential manager
 func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config, cryptoProvider apicryptosuite.CryptoSuite) (apifabclient.CredentialManager, error) {
-
-	if mspConfigPath == "" {
-		return nil, errors.New("mspConfigPath is required")
-	}
-
 	if orgName == "" {
 		return nil, errors.New("orgName is required")
 	}
@@ -72,21 +70,36 @@ func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config
 		return nil, errors.New("config is required")
 	}
 
-	return &credentialManager{orgName: orgName, config: config, certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
+	netwkConfig, err := config.NetworkConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// viper keys are case insensitive
+	orgConfig, ok := netwkConfig.Organizations[strings.ToLower(orgName)]
+	if !ok {
+		return nil, errors.New("org config retrieval failed")
+	}
+
+	if mspConfigPath == "" && len(orgConfig.Users) == 0 {
+		return nil, errors.New("either mspConfigPath or an embedded list of users is required")
+	}
+
+	if !filepath.IsAbs(mspConfigPath) {
+		cryptoConfPath := orgConfig.CryptoPath
+		if strings.HasPrefix(mspConfigPath, "../") && cryptoConfPath != "" { // for paths starting  with '../' trim the prefix so the following line joins the absolute path correctly
+			mspConfigPath = strings.Trim(mspConfigPath, "../")
+		}
+		mspConfigPath = filepath.Join(cryptoConfPath, mspConfigPath)
+	}
+
+	return &credentialManager{orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
 }
 
 // GetSigningIdentity will sign the given object with provided key,
 func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient.SigningIdentity, error) {
-
 	if userName == "" {
 		return nil, errors.New("username is required")
-	}
-
-	enrollmentCertDir := strings.Replace(mgr.certDir, "{userName}", userName, -1)
-
-	enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
-	if err != nil {
-		return nil, errors.WithMessage(err, "find enrollment cert path failed")
 	}
 
 	mspID, err := mgr.config.MspID(mgr.orgName)
@@ -94,9 +107,10 @@ func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient
 		return nil, errors.WithMessage(err, "MSP ID config read failed")
 	}
 
-	enrollmentCert, err := ioutil.ReadFile(enrollmentCertPath)
+	enrollmentCert, err := mgr.getEnrollmentCert(userName)
+
 	if err != nil {
-		return nil, errors.Wrap(err, "reading enrollment cert path failed")
+		return nil, err
 	}
 
 	//Get Key from Pem bytes
@@ -106,16 +120,50 @@ func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient
 	}
 
 	//Get private key using SKI
-	pk, err := mgr.cryptoProvider.GetKey(key.SKI())
+	privateKey, err := mgr.cryptoProvider.GetKey(key.SKI())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get private key")
 	}
 
-	//Create Signing Identity
-	signingIdentity := &apifabclient.SigningIdentity{MspID: mspID, PrivateKey: pk, EnrollmentCert: enrollmentCert}
+	signingIdentity := &apifabclient.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
 
 	return signingIdentity, nil
+}
 
+func (mgr *credentialManager) getEnrollmentCert(userName string) ([]byte, error) {
+	var err error
+
+	certPem := mgr.embeddedUsers[strings.ToLower(userName)].Cert.Pem
+	certPath := mgr.embeddedUsers[strings.ToLower(userName)].Cert.Path
+
+	var enrollmentCertBytes []byte
+
+	if certPem != "" {
+		enrollmentCertBytes = []byte(certPem)
+	} else if certPath != "" {
+		enrollmentCertBytes, err = ioutil.ReadFile(certPath)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "reading enrollment cert path failed")
+		}
+	} else if mgr.certDir != "" {
+		enrollmentCertDir := strings.Replace(mgr.certDir, "{userName}", userName, -1)
+		enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
+
+		if err != nil {
+			return nil, errors.WithMessage(err, "find enrollment cert path failed")
+		}
+
+		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath)
+
+		if err != nil {
+			return nil, errors.WithMessage(err, "reading enrollment cert path failed")
+		}
+	} else {
+		return nil, errors.Errorf("failed to find enrollment cert for user %s, verify the configs", userName)
+	}
+
+	return enrollmentCertBytes, nil
 }
 
 // Gets the first path from the dir directory
