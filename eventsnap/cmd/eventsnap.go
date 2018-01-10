@@ -202,7 +202,7 @@ func (s *eventSnap) startEventRelay(channelID string, config *config.EventSnapCo
 		opts.RelayTimeout = config.EventRelayTimeout
 	}
 
-	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, config.TransportCredentials, opts)
+	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, config.TLSConfig, opts)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error creating event relay")
 	}

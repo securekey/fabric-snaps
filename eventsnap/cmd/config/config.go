@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc/credentials"
-
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/pkg/errors"
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -72,8 +70,8 @@ type EventSnapConfig struct {
 	// If > 0, if buffer full, blocks util timeout.
 	EventConsumerTimeout time.Duration
 
-	// TransportCredentials is the credentials used for connecting with peer event service
-	TransportCredentials credentials.TransportCredentials
+	// TLSConfig contains the TLS certs and CA cert pool
+	TLSConfig *tls.Config
 
 	// channelConfigLoaded indicates whether the channel-specific configuration was loaded
 	ChannelConfigLoaded bool
@@ -121,13 +119,13 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 			eventSnapConfig.EventDispatcherBufferSize = uint(config.GetInt("eventsnap.dispatcher.buffersize"))
 			eventSnapConfig.EventConsumerBufferSize = uint(config.GetInt("eventsnap.consumer.buffersize"))
 			eventSnapConfig.EventConsumerTimeout = config.GetDuration("eventsnap.consumer.timeout")
-			tlsCredentials, err := getTLSCredentials(peerConfig, config)
+			tlsConfig, err := getTLSConfig(peerConfig, config)
 			if err != nil {
 				return nil, err
 			}
 
-			logger.Debugf("TLS Credentials: %s", tlsCredentials)
-			eventSnapConfig.TransportCredentials = tlsCredentials
+			logger.Debugf("TLS Config: %s", tlsConfig)
+			eventSnapConfig.TLSConfig = tlsConfig
 		}
 	}
 
@@ -148,7 +146,7 @@ func newPeerViper(configPath string) (*viper.Viper, error) {
 	return peerViper, nil
 }
 
-func getTLSCredentials(peerConfig, config *viper.Viper) (credentials.TransportCredentials, error) {
+func getTLSConfig(peerConfig, config *viper.Viper) (*tls.Config, error) {
 
 	tlsCaCertPool := x509.NewCertPool()
 	if config.GetBool("eventsnap.eventhub.tlsCerts.systemCertPool") == true {
@@ -213,11 +211,11 @@ func getTLSCredentials(peerConfig, config *viper.Viper) (credentials.TransportCr
 		certificates = []tls.Certificate{clientCerts}
 	}
 
-	creds := credentials.NewTLS(&tls.Config{
+	creds := &tls.Config{
 		Certificates: certificates,
 		RootCAs:      tlsCaCertPool,
 		ServerName:   sn,
-	})
+	}
 
 	return creds, nil
 }

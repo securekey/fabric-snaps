@@ -7,12 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package relay
 
 import (
+	"crypto/tls"
 	"fmt"
 	"reflect"
 	"testing"
 	"time"
-
-	"google.golang.org/grpc/credentials"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -34,7 +33,7 @@ func TestEventRelay(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, creds credentials.TransportCredentials) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter:          adapter,
 			NumStartFailures: 1, // Simulate a failed startup the first time
@@ -139,7 +138,7 @@ func TestEventRelayBufferFull(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
@@ -191,7 +190,7 @@ func TestEventRelayTimeout(t *testing.T) {
 	channelID1 := "ch1"
 
 	var mockeh *mockeventhub.MockEventHub
-	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsCredentials credentials.TransportCredentials) (EventHub, error) {
+	opts := MockOpts(func(channelID string, address string, regTimeout time.Duration, adapter EventAdapter, tlsConfig *tls.Config) (EventHub, error) {
 		mockeh = &mockeventhub.MockEventHub{
 			Adapter: adapter,
 		}
