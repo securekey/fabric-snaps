@@ -287,6 +287,10 @@ func getCreatorFromLocalMSP() ([]byte, error) {
 }
 
 func tlsCertHash(certs []tls.Certificate) []byte {
+	if len(certs) == 0 {
+		return nil
+	}
+
 	cert := certs[0]
 	if len(cert.Certificate) == 0 {
 		return nil
