@@ -27,6 +27,7 @@ import (
 
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 )
 
 var jsonStr = []byte(`{"id":"123", "name": "Test Name"}`)
@@ -250,15 +251,9 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	//Setup bccsp factory
-	opts := &factory.FactoryOpts{
-		ProviderName: "SW",
-		SwOpts: &factory.SwOpts{
-			HashFamily:   "SHA2",
-			SecLevel:     256,
-			Ephemeral:    false,
-			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
-		},
-	}
+	opts := sampleconfig.GetSampleBCCSPFactoryOpts("./sampleconfig/msp/keystore")
+
+	//Now call init factories using opts you got
 	factory.InitFactories(opts)
 
 	os.Exit(m.Run())

@@ -53,6 +53,8 @@ GO_BUILD_TAGS ?= "experimental"
 
 FABRIC_SNAPS_POPULATE_VENDOR ?= true
 
+DOCKER_COMPOSE_CMD ?= docker-compose
+
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.3.2 # the version of dep that will be installed by depend-install (or in the CI)
 
@@ -98,13 +100,16 @@ spelling:
 unit-test: depend populate
 	@scripts/unit.sh
 
+pkcs11-unit-test: depend populate
+	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit	
+
 integration-test: clean depend populate snaps
 	@scripts/integration.sh
 
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 
-all: clean checks snaps unit-test integration-test http-server
+all: clean checks snaps unit-test pkcs11-unit-test integration-test http-server
 
 populate: populate-vendor
 

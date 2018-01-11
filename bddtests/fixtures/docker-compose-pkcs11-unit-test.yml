@@ -1,0 +1,16 @@
+#
+# Copyright IBM Corp, SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '2'
+
+services:
+
+  pkcs11-image:
+    container_name: pkcs11-image
+    image: repo.onetap.ca:8443/softhsmv2:alpine
+    volumes:
+        - ../../:/go/src/github.com/securekey/fabric-snaps
+    command: /go/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh
+#    tty : true
