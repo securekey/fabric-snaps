@@ -68,6 +68,75 @@ func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
+func TestFindPKCSLib(t *testing.T) {
+
+	lib, pin, label := FindPKCS11Lib("lib1,lib2,lib3")
+	if lib != "" {
+		t.Fatalf("Expected empty lib")
+	}
+	if pin != "" {
+		t.Fatalf("Expected empty pin")
+	}
+	if label != "" {
+		t.Fatalf("Expected empty label")
+	}
+
+	os.Setenv("PKCS11_LIB", "SomeLib")
+	os.Setenv("PKCS11_PIN", "12345")
+	os.Setenv("PKCS11_LABEL", "system_label")
+	lib, pin, label = FindPKCS11Lib("s")
+	if lib != os.Getenv("PKCS11_LIB") {
+		t.Fatalf("Expected system config for lib")
+	}
+	if pin != os.Getenv("PKCS11_PIN") {
+		t.Fatalf("Expected system config for pin")
+	}
+	if label != os.Getenv("PKCS11_LABEL") {
+		t.Fatalf("Expected system config for label")
+	}
+
+}
+func TestBCCSPOptions(t *testing.T) {
+
+	configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+
+	csconfig, err := instance.GetViper("testChannel", configKey, configmanagerApi.YAML)
+	if err != nil {
+		t.Fatalf("Got error while getting vipers %v", err)
+	}
+	//test PKCS11 options
+	opts, err := getPKCSOptions(csconfig)
+	if err != nil {
+		t.Fatalf("Got error while getting BCCSP opts %v", err)
+	}
+	if opts.ProviderName != "PKCS11" {
+		t.Fatalf("Expected PKCS11 provider")
+	}
+	//test PLUGIN options
+	opts, err = getPluginOptions(csconfig)
+	if err != nil {
+		t.Fatalf("Got error while getting BCCSP opts %v", err)
+	}
+	if opts.PluginOpts == nil {
+		t.Fatalf("Expected PluginOpts to be set")
+	}
+	if opts.PluginOpts.Library == "" {
+		t.Fatalf("Expected PluginOpts - Library to be set")
+	}
+	if opts.PluginOpts.Config == nil {
+		t.Fatalf("Expected PluginOpts - Config to be set")
+	}
+	//Config map is requred
+	pluginCfgOptsMap := opts.PluginOpts.Config
+	val, _ := pluginCfgOptsMap["key"]
+	if val == nil {
+		t.Fatalf("Expected value for key")
+	}
+
+}
+
 func getMockStub() *shim.MockStub {
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")

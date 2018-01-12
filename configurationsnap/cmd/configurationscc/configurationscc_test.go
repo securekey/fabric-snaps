@@ -333,6 +333,87 @@ func TestSaveConfigurationsWithBogusPayload(t *testing.T) {
 	}
 
 }
+func TestGettingBCCSP(t *testing.T) {
+
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+
+	csconfig, err := instance.GetViper("testChannel", configKey, api.YAML)
+	if err != nil {
+		t.Fatalf("Expected: Getting channel cache from ledge ")
+	}
+
+	provider := csconfig.GetString("BCCSP.security.provider")
+	if provider == "" {
+		t.Fatalf("Expected: provider")
+	}
+	bccspHashAlg := csconfig.GetString("BCCSP.security.hashAlgorithm")
+	if bccspHashAlg == "" {
+		t.Fatalf("Expected: provider")
+	}
+	level := csconfig.GetInt("BCCSP.security.level")
+	if level == 0 {
+		t.Fatalf("Expected: level")
+	}
+	pin := csconfig.GetString("BCCSP.security.pin")
+	if pin == "" {
+		t.Fatalf("Expected: pin")
+	}
+
+	label := csconfig.GetString("BCCSP.security.label")
+	if label == "" {
+		t.Fatalf("Expected: label")
+	}
+	lib := csconfig.GetString("BCCSP.security.library")
+	if lib == "" {
+		t.Fatalf("Expected: lib")
+	}
+}
+
+func TestGenerateKeyArgs(t *testing.T) {
+	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub.ChannelID = "testChannel"
+	funcName := []byte("generateKeyPair")
+	_, err := invoke(stub, [][]byte{funcName, []byte("ECDSA")})
+	if err == nil {
+		t.Fatalf("Expected: 'Required arguments are: key type and ephemeral flag'")
+	}
+	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA-FAKE"), []byte("false")})
+	if err == nil {
+		t.Fatalf("Expected: 'The key option is invalid. Valid options: [ECDSA, ECDSAP256,ECDSAP384]' ")
+	}
+	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA"), []byte("notbool")})
+	if err == nil {
+		t.Fatalf("Expected: 'Ephemeral flag is not set'")
+	}
+	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA"), []byte("")})
+	if err == nil {
+		t.Fatalf("Expected: 'Ephemeral flag is not set'")
+	}
+
+}
+
+func TestGetKeyOpts(t *testing.T) {
+	key, err := getKeyOpts("ECDSA", false)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if key.Algorithm() != "ECDSA" {
+		t.Fatalf("Expected ECDSA alg")
+	}
+	key, err = getKeyOpts("RSA", false)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if key.Algorithm() != "RSA" {
+		t.Fatalf("Expected RSA alg")
+	}
+	key, err = getKeyOpts("ECDSA-XXX", false)
+	if err == nil {
+		t.Fatalf("Expected Supported options: ECDSA,ECDSAP256 ... ")
+	}
+}
 
 func TestNew(t *testing.T) {
 	ccsnap := New()
@@ -402,10 +483,12 @@ func TestMain(m *testing.M) {
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
 				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
 	stub := getMockStub()
+	stub.ChannelID = "testChannel"
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
+	fmt.Printf("***** Config data %s", string(configBytes))
 	//upload valid message to HL
 	err = uplaodConfigToHL(stub, configBytes)
 	if err != nil {
