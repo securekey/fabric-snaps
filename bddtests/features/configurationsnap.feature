@@ -24,3 +24,19 @@ Feature:  Test configuration snap Features
 		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/config.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
         When client C1 query chaincode with error "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc1,invoke,query,b" on p0
 		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/configreset.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
+
+	@threeconfig
+	Scenario: Invoke Transaction Snap generateKeyPair and ECDSA function
+	    Given fabric has channel "mychannel" and p0 joined channel
+  		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
+		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
+		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateKeyPair,ECDSA,false" on p0
+        And response from "configurationsnap" to client C1 has key and key type is "ECDSA" on p0
+	@twoconfig
+	
+	Scenario: Invoke Transaction Snap generateKeyPair and RSA function
+	    Given fabric has channel "mychannel" and p0 joined channel
+  		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
+		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
+		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateKeyPair,RSA,false" on p0
+        And response from "configurationsnap" to client C1 has key and key type is "RSA" on p0
