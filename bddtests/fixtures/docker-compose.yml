@@ -61,7 +61,8 @@ services:
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: /bin/bash -c 'peer node start'
+    command: /bin/bash -c '/etc/hyperledger/softhsm2/install-softhsm2.sh && peer node start'
+    tty: true
     ports:
       - 7051:7051
       - 7053:7053
@@ -75,7 +76,6 @@ services:
         - ../../build/snaps/configurationscc.so:/opt/extsysccs/configurationscc.so
         - ../../build/snaps/eventsnap.so:/opt/extsysccs/eventsnap.so
         - ../../build/test/eventconsumersnap.so:/opt/extsysccs/eventconsumersnap.so
-        - ./config/snaps/:/opt/extsysccs/config
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
@@ -83,6 +83,7 @@ services:
         - ./config/mutual_tls/ca:/etc/hyperledger/mutual_tls/peer
         # TODO: Move cert to ledger and key to HSM
         - ./config/mutual_tls/client:/etc/hyperledger/mutual_tls/client
+        - ./softhsm2:/etc/hyperledger/softhsm2
     depends_on:
       - builder
       - orderer.example.com

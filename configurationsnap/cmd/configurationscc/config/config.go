@@ -9,10 +9,13 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/cloudflare/cfssl/log"
+	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp/pkcs11"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/pkg/errors"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -31,7 +34,7 @@ const (
 	customConfigName      = "config"
 )
 
-// Config contains the configuration for the config snap
+//Config contains the configuration for the config snap
 type Config struct {
 	// PeerID is the local ID of the peer
 	PeerID string
@@ -90,6 +93,7 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 				refreshInterval = minimumRefreshInterval
 			}
 		}
+
 	}
 	log.Debug("Refresh Intrval: %.0f", refreshInterval)
 
@@ -136,6 +140,155 @@ func GetPeerID(peerConfigPathOverride string) (string, error) {
 	}
 	peerID := peerConfig.GetString("peer.id")
 	return peerID, nil
+}
+
+//GetBCCSPOpts to get bccsp options from configurationcc config
+func GetBCCSPOpts(channelID string, peerConfigPath string) (*factory.FactoryOpts, error) {
+	var cfgopts *factory.FactoryOpts
+	peerMspID, err := GetPeerMSPID(peerConfigPath)
+	if err != nil {
+		return cfgopts, err
+	}
+	peerID, err := GetPeerID(peerConfigPath)
+	if err != nil {
+		return cfgopts, err
+	}
+	configKey := configmanagerApi.ConfigKey{MspID: peerMspID, PeerID: peerID, AppName: "configurationsnap"}
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+
+	csconfig, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
+	if err != nil {
+		return cfgopts, err
+	}
+
+	switch GetProvider(csconfig) {
+	case "PKCS11":
+		return getPKCSOptions(csconfig)
+	case "PLUGIN":
+		return getPluginOptions(csconfig)
+	default:
+		return nil, errors.Errorf("Provider '%s' is not supported", GetProvider(csconfig))
+	}
+}
+
+func getPluginOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
+
+	cfglib := GetLib(csconfig)
+	cfg := csconfig.GetStringMap("BCCSP.Security.Config")
+	logger.Debugf("BCCSP Plugin option config map %v", cfg)
+	pluginOpt := factory.PluginOpts{
+		Library: cfglib,
+		Config:  cfg,
+	}
+	opts := &factory.FactoryOpts{
+		ProviderName: "PLUGIN",
+		PluginOpts:   &pluginOpt,
+	}
+	logger.Debugf("BCCSP Plugin option config map %v", cfg)
+	return opts, nil
+}
+
+func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
+	//from config file
+	cfglib := GetLib(csconfig)
+	//if env variable was set get library config from it
+	//if no env was set parse input from ocnfig file
+	//and verify if lib exists
+	syslib, syspin, syslabel := FindPKCS11Lib(cfglib)
+	if syslib != "" {
+		cfglib = syslib
+	}
+	cfgpin := GetPin(csconfig)
+	if syspin != "" {
+		cfgpin = syspin
+	}
+	cfglabel := GetLabel(csconfig)
+	if syslabel != "" {
+		cfglabel = syslabel
+	}
+	ksopts := &pkcs11.FileKeystoreOpts{
+		KeyStorePath: GetKeystorePath(csconfig),
+	}
+	pkcsOpt := pkcs11.PKCS11Opts{
+		SecLevel:     GetLevel(csconfig),
+		HashFamily:   GetHashAlg(csconfig),
+		Ephemeral:    GetEphemeral(csconfig),
+		Library:      cfglib,
+		Pin:          cfgpin,
+		Label:        cfglabel,
+		FileKeystore: ksopts,
+	}
+	logger.Debugf("Creating PKCS11 provider with options %v", pkcsOpt)
+	opts := &factory.FactoryOpts{
+		ProviderName: "PKCS11",
+		Pkcs11Opts:   &pkcsOpt,
+	}
+
+	return opts, nil
+
+}
+
+//GetProvider returns provider
+func GetProvider(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.Provider")
+}
+
+//GetHashAlg returns hash alg
+func GetHashAlg(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.HashAlgorithm")
+}
+
+//GetEphemeral returns ephemeral
+func GetEphemeral(csconfig *viper.Viper) bool {
+	return csconfig.GetBool("BCCSP.Security.Ephemeral")
+}
+
+//GetLevel returns level
+func GetLevel(csconfig *viper.Viper) int {
+	return csconfig.GetInt("BCCSP.Security.Level")
+}
+
+//GetPin returns pin
+func GetPin(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.Pin")
+}
+
+//GetLib returns lib
+func GetLib(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.Library")
+}
+
+//GetLabel returns label
+func GetLabel(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.Label")
+}
+
+//GetKeystorePath returns keystorePath
+func GetKeystorePath(csconfig *viper.Viper) string {
+	return csconfig.GetString("BCCSP.Security.KeystorePath")
+}
+
+//FindPKCS11Lib to check which one of configured libs exist for current ARCH
+func FindPKCS11Lib(configuredLib string) (lib, pin, label string) {
+	lib = os.Getenv("PKCS11_LIB")
+	if lib == "" {
+		lib = os.Getenv("PKCS11_LIBRARY")
+	}
+	if lib == "" {
+		possibilities := strings.Split(configuredLib, ",")
+		for _, path := range possibilities {
+			if _, err := os.Stat(strings.TrimSpace(path)); !os.IsNotExist(err) {
+				lib = path
+				break
+			}
+		}
+	} else {
+		pin = os.Getenv("PKCS11_PIN")
+		label = os.Getenv("PKCS11_LABEL")
+	}
+	logger.Debugf("Found pkcs library %s %s %s", lib, pin, label)
+	return lib, pin, label
 }
 
 //GetDefaultRefreshInterval get default interval
