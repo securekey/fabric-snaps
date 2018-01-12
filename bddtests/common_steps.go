@@ -7,6 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package bddtests
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DATA-DOG/godog"
 	"github.com/golang/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -24,14 +30,12 @@ import (
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
-	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
-	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
-
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	bccsputils "github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/pkg/errors"
-
-	"github.com/DATA-DOG/godog"
+	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 )
 
 // CommonSteps contain BDDContext
@@ -364,6 +368,59 @@ func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 	return nil
 }
 
+func (d *CommonSteps) checkKeyGenResponse(ccID string, expectedKeyType string) error {
+	//key bytes returned
+	if queryValue == "" {
+		return fmt.Errorf("QueryValue is empty")
+	}
+	if strings.Contains(queryValue, "Error") {
+		return fmt.Errorf("QueryValue contains error: %s", queryValue)
+	}
+	//response contains public key bytes
+	raw := []byte(queryValue)
+	pk, err := bccsputils.DERToPublicKey(raw)
+	if err != nil {
+		return errors.Wrap(err, "failed marshalling der to public key")
+	}
+	switch k := pk.(type) {
+	case *ecdsa.PublicKey:
+		if !strings.Contains(expectedKeyType, "ECDSA") {
+			return errors.Errorf("Expected ECDSA key but got %v", k)
+		}
+		ecdsaPK, ok := pk.(*ecdsa.PublicKey)
+		if !ok {
+			return errors.New("failed casting to ECDSA public key. Invalid raw material")
+		}
+		ecPt := elliptic.Marshal(ecdsaPK.Curve, ecdsaPK.X, ecdsaPK.Y)
+		hash := sha256.Sum256(ecPt)
+		ski := hash[:]
+		if len(ski) == 0 {
+			return errors.New("Expected valid SKI for PK")
+		}
+
+	case *rsa.PublicKey:
+		if !strings.Contains(expectedKeyType, "RSA") {
+			return errors.Errorf("Expected RSA key but got %v", k)
+		}
+		rsaPK, ok := pk.(*rsa.PublicKey)
+		if !ok {
+			return errors.New("failed casting to ECDSA public key. Invalid raw material")
+		}
+		PubASN1, err := x509.MarshalPKIXPublicKey(rsaPK)
+		if err != nil {
+			return err
+		}
+		if len(PubASN1) == 0 {
+			return errors.New("Invalid RSA key")
+		}
+	default:
+
+		fmt.Printf("Not supported %v", k)
+	}
+
+	return nil
+}
+
 // createAndSendTransactionProposal ...
 func (d *CommonSteps) createAndSendTransactionProposal(channel sdkApi.Channel, chainCodeID string,
 	args []string, targets []apitxn.ProposalProcessor, transientData map[string][]byte) ([]*apitxn.TransactionProposalResponse, apitxn.TransactionID, error) {
@@ -546,5 +603,6 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 waits (\d+) seconds$`, d.wait)
 	s.Step(`^client C1 copies "([^"]*)" to "([^"]*)"$`, d.copyConfigFile)
 	s.Step(`^client C1 query chaincode with error "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.queryCCForError)
+	s.Step(`^response from "([^"]*)" to client C1 has key and key type is "([^"]*)" on p0$`, d.checkKeyGenResponse)
 
 }
