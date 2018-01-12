@@ -11,14 +11,16 @@ import (
 	"strings"
 	"time"
 
+	"encoding/json"
+
 	"github.com/cloudflare/cfssl/log"
 	errors "github.com/pkg/errors"
-
-	"encoding/json"
 
 	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/hyperledger/fabric/bccsp"
+	factory "github.com/hyperledger/fabric/bccsp/factory"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -26,7 +28,6 @@ import (
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
-
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
@@ -34,13 +35,14 @@ import (
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
 var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb.Response{
-	"healthCheck": healthCheck,
-	"save":        save,
-	"get":         get,
-	"delete":      delete,
-	"refresh":     refresh,
+	"healthCheck":     healthCheck,
+	"save":            save,
+	"get":             get,
+	"delete":          delete,
+	"refresh":         refresh,
+	"generateKeyPair": generateKeyPair,
 }
-
+var supportedAlgs = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024", "RSA2048", "RSA3072", "RSA4096"}
 var availableFunctions = functionSet()
 
 var logger = shim.NewLogger("configuration-snap")
@@ -177,6 +179,98 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	instance.Refresh(stub, peerMspID)
 	return shim.Success(nil)
+}
+
+//to generate key pair based on options submitted
+//expected keytype and ephemeral flag in args
+func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if len(args) < 2 {
+		return shim.Error(fmt.Sprintf("Required arguments are: key type and ephemeral flag"))
+	}
+	keyType := string(args[0])
+	ephemeral, err := strconv.ParseBool(string(args[1]))
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Ephemeral flag is not set"))
+	}
+	//check if requesteed option was supported
+	options, err := getKeyOpts(keyType, ephemeral)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//generate key
+	return generateKeyWithOpts(stub.GetChannelID(), options)
+}
+
+func getKeyOpts(keyType string, ephemeral bool) (bccsp.KeyGenOpts, error) {
+
+	switch keyType {
+	case "ECDSA":
+		return &bccsp.ECDSAKeyGenOpts{Temporary: ephemeral}, nil
+	case "ECDSAP256":
+		return &bccsp.ECDSAP256KeyGenOpts{Temporary: ephemeral}, nil
+	case "ECDSAP384":
+		return &bccsp.ECDSAP384KeyGenOpts{Temporary: ephemeral}, nil
+	case "RSA":
+		return &bccsp.RSAKeyGenOpts{Temporary: ephemeral}, nil
+	case "RSA1024":
+		return &bccsp.RSA1024KeyGenOpts{Temporary: ephemeral}, nil
+	case "RSA2048":
+		return &bccsp.RSA2048KeyGenOpts{Temporary: ephemeral}, nil
+	case "RSA3072":
+		return &bccsp.RSA3072KeyGenOpts{Temporary: ephemeral}, nil
+	case "RSA4096":
+		return &bccsp.RSA4096KeyGenOpts{Temporary: ephemeral}, nil
+	default:
+		supportedAlgsMsg := strings.Join(supportedAlgs, ",")
+		return nil, errors.Errorf("The key algorithm is invalid. Supported options: %s", supportedAlgsMsg)
+	}
+
+}
+
+//generateKeyWithOpts to generate key using BCCSP
+func generateKeyWithOpts(channelID string, opts bccsp.KeyGenOpts) pb.Response {
+
+	cfgopts, err := config.GetBCCSPOpts(channelID, peerConfigPath)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Debugf("BCCSP Plugin option config map %v", cfgopts)
+	//just once - initialize factory with options
+	//if factory was already initialized this call will be ignored
+	factory.InitFactories(cfgopts)
+	logger.Debugf("****Passing opts %s %v", cfgopts.ProviderName, cfgopts)
+	bccspsuite, err := factory.GetBCCSPFromOpts(cfgopts)
+	if err != nil {
+		logger.Debugf("Error initializing with options %s %s %s ", cfgopts.Pkcs11Opts.Library, cfgopts.Pkcs11Opts.Pin, cfgopts.Pkcs11Opts.Label)
+		return shim.Error(fmt.Sprintf("Got error from GetBCCSPFromOpts in %v", err))
+	}
+	k, err := bccspsuite.KeyGen(opts)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Got error from KeyGen in %v %v", opts, err))
+	}
+	return parseKey(k)
+}
+
+//pass generated key (private/public) and return public to caller
+func parseKey(k bccsp.Key) pb.Response {
+	logger.Debugf("Parsing key %v", k)
+	var pubKey bccsp.Key
+	var err error
+	if k.Private() {
+		pubKey, err = k.PublicKey()
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Error:getting public key %v", err))
+		}
+	} else {
+		pubKey = k
+	}
+	pubKeyBts, err := pubKey.Bytes()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Error:getting public key bytes %v", err))
+	}
+	logger.Debugf("***PubKey - len '%d' - SKI: '%v'", len(pubKeyBts), pubKey.SKI())
+	return shim.Success(pubKeyBts)
+
 }
 
 func periodicRefresh(channelID string, peerID string, peerMSPID string, refreshInterval time.Duration) {
