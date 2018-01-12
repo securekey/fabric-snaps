@@ -6,3 +6,15 @@
 cache:
     refreshInterval: 5s
 
+BCCSP:
+  Security:
+    Provider: "PKCS11"
+    HashAlgorithm: "SHA2"
+    Ephemeral: false
+    Level: 256
+    Pin: "98765432"
+    Label: "SkLogs"
+    Library: "/usr/lib/softhsm/libsofthsm2.so"
+    KeystorePath: ""
+    Config:
+     {"key":"a"}
