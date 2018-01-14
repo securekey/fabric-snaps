@@ -381,10 +381,18 @@ func (o *andOperation) and(grps []api.Group, index int) {
 	if index >= len(grps) {
 		var items []api.Item
 		for _, c := range o.stack.Groups() {
-			items = append(items, c.group.Items()[c.index])
+			groupItems := c.group.Items()
+			if c.index >= len(groupItems) {
+				// FIXME: Once in a while we see an 'index out of range' error, which causes a panic. Add this workaround
+				// for now until the problem is properly diagnosed.
+				logger.Errorf("***** Index %d is greater than or equal to number of items: %d. This is a problem that should be looked into!!! groupItems=%v, index=%d", c.index, len(groupItems), groupItems, index)
+			} else {
+				items = append(items, groupItems[c.index])
+			}
 		}
-		g := NewGroup(items)
-		o.result = append(o.result, g)
+		if len(items) > 0 {
+			o.result = append(o.result, NewGroup(items))
+		}
 	} else {
 		grp := grps[index]
 		items := grp.Items()

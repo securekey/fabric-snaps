@@ -20,7 +20,3 @@ Feature:  Test configuration snap Features
         When client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,endorseAndCommitTransaction,mychannel,example_cc,invoke,move,a,b,0" on p0
         And client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc,invoke,query,b" on p0
         And response from "txnsnapinvoker" to client C1 contains value "200"
-		#config without endorser - should fail
-		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/config.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
-        When client C1 query chaincode with error "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc1,invoke,query,b" on p0
-		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/configreset.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"

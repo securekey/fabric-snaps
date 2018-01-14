@@ -20,11 +20,12 @@ import (
 	"github.com/pkg/errors"
 
 	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
-	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
@@ -196,62 +197,53 @@ func (c *clientImpl) EndorseTransaction(channel sdkApi.Channel, endorseRequest *
 		ChaincodeID:  endorseRequest.ChaincodeID,
 	}
 
+	// TODO: Replace this code with the GO SDK's ChannelClient
 	responses, _, err := channel.SendTransactionProposal(request)
 	if err != nil {
 		return nil, errors.Errorf("Error sending transaction proposal: %s", err)
 	}
 
+	// TODO: Replace the following code with the GO SDK's endorsement validation logic
 	if len(responses) == 0 {
 		return nil, errors.Errorf("Did not receive any endorsements")
 	}
-	var validResponses []*apitxn.TransactionProposalResponse
-	var errorCount int
 	var errorResponses []string
 	for _, response := range responses {
 		if response.Err != nil {
-			errorCount++
 			errorResponses = append(errorResponses, response.Err.Error())
-		} else {
-			validResponses = append(validResponses, response)
 		}
 	}
-
-	if errorCount == len(responses) {
-		return nil, errors.Errorf(strings.Join(errorResponses, "\n"))
+	if len(errorResponses) > 0 {
+		return responses, errors.Errorf(strings.Join(errorResponses, "\n"))
+	}
+	if len(responses) != len(processors) {
+		return responses, errors.Errorf("only %d out of %d responses were received", len(responses), len(processors))
 	}
 
-	return validResponses, nil
+	return responses, nil
 }
 
 func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
-	responses []*apitxn.TransactionProposalResponse, registerTxEvent bool, registerTxEventTimeout time.Duration) error {
+	responses []*apitxn.TransactionProposalResponse, registerTxEvent bool) error {
 	c.RLock()
 	defer c.RUnlock()
-
-	logger.Debugf("Sending transaction for commit")
 
 	transaction, err := channel.CreateTransaction(responses)
 	if err != nil {
 		return errors.Errorf("Error creating transaction: %s", err)
 	}
-	done := make(chan bool)
-	fail := make(chan error)
+	logger.Debugf("Sending transaction [%s] for commit", transaction.Proposal.TxnID.ID)
+
+	var txStatusEventCh <-chan *eventapi.TxStatusEvent
 	txID := transaction.Proposal.TxnID
 	if registerTxEvent {
-		localPeer, err := c.config.GetLocalPeer()
+		events := eventservice.Get(channel.Name())
+		reg, eventch, err := events.RegisterTxStatusEvent(txID.ID)
 		if err != nil {
-			return errors.Errorf("GetLocalPeer return error [%v]", err)
+			return errors.Wrapf(err, "unable to register for TxStatus event for TxID [%s] on channel [%s]", txID, channel.Name())
 		}
-		eventHub, err := sdkFabApi.NewEventHub(c.client)
-		if err != nil {
-			return errors.Errorf("Failed sdkFabricTxn.GetDefaultImplEventHub() [%v]", err)
-		}
-		eventHub.SetPeerAddr(fmt.Sprintf("%s:%d", localPeer.EventHost, localPeer.EventPort), "", "")
-		if err := eventHub.Connect(); err != nil {
-			return errors.Errorf("Failed eventHub.Connect() [%v]", err)
-		}
-		defer eventHub.Disconnect()
-		done, fail = c.registerTxEvent(txID, eventHub)
+		defer events.Unregister(reg)
+		txStatusEventCh = eventch
 	}
 	resp, err := channel.SendTransaction(transaction)
 	if err != nil {
@@ -264,10 +256,12 @@ func (c *clientImpl) CommitTransaction(channel sdkApi.Channel,
 
 	if registerTxEvent {
 		select {
-		case <-done:
-		case <-fail:
-			return errors.Errorf("SendTransaction Error received from eventhub for txid(%s) error(%v)", txID.ID, fail)
-		case <-time.After(time.Second * registerTxEventTimeout):
+		case txStatusEvent := <-txStatusEventCh:
+			if txStatusEvent.TxValidationCode != pb.TxValidationCode_VALID {
+				return errors.Errorf("transaction [%s] did not commit successfully. Code: [%s]", txID.ID, txStatusEvent.TxValidationCode)
+			}
+			logger.Debugf("Transaction [%s] successfully committed", txID.ID)
+		case <-time.After(c.config.GetCommitTimeout()):
 			return errors.Errorf("SendTransaction Didn't receive tx event for txid(%s)", txID.ID)
 		}
 	}
@@ -471,24 +465,4 @@ func (c *clientImpl) GetConfig() sdkConfigApi.Config {
 
 func (c *clientImpl) GetUser() sdkApi.User {
 	return c.client.UserContext()
-}
-
-// RegisterTxEvent registers on the given eventhub for the give transaction
-// returns a boolean channel which receives true when the event is complete
-// and an error channel for errors
-func (c *clientImpl) registerTxEvent(txID apitxn.TransactionID, eventHub sdkApi.EventHub) (chan bool, chan error) {
-	done := make(chan bool)
-	fail := make(chan error)
-
-	eventHub.RegisterTxEvent(txID, func(txId string, errorCode sdkpb.TxValidationCode, err error) {
-		if err != nil {
-			logger.Debugf("Received error event for txid(%s)\n", txId)
-			fail <- err
-		} else {
-			logger.Debugf("Received success event for txid(%s)\n", txId)
-			done <- true
-		}
-	})
-
-	return done, fail
 }

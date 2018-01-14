@@ -8,10 +8,24 @@
 txnsnap:
   loglevel: debug
 
-# Membership list polling interval and tls flag
+  # Endorser selection attempts
   selection:
     maxattempts: 5
     interval: 2s
+
+  # Endorsement options
+  endorsement:
+    # maxAttempts is the number of attempts that should be made
+    # until a successfull endorsement is received from all endorsers
+    maxattempts: 5
+
+    # interval is the time between endorsement attempts
+    interval: 2s
+
+  # Commit options
+  commit:
+    # timeout is the time to wait for a commit
+    timeout: 5s
 
 # Configurations for the fabric client
 client:

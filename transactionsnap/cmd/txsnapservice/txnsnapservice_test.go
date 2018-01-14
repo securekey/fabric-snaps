@@ -14,6 +14,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
+	"github.com/securekey/fabric-snaps/mocks/event/mockproducer"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks/mockchpeer"
 
 	"github.com/gogo/protobuf/proto"
@@ -32,6 +35,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	evservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
@@ -44,12 +48,14 @@ var mspID = "Org1MSP"
 var mockEndorserServer *fcmocks.MockEndorserServer
 var mockBroadcastServer *fcmocks.MockBroadcastServer
 var mockEventServer *fcmocks.MockEventServer
+var eventProducer *mockproducer.MockProducer
 
 var endorserTestURL = "127.0.0.1:7040"
 var broadcastTestURL = "127.0.0.1:7041"
 var endorserTestEventHost = "127.0.0.1"
 var endorserTestEventPort = 7053
 var membership api.MembershipManager
+var txSnapConfig api.Config
 var fcClient api.Client
 
 var validRootCA = `-----BEGIN CERTIFICATE-----
@@ -85,10 +91,9 @@ func (c *sampleConfig) GetMspConfigPath() string {
 	return "../sampleconfig/msp"
 }
 
-var txService TxServiceImpl
-
 func TestEndorseTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
+	txService := newMockTxService(nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -104,7 +109,7 @@ func TestEndorseTransaction(t *testing.T) {
 		t.Fatalf("ChannelID is required field")
 	}
 
-	snapTxReq = createTransactionSnapRequest("endorsetransaction", "", "testChannel", false, nil)
+	snapTxReq = createTransactionSnapRequest("endorsetransaction", "", channelID, false, nil)
 	fmt.Printf("%v\n", txService)
 	_, err = txService.EndorseTransaction(&snapTxReq, nil)
 	if err == nil {
@@ -119,7 +124,8 @@ func TestEndorseTransactionWithPeerFilter(t *testing.T) {
 		Args: []string{channelID},
 	}
 
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, peerFilterOpts)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, peerFilterOpts)
+	txService := newMockTxService(nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -131,7 +137,8 @@ func TestEndorseTransactionWithPeerFilter(t *testing.T) {
 }
 
 func TestCommitTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
+	txService := newMockTxService(nil)
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -140,25 +147,23 @@ func TestCommitTransaction(t *testing.T) {
 	if txnProposalResponse == nil {
 		t.Fatalf("Expected proposal response")
 	}
-	timeDuration := time.Duration(1) * time.Millisecond
-	validationCode, err := txService.CommitTransaction("testChannel", txnProposalResponse, false, timeDuration)
+	validationCode, err := txService.CommitTransaction(channelID, txnProposalResponse, false)
 	if err != nil {
 		t.Fatalf("Expected to commit tx")
 	}
 	if validationCode != 0 {
 		t.Fatalf("Expected to commit tx")
 	}
-	_, err = txService.CommitTransaction("", txnProposalResponse, false, timeDuration)
+	_, err = txService.CommitTransaction("", txnProposalResponse, false)
 	if err == nil {
 		t.Fatalf("ChannelID is required in commit transaction")
 	}
 
-	_, err = txService.CommitTransaction("channelID", nil, false, timeDuration)
+	_, err = txService.CommitTransaction("channelID", nil, false)
 	if err == nil {
 		t.Fatalf("TxProposalResponse is null. Expected error")
 	}
-	timeDuration = time.Duration(-1) * time.Millisecond
-	_, err = txService.CommitTransaction("channelID", nil, false, timeDuration)
+	_, err = txService.CommitTransaction("channelID", nil, false)
 	if err == nil {
 		t.Fatalf("Expected error:'Error creating transaction: at least one proposal response is necessary'")
 	}
@@ -166,7 +171,20 @@ func TestCommitTransaction(t *testing.T) {
 }
 
 func TestEndorseCommitTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", "testChannel", false, nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil)
+	txService := newMockTxService(func(responses []*apitxn.TransactionProposalResponse) error {
+		go func() {
+			time.Sleep(2 * time.Second)
+			eventProducer.ProduceEvent(
+				mockevent.NewFilteredBlockEvent(
+					channelID,
+					mockevent.NewFilteredTx(responses[0].Proposal.TxnID.ID, pb.TxValidationCode_VALID),
+				),
+			)
+		}()
+		return nil
+	})
+
 	fmt.Printf("%v\n", txService)
 	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -175,8 +193,8 @@ func TestEndorseCommitTransaction(t *testing.T) {
 	if txnProposalResponse == nil {
 		t.Fatalf("Expected proposal response")
 	}
-	timeDuration := time.Duration(1) * time.Millisecond
-	validationCode, err := txService.EndorseAndCommitTransaction(&snapTxReq, nil, timeDuration)
+
+	validationCode, err := txService.EndorseAndCommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Expected to commit tx")
 	}
@@ -187,6 +205,7 @@ func TestEndorseCommitTransaction(t *testing.T) {
 }
 
 func TestVerifyProposalSignature(t *testing.T) {
+	txService := newMockTxService(nil)
 	err := txService.VerifyTxnProposalSignature("", nil)
 	if err == nil {
 		t.Fatalf("ChannelID is mandatory field")
@@ -196,6 +215,15 @@ func TestVerifyProposalSignature(t *testing.T) {
 		t.Fatalf("SignedProposal is mandatory field")
 	}
 
+}
+
+func newMockTxService(callback EndorsedCallback) *TxServiceImpl {
+	return &TxServiceImpl{
+		Config:     txSnapConfig,
+		FcClient:   fcClient,
+		Membership: membership,
+		Callback:   callback,
+	}
 }
 
 func TestMain(m *testing.M) {
@@ -236,37 +264,36 @@ func TestMain(m *testing.M) {
 	configmgmtService.Initialize(stub, mspID)
 
 	PeerConfigPath = "../sampleconfig"
-	config, err := config.NewConfig("../sampleconfig", channelID)
+	txSnapConfig, err = config.NewConfig("../sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 
-	fcClient, err = client.GetInstance("testchannel", &sampleConfig{config})
+	fcClient, err = client.GetInstance(channelID, &sampleConfig{txSnapConfig})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
-	configureClient(fcClient, &sampleConfig{config}, configData)
+	configureClient(fcClient, &sampleConfig{txSnapConfig}, configData)
 
 	p1 = peer("grpc://peer1:7051", org1)
 	p2 = peer("grpc://peer2:7051", org1)
-	membership = mocks.NewMockMembershipManager(nil).Add("testChannel", p1, p2)
-
-	txService.Config = config
-	txService.FcClient = fcClient
-	txService.Membership = membership
-	//txService = TxServiceImpl{Config: config, FcClient: fcClient, Membership: membership}
+	membership = mocks.NewMockMembershipManager(nil).Add(channelID, p1, p2)
 	mockEndorserServer = fcmocks.StartEndorserServer(endorserTestURL)
 	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
-	mockEventServer, err = fcmocks.StartMockEventServer(fmt.Sprintf("%s:%d", endorserTestEventHost, endorserTestEventPort))
-	if err != nil {
-		panic(err.Error())
+	if eventProducer == nil {
+		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())
+		localservice.Register(channelID, eventService)
+		if err != nil {
+			panic(err.Error())
+		}
+		eventProducer = producer
 	}
-	testChannel, err := fcClient.NewChannel("testChannel")
+	testChannel, err := fcClient.NewChannel(channelID)
 	if err != nil {
 		panic(fmt.Sprintf("NewChannel return error: %v", err))
 	}
 	builder := &fcmocks.MockConfigUpdateEnvelopeBuilder{
-		ChannelID: "testChannel",
+		ChannelID: channelID,
 		MockConfigGroupBuilder: fcmocks.MockConfigGroupBuilder{
 			ModPolicy:      "Admins",
 			MSPNames:       []string{"Org1MSP"},

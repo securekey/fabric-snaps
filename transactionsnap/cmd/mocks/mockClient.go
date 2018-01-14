@@ -7,8 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	"time"
-
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -58,10 +56,9 @@ func (c *MockClient) EndorseTransaction(channel sdkApi.Channel, request *transac
 // @param {Channel} channel on which the transaction is taking place
 // @param {[]TransactionProposalResponse} responses from endorsers
 // @param {bool} register for Tx event
-// @param {time.Duration} register for Tx event timeout in seconds
 // @returns {error} error, if any
-func (c *MockClient) CommitTransaction(channel sdkApi.Channel, txres []*apitxn.TransactionProposalResponse, register bool, timeout time.Duration) error {
-	return c.fcClient.CommitTransaction(channel, txres, register, timeout)
+func (c *MockClient) CommitTransaction(channel sdkApi.Channel, txres []*apitxn.TransactionProposalResponse, register bool) error {
+	return c.fcClient.CommitTransaction(channel, txres, register)
 }
 
 // QueryChannels joined by the given peer

@@ -27,7 +27,6 @@ import (
 )
 
 var logger = logging.NewLogger("tx-service")
-var registerTxEventTimeout time.Duration = 30
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
@@ -39,6 +38,10 @@ var DoIntializeChannel = true
 type clientServiceImpl struct {
 }
 
+// EndorsedCallback is a function that is invoked after the endorsement
+// phase of EndorseAndCommitTransaction. (Used in unit tests.)
+type EndorsedCallback func([]*apitxn.TransactionProposalResponse) error
+
 var clientService = newClientService()
 
 //TxServiceImpl used to create transaction service
@@ -46,6 +49,11 @@ type TxServiceImpl struct {
 	Config     api.Config
 	FcClient   api.Client
 	Membership api.MembershipManager
+
+	// Callback is invoked after the endorsement
+	// phase of EndorseAndCommitTransaction
+	// (Used in unit tests.)
+	Callback EndorsedCallback
 }
 
 //Get will return txService to caller
@@ -142,15 +150,41 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 		Targets:       peers,
 		PeerFilter:    peerFilter,
 	}
-	tpxResponse, err := txs.FcClient.EndorseTransaction(channel, request)
-	if err != nil {
-		return nil, err
+
+	// TODO: The following retry logic should be replaced with the retry logic in the GO SDK (when it becomes available)
+	var tpxResponses []*apitxn.TransactionProposalResponse
+	var attemptNum int
+	var lastErr error
+	remainingAttempts := txs.Config.GetEndorsementMaxAttempts()
+	for remainingAttempts > 0 {
+		attemptNum++
+		remainingAttempts--
+		tpxResponses, err = txs.FcClient.EndorseTransaction(channel, request)
+		txID := "unknown"
+		if len(tpxResponses) > 0 {
+			txID = tpxResponses[0].Proposal.TxnID.ID
+		}
+		if err != nil {
+			lastErr = err
+			if remainingAttempts > 0 {
+				logger.Warnf("Received error when endorsing Tx [%s] on attempt #%d: [%s]. Remaining attempts: %d. Retrying in %s", txID, attemptNum, err, remainingAttempts, txs.Config.GetEndorsementRetryInterval())
+				time.Sleep(txs.Config.GetEndorsementRetryInterval())
+			} else {
+				logger.Warnf("Received error when endorsing Tx [%s] on attempt #%d. Returning error - Err: [%s]", txID, attemptNum, err)
+				return nil, err
+			}
+		} else {
+			if lastErr != nil {
+				logger.Infof("Retry was successfull for Tx [%s] on attempt #%d.", txID, attemptNum)
+			}
+			break
+		}
 	}
-	return tpxResponse, nil
+	return tpxResponses, nil
 }
 
 //CommitTransaction use to comit the transaction
-func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*apitxn.TransactionProposalResponse, registerTxEvent bool, timeout time.Duration) (pb.TxValidationCode, error) {
+func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*apitxn.TransactionProposalResponse, registerTxEvent bool) (pb.TxValidationCode, error) {
 	if channelID == "" {
 		return pb.TxValidationCode(-1), errors.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
 	}
@@ -161,7 +195,7 @@ func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*api
 		return pb.TxValidationCode(-1), errors.Errorf("Cannot create channel %v", err)
 	}
 
-	err = txs.FcClient.CommitTransaction(channel, tpResponses, registerTxEvent, registerTxEventTimeout)
+	err = txs.FcClient.CommitTransaction(channel, tpResponses, registerTxEvent)
 	if err != nil {
 		return pb.TxValidationCode(-1), errors.Errorf("CommitTransaction returned error: %v", err)
 	}
@@ -170,7 +204,7 @@ func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*api
 }
 
 //EndorseAndCommitTransaction use to endorse and commit transaction
-func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer, timeout time.Duration) (pb.TxValidationCode, error) {
+func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) (pb.TxValidationCode, error) {
 
 	if snapTxRequest == nil {
 		return pb.TxValidationCode(-1), errors.Errorf("SnapTxRequest is required")
@@ -196,8 +230,14 @@ func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTra
 	if err != nil {
 		return pb.TxValidationCode(-1), err
 	}
-	err = txs.FcClient.CommitTransaction(channel, tpxResponse, snapTxRequest.RegisterTxEvent, registerTxEventTimeout)
 
+	if txs.Callback != nil {
+		if err := txs.Callback(tpxResponse); err != nil {
+			return pb.TxValidationCode(-1), err
+		}
+	}
+
+	err = txs.FcClient.CommitTransaction(channel, tpxResponse, snapTxRequest.RegisterTxEvent)
 	if err != nil {
 		return pb.TxValidationCode(-1), errors.Errorf("CommitTransaction returned error: %v", err)
 	}
