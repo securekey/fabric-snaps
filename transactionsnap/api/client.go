@@ -7,8 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
-	"time"
-
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -63,9 +61,8 @@ type Client interface {
 	// @param {Channel} channel on which the transaction is taking place
 	// @param {[]TransactionProposalResponse} responses from endorsers
 	// @param {bool} register for Tx event
-	// @param {time.Duration} register for Tx event timeout in seconds
 	// @returns {error} error, if any
-	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool, time.Duration) error
+	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool) error
 
 	// QueryChannels joined by the given peer
 	// @param {Peer} The peer to query

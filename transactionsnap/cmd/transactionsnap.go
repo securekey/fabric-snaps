@@ -10,7 +10,6 @@ import (
 
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -26,16 +25,13 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
 )
 
-// The newTxID is added so the unit test can access the new transaction id generated in transactionsnap
-var newTxID apitxn.TransactionID
-
-//used for testing
-var peerConfigPath = ""
-
-var registerTxEventTimeout time.Duration = 30
+// txServiceProvider is used by unit tests
+type txServiceProvider func(channelID string) (*txsnapservice.TxServiceImpl, error)
 
 //TxnSnap implements endorse transaction and commit transaction
 type TxnSnap struct {
+	// getTxService is used by unit tests
+	getTxService txServiceProvider
 }
 
 // clientServiceImpl implements client service
@@ -48,7 +44,9 @@ var logger = logging.NewLogger("transaction-snap")
 
 // New chaincode implementation
 func New() shim.Chaincode {
-	return &TxnSnap{}
+	return &TxnSnap{getTxService: func(channelID string) (*txsnapservice.TxServiceImpl, error) {
+		return txsnapservice.Get(channelID)
+	}}
 }
 
 // Init snap
@@ -66,7 +64,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	switch function {
 	case "endorseTransaction":
 
-		tpResponses, err := endorseTransaction(stub.GetArgs())
+		tpResponses, err := es.endorseTransaction(stub.GetArgs())
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -77,7 +75,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
 
-		_, err := commitTransaction(stub.GetArgs(), registerTxEventTimeout)
+		_, err := es.commitTransaction(stub.GetArgs())
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -86,7 +84,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	case "endorseAndCommitTransaction":
 
-		err := endorseAndCommitTransaction(stub.GetArgs())
+		err := es.endorseAndCommitTransaction(stub.GetArgs())
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
@@ -99,12 +97,12 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: "Not enough arguments in call to verify transaction proposal signature"}
 		}
 
-		if err := verifyTxnProposalSignature(args); err != nil {
+		if err := es.verifyTxnProposalSignature(args); err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 	case "getPeersOfChannel":
-		payload, err := getPeersOfChannel(args)
+		payload, err := es.getPeersOfChannel(args)
 		if err != nil {
 			logger.Errorf("getPeersOfChannel error: %s", err.Error())
 			return shim.Error(err.Error())
@@ -118,7 +116,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 // getPeersOfChannel returns peers that are available for that channel
-func getPeersOfChannel(args []string) ([]byte, error) {
+func (es *TxnSnap) getPeersOfChannel(args []string) ([]byte, error) {
 
 	if len(args) < 1 || args[0] == "" {
 
@@ -128,7 +126,7 @@ func getPeersOfChannel(args []string) ([]byte, error) {
 	// First argument is channel
 	channel := args[0]
 	logger.Debugf("Retrieving peers on channel: %s", channel)
-	srvc, err := txsnapservice.Get(channel)
+	srvc, err := es.getTxService(channel)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +156,7 @@ func getPeersOfChannel(args []string) ([]byte, error) {
 	return peerBytes, nil
 }
 
-func endorseTransaction(args [][]byte) ([]*apitxn.TransactionProposalResponse, error) {
+func (es *TxnSnap) endorseTransaction(args [][]byte) ([]*apitxn.TransactionProposalResponse, error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
@@ -181,7 +179,7 @@ func endorseTransaction(args [][]byte) ([]*apitxn.TransactionProposalResponse, e
 
 	}
 	logger.Debug("Endorser args:", ccargs)
-	srvc, err := txsnapservice.Get(snapTxRequest.ChannelID)
+	srvc, err := es.getTxService(snapTxRequest.ChannelID)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +192,7 @@ func endorseTransaction(args [][]byte) ([]*apitxn.TransactionProposalResponse, e
 	return tpxResponse, nil
 }
 
-func commitTransaction(args [][]byte, timeout time.Duration) (pb.TxValidationCode, error) {
+func (es *TxnSnap) commitTransaction(args [][]byte) (pb.TxValidationCode, error) {
 	if len(args) < 4 {
 		return pb.TxValidationCode(-1), errors.New("Not enough arguments in call to commit transaction")
 	}
@@ -214,11 +212,11 @@ func commitTransaction(args [][]byte, timeout time.Duration) (pb.TxValidationCod
 	if err := json.Unmarshal(args[2], &tpResponses); err != nil {
 		return pb.TxValidationCode(-1), errors.Errorf("Cannot unmarshal responses")
 	}
-	srvc, err := txsnapservice.Get(channelID)
+	srvc, err := es.getTxService(channelID)
 	if err != nil {
 		return pb.TxValidationCode(-1), err
 	}
-	validationCode, err := srvc.CommitTransaction(channelID, tpResponses, registerTxEvent, registerTxEventTimeout)
+	validationCode, err := srvc.CommitTransaction(channelID, tpResponses, registerTxEvent)
 	if err != nil {
 		return validationCode, errors.Errorf("CommitTransaction returned error: %v", err)
 	}
@@ -227,50 +225,29 @@ func commitTransaction(args [][]byte, timeout time.Duration) (pb.TxValidationCod
 
 //endorseAndCommitTransaction returns error
 
-func endorseAndCommitTransaction(args [][]byte) error {
+func (es *TxnSnap) endorseAndCommitTransaction(args [][]byte) error {
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
 		return errors.New("Not enough arguments in call to endorse and commit transaction")
 	}
-	//
+
 	snapTxRequest, err := getSnapTransactionRequest(args[1])
 	if err != nil {
 		return err
 	}
 
-	tpxResponses, err := endorseTransaction(args)
+	srvc, err := es.getTxService(snapTxRequest.ChannelID)
 	if err != nil {
 		return err
 	}
-	//used for testing
-	newTxID = tpxResponses[0].Proposal.TxnID
 
-	b := []byte{}
-	b = strconv.AppendBool(b, snapTxRequest.RegisterTxEvent)
-	respBts, err := json.Marshal(tpxResponses)
-	if err != nil {
-		return err
-	}
-	//compose args for commit
-	commitArgs := [][]byte{}
-	commitArgs = append(commitArgs, []byte(""))
-	commitArgs = append(commitArgs, []byte(snapTxRequest.ChannelID))
-	commitArgs = append(commitArgs, respBts)
-	commitArgs = append(commitArgs, b)
-
-	// Channel already checked in endorseTransaction
-	txValidationCode, err := commitTransaction(commitArgs, registerTxEventTimeout)
-
-	if err != nil {
+	if _, err := srvc.EndorseAndCommitTransaction(snapTxRequest, nil); err != nil {
 		return errors.Errorf("CommitTransaction returned error: %v", err)
-	}
-	if txValidationCode < 0 {
-		return errors.Errorf("CommitTransaction returned negative validation code. Transaction was not committed")
 	}
 	return nil
 }
 
-func verifyTxnProposalSignature(args [][]byte) error {
+func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) error {
 	if len(args) < 1 {
 		return errors.New("Expected arg here containing channelID")
 	}
@@ -280,7 +257,7 @@ func verifyTxnProposalSignature(args [][]byte) error {
 	if err := proto.Unmarshal(args[2], signedProposal); err != nil {
 		return err
 	}
-	srvc, err := txsnapservice.Get(channelID)
+	srvc, err := es.getTxService(channelID)
 	if err != nil {
 		return err
 	}

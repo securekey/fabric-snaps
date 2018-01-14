@@ -20,13 +20,15 @@ type Config interface {
 	GetTLSRootCertPath() string
 	GetTLSCertPath() string
 	GetTLSKeyPath() string
-	GetMembershipPollInterval() time.Duration
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string
 	GetPeerConfig() *viper.Viper
 	GetConfigBytes() []byte
 	GetEndorserSelectionMaxAttempts() int
 	GetEndorserSelectionInterval() time.Duration
+	GetEndorsementMaxAttempts() int
+	GetEndorsementRetryInterval() time.Duration
+	GetCommitTimeout() time.Duration
 }
 
 // PeerConfig represents the server addresses of a fabric peer
