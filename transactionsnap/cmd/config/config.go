@@ -25,11 +25,14 @@ import (
 )
 
 const (
-	configFileName              = "config"
-	peerConfigFileName          = "core"
-	cmdRootPrefix               = "core"
-	defaultSelectionMaxAttempts = 1
-	defaultSelectionInterval    = time.Second
+	configFileName                  = "config"
+	peerConfigFileName              = "core"
+	cmdRootPrefix                   = "core"
+	defaultSelectionMaxAttempts     = 1
+	defaultSelectionInterval        = time.Second
+	defaultEndorsementMaxAttempts   = 3
+	defaultEndorsementRetryInterval = 2 * time.Second
+	defaultCommitTimeout            = 30 * time.Second
 )
 
 var logger = logging.NewLogger("txn-snap-config")
@@ -163,11 +166,6 @@ func (c *Config) GetTLSKeyPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.key.file"))
 }
 
-// GetMembershipPollInterval get membership pollinterval
-func (c *Config) GetMembershipPollInterval() time.Duration {
-	return c.txnSnapConfig.GetDuration("txnsnap.membership.pollinterval")
-}
-
 // GetGRPCProtocol to get grpc protocol
 func (c *Config) GetGRPCProtocol() string {
 	if c.peerConfig.GetBool("peer.tls.enabled") {
@@ -216,6 +214,35 @@ func (c *Config) GetEndorserSelectionInterval() time.Duration {
 	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
 	if interval == 0 {
 		return defaultSelectionInterval
+	}
+	return interval
+}
+
+// GetEndorsementMaxAttempts returns the maximum number of attempts
+// at successful endorsements.
+func (c *Config) GetEndorsementMaxAttempts() int {
+	maxAttempts := c.txnSnapConfig.GetInt("txnsnap.endorsement.maxattempts")
+	if maxAttempts == 0 {
+		return defaultEndorsementMaxAttempts
+	}
+	return maxAttempts
+}
+
+// GetEndorsementRetryInterval is the amount of time to wait between
+// attempts at endorsements.
+func (c *Config) GetEndorsementRetryInterval() time.Duration {
+	interval := c.txnSnapConfig.GetDuration("txnsnap.endorsement.interval")
+	if interval == 0 {
+		return defaultEndorsementRetryInterval
+	}
+	return interval
+}
+
+// GetCommitTimeout is the amount of time to wait for a commit.
+func (c *Config) GetCommitTimeout() time.Duration {
+	interval := c.txnSnapConfig.GetDuration("txnsnap.commit.timeout")
+	if interval == 0 {
+		return defaultCommitTimeout
 	}
 	return interval
 }

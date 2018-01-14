@@ -7,10 +7,24 @@
 txnsnap:
   loglevel: debug
 
-# Membership list polling interval and tls flag
+  # Endorser selection attempts
   selection:
-    maxattempts: 20
+    maxattempts: 10
     interval: 1s
+
+  # Endorsement options
+  endorsement:
+    # maxAttempts is the number of attempts that should be made
+    # until a successfull endorsement is received from all endorsers
+    maxattempts: 5
+
+    # interval is the time between endorsement attempts
+    interval: 2s
+
+  # Commit options
+  commit:
+    # timeout is the time to wait for a commit
+    timeout: 60s
 
 
 # Configurations for the fabric client
@@ -44,28 +58,10 @@ client:
 
     # [Optional]. Client key and cert for TLS handshake with peers and orderers
     client:
-      keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
-      certpem: |
-        -----BEGIN CERTIFICATE-----
-        MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
-        gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
-        bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
-        aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
-        Fw0xNzEyMDEyMTEzMDBaFw0xODEyMDEyMTEzMDBaMGMxCzAJBgNVBAYTAkNBMRAw
-        DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
-        eGN0bDEMMAoGA1UECxMDTGFiMQ8wDQYDVQQDDAZzZGtfZ28wdjAQBgcqhkjOPQIB
-        BgUrgQQAIgNiAAT6I1CGNrkchIAEmeJGo53XhDsoJwRiohBv2PotEEGuO6rMyaOu
-        pulj2VOj+YtgWw4ZtU49g4Nv6rq1QlKwRYyMwwRJSAZHIUMhYZjcDi7YEOZ3Fs1h
-        xKmIxR+TTR2vf9KjgZAwgY0wDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG
-        AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDwS3xhpAWs81OVWvZt+iUNL
-        z26DMB8GA1UdIwQYMBaAFLRasbknomawJKuQGiyKs/RzTCujMBgGA1UdEQQRMA+C
-        DWZhYnJpY19zZGtfZ28wCgYIKoZIzj0EAwQDgYwAMIGIAkIAk1MxMogtMtNO0rM8
-        gw2rrxqbW67ulwmMQzp6EJbm/28T2pIoYWWyIwpzrquypI7BOuf8is5b7Jcgn9oz
-        7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
-        3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
-        -----END CERTIFICATE-----
+
       # Certificate location absolute path
-#      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+      keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
 
 # Global configuration for peer, event service and orderer timeouts
   peer:
