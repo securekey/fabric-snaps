@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31f6af4d_48485955",
+        "filename": "transactionsnap/cmd/client/pgresolver/groupsimpl.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-15T21:54:40Z",
+      "side": 1,
+      "message": "same label as first index",
+      "range": {
+        "startLine": 388,
+        "startChar": 145,
+        "endLine": 388,
+        "endChar": 151
+      },
+      "revId": "9237a4383987bd20c4cc508f59dd5ec9cf8af403",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d66326b2_b299daf7",
+        "filename": "transactionsnap/cmd/client/pgresolver/groupsimpl.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-15T21:54:40Z",
+      "side": 1,
+      "message": "should this Index be labeled differently than the last Index to distinguish the two?\nmaybe andOperation index vs stack group index?",
+      "range": {
+        "startLine": 388,
+        "startChar": 24,
+        "endLine": 388,
+        "endChar": 30
+      },
+      "revId": "9237a4383987bd20c4cc508f59dd5ec9cf8af403",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
