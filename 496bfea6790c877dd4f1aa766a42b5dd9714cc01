@@ -175,6 +175,30 @@
       "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd5bdf85_9469db1f",
+        "filename": "transactionsnap/cmd/transactionsnap_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-15T14:21:57Z",
+      "side": 1,
+      "message": "Actually, this needs to be done here since the local event service must be registered once - and only once.",
+      "parentUuid": "3b5791ea_118988fc",
+      "range": {
+        "startLine": 813,
+        "startChar": 4,
+        "endLine": 813,
+        "endChar": 24
+      },
+      "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
