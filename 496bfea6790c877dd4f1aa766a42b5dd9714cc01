@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "132dbde3_8ef358fa",
+        "filename": "bddtests/fixtures/config/snaps/txnsnap/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-15T00:54:26Z",
+      "side": 1,
+      "message": "did the embedded cert cause an issue?",
+      "range": {
+        "startLine": 64,
+        "startChar": 6,
+        "endLine": 64,
+        "endChar": 14
+      },
+      "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82a84fe8_dc6aaa58",
+        "filename": "transactionsnap/cmd/client/pgresolver/groupsimpl.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-15T00:54:26Z",
+      "side": 1,
+      "message": "anything else we can log to help with debugging?",
+      "range": {
+        "startLine": 388,
+        "startChar": 4,
+        "endLine": 388,
+        "endChar": 17
+      },
+      "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7907b9d5_2380aef1",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-15T00:54:26Z",
+      "side": 1,
+      "message": "Appears the purpose of this var is to inject a test impl from looking at the test file.",
+      "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bed851ab_f13b9794",
+        "filename": "transactionsnap/cmd/transactionsnap_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-15T00:54:26Z",
+      "side": 1,
+      "message": "does this get called multiple times or can be initialized elsewhere?",
+      "range": {
+        "startLine": 813,
+        "startChar": 4,
+        "endLine": 813,
+        "endChar": 24
+      },
+      "revId": "496bfea6790c877dd4f1aa766a42b5dd9714cc01",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
