@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb6eda3b_1827224d",
+        "filename": "bddtests/common_steps.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-15T18:56:44Z",
+      "side": 1,
+      "message": "Return error here",
+      "revId": "554b6cb65892124310e7bfa6e95da4d51d127a63",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09e2aaac_c15f7c56",
+        "filename": "configurationsnap/cmd/configurationscc/config/config.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-15T18:56:44Z",
+      "side": 1,
+      "message": "returns pin",
+      "revId": "554b6cb65892124310e7bfa6e95da4d51d127a63",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a5eec4_093b60bd",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-15T18:56:44Z",
+      "side": 1,
+      "message": "Remove print?",
+      "revId": "554b6cb65892124310e7bfa6e95da4d51d127a63",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
