@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0133972f_7f7aad8d",
+        "filename": "bddtests/common_steps.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-15T20:30:32Z",
+      "side": 1,
+      "message": "RSA",
+      "range": {
+        "startLine": 407,
+        "startChar": 40,
+        "endLine": 407,
+        "endChar": 45
+      },
+      "revId": "ca0ffbba567682257582d5aa8704df92a9a91387",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
