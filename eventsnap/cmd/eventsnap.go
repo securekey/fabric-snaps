@@ -172,7 +172,7 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 	for {
 		time.Sleep(channelConfigCheckDuration)
 
-		logger.Infof("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
+		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
 		if config, err := config.New(channelID, ""); err != nil {
 			logger.Warningf("Error reading configuration: %s\n", err)
 		} else if config.ChannelConfigLoaded {
@@ -183,7 +183,7 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 			}
 			return
 		}
-		logger.Infof("... EventSnap configuration is not available yet for channel [%s]\n", channelID)
+		logger.Debugf("... EventSnap configuration is not available yet for channel [%s]\n", channelID)
 	}
 }
 

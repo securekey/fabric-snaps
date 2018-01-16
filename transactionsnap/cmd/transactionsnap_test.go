@@ -35,6 +35,10 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	evservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
+	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
+	"github.com/securekey/fabric-snaps/mocks/event/mockproducer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
@@ -61,8 +65,8 @@ dooG04HBoqBLvB8Q
 `
 var mockEndorserServer *fcmocks.MockEndorserServer
 var mockBroadcastServer *fcmocks.MockBroadcastServer
-var mockEventServer *fcmocks.MockEventServer
 
+var eventProducer *mockproducer.MockProducer
 var endorserTestURL = "127.0.0.1:7040"
 var broadcastTestURL = "127.0.0.1:7041"
 var endorserTestEventHost = "127.0.0.1"
@@ -80,7 +84,7 @@ const (
 var p1, p2 sdkApi.Peer
 
 func TestTransactionSnapInit(t *testing.T) {
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	var args [][]byte
 	response := stub.MockInit("TxID", args)
@@ -90,7 +94,7 @@ func TestTransactionSnapInit(t *testing.T) {
 }
 
 func TestNotSupportedFunction(t *testing.T) {
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("notSupportedFunction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -171,7 +175,7 @@ func testGetPeersOfChannelQueryErrorNoPeers(t *testing.T) {
 }
 
 func TestWrongRegisterTxEventValue(t *testing.T) {
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := make([][]byte, 4)
 	args[0] = []byte("commitTransaction")
@@ -190,7 +194,7 @@ func TestWrongRegisterTxEventValue(t *testing.T) {
 }
 
 func TestNotSpecifiedChannel(t *testing.T) {
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	var funcs []string
 	funcs = append(funcs, "endorseTransaction")
@@ -227,7 +231,7 @@ func TestNotSpecifiedChannel(t *testing.T) {
 
 func TestNotSpecifiedChaincodeID(t *testing.T) {
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "", "testChannel", false)
 	//invoke transaction snap
@@ -244,7 +248,7 @@ func TestNotSpecifiedChaincodeID(t *testing.T) {
 
 func TestSupportedFunctionWithoutRequest(t *testing.T) {
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 
 	var funcs []string
@@ -296,7 +300,7 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 
 func TestSupportedFunctionWithNilRequest(t *testing.T) {
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	var funcs []string
 	funcs = append(funcs, "endorseTransaction")
@@ -319,7 +323,7 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) {
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = false
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -348,7 +352,7 @@ func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) 
 func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 	mockEndorserServer.ProposalError = fmt.Errorf("proposalError")
 	mockEndorserServer.AddkvWrite = false
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -367,7 +371,25 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionSuccess(t *testing.
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = false
-	snap := &TxnSnap{}
+	snap := &TxnSnap{getTxService: func(channelID string) (*txsnapservice.TxServiceImpl, error) {
+		txService, err := txsnapservice.Get(channelID)
+		if err != nil {
+			return nil, err
+		}
+		txService.Callback = func(responses []*apitxn.TransactionProposalResponse) error {
+			go func() {
+				time.Sleep(3 * time.Second)
+				eventProducer.ProduceEvent(
+					mockevent.NewFilteredBlockEvent(
+						channelID,
+						mockevent.NewFilteredTx(responses[0].Proposal.TxnID.ID, pb.TxValidationCode_VALID),
+					),
+				)
+			}()
+			return nil
+		}
+		return txService, nil
+	}}
 	stub := shim.NewMockStub("transactionsnap", snap)
 
 	// registerTxEvent is false
@@ -378,22 +400,10 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionSuccess(t *testing.
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
 
-	// registerTxEvent is true
-	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
-	go func() {
-		time.Sleep(time.Second * 1)
-		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pbsdk.ChaincodeEvent{}, newTxID.ID, "testChannel")
-		if err != nil {
-			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
-			return
-		}
-		mockEventServer.SendMockEvent(&pbsdk.Event{Event: &pbsdk.Event_Block{Block: mockBlock}})
-	}()
-
 	//invoke transaction snap
+	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.OK {
-		time.Sleep(time.Second * 3)
 		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
 	}
 }
@@ -403,7 +413,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = true
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -417,20 +427,9 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 	}
 	// registerTxEvent is true with wrongTxnID
 	mockBroadcastServer.BroadcastInternalServerError = false
-	registerTxEventTimeout = 5
-	defer resetRegisterTxEventTimeout()
-	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
-	go func() {
-		time.Sleep(time.Second * 1)
-		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pbsdk.ChaincodeEvent{}, "wrongTxnID", "testChannel")
-		if err != nil {
-			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
-			return
-		}
-		mockEventServer.SendMockEvent(&pbsdk.Event{Event: &pbsdk.Event_Block{Block: mockBlock}})
-	}()
 
 	//invoke transaction snap
+	args = createTransactionSnapRequest("endorseAndCommitTransaction", "ccid", "testChannel", true)
 	response = stub.MockInvoke("TxID2", args)
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
@@ -444,8 +443,8 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
-	mockBroadcastServer.BroadcastInternalServerError = false
-	snap := &TxnSnap{}
+
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -467,6 +466,18 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	if tpResponse[0].ProposalResponse.Response.Status != 200 {
 		t.Fatalf("Expected proposal response status: SUCCESS")
 	}
+
+	txID := tpResponse[0].Proposal.TxnID.ID
+	go func() {
+		time.Sleep(2 * time.Second)
+		eventProducer.ProduceEvent(
+			mockevent.NewFilteredBlockEvent(
+				channelID,
+				mockevent.NewFilteredTx(txID, pb.TxValidationCode_VALID),
+			),
+		)
+	}()
+
 	// Call commit transaction with registerTxEvent is false
 	args = make([][]byte, 4)
 	args[0] = []byte("commitTransaction")
@@ -478,15 +489,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	if response.Status != shim.OK {
 		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
 	}
-	go func() {
-		time.Sleep(time.Second * 1)
-		mockBlock, err := fcmocks.CreateBlockWithCCEvent(&pbsdk.ChaincodeEvent{}, tpResponse[0].Proposal.TxnID.ID, "testChannel")
-		if err != nil {
-			fmt.Printf("Error CreateBlockWithCCEvent %v\n", err)
-			return
-		}
-		mockEventServer.SendMockEvent(&pbsdk.Event{Event: &pbsdk.Event_Block{Block: mockBlock}})
-	}()
+
 	// Call commit transaction with registerTxEvent is true
 	args[3] = []byte("true")
 	response = stub.MockInvoke("TxID3", args)
@@ -500,7 +503,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	mockEndorserServer.ProposalError = nil
 	mockEndorserServer.AddkvWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = true
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -540,13 +543,11 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 
 	// registerTxEvent is true
 	mockBroadcastServer.BroadcastInternalServerError = false
-	registerTxEventTimeout = 5
-	defer resetRegisterTxEventTimeout()
 	args[3] = []byte("true")
 	//invoke transaction snap
 	response = stub.MockInvoke("TxID3", args)
 	if response.Status != shim.ERROR {
-		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
+		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
 	errorMsg = "SendTransaction Didn't receive tx event for txid"
 	if !strings.Contains(response.Message, errorMsg) {
@@ -576,7 +577,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T
 		t.Fatalf("Error Marshal signedProposal: %v", err)
 	}
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := make([][]byte, 3)
 	args[0] = []byte("verifyTransactionProposalSignature")
@@ -612,7 +613,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 		t.Fatalf("Error Marshal signedProposal: %v", err)
 	}
 
-	snap := &TxnSnap{}
+	snap := New()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := make([][]byte, 3)
 	args[0] = []byte("verifyTransactionProposalSignature")
@@ -749,10 +750,6 @@ func signObjectWithKey(object []byte, key apicryptosuite.Key,
 	return signature, nil
 }
 
-func resetRegisterTxEventTimeout() {
-	registerTxEventTimeout = 30
-}
-
 func TestMain(m *testing.M) {
 
 	opts := &bccspFactory.FactoryOpts{
@@ -786,7 +783,6 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub, mspID)
 
-	peerConfigPath = "./sampleconfig"
 	_, err = config.NewConfig("./sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
@@ -813,9 +809,14 @@ func TestMain(m *testing.M) {
 
 	mockEndorserServer = fcmocks.StartEndorserServer(endorserTestURL)
 	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
-	mockEventServer, err = fcmocks.StartMockEventServer(fmt.Sprintf("%s:%d", endorserTestEventHost, endorserTestEventPort))
-	if err != nil {
-		panic(err.Error())
+
+	if eventProducer == nil {
+		eventService, producer, err := evservice.NewServiceWithMockProducer("testChannel", []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())
+		localservice.Register("testChannel", eventService)
+		if err != nil {
+			panic(err.Error())
+		}
+		eventProducer = producer
 	}
 
 	clientService = newClientServiceMock()

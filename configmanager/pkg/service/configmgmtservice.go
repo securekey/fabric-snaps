@@ -61,7 +61,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 
 	channelCache := csi.getCache(channelID)
 	if channelCache == nil {
-		logger.Infof("Getting channel cache from ledger\n")
+		logger.Debugf("Config cache is not initialized for channel [%s]. Getting config from ledger.\n", channelID)
 		return csi.GetConfigFromLedger(channelID, configKey)
 	}
 
@@ -72,7 +72,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 
 	val := channelCache[keyStr]
 	if len(val) == 0 {
-		logger.Infof("Getting app cache from ledger\n")
+		logger.Infof("Config cache does not contain config for key [%s] on channel [%s]. Getting config from ledger.\n", keyStr, channelID)
 		//not in cache get from ledger
 		return csi.GetConfigFromLedger(channelID, configKey)
 	}
