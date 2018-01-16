@@ -274,7 +274,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	//Get private key using SKI
 	pk, err = bccspSuite.GetKey(key.SKI())
 
-	if pk != nil {
+	if pk != nil && pk.Private() {
 		//If private key available then get tls config from private key
 		return httpServiceImpl.prepareTLSConfigFromPrivateKey(bccspSuite, pk, clientCert, caCerts, config.IsSystemCertPoolEnabled())
 

@@ -18,7 +18,7 @@ func GetSampleBCCSPFactoryOpts(ksPath string) *factory.FactoryOpts {
 			HashFamily:   "SHA2",
 			SecLevel:     256,
 			Ephemeral:    false,
-			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: ksPath},
+			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: ksPath + "/msp/keystore"},
 		},
 	}
 }

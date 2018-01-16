@@ -6,14 +6,34 @@
 #
 set -e
 
-#TODO below commented lines will be replaced with proper key import steps once EC keys import available in softhsm image
-#cd /go/src/github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig/msp/keystore/
-#openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in test-client.key -out private.p8
-#softhsm2-util --import private.p8 --slot 1069122796  --label "SKLogs" --pin 98765432  --id A1B2 --no-public-key
-#rm -f private.p8
+PKC11_TOOL=github.com/gbolo/go-util/p11tool
+GO_SRC=/go/src
 
+#Add entry here below for your key to be imported into softhsm
+declare -a PRIVATE_KEYS=(
+    "github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig/ec-keys/client.key"
+)
+
+
+echo "Installing pkcs11 tool..."
+go get ${PKC11_TOOL}
+
+echo "Importing keys to softhsm..."
+softhsm2-util --init-token --slot 1 --label "ForFabric" --pin 98765432    --so-pin 987654
+
+cd /go/src/${PKC11_TOOL}
+for i in "${PRIVATE_KEYS[@]}"
+do
+    echo "Importing key : ${GO_SRC}/${i}"
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in ${GO_SRC}/${i} -out private.p8
+    go run main.go -action import -keyFile private.p8
+    rm -rf private.p8
+done
+
+
+echo "Running PKCS11 unit tests..."
 
 PKGS=`go list github.com/securekey/fabric-snaps/httpsnap... 2> /dev/null | \
                                                  grep -v /api`
-echo "Running PKCS11 unit tests..."
+
 go test -tags pkcs11 -cover $PKGS -p 1 -timeout=10m

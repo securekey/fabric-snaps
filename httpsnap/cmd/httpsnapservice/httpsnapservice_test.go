@@ -68,11 +68,11 @@ func TestCertPinning(t *testing.T) {
 
 	// Happy path: Should get "Hello" back - one pin provided
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", ContentType: contentType,
-		RequestBody: string(jsonStr), PinSet: []string{"c2MiEtoRw7m1kc2r4GnVCT89OxqXK24PFiK02Qo1PIs="}}, "Hello")
+		RequestBody: string(jsonStr), PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="}}, "Hello")
 
 	// Happy path: Should get "Hello" back - pinset is provided (comma separated)
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", ContentType: contentType,
-		RequestBody: string(jsonStr), PinSet: []string{"c2MiEtoRw7m1kc2r4GnVCT89OxqXK24PFiK02Qo1PIs=", "pin2"}}, "Hello")
+		RequestBody: string(jsonStr), PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY=", "pin2"}}, "Hello")
 
 	// Happy path: Should get "Hello" back - nil pinset is provided (no cert pin validation)
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", ContentType: contentType,
@@ -262,7 +262,7 @@ func TestMain(m *testing.M) {
 	PeerConfigPath = "../sampleconfig"
 
 	//Setup bccsp factory
-	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../sampleconfig/msp/keystore")
+	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../sampleconfig")
 
 	factory.InitFactories(opts)
 

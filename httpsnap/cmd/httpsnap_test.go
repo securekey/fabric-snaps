@@ -251,7 +251,7 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	//Setup bccsp factory
-	opts := sampleconfig.GetSampleBCCSPFactoryOpts("./sampleconfig/msp/keystore")
+	opts := sampleconfig.GetSampleBCCSPFactoryOpts("./sampleconfig")
 
 	//Now call init factories using opts you got
 	factory.InitFactories(opts)
