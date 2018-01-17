@@ -19,3 +19,24 @@ BCCSP:
     #config map used with PLUGIN provider
     Config:
      {"key":"a"}
+
+#Certificate Request Parameters - all names are required
+#Alternative names are optional
+csr:
+  cn: sk-server
+  names:
+    Country: Canada        #Country
+    StateProvince: Yonge   #street
+    Locality: TO           #locality
+    Org: SK                #organization
+    OrgUnit: Fabric-Snaps  #org unit
+  alternativenames:
+    DNSNames:
+     - a.b.c
+     - something.com
+    EmailAddresses:
+     - support.securekey.com
+     - ops.securekey.com
+    IPAddresses:
+     - "172.0.0.1"
+     - "172.0.0.0"

@@ -96,6 +96,40 @@ func TestFindPKCSLib(t *testing.T) {
 	}
 
 }
+
+func TestCSROptions(t *testing.T) {
+
+	csrCfg, err := GetCSRConfigOptions("testChannel", "../sampleconfig")
+	if err != nil {
+		t.Fatalf("Got error while getting csr options %v", err)
+	}
+
+	if csrCfg.CommonName == "" {
+		t.Fatalf("Common name is mandatory")
+	}
+	//country
+	if csrCfg.Country == "" {
+		t.Fatalf("Country name is an empty string ")
+	}
+	//street
+	if csrCfg.StateProvince == "" {
+		t.Fatalf("StateProvince name is mandatory")
+	}
+	if csrCfg.Locality == "" {
+		t.Fatalf("Locality name is an empty string ")
+	}
+	//organization
+	if csrCfg.Org == "" {
+		t.Fatalf("Org name is an empty string ")
+	}
+
+	//organizational unit
+	if len(csrCfg.OrgUnit) == 0 {
+		t.Fatalf("OrgUnit name is mandatory")
+	}
+
+}
+
 func TestBCCSPOptions(t *testing.T) {
 
 	configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}

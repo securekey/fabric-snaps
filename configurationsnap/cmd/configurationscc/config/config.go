@@ -9,6 +9,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -42,6 +43,19 @@ type Config struct {
 	PeerMspID string
 	//cache refresh interval
 	RefreshInterval time.Duration
+}
+
+//CSRConfig used to pass CSR configuration parameters
+type CSRConfig struct {
+	CommonName     string
+	Country        string
+	StateProvince  string
+	Locality       string
+	Org            string
+	OrgUnit        string
+	DNSNames       []string
+	EmailAddresses []string
+	IPAddresses    []net.IP
 }
 
 // New returns a new config snap configuration for the given channel
@@ -121,7 +135,6 @@ func GetPeerMSPID(peerConfigPathOverride string) (string, error) {
 	}
 
 	mspID := peerConfig.GetString("peer.localMspId")
-	fmt.Printf("returning local mspId %s", mspID)
 	return mspID, nil
 
 }
@@ -226,6 +239,46 @@ func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 	}
 
 	return opts, nil
+
+}
+
+//GetCSRConfigOptions to pass CSR config opts
+func GetCSRConfigOptions(channelID string, peerConfigPath string) (*CSRConfig, error) {
+	csrConfig := CSRConfig{}
+	peerMspID, err := GetPeerMSPID(peerConfigPath)
+	if err != nil {
+		return &csrConfig, err
+	}
+	peerID, err := GetPeerID(peerConfigPath)
+	if err != nil {
+		return &csrConfig, err
+	}
+	configKey := configmanagerApi.ConfigKey{MspID: peerMspID, PeerID: peerID, AppName: "configurationsnap"}
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+
+	csconfig, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
+	if err != nil {
+		return &csrConfig, err
+	}
+	csrConfig.CommonName = csconfig.GetString("csr.cn")
+	csrConfig.Country = csconfig.GetString("csr.names.country")
+	csrConfig.Locality = csconfig.GetString("csr.names.locality")
+	csrConfig.Org = csconfig.GetString("csr.names.org")
+	csrConfig.OrgUnit = csconfig.GetString("csr.names.orgunit")
+	csrConfig.StateProvince = csconfig.GetString("csr.names.stateprovince")
+	csrConfig.DNSNames = csconfig.GetStringSlice("csr.alternativenames.DNSNames")
+	csrConfig.EmailAddresses = csconfig.GetStringSlice("csr.alternativenames.EmailAddresses")
+	ipaddresses := csconfig.GetStringSlice("csr.alternativenames.IPAddresses")
+	var netAddrs []net.IP
+	for _, v := range ipaddresses {
+		if ip := net.ParseIP(v); ip != nil {
+			netAddrs = append(netAddrs, ip)
+		}
+	}
+	csrConfig.IPAddresses = netAddrs
+
+	return &csrConfig, nil
 
 }
 
