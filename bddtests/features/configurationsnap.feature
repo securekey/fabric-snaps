@@ -20,10 +20,6 @@ Feature:  Test configuration snap Features
         When client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,endorseAndCommitTransaction,mychannel,example_cc,invoke,move,a,b,0" on p0
         And client C1 query chaincode "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc,invoke,query,b" on p0
         And response from "txnsnapinvoker" to client C1 contains value "200"
-		#config without endorser - should fail
-		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/config.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
-        When client C1 query chaincode with error "txnsnapinvoker" on channel "" with args "txnsnap,endorseTransaction,mychannel,example_cc1,invoke,query,b" on p0
-		And client C1 copies "./fixtures/config/snaps/txnsnap/testconfigs/configreset.yaml" to "./fixtures/config/snaps/txnsnap/config.yaml"
 
 	@twoconfig
 	Scenario: Invoke Transaction Snap generateKeyPair and ECDSA function
@@ -40,3 +36,12 @@ Feature:  Test configuration snap Features
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
 		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateKeyPair,RSA,false" on p0
         And response from "configurationsnap" to client C1 has key and key type is "RSA" on p0
+
+
+	@fourconfig	
+	Scenario: Invoke Transaction Snap generateCSR and ECDSA function. Last argument in call is signature algorithm string
+	    Given fabric has channel "mychannel" and p0 joined channel
+  		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
+		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
+		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateCSR,ECDSA,false,ECDSAWithSHA1" on p0
+        And response from "configurationsnap" to client C1 has CSR on p0
