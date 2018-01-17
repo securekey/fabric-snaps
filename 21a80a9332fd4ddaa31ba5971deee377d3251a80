@@ -22,6 +22,30 @@
       "revId": "21a80a9332fd4ddaa31ba5971deee377d3251a80",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5ad838_8e263f4a",
+        "filename": "transactionsnap/cmd/transactionsnap_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-17T22:47:39Z",
+      "side": 1,
+      "message": "I will copy this package into transactionsnap",
+      "parentUuid": "1faa75bc_3d825b44",
+      "range": {
+        "startLine": 27,
+        "startChar": 36,
+        "endLine": 27,
+        "endChar": 44
+      },
+      "revId": "21a80a9332fd4ddaa31ba5971deee377d3251a80",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
