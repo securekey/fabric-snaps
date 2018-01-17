@@ -106,16 +106,9 @@ organizations:
     # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
     # for PROD with no cert access through volume mappings, use 'users' and embed user certs/keys directly, do not use 'cryptoPath'
     # for DEV mode, cryptoPath below works as an alternative
-    cryptoPath:  fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+#    cryptoPath:  fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
     users:
       Admin:
-        key:
-          pem: |
-            -----BEGIN PRIVATE KEY-----
-            MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg5Ahcehypz6IpAYy6
-            DtIf5zZsRjP4PtsmDhLbBJsXmD6hRANCAAR+YRAn8dFpDQDyvDA7JKPl5PoZenj3
-            m1KOnMry/mOZcnXnTIh2ASV4ss8VluzBcyHGAv7BCmxXxDkjcV9eybv8
-            -----END PRIVATE KEY-----
         cert:
           pem: |
             -----BEGIN CERTIFICATE-----
@@ -133,13 +126,6 @@ organizations:
             CsbWERvZPjR/GFEDEvc=
             -----END CERTIFICATE-----
       User1:
-        key:
-          pem: |
-            -----BEGIN PRIVATE KEY-----
-            MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgp4qKKB0WCEfx7XiB
-            5Ul+GpjM1P5rqc6RhjD5OkTgl5OhRANCAATyFT0voXX7cA4PPtNstWleaTpwjvbS
-            J3+tMGTG67f+TdCfDxWYMpQYxLlE8VkbEzKWDwCYvDZRMKCQfv2ErNvb
-            -----END PRIVATE KEY-----
         cert:
           pem: |
             -----BEGIN CERTIFICATE-----
