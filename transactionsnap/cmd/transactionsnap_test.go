@@ -24,6 +24,7 @@ import (
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/protos/common"
 	protosUtils "github.com/hyperledger/fabric/protos/utils"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
@@ -752,15 +753,10 @@ func signObjectWithKey(object []byte, key apicryptosuite.Key,
 
 func TestMain(m *testing.M) {
 
-	opts := &bccspFactory.FactoryOpts{
-		ProviderName: "SW",
-		SwOpts: &bccspFactory.SwOpts{
-			HashFamily:   "SHA2",
-			SecLevel:     256,
-			Ephemeral:    false,
-			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
-		},
-	}
+	//Setup bccsp factory
+	// note: use of 'pkcs11' tag in the unit test will load the PCKS11 version of the factory opts.
+	// otherwise default SW version will be used.
+	opts := sampleconfig.GetSampleBCCSPFactoryOpts("./sampleconfig")
 	bccspFactory.InitFactories(opts)
 
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")

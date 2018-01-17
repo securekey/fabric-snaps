@@ -125,6 +125,11 @@ func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient
 		return nil, errors.Wrap(err, "failed to get private key")
 	}
 
+	// make sure the key is private for the signingIdentity
+	if !privateKey.Private() {
+		return nil, errors.New("failed to get private key, found a public key instead")
+	}
+
 	signingIdentity := &apifabclient.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
 
 	return signingIdentity, nil
