@@ -21,7 +21,7 @@ go get ${PKC11_TOOL}
 echo "Importing keys to softhsm..."
 softhsm2-util --init-token --slot 1 --label "ForFabric" --pin 98765432    --so-pin 987654
 
-cd /go/src/${PKC11_TOOL}
+cd ${GO_SRC}/${PKC11_TOOL}
 for i in "${PRIVATE_KEYS[@]}"
 do
     echo "Importing key : ${GO_SRC}/${i}"
