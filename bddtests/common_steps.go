@@ -13,6 +13,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -368,6 +369,33 @@ func (d *CommonSteps) containsInQueryValue(ccID string, value string) error {
 	return nil
 }
 
+//checkCSR to verify that CSR was created
+func (d *CommonSteps) checkCSR(ccID string) error {
+	//key bytes returned
+	if queryValue == "" {
+		return fmt.Errorf("QueryValue is empty")
+	}
+	if strings.Contains(queryValue, "Error") {
+		return fmt.Errorf("QueryValue contains error: %s", queryValue)
+	}
+	//response contains public key bytes
+	raw := []byte(queryValue)
+	csr := pem.EncodeToMemory(&pem.Block{
+		Type: "CERTIFICATE REQUEST", Bytes: raw,
+	})
+	logger.Debugf("CSR was created \n%v\n", string(csr))
+	//returned certificate request should have fields configured in config.yaml
+	c, e := x509.ParseCertificateRequest(raw)
+	if e != nil {
+		return e
+	}
+	if c.Subject.Organization[0] == "" {
+		return errors.Errorf("CSR should have non nil subject-organization")
+	}
+	logger.Debugf("CSR was created \n%v\n", c.Subject)
+	return nil
+}
+
 func (d *CommonSteps) checkKeyGenResponse(ccID string, expectedKeyType string) error {
 	//key bytes returned
 	if queryValue == "" {
@@ -604,5 +632,6 @@ func (d *CommonSteps) registerSteps(s *godog.Suite) {
 	s.Step(`^client C1 copies "([^"]*)" to "([^"]*)"$`, d.copyConfigFile)
 	s.Step(`^client C1 query chaincode with error "([^"]*)" on channel "([^"]*)" with args "([^"]*)" on p0$`, d.queryCCForError)
 	s.Step(`^response from "([^"]*)" to client C1 has key and key type is "([^"]*)" on p0$`, d.checkKeyGenResponse)
+	s.Step(`^response from "([^"]*)" to client C1 has CSR on p0$`, d.checkCSR)
 
 }

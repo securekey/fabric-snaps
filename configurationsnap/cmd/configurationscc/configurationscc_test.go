@@ -106,10 +106,11 @@ func TestSave(t *testing.T) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 	expected := &[]*mgmtapi.ConfigKV{}
-	//configKV := &mngmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
 	for _, config := range *expected {
-		fmt.Printf("Response %s", *config)
+		if config == nil {
+			t.Fatalf("Expected config")
+		}
 	}
 
 }
@@ -227,13 +228,12 @@ func TestGetKey(t *testing.T) {
 		t.Fatalf("Expected error:Got error unmarshalling config key")
 	}
 	ch := make(chan int)
-	p, err := json.Marshal(ch)
+	_, err = json.Marshal(ch)
 	if err != nil {
 		errStr := fmt.Sprintf("Got error while marshalling config %v", err)
 		logger.Error(errStr)
 
 	}
-	fmt.Printf("%s", p)
 }
 
 func TestGetIdentity(t *testing.T) {
@@ -394,6 +394,22 @@ func TestGenerateKeyArgs(t *testing.T) {
 
 }
 
+func TestGetSignatureAlg(t *testing.T) {
+
+	_, err := getSignatureAlg("ECDSAWithSHA256")
+	if err != nil {
+		t.Fatalf("Valid alg errors out: %v", err)
+	}
+	_, err = getSignatureAlg("SHA256WithRSAPSS")
+	if err != nil {
+		t.Fatalf("Valid alg errors out: %v", err)
+	}
+	_, err = getSignatureAlg("SHA256WithRSAPSS-FAKE")
+	if err == nil {
+		t.Fatalf("Expected error invalid alg ")
+	}
+}
+
 func TestGetKeyOpts(t *testing.T) {
 	key, err := getKeyOpts("ECDSA", false)
 	if err != nil {
@@ -422,12 +438,10 @@ func TestNew(t *testing.T) {
 }
 func TestConversion(t *testing.T) {
 	key := api.ConfigKey{MspID: "msp.one", PeerID: "peerOne", AppName: "AppName"}
-	fmt.Printf("%v ", []byte("whatever"))
 	c := api.ConfigKV{Key: key, Value: []byte("whatever")}
 	key1 := api.ConfigKey{MspID: "msp.one", PeerID: "peerwo", AppName: "AppNameTwo"}
 	c1 := api.ConfigKV{Key: key1, Value: []byte("whateverTwo")}
 	a := []*api.ConfigKV{&c, &c1}
-	fmt.Printf("***%s\n", a)
 	b, err := json.Marshal(a)
 	if err != nil {
 
@@ -435,7 +449,9 @@ func TestConversion(t *testing.T) {
 	r := []*api.ConfigKV{}
 	json.Unmarshal(b, &r)
 	for _, config := range r {
-		fmt.Printf("unmarshaled: %+v\n", config)
+		if config == nil {
+			t.Fatalf("Config is null")
+		}
 	}
 
 }

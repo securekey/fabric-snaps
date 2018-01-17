@@ -6,24 +6,27 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"encoding/json"
-
 	"github.com/cloudflare/cfssl/log"
-	errors "github.com/pkg/errors"
-
 	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp/signer"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	errors "github.com/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -41,6 +44,7 @@ var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb
 	"delete":          delete,
 	"refresh":         refresh,
 	"generateKeyPair": generateKeyPair,
+	"generateCSR":     generateCSR,
 }
 var supportedAlgs = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024", "RSA2048", "RSA3072", "RSA4096"}
 var availableFunctions = functionSet()
@@ -201,6 +205,212 @@ func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte) pb.Respons
 	return generateKeyWithOpts(stub.GetChannelID(), options)
 }
 
+//to generate CSR based on supplied arguments
+//first arg: key type (ECDSA, RSA)
+//second arg : ephemeral flag (true/false)
+//third  arg: signature algorithm (one of x509.SignatureAlgorithm)
+func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	//check args
+	if len(args) < 3 {
+		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag and CSR's signature algorithm"))
+	}
+	keyType := string(args[0])
+	ephemeral, err := strconv.ParseBool(string(args[1]))
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Ephemeral flag is not set"))
+	}
+	sigAlgType := string(args[2])
+	//get requested key options
+	options, err := getKeyOpts(keyType, ephemeral)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Debugf("Keygen options %v")
+	bccspsuite, keys, err := getBCCSPAndKeyPair(stub.GetChannelID(), options)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	csrTemplate, err := getCSRTemplate(stub.GetChannelID(), keys, keyType, sigAlgType)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Debugf("Certificate request template %v", csrTemplate)
+	//generate the csr request
+	cryptoSigner, err := signer.New(bccspsuite, keys)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	csrReq, err := x509.CreateCertificateRequest(rand.Reader, &csrTemplate, cryptoSigner)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Debugf("CSR was created. Len is %d", len(csrReq))
+	return shim.Success(csrReq)
+
+}
+
+func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType string) (x509.CertificateRequest, error) {
+	var csrTemplate x509.CertificateRequest
+	sigAlg, err := getSignatureAlg(sigAlgType)
+	if err != nil {
+		return csrTemplate, err
+	}
+	//generate subject for CSR
+	asn1Subj, err := getCSRSubject(channelID)
+	if err != nil {
+		return csrTemplate, err
+	}
+	csrConfig, err := config.GetCSRConfigOptions(channelID, peerConfigPath)
+	if err != nil {
+		return csrTemplate, err
+	}
+	pubKey, err := keys.PublicKey()
+	if err != nil {
+		logger.Debugf("Get error parsing public key %v", err)
+		return csrTemplate, err
+	}
+	pubKeyAlg, err := getPublicKeyAlg(keyType)
+	if err != nil {
+		logger.Debugf("Get error parsing public key alg %v", err)
+		return csrTemplate, err
+	}
+	//generate a csr template
+	csrTemplate = x509.CertificateRequest{
+		Version:            1,
+		RawSubject:         asn1Subj,
+		SignatureAlgorithm: sigAlg,
+		PublicKeyAlgorithm: pubKeyAlg,
+		PublicKey:          pubKey,
+		//subject alternative names
+		DNSNames:       csrConfig.DNSNames,
+		EmailAddresses: csrConfig.EmailAddresses,
+		IPAddresses:    csrConfig.IPAddresses,
+	}
+	logger.Debugf("Certificate request template %v", csrTemplate)
+	return csrTemplate, nil
+
+}
+
+func getCSRSubject(channelID string) ([]byte, error) {
+	//get csr configuration - from config(HL)
+	csrConfig, err := config.GetCSRConfigOptions(channelID, peerConfigPath)
+	if err != nil {
+		return nil, err
+	}
+	if csrConfig.CommonName == "" {
+		return nil, errors.Errorf("Common name is required")
+	}
+	if csrConfig.Country == "" {
+		return nil, errors.Errorf("Country is required")
+	}
+	if csrConfig.StateProvince == "" {
+		return nil, errors.Errorf("StateProvince is required")
+	}
+	if csrConfig.Locality == "" {
+		return nil, errors.Errorf("Locality is required")
+	}
+	if csrConfig.Org == "" {
+		return nil, errors.Errorf("Organization is required")
+	}
+	if csrConfig.OrgUnit == "" {
+		return nil, errors.Errorf("Organizational Unit is required")
+	}
+	logger.Debugf("csrConfig options %v", csrConfig)
+	subj := pkix.Name{
+		CommonName:         csrConfig.CommonName,
+		Country:            []string{csrConfig.Country},
+		Province:           []string{csrConfig.StateProvince},
+		Locality:           []string{csrConfig.Locality},
+		Organization:       []string{csrConfig.Org},
+		OrganizationalUnit: []string{csrConfig.OrgUnit},
+	}
+	logger.Debugf("Subject options %v", subj)
+
+	rawSubj := subj.ToRDNSequence()
+
+	asn1Subj, err := asn1.Marshal(rawSubj)
+	if err != nil {
+		return nil, err
+	}
+	return asn1Subj, nil
+}
+
+func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, bccsp.Key, error) {
+	var k bccsp.Key
+	var err error
+	var bccspsuite bccsp.BCCSP
+	cfgopts, err := config.GetBCCSPOpts(channelID, peerConfigPath)
+	if err != nil {
+		return bccspsuite, k, err
+	}
+	logger.Debugf("BCCSP Plugin option config map %v", cfgopts)
+	//just once - initialize factory with options
+	//if factory was already initialized this call will be ignored
+	factory.InitFactories(cfgopts)
+	logger.Debugf("****Passing opts %s %v", cfgopts.ProviderName, cfgopts)
+	bccspsuite, err = factory.GetBCCSPFromOpts(cfgopts)
+	if err != nil {
+		logger.Debugf("Error initializing with options %s %s %s ", cfgopts.Pkcs11Opts.Library, cfgopts.Pkcs11Opts.Pin, cfgopts.Pkcs11Opts.Label)
+		return bccspsuite, k, err
+	}
+	k, err = bccspsuite.KeyGen(opts)
+	if err != nil {
+		return bccspsuite, k, err
+	}
+	return bccspsuite, k, nil
+}
+
+func getPublicKeyAlg(algorithm string) (x509.PublicKeyAlgorithm, error) {
+	var sigAlg x509.PublicKeyAlgorithm
+	switch algorithm {
+	case "RSA":
+		return x509.RSA, nil
+	case "DSA":
+		return x509.RSA, nil
+	case "ECDSA":
+		return x509.RSA, nil
+	default:
+		return sigAlg, errors.Errorf("Public key algorithm is not supported %s", algorithm)
+	}
+}
+func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
+	var sigAlg x509.SignatureAlgorithm
+	switch algorithm {
+	case "ECDSAWithSHA1":
+		return x509.ECDSAWithSHA1, nil
+	case "ECDSAWithSHA256":
+		return x509.ECDSAWithSHA256, nil
+	case "ECDSAWithSHA384":
+		return x509.ECDSAWithSHA384, nil
+	case "ECDSAWithSHA512":
+		return x509.ECDSAWithSHA512, nil
+	case "SHA256WithRSAPSS":
+		return x509.SHA256WithRSAPSS, nil
+	case "SHA384WithRSAPSS":
+		return x509.SHA384WithRSAPSS, nil
+	case "SHA512WithRSAPSS":
+		return x509.SHA512WithRSAPSS, nil
+	case "DSAWithSHA256":
+		return x509.DSAWithSHA256, nil
+	case "DSAWithSHA1":
+		return x509.DSAWithSHA1, nil
+	case "SHA512WithRSA":
+		return x509.SHA512WithRSA, nil
+	case "SHA384WithRSA":
+		return x509.SHA384WithRSA, nil
+	case "SHA256WithRSA":
+		return x509.SHA256WithRSA, nil
+	case "SHA1WithRSA":
+		return x509.SHA1WithRSA, nil
+	case "MD5WithRSA":
+		return x509.MD5WithRSA, nil
+	case "MD2WithRSA":
+		return x509.MD2WithRSA, nil
+	default:
+		return sigAlg, errors.Errorf("Alg not supported")
+	}
+}
+
 func getKeyOpts(keyType string, ephemeral bool) (bccsp.KeyGenOpts, error) {
 
 	switch keyType {
@@ -230,23 +440,9 @@ func getKeyOpts(keyType string, ephemeral bool) (bccsp.KeyGenOpts, error) {
 //generateKeyWithOpts to generate key using BCCSP
 func generateKeyWithOpts(channelID string, opts bccsp.KeyGenOpts) pb.Response {
 
-	cfgopts, err := config.GetBCCSPOpts(channelID, peerConfigPath)
+	_, k, err := getBCCSPAndKeyPair(channelID, opts)
 	if err != nil {
-		return shim.Error(err.Error())
-	}
-	logger.Debugf("BCCSP Plugin option config map %v", cfgopts)
-	//just once - initialize factory with options
-	//if factory was already initialized this call will be ignored
-	factory.InitFactories(cfgopts)
-	logger.Debugf("****Passing opts %s %v", cfgopts.ProviderName, cfgopts)
-	bccspsuite, err := factory.GetBCCSPFromOpts(cfgopts)
-	if err != nil {
-		logger.Debugf("Error initializing with options %s %s %s ", cfgopts.Pkcs11Opts.Library, cfgopts.Pkcs11Opts.Pin, cfgopts.Pkcs11Opts.Label)
-		return shim.Error(fmt.Sprintf("Got error from GetBCCSPFromOpts in %v", err))
-	}
-	k, err := bccspsuite.KeyGen(opts)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Got error from KeyGen in %v %v", opts, err))
+		return shim.Error(fmt.Sprintf("Got error from getBCCSPAndKeyPair in %v %v", opts, err))
 	}
 	return parseKey(k)
 }
