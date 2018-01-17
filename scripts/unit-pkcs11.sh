@@ -12,8 +12,14 @@ GO_SRC=/go/src
 #Add entry here below for your key to be imported into softhsm
 declare -a PRIVATE_KEYS=(
     "github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig/ec-keys/client.key"
+    "github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig/msp/keystore/key.pem"
 )
 
+# list all modules requiring PKCS11 testing
+declare -a PKG_TESTS=(
+    "github.com/securekey/fabric-snaps/httpsnap"
+    "github.com/securekey/fabric-snaps/transactionsnap"
+)
 
 echo "Installing pkcs11 tool..."
 go get ${PKC11_TOOL}
@@ -33,7 +39,14 @@ done
 
 echo "Running PKCS11 unit tests..."
 
-PKGS=`go list github.com/securekey/fabric-snaps/httpsnap... 2> /dev/null | \
-                                                 grep -v /api`
+PKGS=""
+for i in "${PKG_TESTS[@]}"
+do
+PKGS_LIST=`go list "${i}"... 2> /dev/null | \
+                grep -v /api`
+PKGS+=" $PKGS_LIST"
+done
 
+
+echo "running pkcs11 tests for the following packages : ${PKGS}"
 go test -tags pkcs11 -cover $PKGS -p 1 -timeout=10m
