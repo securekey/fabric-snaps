@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-@all
 @configurationsnap
 Feature:  Test configuration snap Features
 
