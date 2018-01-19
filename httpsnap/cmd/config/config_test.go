@@ -77,6 +77,28 @@ func TestGetShemaConfig(t *testing.T) {
 	}
 }
 
+func TestIsHeaderAllowed(t *testing.T) {
+
+	value, err := c.IsHeaderAllowed("not-configured")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if value == true {
+		t.Fatal("Expected false, got true for not-configured header")
+	}
+
+	value, err = c.IsHeaderAllowed("Content-Type")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if value == false {
+		t.Fatal("Expected true, got false for 'Content-Type' header")
+	}
+
+}
+
 func TestGetCaCerts(t *testing.T) {
 	values, err := c.GetCaCerts()
 	if err != nil {

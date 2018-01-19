@@ -21,6 +21,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
 
 	"github.com/spf13/viper"
@@ -30,11 +31,15 @@ import (
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 )
 
-var jsonStr = []byte(`{"id":"123", "name": "Test Name"}`)
+var jsonStr = `{"id":"123", "name": "Test Name"}`
 var contentType = "application/json"
 var channelID = "testChannel"
 var peerTLSChannelID = "testPeerTLSChannel"
 var mspID = "Org1MSP"
+var headers = map[string]string{
+	"Content-Type":  "application/json",
+	"Authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+}
 
 func TestInit(t *testing.T) {
 
@@ -53,33 +58,35 @@ func TestInvalidParameters(t *testing.T) {
 	// Test required argument: function name
 	testRequiredArg(t, stub, [][]byte{}, "function name")
 
-	// Test required argument: URL
-	testRequiredArg(t, stub, [][]byte{}, "URL")
+	// Test required argument: request
+	testRequiredArg(t, stub, [][]byte{[]byte("invoke")}, "Http Snap Request")
 
-	// Test required argument: content type
-	testRequiredArg(t, stub, [][]byte{[]byte("invoke"), []byte("http://localhost/abc")}, "content type")
+	// Required args: nil headers
+	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", nil, jsonStr)}
+	verifyFailure(t, stub, args, "Invoke should have failed due to nil headers")
 
-	// Test required argument: request body
-	testRequiredArg(t, stub, [][]byte{[]byte("invoke"), []byte("http://localhost/abc"), []byte(contentType)}, "request body")
+	// Required args: headers missing required 'Content-Type' header
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{}, jsonStr)}
+	verifyFailure(t, stub, args, "Invoke should have failed due to missing required header")
 
-	// Required args: empty URL
-	args := [][]byte{[]byte("invoke"), []byte(""), []byte(contentType), []byte(jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to empty URL")
-
-	// Required args: empty content type
-	args = [][]byte{[]byte("invoke"), []byte("http/localhost/abc"), []byte(""), []byte(jsonStr)}
+	// Required args: empty Content-Type header
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{"Content-Type": ""}, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed due to empty content type")
 
 	// Required args: empty request body
-	args = [][]byte{[]byte("invoke"), []byte("http/localhost/abc"), []byte(contentType), []byte("")}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", headers, "")}
 	verifyFailure(t, stub, args, "Invoke should have failed due to empty request body")
 
+	// Required args: empty URL
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("", headers, jsonStr)}
+	verifyFailure(t, stub, args, "Invoke should have failed due to empty URL")
+
 	// Failed path: url syntax is not valid
-	args = [][]byte{[]byte("invoke"), []byte("http/localhost/abc"), []byte(contentType), []byte(jsonStr)}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http/localhost/abc", headers, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed since URL syntax is not valid")
 
 	// Failed path: HTTP url not allowed (only HTTPS)
-	args = [][]byte{[]byte("invoke"), []byte("http://localhost/abc"), []byte(contentType), []byte(jsonStr)}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", headers, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed since URL doesn't start with https")
 }
 
@@ -87,10 +94,10 @@ func TestUsingHttpService(t *testing.T) {
 
 	stub := newMockStub(channelID)
 	// Happy path: Should get "Hello" back - use default TLS settings
-	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
+	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
 	// Failed Path: Connect to Google
-	args = [][]byte{[]byte("invoke"), []byte("https://www.google.ca"), []byte(contentType), []byte(jsonStr)}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://www.google.ca", headers, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed to connect to google")
 
 }
@@ -99,10 +106,10 @@ func TestUsingHttpServiceOnPeerTLSConfig(t *testing.T) {
 
 	stub := newMockStub(peerTLSChannelID)
 	// Happy path: Should get "Hello" back - use default TLS settings
-	args := [][]byte{[]byte("invoke"), []byte("https://localhost:8443/hello"), []byte(contentType), []byte(jsonStr)}
+	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
 	// Failed Path: Connect to Google
-	args = [][]byte{[]byte("invoke"), []byte("https://www.google.ca"), []byte(contentType), []byte(jsonStr)}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://www.google.ca", headers, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed to connect to google")
 
 }
@@ -120,9 +127,11 @@ func verifySuccess(t *testing.T, stub *shim.MockStub, args [][]byte, expected st
 
 func verifyFailure(t *testing.T, stub *shim.MockStub, args [][]byte, msg string) {
 	res := stub.MockInvoke("txID", args)
+	fmt.Println(res.Message)
 	if res.Status == shim.OK {
 		t.Fatalf("%s: %v", msg, res.Message)
 	}
+
 }
 
 func testRequiredArg(t *testing.T, stub *shim.MockStub, args [][]byte, argName string) {
@@ -268,4 +277,16 @@ func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
 	err := configManager.Save(config)
 	return err
 
+}
+
+func createHTTPSnapRequest(url string, headers map[string]string, body string) []byte {
+
+	req := api.HTTPSnapRequest{URL: url, Headers: headers, Body: body}
+	reqBytes, err := json.Marshal(req)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return nil
+	}
+
+	return reqBytes
 }

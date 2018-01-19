@@ -154,3 +154,7 @@ schemas:
     },
     "required": ["description"]
 }'
+
+headers: 
+  - Content-Type
+  - Authorization

@@ -115,7 +115,7 @@ func (c *config) GetConfigPath(path string) string {
 	return filepath.Join(basePath, path)
 }
 
-// Helper function to retieve schema configuration
+// Helper function to retrieve schema configuration
 func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig, err error) {
 
 	var schemaConfigs []httpsnapApi.SchemaConfig
@@ -131,6 +131,42 @@ func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig,
 	}
 
 	return schemaMap, nil
+}
+
+// Helper function to retrieve allowed http request headers
+func (c *config) getHeaderMap() (headerMap map[string]bool, err error) {
+
+	var headers []string
+	err = c.httpSnapConfig.UnmarshalKey("headers", &headers)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting allowed headers: %s", err)
+	}
+
+	if headers == nil || len(headers) == 0 {
+		return nil, fmt.Errorf("Missing http headers configuration")
+	}
+
+	headerMap = make(map[string]bool, len(headers))
+	for _, h := range headers {
+		headerMap[h] = true
+	}
+
+	return headerMap, nil
+}
+
+// IsHeaderAllowed returns true if specfied http header type is enabled
+func (c *config) IsHeaderAllowed(name string) (bool, error) {
+	headerMap, err := c.getHeaderMap()
+	if err != nil {
+		return false, err
+	}
+
+	val, ok := headerMap[name]
+	if !ok {
+		return false, nil
+	}
+
+	return val, nil
 }
 
 // GetCaCerts returns the list of ca certs

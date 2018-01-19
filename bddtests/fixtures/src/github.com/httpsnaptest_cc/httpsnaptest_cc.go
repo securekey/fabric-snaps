@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -17,6 +18,15 @@ var logger = shim.NewLogger("HttpSnapTest_cc")
 
 // HTTPSnapTest demostrates how to invoke http snap via chaincode
 type HTTPSnapTest struct {
+}
+
+//HTTPSnapRequest is used to invoke http snap
+type HTTPSnapRequest struct {
+	URL         string            // required
+	Headers     map[string]string // required
+	Body        string            // required
+	NamedClient string            // optional
+	PinSet      []string          // optional
 }
 
 // Init - nothing to do for now
@@ -42,20 +52,26 @@ func (t *HTTPSnapTest) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// url is mandatory
-	url := args[1]
-	if url == nil || len(url) == 0 {
+	url := string(args[1])
+	if url == "" {
 		return shim.Error("Url is required")
 	}
 
-	contentType := []byte("application/json")
-	jsonStr := []byte(`{"id":"123", "name": "Test Name"}`)
+	headers := map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+	}
+
+	req := HTTPSnapRequest{URL: url, Headers: headers, Body: `{"id":"123", "name": "Test Name"}`}
+	reqBytes, err := json.Marshal(req)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
 
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = append(ccArgs, []byte("invoke")) // function
-	ccArgs = append(ccArgs, url)              // url
-	ccArgs = append(ccArgs, contentType)      // content type
-	ccArgs = append(ccArgs, jsonStr)          // request body
+	ccArgs = append(ccArgs, reqBytes)         // http snap request
 
 	logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
 

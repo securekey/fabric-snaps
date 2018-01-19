@@ -47,11 +47,11 @@ type HTTPServiceImpl struct {
 
 //HTTPServiceInvokeRequest used to create http invoke service
 type HTTPServiceInvokeRequest struct {
-	RequestURL  string
-	ContentType string
-	RequestBody string
-	NamedClient string
-	PinSet      []string
+	RequestURL     string
+	RequestHeaders map[string]string
+	RequestBody    string
+	NamedClient    string
+	PinSet         []string
 }
 
 // Dialer is custom dialer to verify cert against pinset
@@ -67,9 +67,19 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 	if httpServiceInvokeRequest.RequestURL == "" {
 		return nil, errors.New("Missing RequestURL")
 	}
-	if httpServiceInvokeRequest.ContentType == "" {
-		return nil, errors.New("Missing ContentType")
+
+	if len(httpServiceInvokeRequest.RequestHeaders) == 0 {
+		return nil, errors.New("Missing request headers")
 	}
+
+	if _, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; !ok {
+		return nil, errors.New("Missing required Content-Type header")
+	}
+
+	if val, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; ok && val == "" {
+		return nil, errors.New("Content-Type header is empty")
+	}
+
 	if httpServiceInvokeRequest.RequestBody == "" {
 		return nil, errors.New("Missing RequestBody")
 	}
@@ -85,19 +95,18 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.Errorf("Unsupported scheme: %s", uri.Scheme)
 	}
 
-	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(httpServiceInvokeRequest.ContentType)
+	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(httpServiceInvokeRequest.RequestHeaders["Content-Type"])
 	if err != nil {
 		return nil, errors.WithMessage(err, "GetSchemaConfig return error")
 	}
 
 	// Validate request body against schema
-	if err := httpServiceImpl.validate(httpServiceInvokeRequest.ContentType, schemaConfig.Request, httpServiceInvokeRequest.RequestBody); err != nil {
+	if err := httpServiceImpl.validate(httpServiceInvokeRequest.RequestHeaders["Content-Type"], schemaConfig.Request, httpServiceInvokeRequest.RequestBody); err != nil {
 		return nil, errors.WithMessage(err, "Failed to validate request body")
 	}
 
 	// URL is ok, retrieve data using http client
-	responseContentType, response, err := httpServiceImpl.getData(httpServiceInvokeRequest.RequestURL, httpServiceInvokeRequest.ContentType,
-		httpServiceInvokeRequest.RequestBody, httpServiceInvokeRequest.NamedClient, httpServiceInvokeRequest.PinSet, httpServiceImpl.config)
+	responseContentType, response, err := httpServiceImpl.getData(httpServiceInvokeRequest, httpServiceImpl.config)
 	if err != nil {
 		return nil, errors.WithMessage(err, "getData return error")
 	}
@@ -127,11 +136,11 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getData(url string, requestContentType string, requestBody string, namedClient string, pins []string, config httpsnapApi.Config) (responseContentType string, responseBody []byte, err error) {
+func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest, config httpsnapApi.Config) (responseContentType string, responseBody []byte, err error) {
 
-	tlsConfig, err := httpServiceImpl.getTLSConfig(namedClient, config)
+	tlsConfig, err := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, config)
 	if err != nil {
-		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", namedClient, err)
+		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, err)
 		return "", nil, err
 	}
 
@@ -144,8 +153,8 @@ func (httpServiceImpl *HTTPServiceImpl) getData(url string, requestContentType s
 		TLSClientConfig:       tlsConfig,
 	}
 
-	if len(pins) > 0 {
-		transport.DialTLS = httpServiceImpl.verifyPinDialer(tlsConfig, pins, config)
+	if len(invokeReq.PinSet) > 0 {
+		transport.DialTLS = httpServiceImpl.verifyPinDialer(tlsConfig, invokeReq.PinSet, config)
 	}
 
 	client := &http.Client{
@@ -153,33 +162,50 @@ func (httpServiceImpl *HTTPServiceImpl) getData(url string, requestContentType s
 		Transport: transport,
 	}
 
-	logger.Debugf("Requesting %s from url=%s", requestBody, url)
+	logger.Debugf("Requesting %s from url=%s", invokeReq.RequestBody, invokeReq.RequestURL)
 
-	resp, err := client.Post(url, requestContentType, bytes.NewBuffer([]byte(requestBody)))
+	req, err := http.NewRequest("POST", invokeReq.RequestURL, bytes.NewBuffer([]byte(invokeReq.RequestBody)))
 	if err != nil {
-		logger.Errorf("POST failed. url=%s, err=%s", url, err)
+		return "", nil, err
+	}
+
+	// Set allowed headers only
+	for name, value := range invokeReq.RequestHeaders {
+		allowed, err := config.IsHeaderAllowed(name)
+		if err != nil {
+			return "", nil, err
+		}
+		if allowed {
+			req.Header.Set(name, value)
+			logger.Debugf("Setting header '%s' to '%s'", name, value)
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.Errorf("POST failed. url=%s, err=%s", invokeReq.RequestURL, err)
 		return "", nil, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, errors.Errorf("Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, url)
+		return "", nil, errors.Errorf("Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, invokeReq.RequestURL)
 	}
 
 	responseContentType = resp.Header.Get("Content-Type")
 
-	if requestContentType != responseContentType {
-		return "", nil, errors.Errorf("Response content-type: %s doesn't match request content-type: %s", responseContentType, requestContentType)
+	if invokeReq.RequestHeaders["Content-Type"] != responseContentType {
+		return "", nil, errors.Errorf("Response content-type: %s doesn't match request content-type: %s", responseContentType, invokeReq.RequestHeaders["Content-Type"])
 	}
 
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Warnf("Read contents failed. url=%s, err=%s", url, err)
+		logger.Warnf("Read contents failed. url=%s, err=%s", invokeReq.RequestURL, err)
 		return "", nil, err
 	}
 
-	logger.Debugf("Got %s from url=%s", contents, url)
+	logger.Debugf("Got %s from url=%s", contents, invokeReq.RequestURL)
 
 	return responseContentType, contents, nil
 }

@@ -54,4 +54,5 @@ type Config interface {
 	IsSystemCertPoolEnabled() bool
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool
+	IsHeaderAllowed(name string) (bool, error)
 }

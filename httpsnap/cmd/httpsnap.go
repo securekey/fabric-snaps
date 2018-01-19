@@ -6,12 +6,13 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"strings"
+	"encoding/json"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
 )
 
@@ -35,11 +36,7 @@ func (httpsnap *HTTPSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Invoke should be called with 4 mandatory arguments (and 2 optional ones):
 // args[0] - Function (currently not used)
-// args[1] - URL
-// args[2] - Content-Type
-// args[3] - Request Body
-// args[4] - Named Client (optional)
-// args[5] - Pin set (optional)
+// args[1] - HttpSnapRequest
 func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	httpservice, err := httpsnapservice.Get(stub.GetChannelID())
@@ -47,41 +44,44 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Error(err.Error())
 	}
 
-	_, args := stub.GetFunctionAndParameters()
+	args := stub.GetArgs()
 
-	if len(args) < 3 {
-		return shim.Error("Missing URL parameter, content type and/or request body")
+	//first arg is function name; the second one is HttpSnapRequest
+	if len(args) < 2 {
+		return shim.Error("Missing function name and/or http snap request")
 	}
 
-	requestURL := args[0]
-	if requestURL == "" {
+	if args[1] == nil || len(args[1]) == 0 {
+		return shim.Error("Http Snap Request is nil or empty")
+	}
+
+	request, err := getHTTPSnapRequest(args[1])
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	if request.URL == "" {
 		return shim.Error("Missing URL parameter")
 	}
 
-	contentType := args[1]
-	if contentType == "" {
-		return shim.Error("Missing content type")
+	if len(request.Headers) == 0 {
+		return shim.Error("Missing request headers")
 	}
 
-	requestBody := args[2]
-	if requestBody == "" {
+	if _, ok := request.Headers["Content-Type"]; !ok {
+		return shim.Error("Missing required Content-Type header")
+	}
+
+	if val, ok := request.Headers["Content-Type"]; ok && val == "" {
+		return shim.Error("Content-Type header is empty")
+	}
+
+	if request.Body == "" {
 		return shim.Error("Missing request body")
 	}
 
-	// Optional parameter: named client (used for determining parameters for TLS configuration)
-	client := ""
-	if len(args) >= 4 {
-		client = string(args[3])
-	}
-
-	// Optional parameter: pin set(comma separated)
-	pins := []string{}
-	if len(args) >= 5 && args[4] != "" && strings.TrimSpace(args[4]) != "" {
-		pins = strings.Split(args[4], ",")
-	}
-
-	response, err := httpservice.Invoke(httpsnapservice.HTTPServiceInvokeRequest{RequestURL: requestURL, ContentType: contentType,
-		RequestBody: requestBody, NamedClient: client, PinSet: pins})
+	response, err := httpservice.Invoke(httpsnapservice.HTTPServiceInvokeRequest{RequestURL: request.URL, RequestHeaders: request.Headers,
+		RequestBody: request.Body, NamedClient: request.NamedClient, PinSet: request.PinSet})
 
 	if err != nil {
 		return shim.Error(err.Error())
@@ -89,6 +89,16 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	return shim.Success(response)
 
+}
+
+// helper method for unmarshalling http snap request
+func getHTTPSnapRequest(reqBytes []byte) (*api.HTTPSnapRequest, error) {
+	var req api.HTTPSnapRequest
+	err := json.Unmarshal(reqBytes, &req)
+	if err != nil {
+		return nil, err
+	}
+	return &req, nil
 }
 
 func main() {

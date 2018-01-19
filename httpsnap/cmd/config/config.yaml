@@ -40,3 +40,7 @@ schemas:
     response: '{
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "Response Schema"}'
+
+headers: 
+  - Content-Type
+  - Authorization
