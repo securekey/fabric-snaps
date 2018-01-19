@@ -10,6 +10,7 @@ ARCH=`uname -m`
 
 if [ $ARCH = "s390x" ]; then
   echo "deb http://ftp.us.debian.org/debian sid main" >> /etc/apt/sources.list
+  echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 fi
 echo "*****START SCRIPT**********"
 apt-get update && \

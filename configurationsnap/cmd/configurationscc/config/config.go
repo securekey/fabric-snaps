@@ -205,6 +205,7 @@ func getPluginOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 	//from config file
 	cfglib := GetLib(csconfig)
+	logger.Debugf("Security library from config %s", cfglib)
 	//if env variable was set get library config from it
 	//if no env was set parse input from ocnfig file
 	//and verify if lib exists
@@ -330,9 +331,11 @@ func FindPKCS11Lib(configuredLib string) (lib, pin, label string) {
 	}
 	if lib == "" {
 		possibilities := strings.Split(configuredLib, ",")
+		logger.Debugf("PKCS provider possibilities %s", possibilities)
 		for _, path := range possibilities {
 			if _, err := os.Stat(strings.TrimSpace(path)); !os.IsNotExist(err) {
 				lib = path
+				logger.Debugf("PKCS provider found %s", lib)
 				break
 			}
 		}
