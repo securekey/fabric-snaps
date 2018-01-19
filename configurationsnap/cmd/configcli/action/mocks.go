@@ -70,6 +70,9 @@ func InitGlobalFlags(flags *pflag.FlagSet) {
 	cliconfig.InitUserPassword(flags)
 	cliconfig.InitOrgID(flags)
 	cliconfig.InitMspID(flags)
+	cliconfig.InitKeyType(flags)
+	cliconfig.InitEphemeralFlag(flags)
+	cliconfig.InitSigALg(flags)
 }
 
 // NewMockPeer creates a mock peer

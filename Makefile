@@ -101,7 +101,7 @@ unit-test: depend populate
 	@scripts/unit.sh
 
 pkcs11-unit-test: depend populate
-	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit	
+#	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit	
 
 integration-test: clean depend populate snaps
 	@scripts/integration.sh
