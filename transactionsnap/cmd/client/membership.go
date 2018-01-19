@@ -7,15 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
-	"fmt"
 	"sync"
 
 	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	"github.com/pkg/errors"
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/channelpeer"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var manager *membershipManagerImpl
@@ -46,16 +45,16 @@ func (m *membershipManagerImpl) GetPeersOfChannel(channel string) api.ChannelMem
 func queryPeersOfChannel(channelID string, config api.Config) ([]api.ChannelPeer, error) {
 	memService, err := memservice.Get()
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting membership service")
+		return nil, errors.Wrap(errors.GeneralError, err, "error getting membership service")
 	}
 
 	peerEndpoints, err := memService.GetPeersOfChannel(channelID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error querying for peers on channel [%s]", channelID)
+		return nil, errors.Wrapf(errors.GeneralError, err, "error querying for peers on channel [%s]", channelID)
 	}
 	peers, err := parsePeerEndpoints(channelID, peerEndpoints, config)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing peer endpoints: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error parsing peer endpoints")
 	}
 	return peers, nil
 
@@ -65,14 +64,14 @@ func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, 
 	var peers []api.ChannelPeer
 	clientInstance, err := GetInstance(channelID, config)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed client GetInstance")
 	}
 
 	for _, endpoint := range endpoints {
 		enpoint := config.GetGRPCProtocol() + endpoint.GetEndpoint()
 		peer, err := sdkFabApi.NewPeer(enpoint, "", "", clientInstance.GetConfig())
 		if err != nil {
-			return nil, fmt.Errorf("Error creating new peer: %s", err)
+			return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new peer")
 		}
 		peer.SetMSPID(string(endpoint.GetMSPid()))
 		peers = append(peers, channelpeer.New(peer, channelID, endpoint.LedgerHeight, manager))
@@ -82,5 +81,5 @@ func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, 
 }
 
 func formatQueryError(channel string, err error) error {
-	return fmt.Errorf("Error querying peers on channel %s: %s", channel, err)
+	return errors.Errorf(errors.GeneralError, "Error querying peers on channel %s: %s", channel, err)
 }

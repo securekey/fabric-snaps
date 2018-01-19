@@ -15,7 +15,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/utils"
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // ImportBCCSPKeyFromPEM attempts to create a private BCCSP key from a pem file keyFile
@@ -26,7 +26,7 @@ func ImportBCCSPKeyFromPEM(keyFile string, myCSP apicryptosuite.CryptoSuite, tem
 	}
 	key, err := ImportBCCSPKeyFromPEMBytes(keyBuff, myCSP, temporary)
 	if err != nil {
-		return nil, errors.WithMessage(err, fmt.Sprintf("Failed parsing private key from key file %s", keyFile))
+		return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("Failed parsing private key from key file %s", keyFile))
 	}
 	return key, nil
 }
@@ -36,34 +36,42 @@ func ImportBCCSPKeyFromPEMBytes(keyBuff []byte, myCSP apicryptosuite.CryptoSuite
 	keyFile := "pem bytes"
 	key, err := pemToPrivateKey(keyBuff, nil)
 	if err != nil {
-		return nil, errors.WithMessage(err, fmt.Sprintf("Failed parsing private key from %s", keyFile))
+		return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("Failed parsing private key from %s", keyFile))
 	}
 	switch key.(type) {
 	case *ecdsa.PrivateKey:
 		priv, err := privateKeyToDER(key.(*ecdsa.PrivateKey))
 		if err != nil {
-			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
+			return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
 		}
 		sk, err := myCSP.KeyImport(priv, getECDSAPrivateKeyImportOpts(temporary))
 		if err != nil {
-			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
+			return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
 		}
 		return sk, nil
 	case *rsa.PrivateKey:
-		return nil, errors.Errorf("Failed to import RSA key from %s; RSA private key import is not supported", keyFile)
+		return nil, errors.Errorf(errors.GeneralError, "Failed to import RSA key from %s; RSA private key import is not supported", keyFile)
 	default:
-		return nil, errors.Errorf("Failed to import key from %s: invalid secret key type", keyFile)
+		return nil, errors.Errorf(errors.GeneralError, "Failed to import key from %s: invalid secret key type", keyFile)
 	}
 }
 
 // PEMtoPrivateKey is a bridge for bccsp utils.PEMtoPrivateKey()
 func pemToPrivateKey(raw []byte, pwd []byte) (interface{}, error) {
-	return utils.PEMtoPrivateKey(raw, pwd)
+	bytes, err := utils.PEMtoPrivateKey(raw, pwd)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "PEMtoPrivateKey failed")
+	}
+	return bytes, err
 }
 
 // PrivateKeyToDER marshals is bridge for utils.PrivateKeyToDER
 func privateKeyToDER(privateKey *ecdsa.PrivateKey) ([]byte, error) {
-	return utils.PrivateKeyToDER(privateKey)
+	bytes, err := utils.PrivateKeyToDER(privateKey)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "PrivateKeyToDER failed")
+	}
+	return bytes, err
 }
 
 //GetECDSAPrivateKeyImportOpts options for ECDSA secret key importation in DER format

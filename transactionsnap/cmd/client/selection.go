@@ -27,6 +27,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 const (
@@ -58,12 +59,12 @@ func (s *selectionServiceImpl) GetEndorsersForChaincode(channelID string, peerFi
 	chaincodeIDs ...string) ([]sdkApi.Peer, error) {
 
 	if len(chaincodeIDs) == 0 {
-		return nil, fmt.Errorf("no chaincode IDs provided")
+		return nil, errors.New(errors.GeneralError, "no chaincode IDs provided")
 	}
 
 	resolver, err := s.getPeerGroupResolver(channelID, chaincodeIDs)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting peer group resolver for chaincodes [%v] on channel [%s]: %s", chaincodeIDs, channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "Error getting peer group resolver for chaincodes [%v] on channel [%s]: %s", chaincodeIDs, channelID, err)
 	}
 	return resolver.Resolve(peerFilter).Peers(), nil
 }
@@ -73,7 +74,7 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*api.PeerConf
 	channelMembership := s.membershipManager.GetPeersOfChannel(channelID)
 	if channelMembership.QueryError != nil && len(channelMembership.Peers) == 0 {
 		// Query error and there is no cached membership list
-		return peerConfig, channelMembership.QueryError
+		return peerConfig, errors.WithMessage(errors.GeneralError, channelMembership.QueryError, "Failed GetPeersOfChannel")
 	}
 
 	rs := rand.NewSource(time.Now().Unix())
@@ -84,12 +85,12 @@ func (s *selectionServiceImpl) GetPeerForEvents(channelID string) (*api.PeerConf
 	// as the local peer
 	localPeer, err := s.config.GetLocalPeer()
 	if err != nil {
-		return peerConfig, err
+		return peerConfig, errors.WithMessage(errors.GeneralError, err, "Failed GetLocalPeer")
 	}
 	selectedPeer := channelMembership.Peers[randomPeer]
 	host, _, err := net.SplitHostPort(selectedPeer.URL())
 	if err != nil {
-		return peerConfig, err
+		return peerConfig, errors.Wrap(errors.GeneralError, err, "Failed SplitHostPort")
 	}
 
 	peerConfig = &api.PeerConfig{
@@ -111,7 +112,7 @@ func (s *selectionServiceImpl) getPeerGroupResolver(channelID string, chaincodeI
 	if resolver == nil {
 		var err error
 		if resolver, err = s.createPGResolver(key); err != nil {
-			return nil, fmt.Errorf("unable to create new peer group resolver for chaincode(s) [%v] on channel [%s]: %s", chaincodeIDs, channelID, err)
+			return nil, errors.Errorf(errors.GeneralError, "unable to create new peer group resolver for chaincode(s) [%v] on channel [%s]: %s", chaincodeIDs, channelID, err)
 		}
 	}
 	return resolver, nil
@@ -132,7 +133,7 @@ func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (api.PeerGroup
 	for _, ccID := range key.chaincodeIDs {
 		policyGroup, err := s.getPolicyGroupForCC(key.channelID, ccID)
 		if err != nil {
-			return nil, fmt.Errorf("error retrieving signature policy for chaincode [%s] on channel [%s]: %s", ccID, key.channelID, err)
+			return nil, errors.Errorf(errors.GeneralError, "error retrieving signature policy for chaincode [%s] on channel [%s]: %s", ccID, key.channelID, err)
 		}
 		policyGroups = append(policyGroups, policyGroup)
 	}
@@ -140,12 +141,12 @@ func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (api.PeerGroup
 	// Perform an 'and' operation on all of the peer groups
 	aggregatePolicyGroup, err := pgresolver.NewGroupOfGroups(policyGroups).Nof(int32(len(policyGroups)))
 	if err != nil {
-		return nil, fmt.Errorf("error computing signature policy for chaincode(s) [%v] on channel [%s]: %s", key.chaincodeIDs, key.channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "error computing signature policy for chaincode(s) [%v] on channel [%s]: %s", key.chaincodeIDs, key.channelID, err)
 	}
 
 	// Create the resolver
 	if resolver, err = pgresolver.NewPeerGroupResolver(aggregatePolicyGroup, s.pgLBP); err != nil {
-		return nil, fmt.Errorf("error creating peer group resolver for chaincodes [%v] on channel [%s]: %s", key.chaincodeIDs, key.channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "error creating peer group resolver for chaincodes [%v] on channel [%s]: %s", key.chaincodeIDs, key.channelID, err)
 	}
 
 	s.pgResolvers[key.String()] = resolver
@@ -156,12 +157,12 @@ func (s *selectionServiceImpl) createPGResolver(key *resolverKey) (api.PeerGroup
 func (s *selectionServiceImpl) getPolicyGroupForCC(channelID, ccID string) (api.Group, error) {
 	ccData, err := s.ccDataProvider.QueryChaincodeData(channelID, ccID)
 	if err != nil {
-		return nil, fmt.Errorf("error querying chaincode [%s] on channel [%s]: %s", ccID, channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "error querying chaincode [%s] on channel [%s]: %s", ccID, channelID, err)
 	}
 
 	sigPolicyEnv := &common.SignaturePolicyEnvelope{}
 	if err := proto.Unmarshal(ccData.Policy, sigPolicyEnv); err != nil {
-		return nil, fmt.Errorf("error unmarshalling SignaturePolicyEnvelope for chaincode [%s] on channel [%s]: %v", ccID, channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "error unmarshalling SignaturePolicyEnvelope for chaincode [%s] on channel [%s]: %v", ccID, channelID, err)
 	}
 
 	return pgresolver.NewSignaturePolicyCompiler(
@@ -225,13 +226,13 @@ func (p *ccDataProviderImpl) QueryChaincodeData(channelID string, chaincodeID st
 
 	response, err := queryChaincode(channelID, ccDataProviderSCC, []string{ccDataProviderfunction, channelID, chaincodeID}, p.config)
 	if err != nil {
-		return nil, fmt.Errorf("error querying chaincode data for chaincode [%s] on channel [%s]: %s", chaincodeID, channelID, err)
+		return nil, errors.Errorf(errors.GeneralError, "error querying chaincode data for chaincode [%s] on channel [%s]: %s", chaincodeID, channelID, err)
 	}
 
 	ccData = &ccprovider.ChaincodeData{}
 	err = proto.Unmarshal(response.ProposalResponse.Response.Payload, ccData)
 	if err != nil {
-		return nil, fmt.Errorf("Error unmarshalling chaincode data: %v", err)
+		return nil, errors.Wrap(errors.GeneralError, err, "Error unmarshalling chaincode data")
 	}
 
 	p.ccDataMap[key.String()] = ccData
@@ -289,7 +290,7 @@ func queryChaincode(channelID string, ccID string, args []string, config api.Con
 	var response *apitxn.TransactionProposalResponse
 	anchors := channel.AnchorPeers()
 	if anchors == nil || len(anchors) == 0 {
-		return nil, fmt.Errorf("GetAnchorPeers didn't return any peer")
+		return nil, errors.New(errors.GeneralError, "GetAnchorPeers didn't return any peer")
 	}
 	for _, anchor := range anchors {
 		// Load anchor peer
@@ -327,7 +328,7 @@ func queryChaincode(channelID string, ccID string, args []string, config api.Con
 
 	// If all queries failed, return error
 	if len(queryErrors) == len(anchors) {
-		return nil, fmt.Errorf(
+		return nil, errors.Errorf(errors.GeneralError,
 			"Error querying peers from all configured anchors for channel %s: %s",
 			channelID, strings.Join(queryErrors, "\n"))
 	}

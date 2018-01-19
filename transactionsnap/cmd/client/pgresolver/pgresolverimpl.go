@@ -16,9 +16,10 @@ import (
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	mb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var module = "pg-resolver"
+var module = "txnsnap"
 var logger = logging.NewLogger(module)
 
 type peerGroupResolver struct {
@@ -31,7 +32,7 @@ func NewRoundRobinPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope
 	compiler := NewSignaturePolicyCompiler(peerRetriever)
 	groupHierarchy, err := compiler.Compile(sigPolicyEnv)
 	if err != nil {
-		return nil, fmt.Errorf("error evaluating signature policy: %s", err)
+		return nil, errors.Wrap(errors.GeneralError, err, "error evaluating signature policy")
 	}
 	return NewPeerGroupResolver(groupHierarchy, NewRoundRobinLBP())
 }
@@ -41,16 +42,14 @@ func NewRandomPeerGroupResolver(sigPolicyEnv *common.SignaturePolicyEnvelope, pe
 	compiler := NewSignaturePolicyCompiler(peerRetriever)
 	groupHierarchy, err := compiler.Compile(sigPolicyEnv)
 	if err != nil {
-		return nil, fmt.Errorf("error evaluating signature policy: %s", err)
+		return nil, errors.Wrap(errors.GeneralError, err, "error evaluating signature policy")
 	}
 	return NewPeerGroupResolver(groupHierarchy, NewRandomLBP())
 }
 
 // NewPeerGroupResolver returns a new PeerGroupResolver
 func NewPeerGroupResolver(groupHierarchy api.GroupOfGroups, lbp api.LoadBalancePolicy) (api.PeerGroupResolver, error) {
-	if logging.IsEnabledFor(module, apilogging.DEBUG) {
-		logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
-	}
+	logger.Debugf("\n***** Policy: %s\n", groupHierarchy)
 
 	mspGroups := groupHierarchy.Reduce()
 
@@ -177,14 +176,14 @@ type signaturePolicyCompiler struct {
 func (c *signaturePolicyCompiler) Compile(sigPolicyEnv *common.SignaturePolicyEnvelope) (api.GroupOfGroups, error) {
 	policFunc, err := c.compile(sigPolicyEnv.Rule, sigPolicyEnv.Identities)
 	if err != nil {
-		return nil, fmt.Errorf("error compiling chaincode signature policy: %s", err)
+		return nil, errors.Wrapf(errors.GeneralError, err, "error compiling chaincode signature policy")
 	}
 	return policFunc()
 }
 
 func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, identities []*mb.MSPPrincipal) (api.SignaturePolicyFunc, error) {
 	if sigPolicy == nil {
-		return nil, fmt.Errorf("nil signature policy")
+		return nil, errors.New(errors.GeneralError, "nil signature policy")
 	}
 
 	switch t := sigPolicy.Type.(type) {
@@ -192,7 +191,7 @@ func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, ide
 		return func() (api.GroupOfGroups, error) {
 			mspID, err := mspPrincipalToString(identities[t.SignedBy])
 			if err != nil {
-				return nil, fmt.Errorf("error getting MSP ID from MSP principal: %s", err)
+				return nil, errors.WithMessage(errors.GeneralError, err, "error getting MSP ID from MSP principal")
 			}
 			return NewGroupOfGroups([]api.Group{NewMSPPeerGroup(mspID, c.peerRetriever)}), nil
 		}, nil
@@ -226,7 +225,7 @@ func (c *signaturePolicyCompiler) compile(sigPolicy *common.SignaturePolicy, ide
 		}, nil
 
 	default:
-		return nil, fmt.Errorf("unsupported signature policy type: %v", t)
+		return nil, errors.Errorf(errors.GeneralError, "unsupported signature policy type: %v", t)
 	}
 }
 
@@ -246,9 +245,9 @@ func mspPrincipalToString(principal *mb.MSPPrincipal) (string, error) {
 
 	case mb.MSPPrincipal_IDENTITY:
 		// TODO: Do we need to support this?
-		return "", fmt.Errorf("unsupported PrincipalClassification type: %s", reflect.TypeOf(principal.PrincipalClassification))
+		return "", errors.Errorf(errors.GeneralError, "unsupported PrincipalClassification type: %s", reflect.TypeOf(principal.PrincipalClassification))
 
 	default:
-		return "", fmt.Errorf("unknown PrincipalClassification type: %s", reflect.TypeOf(principal.PrincipalClassification))
+		return "", errors.Errorf(errors.GeneralError, "unknown PrincipalClassification type: %s", reflect.TypeOf(principal.PrincipalClassification))
 	}
 }

@@ -8,19 +8,17 @@ package config
 
 import (
 	"bytes"
-	"fmt"
 	"go/build"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/viper"
 )
 
@@ -35,7 +33,7 @@ const (
 	defaultCommitTimeout            = 30 * time.Second
 )
 
-var logger = logging.NewLogger("txn-snap-config")
+var logger = logging.NewLogger("txnsnap")
 var defaultLogLevel = "info"
 
 //Config implements Config interface
@@ -61,21 +59,21 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 
 	err := peerConfig.ReadInConfig()
 	if err != nil {
-		return nil, errors.Errorf("Fatal error reading peer config file: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Fatal error reading peer config file")
 	}
 	//txSnapConfig
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"),
 		PeerID: peerConfig.GetString("peer.id"), AppName: "txnsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, errors.New("Cannot create cache instance")
+		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
 	}
 	dataConfig, err := cacheInstance.Get(channelID, key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
 	}
 	if dataConfig == nil {
-		return nil, fmt.Errorf("config data is empty")
+		return nil, errors.New(errors.GeneralError, "config data is empty")
 	}
 	txnSnapConfig := viper.New()
 	txnSnapConfig.SetConfigType("YAML")
@@ -87,7 +85,7 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	c := &Config{peerConfig: peerConfig, txnSnapConfig: txnSnapConfig, txnSnapConfigBytes: dataConfig}
 	err = c.initializeLogging()
 	if err != nil {
-		return nil, errors.Errorf("Error initializing logging: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
 	}
 	return c, nil
 }
@@ -105,28 +103,28 @@ func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
 
 	peerAddress := c.peerConfig.GetString("peer.address")
 	if peerAddress == "" {
-		return nil, errors.Errorf("Peer address not found in config")
+		return nil, errors.New(errors.GeneralError, "Peer address not found in config")
 	}
 	eventAddress := c.peerConfig.GetString("peer.events.address")
 	if eventAddress == "" {
-		return nil, errors.Errorf("Peer event address not found in config")
+		return nil, errors.New(errors.GeneralError, "Peer event address not found in config")
 	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
 	peer.Host = c.GetGRPCProtocol() + splitPeerAddress[0]
 	peer.Port, err = strconv.Atoi(splitPeerAddress[1])
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
 	}
 	splitEventAddress := strings.Split(eventAddress, ":")
 	// Event host should be set to the peer host as that is the advertised address
 	peer.EventHost = c.GetGRPCProtocol() + splitPeerAddress[0]
 	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
 	}
 	peer.MSPid = []byte(c.GetMspID())
 	if peer.MSPid == nil || string(peer.MSPid) == "" {
-		return nil, errors.Errorf("Peer localMspId not found in config")
+		return nil, errors.New(errors.GeneralError, "Peer localMspId not found in config")
 	}
 
 	return peer, nil
@@ -257,11 +255,11 @@ func (c *Config) initializeLogging() error {
 
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
-		return errors.Errorf("Error initializing log level: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
 	}
 
-	logging.SetLevel("", level)
-	logger.Debugf("Txnsnap logging initialized. Log level: %s", logging.GetLevel(""))
+	logging.SetLevel("txnsnap", level)
+	logger.Debugf("Txnsnap logging initialized. Log level: %s", logLevel)
 
 	return nil
 }
