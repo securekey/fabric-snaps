@@ -22,10 +22,10 @@ import (
 	"github.com/hyperledger/fabric/bccsp"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.NewLogger("transaction-fabric-client-factories")
+var logger = logging.NewLogger("txnsnap")
 
 // CredentialManagerProviderFactory is will provide custom context factory for SDK
 type CredentialManagerProviderFactory struct {
@@ -38,7 +38,7 @@ func (f *CredentialManagerProviderFactory) NewCredentialManager(orgName string, 
 
 	credentialMgr, err := NewCredentialManager(orgName, f.CryptoPath, config, cryptoProvider)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new credential manager")
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to create new credential manager")
 	}
 
 	return credentialMgr, nil
@@ -59,15 +59,15 @@ type credentialManager struct {
 // @returns {CredentialManager} new credential manager
 func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config, cryptoProvider apicryptosuite.CryptoSuite) (apifabclient.CredentialManager, error) {
 	if orgName == "" {
-		return nil, errors.New("orgName is required")
+		return nil, errors.New(errors.GeneralError, "orgName is required")
 	}
 
 	if cryptoProvider == nil {
-		return nil, errors.New("cryptoProvider is required")
+		return nil, errors.New(errors.GeneralError, "cryptoProvider is required")
 	}
 
 	if config == nil {
-		return nil, errors.New("config is required")
+		return nil, errors.New(errors.GeneralError, "config is required")
 	}
 
 	netwkConfig, err := config.NetworkConfig()
@@ -78,11 +78,11 @@ func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config
 	// viper keys are case insensitive
 	orgConfig, ok := netwkConfig.Organizations[strings.ToLower(orgName)]
 	if !ok {
-		return nil, errors.New("org config retrieval failed")
+		return nil, errors.New(errors.GeneralError, "org config retrieval failed")
 	}
 
 	if mspConfigPath == "" && len(orgConfig.Users) == 0 {
-		return nil, errors.New("either mspConfigPath or an embedded list of users is required")
+		return nil, errors.New(errors.GeneralError, "either mspConfigPath or an embedded list of users is required")
 	}
 
 	if !filepath.IsAbs(mspConfigPath) {
@@ -99,12 +99,12 @@ func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config
 // GetSigningIdentity will sign the given object with provided key,
 func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient.SigningIdentity, error) {
 	if userName == "" {
-		return nil, errors.New("username is required")
+		return nil, errors.New(errors.GeneralError, "username is required")
 	}
 
 	mspID, err := mgr.config.MspID(mgr.orgName)
 	if err != nil {
-		return nil, errors.WithMessage(err, "MSP ID config read failed")
+		return nil, errors.WithMessage(errors.GeneralError, err, "MSP ID config read failed")
 	}
 
 	enrollmentCert, err := mgr.getEnrollmentCert(userName)
@@ -116,18 +116,18 @@ func (mgr *credentialManager) GetSigningIdentity(userName string) (*apifabclient
 	//Get Key from Pem bytes
 	key, err := getCryptoSuiteKeyFromPem(enrollmentCert, mgr.cryptoProvider)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cryptosuite key from enrollment cert")
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to get cryptosuite key from enrollment cert")
 	}
 
 	//Get private key using SKI
 	privateKey, err := mgr.cryptoProvider.GetKey(key.SKI())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get private key")
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to get private key")
 	}
 
 	// make sure the key is private for the signingIdentity
 	if !privateKey.Private() {
-		return nil, errors.New("failed to get private key, found a public key instead")
+		return nil, errors.New(errors.GeneralError, "failed to get private key, found a public key instead")
 	}
 
 	signingIdentity := &apifabclient.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
@@ -149,23 +149,23 @@ func (mgr *credentialManager) getEnrollmentCert(userName string) ([]byte, error)
 		enrollmentCertBytes, err = ioutil.ReadFile(certPath)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "reading enrollment cert path failed")
+			return nil, errors.Wrap(errors.GeneralError, err, "reading enrollment cert path failed")
 		}
 	} else if mgr.certDir != "" {
 		enrollmentCertDir := strings.Replace(mgr.certDir, "{userName}", userName, -1)
 		enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
 
 		if err != nil {
-			return nil, errors.WithMessage(err, "find enrollment cert path failed")
+			return nil, errors.WithMessage(errors.GeneralError, err, "find enrollment cert path failed")
 		}
 
 		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath)
 
 		if err != nil {
-			return nil, errors.WithMessage(err, "reading enrollment cert path failed")
+			return nil, errors.WithMessage(errors.GeneralError, err, "reading enrollment cert path failed")
 		}
 	} else {
-		return nil, errors.Errorf("failed to find enrollment cert for user %s, verify the configs", userName)
+		return nil, errors.Errorf(errors.GeneralError, "failed to find enrollment cert for user %s, verify the configs", userName)
 	}
 
 	return enrollmentCertBytes, nil
@@ -176,7 +176,7 @@ func getFirstPathFromDir(dir string) (string, error) {
 
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return "", errors.Wrap(err, "read directory failed")
+		return "", errors.Wrap(errors.GeneralError, err, "read directory failed")
 	}
 
 	for _, p := range files {
@@ -197,24 +197,24 @@ func getFirstPathFromDir(dir string) (string, error) {
 		return fullName, nil
 	}
 
-	return "", errors.New("no paths found")
+	return "", errors.New(errors.GeneralError, "no paths found")
 }
 
 func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite apicryptosuite.CryptoSuite) (apicryptosuite.Key, error) {
 	if idBytes == nil {
-		return nil, errors.New("getCryptoSuiteKeyFromPem error: nil idBytes")
+		return nil, errors.New(errors.GeneralError, "getCryptoSuiteKeyFromPem error: nil idBytes")
 	}
 
 	// Decode the pem bytes
 	pemCert, _ := pem.Decode(idBytes)
 	if pemCert == nil {
-		return nil, errors.Errorf("getCryptoSuiteKeyFromPem error: could not decode pem bytes [%v]", idBytes)
+		return nil, errors.Errorf(errors.GeneralError, "getCryptoSuiteKeyFromPem error: could not decode pem bytes [%v]", idBytes)
 	}
 
 	// get a cert
 	cert, err := x509.ParseCertificate(pemCert.Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "getCryptoSuiteKeyFromPem error: failed to parse x509 cert")
+		return nil, errors.Wrap(errors.GeneralError, err, "getCryptoSuiteKeyFromPem error: failed to parse x509 cert")
 	}
 
 	// get the public key in the right format

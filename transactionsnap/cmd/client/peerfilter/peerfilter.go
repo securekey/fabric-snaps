@@ -8,12 +8,12 @@ package peerfilter
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/peerfilter/minblockheight"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.NewLogger("transaction-snap/peerfilter")
+var logger = logging.NewLogger("txnsnap")
 
 // New creates a new peer filter according to the given options
 func New(opts *api.PeerFilterOpts) (api.PeerFilter, error) {
@@ -25,6 +25,6 @@ func New(opts *api.PeerFilterOpts) (api.PeerFilter, error) {
 	case api.MinBlockHeightPeerFilterType:
 		return minblockheight.New(opts.Args)
 	default:
-		return nil, errors.Errorf("invalid peer filter type [%s]", opts.Type)
+		return nil, errors.Errorf(errors.GeneralError, "invalid peer filter type [%s]", opts.Type)
 	}
 }

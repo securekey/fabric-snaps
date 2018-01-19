@@ -8,10 +8,7 @@ package txsnapservice
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/gogo/protobuf/proto"
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
@@ -24,9 +21,10 @@ import (
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/peerfilter"
 	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.NewLogger("tx-service")
+var logger = logging.NewLogger("txnsnap")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
@@ -69,7 +67,7 @@ type apiConfig struct {
 func (txs *TxServiceImpl) QueryChannels(targetPeer sdkApi.Peer) ([]string, error) {
 	channels, err := txs.FcClient.QueryChannels(targetPeer)
 	if err != nil {
-		return nil, errors.Errorf("Error querying channels on %v: %s", targetPeer, err)
+		return nil, errors.Errorf(errors.GeneralError, "Error querying channels on %v: %s", targetPeer, err)
 	}
 	return channels, nil
 }
@@ -84,18 +82,16 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 	txService := &TxServiceImpl{}
 	config, err := txsnapconfig.NewConfig(PeerConfigPath, channelID)
 	if err != nil {
-		errMsg := fmt.Sprintf("Failed to initialize config: %s", err)
-		logger.Errorf(errMsg)
-		return txService, err
+		return txService, errors.WithMessage(errors.GeneralError, err, "Failed to initialize config")
 	}
 
 	if config == nil || config.GetConfigBytes() == nil {
-		return nil, fmt.Errorf("config from ledger is nil")
+		return nil, errors.New(errors.GeneralError, "config from ledger is nil")
 	}
 
 	fcClient, err := txnSnapClient.GetInstance(channelID, &apiConfig{config})
 	if err != nil {
-		return nil, errors.Errorf("Cannot initialize client %v", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
 	}
 
 	membership := clientService.GetClientMembership(config)
@@ -109,19 +105,19 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 //EndorseTransaction use to endorse the transaction
 func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) ([]*apitxn.TransactionProposalResponse, error) {
 	if snapTxRequest == nil {
-		return nil, errors.Errorf("SnapTxRequest is required")
+		return nil, errors.New(errors.GeneralError, "SnapTxRequest is required")
 
 	}
 	if snapTxRequest.ChaincodeID == "" {
-		return nil, errors.Errorf("ChaincodeID is mandatory field of the SnapTransactionRequest")
+		return nil, errors.New(errors.GeneralError, "ChaincodeID is mandatory field of the SnapTransactionRequest")
 	}
 	if snapTxRequest.ChannelID == "" {
-		return nil, errors.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
+		return nil, errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 
 	channel, err := txs.FcClient.NewChannel(snapTxRequest.ChannelID)
 	if err != nil {
-		return nil, errors.Errorf("Cannot create channel %v", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot create channel")
 	}
 
 	// //cc code args
@@ -138,7 +134,7 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 		var err error
 		peerFilter, err = peerfilter.New(snapTxRequest.PeerFilter)
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating Peer Filter")
+			return nil, errors.Wrap(errors.GeneralError, err, "error creating Peer Filter")
 		}
 	}
 
@@ -171,7 +167,7 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 				time.Sleep(txs.Config.GetEndorsementRetryInterval())
 			} else {
 				logger.Warnf("Received error when endorsing Tx [%s] on attempt #%d. Returning error - Err: [%s]", txID, attemptNum, err)
-				return nil, err
+				return nil, errors.WithMessage(errors.GeneralError, err, "Received error when endorsing Tx")
 			}
 		} else {
 			if lastErr != nil {
@@ -186,18 +182,18 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 //CommitTransaction use to comit the transaction
 func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*apitxn.TransactionProposalResponse, registerTxEvent bool) (pb.TxValidationCode, error) {
 	if channelID == "" {
-		return pb.TxValidationCode(-1), errors.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
+		return pb.TxValidationCode(-1), errors.Errorf(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 	//	channel, err := txs.FcClient.NewChannel(channelID)
 	channel, err := txs.getChannel(channelID)
 	if err != nil {
 		//what code should be returned here
-		return pb.TxValidationCode(-1), errors.Errorf("Cannot create channel %v", err)
+		return pb.TxValidationCode(-1), errors.WithMessage(errors.GeneralError, err, "Cannot create channel")
 	}
 
 	err = txs.FcClient.CommitTransaction(channel, tpResponses, registerTxEvent)
 	if err != nil {
-		return pb.TxValidationCode(-1), errors.Errorf("CommitTransaction returned error: %v", err)
+		return pb.TxValidationCode(-1), errors.WithMessage(errors.GeneralError, err, "CommitTransaction returned error")
 	}
 	return pb.TxValidationCode(pb.TxValidationCode_VALID), nil
 
@@ -207,14 +203,14 @@ func (txs *TxServiceImpl) CommitTransaction(channelID string, tpResponses []*api
 func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) (pb.TxValidationCode, error) {
 
 	if snapTxRequest == nil {
-		return pb.TxValidationCode(-1), errors.Errorf("SnapTxRequest is required")
+		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "SnapTxRequest is required")
 	}
 
 	if snapTxRequest.ChaincodeID == "" {
-		return pb.TxValidationCode(-1), errors.Errorf("ChaincodeID is mandatory field of the SnapTransactionRequest")
+		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "ChaincodeID is mandatory field of the SnapTransactionRequest")
 	}
 	if snapTxRequest.ChannelID == "" {
-		return pb.TxValidationCode(-1), errors.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
+		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 
 	tpxResponse, err := txs.EndorseTransaction(snapTxRequest, peers)
@@ -239,7 +235,7 @@ func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTra
 
 	err = txs.FcClient.CommitTransaction(channel, tpxResponse, snapTxRequest.RegisterTxEvent)
 	if err != nil {
-		return pb.TxValidationCode(-1), errors.Errorf("CommitTransaction returned error: %v", err)
+		return pb.TxValidationCode(-1), errors.WithMessage(errors.GeneralError, err, "CommitTransaction returned error")
 	}
 	return pb.TxValidationCode(pb.TxValidationCode_VALID), nil
 
@@ -249,29 +245,29 @@ func (txs *TxServiceImpl) EndorseAndCommitTransaction(snapTxRequest *api.SnapTra
 func (txs *TxServiceImpl) VerifyTxnProposalSignature(channelID string, signedProposal *pb.SignedProposal) error {
 
 	if channelID == "" {
-		return fmt.Errorf("ChannelID is mandatory field of the SnapTransactionRequest")
+		return errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 
 	channel, err := txs.getChannel(channelID)
 	if err != nil {
-		return fmt.Errorf("Cannot create channel %v", err)
+		return errors.WithMessage(errors.GeneralError, err, "Cannot create channel")
 	}
 
 	if signedProposal == nil {
-		return fmt.Errorf("Signed proposal is missing")
+		return errors.New(errors.GeneralError, "Signed proposal is missing")
 	}
 	err = txs.initializeChannel(channel)
 	if err != nil {
-		return fmt.Errorf("Cannot initialize channel %v", err)
+		return errors.WithMessage(errors.GeneralError, err, "Cannot initialize channel")
 	}
 
 	proposalBytes, err := proto.Marshal(signedProposal)
 	if err != nil {
-		return fmt.Errorf("Cannot unmarshal proposlaBytes  %v", err)
+		return errors.Wrap(errors.GeneralError, err, "Cannot unmarshal proposlaBytes")
 	}
 	err = txs.FcClient.VerifyTxnProposalSignature(channel, proposalBytes)
 	if err != nil {
-		return fmt.Errorf("VerifyTxnProposalSignature returned error: %v", err)
+		return errors.WithMessage(errors.GeneralError, err, "VerifyTxnProposalSignature returned error")
 	}
 	return nil
 }
@@ -279,7 +275,7 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(channelID string, signedPro
 //GetPeersOfChannel use to get peers of channel
 func (txs *TxServiceImpl) GetPeersOfChannel(args []string, membership api.MembershipManager) ([]byte, error) {
 	if len(args) < 1 || args[0] == "" {
-		return nil, fmt.Errorf("Channel name must be provided")
+		return nil, errors.New(errors.GeneralError, "Channel name must be provided")
 	}
 
 	// First argument is channel
@@ -288,7 +284,7 @@ func (txs *TxServiceImpl) GetPeersOfChannel(args []string, membership api.Member
 
 	channelMembership := membership.GetPeersOfChannel(channel)
 	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
-		return nil, fmt.Errorf("Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
+		return nil, errors.Errorf(errors.GeneralError, "Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
 	}
 	if channelMembership.QueryError != nil && channelMembership.Peers != nil {
 		logger.Warnf(
@@ -306,7 +302,7 @@ func (txs *TxServiceImpl) GetPeersOfChannel(args []string, membership api.Member
 
 	peerBytes, err := json.Marshal(endpoints)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed json Marshal")
 	}
 
 	return peerBytes, nil
@@ -316,13 +312,13 @@ func (txs *TxServiceImpl) getChannel(channelID string) (sdkApi.Channel, error) {
 	if !DoIntializeChannel {
 		channel, err := txs.FcClient.GetChannel(channelID)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithMessage(errors.GeneralError, err, "Failed GetChannel")
 		}
 		return channel, nil
 	}
 	channel, err := txs.FcClient.NewChannel(channelID)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed NewChannel")
 	}
 	return channel, nil
 }
@@ -333,7 +329,7 @@ func (txs *TxServiceImpl) initializeChannel(channel sdkApi.Channel) error {
 	}
 	err := txs.FcClient.InitializeChannel(channel)
 	if err != nil {
-		return fmt.Errorf("Cannot initialize channel %v", err)
+		return errors.WithMessage(errors.GeneralError, err, "Cannot initialize channel")
 	}
 	return nil
 }
@@ -347,7 +343,7 @@ func newClientService() api.ClientService {
 func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
 	fcClient, err := txnSnapClient.GetInstance(channelID, config)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot initialize client %v", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
 	}
 	return fcClient, nil
 }
@@ -365,7 +361,7 @@ func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTr
 	var snapTxRequest api.SnapTransactionRequest
 	err := json.Unmarshal(snapTransactionRequestbBytes, &snapTxRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot decode parameters from request to Snap Transaction Request %v", err)
+		return nil, errors.Wrap(errors.GeneralError, err, "Cannot decode parameters from request to Snap Transaction Request")
 	}
 	return &snapTxRequest, nil
 }

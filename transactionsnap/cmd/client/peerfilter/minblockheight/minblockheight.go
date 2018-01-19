@@ -7,16 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package minblockheight
 
 import (
-	"errors"
-
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	peer "github.com/hyperledger/fabric/core/peer"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.NewLogger("transaction-snap/peerfilter/minblockheight")
+var logger = logging.NewLogger("txnsnap")
 
 // New creates a new Min Block Height peer filter. This filter
 // selects peers whose block height is at least the height
@@ -27,7 +26,7 @@ func New(args []string) (api.PeerFilter, error) {
 
 func newWithOpts(args []string, bcInfoProvider blockchainInfoProvider) (*peerFilter, error) {
 	if len(args) == 0 {
-		return nil, errors.New("expecting channel ID arg")
+		return nil, errors.New(errors.GeneralError, "expecting channel ID arg")
 	}
 	return &peerFilter{
 		channelID:      args[0],

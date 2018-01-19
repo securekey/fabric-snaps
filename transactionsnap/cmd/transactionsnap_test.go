@@ -188,7 +188,7 @@ func TestWrongRegisterTxEventValue(t *testing.T) {
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
-	errorMsg := `Cannot ParseBool the fourth arg to registerTxEvent strconv.ParseBool: parsing "false1": invalid syntax`
+	errorMsg := `Cannot ParseBool the fourth arg to registerTxEvent: strconv.ParseBool: parsing "false1": invalid syntax`
 	if response.Message != errorMsg {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
@@ -314,7 +314,7 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 		if response.Status != shim.ERROR {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
-		errorMsg := "Cannot decode parameters from request to Snap Transaction Request unexpected end of JSON input"
+		errorMsg := "Cannot decode parameters from request to Snap Transaction Request: unexpected end of JSON input"
 		if response.Message != errorMsg {
 			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 		}

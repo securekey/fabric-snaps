@@ -12,6 +12,7 @@ import (
 
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // NewGroupOfGroups returns a new group of groups
@@ -172,10 +173,10 @@ func (g *groupsImpl) Collapse() api.Group {
 
 func (g *groupsImpl) Nof(threshold int32) (api.GroupOfGroups, error) {
 	if int(threshold) > len(g.Items()) {
-		return nil, fmt.Errorf("N is greater than length of the group")
+		return nil, errors.New(errors.GeneralError, "N is greater than length of the group")
 	}
 	if threshold <= 0 {
-		return nil, fmt.Errorf("N must be greater than 0")
+		return nil, errors.New(errors.GeneralError, "N must be greater than 0")
 	}
 	return getCombinations(g.Items(), threshold, 0)
 }
