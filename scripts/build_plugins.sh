@@ -20,6 +20,8 @@ git checkout $FABRIC_NEXT_VERSION
 ./fabric_cherry_picks.sh >/dev/null
 cd /opt/gopath/src/github.com/hyperledger/fabric
 
+git am /opt/gopath/src/github.com/hyperledger/fabric-next/patches/0001-DRAFT-Remote-EP11-BCCSP.patch
+
 cd  /opt/gopath/src/github.com/securekey/fabric-snaps
 
 # This can be deleted once we have Go 1.10
