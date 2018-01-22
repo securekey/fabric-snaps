@@ -276,7 +276,11 @@ func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 
 		// Only send a chaincode event if the transaction has committed
 		if tx.TxValidationCode == pb.TxValidationCode_VALID {
-			for _, action := range tx.FilteredAction {
+			txActions := tx.GetTransactionActions()
+			if txActions == nil {
+				continue
+			}
+			for _, action := range txActions.ChaincodeActions {
 				if action.CcEvent != nil {
 					ed.triggerCCEvent(action.CcEvent)
 				}

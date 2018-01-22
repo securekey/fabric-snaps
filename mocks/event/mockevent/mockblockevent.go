@@ -82,12 +82,16 @@ func NewFilteredTx(txID string, txValidationCode pb.TxValidationCode) *pb.Filter
 func NewFilteredTxWithCCEvent(txID, ccID, event string) *pb.FilteredTransaction {
 	return &pb.FilteredTransaction{
 		Txid: txID,
-		FilteredAction: []*pb.FilteredAction{
-			&pb.FilteredAction{
-				CcEvent: &pb.ChaincodeEvent{
-					ChaincodeId: ccID,
-					EventName:   event,
-					TxId:        txID,
+		Data: &pb.FilteredTransaction_TransactionActions{
+			TransactionActions: &pb.FilteredTransactionActions{
+				ChaincodeActions: []*pb.FilteredChaincodeAction{
+					&pb.FilteredChaincodeAction{
+						CcEvent: &pb.ChaincodeEvent{
+							ChaincodeId: ccID,
+							EventName:   event,
+							TxId:        txID,
+						},
+					},
 				},
 			},
 		},

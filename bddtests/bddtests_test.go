@@ -70,11 +70,12 @@ func TestMain(m *testing.M) {
 
 		FeatureContext(s)
 	}, godog.Options{
-		Tags:      tags,
-		Format:    "progress",
-		Paths:     []string{"features"},
-		Randomize: time.Now().UTC().UnixNano(), // randomize scenario execution order
-		Strict:    true,
+		Tags:          tags,
+		Format:        "progress",
+		Paths:         []string{"features"},
+		Randomize:     time.Now().UTC().UnixNano(), // randomize scenario execution order
+		Strict:        true,
+		StopOnFailure: true,
 	})
 
 	if st := m.Run(); st > status {
