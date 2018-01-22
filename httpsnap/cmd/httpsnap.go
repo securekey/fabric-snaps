@@ -14,6 +14,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("httpsnap")
@@ -96,7 +97,7 @@ func getHTTPSnapRequest(reqBytes []byte) (*api.HTTPSnapRequest, error) {
 	var req api.HTTPSnapRequest
 	err := json.Unmarshal(reqBytes, &req)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed json.Unmarshal")
 	}
 	return &req, nil
 }

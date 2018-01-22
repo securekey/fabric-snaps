@@ -7,7 +7,6 @@ package config
 
 import (
 	"bytes"
-	"fmt"
 	"go/build"
 	"io/ioutil"
 	"path/filepath"
@@ -18,6 +17,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 
 	"github.com/spf13/viper"
 )
@@ -28,8 +28,7 @@ const (
 	defaultTimeout     = time.Second * 5
 )
 
-var logger = logging.NewLogger("httpsnap-config")
-var defaultLogFormat = `%{color}%{time:15:04:05.000} [%{module}] %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
+var logger = logging.NewLogger("httpsnap")
 var defaultLogLevel = "info"
 
 // FilePathSeparator separator defined by os.Separator.
@@ -57,17 +56,20 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	peerConfig.SetEnvKeyReplacer(replacer)
 	err := peerConfig.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Fatal error reading peer config file: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Fatal error reading peer config file")
 	}
 	//httpSnapConfig Config
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
 	cacheInstance := configmgmtService.GetInstance()
+	if cacheInstance == nil {
+		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
+	}
 	configData, err := cacheInstance.Get(channelID, key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
 	}
 	if configData == nil {
-		return nil, fmt.Errorf("config data is empty")
+		return nil, errors.New(errors.GeneralError, "config data is empty")
 	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
@@ -78,7 +80,7 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
 	err = c.initializeLogging()
 	if err != nil {
-		return nil, fmt.Errorf("Error initializing logging: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
 	}
 	return c, nil
 }
@@ -93,11 +95,11 @@ func (c *config) initializeLogging() error {
 
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
-		return fmt.Errorf("Error initializing log level: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
 	}
 
 	logging.SetLevel("httpsnap", level)
-	logger.Debugf("Httpsnap logging initialized. Log level: %s", logging.GetLevel("httpsnap"))
+	logger.Debugf("Httpsnap logging initialized. Log level: %s", logLevel)
 
 	return nil
 }
@@ -121,7 +123,7 @@ func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig,
 	var schemaConfigs []httpsnapApi.SchemaConfig
 	err = c.httpSnapConfig.UnmarshalKey("schemas", &schemaConfigs)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
 	}
 
 	schemaMap = make(map[string]*httpsnapApi.SchemaConfig, len(schemaConfigs))
@@ -139,11 +141,11 @@ func (c *config) getHeaderMap() (headerMap map[string]bool, err error) {
 	var headers []string
 	err = c.httpSnapConfig.UnmarshalKey("headers", &headers)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting allowed headers: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error getting allowed headers")
 	}
 
 	if headers == nil || len(headers) == 0 {
-		return nil, fmt.Errorf("Missing http headers configuration")
+		return nil, errors.New(errors.GeneralError, "Missing http headers configuration")
 	}
 
 	headerMap = make(map[string]bool, len(headers))
@@ -209,7 +211,7 @@ func (c *config) GetPeerClientKey() (string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(clientKeyLocation))
 	if err != nil {
-		return "", err
+		return "", errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
 	}
 	return string(fileData), nil
 }
@@ -234,7 +236,7 @@ func (c *config) getPeerClientCert() (string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(clientCertLocation))
 	if err != nil {
-		return "", err
+		return "", errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
 	}
 	return string(fileData), nil
 }
@@ -249,7 +251,7 @@ func (c *config) getPeerTLSRootCert() ([]string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(rootCertLocation))
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
 	}
 
 	return []string{string(fileData)}, nil
@@ -268,7 +270,7 @@ func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, er
 	var clientTLS map[string]*httpsnapApi.ClientTLS
 	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &clientTLS)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
 	}
 	return clientTLS, nil
 }
@@ -283,7 +285,7 @@ func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig,
 	schemaConfig := schemaMap[contentType]
 	logger.Debugf("Schema config: %s", schemaConfig)
 	if schemaConfig == nil {
-		return nil, fmt.Errorf("Schema configuration for content-type: %s not found", contentType)
+		return nil, errors.Errorf(errors.GeneralError, "Schema configuration for content-type: %s not found", contentType)
 	}
 
 	return schemaConfig, nil

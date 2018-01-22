@@ -29,13 +29,13 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/pkg/errors"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var logger = logging.NewLogger("http-service")
+var logger = logging.NewLogger("httpsnap")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
@@ -65,57 +65,57 @@ func Get(channelID string) (*HTTPServiceImpl, error) {
 //Invoke http service
 func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServiceInvokeRequest) ([]byte, error) {
 	if httpServiceInvokeRequest.RequestURL == "" {
-		return nil, errors.New("Missing RequestURL")
+		return nil, errors.New(errors.GeneralError, "Missing RequestURL")
 	}
 
 	if len(httpServiceInvokeRequest.RequestHeaders) == 0 {
-		return nil, errors.New("Missing request headers")
+		return nil, errors.New(errors.GeneralError, "Missing request headers")
 	}
 
 	if _, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; !ok {
-		return nil, errors.New("Missing required Content-Type header")
+		return nil, errors.New(errors.GeneralError, "Missing required Content-Type header")
 	}
 
 	if val, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; ok && val == "" {
-		return nil, errors.New("Content-Type header is empty")
+		return nil, errors.New(errors.GeneralError, "Content-Type header is empty")
 	}
 
 	if httpServiceInvokeRequest.RequestBody == "" {
-		return nil, errors.New("Missing RequestBody")
+		return nil, errors.New(errors.GeneralError, "Missing RequestBody")
 	}
 
 	// Validate URL
 	uri, err := url.ParseRequestURI(httpServiceInvokeRequest.RequestURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "Invalid URL")
+		return nil, errors.Wrap(errors.GeneralError, err, "Invalid URL")
 	}
 
 	// Scheme has to be https
 	if uri.Scheme != "https" {
-		return nil, errors.Errorf("Unsupported scheme: %s", uri.Scheme)
+		return nil, errors.Errorf(errors.GeneralError, "Unsupported scheme: %s", uri.Scheme)
 	}
 
 	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(httpServiceInvokeRequest.RequestHeaders["Content-Type"])
 	if err != nil {
-		return nil, errors.WithMessage(err, "GetSchemaConfig return error")
+		return nil, errors.WithMessage(errors.GeneralError, err, "GetSchemaConfig return error")
 	}
 
 	// Validate request body against schema
 	if err := httpServiceImpl.validate(httpServiceInvokeRequest.RequestHeaders["Content-Type"], schemaConfig.Request, httpServiceInvokeRequest.RequestBody); err != nil {
-		return nil, errors.WithMessage(err, "Failed to validate request body")
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed to validate request body")
 	}
 
 	// URL is ok, retrieve data using http client
 	responseContentType, response, err := httpServiceImpl.getData(httpServiceInvokeRequest, httpServiceImpl.config)
 	if err != nil {
-		return nil, errors.WithMessage(err, "getData return error")
+		return nil, errors.WithMessage(errors.GeneralError, err, "getData return error")
 	}
 
 	logger.Debugf("Successfully retrieved data from URL: %s", httpServiceInvokeRequest.RequestURL)
 
 	// Validate response body against schema
 	if err := httpServiceImpl.validate(responseContentType, schemaConfig.Response, string(response)); err != nil {
-		return nil, errors.WithMessage(err, "validate return error")
+		return nil, errors.WithMessage(errors.GeneralError, err, "validate return error")
 	}
 	return response, nil
 }
@@ -124,11 +124,11 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	config, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to initialize config")
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed to initialize config")
 	}
 
 	if config == nil {
-		return nil, errors.New("config from ledger is nil")
+		return nil, errors.New(errors.GeneralError, "config from ledger is nil")
 	}
 	httpService := &HTTPServiceImpl{}
 	httpService.config = config
@@ -166,7 +166,7 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 	req, err := http.NewRequest("POST", invokeReq.RequestURL, bytes.NewBuffer([]byte(invokeReq.RequestBody)))
 	if err != nil {
-		return "", nil, err
+		return "", nil, errors.Wrap(errors.GeneralError, err, "Failed http.NewRequest")
 	}
 
 	// Set allowed headers only
@@ -184,25 +184,25 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.Errorf("POST failed. url=%s, err=%s", invokeReq.RequestURL, err)
-		return "", nil, err
+		return "", nil, errors.Wrapf(errors.GeneralError, err, "POST failed. url=%s", invokeReq.RequestURL)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, errors.Errorf("Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, invokeReq.RequestURL)
+		return "", nil, errors.Errorf(errors.GeneralError, "Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, invokeReq.RequestURL)
 	}
 
 	responseContentType = resp.Header.Get("Content-Type")
 
 	if invokeReq.RequestHeaders["Content-Type"] != responseContentType {
-		return "", nil, errors.Errorf("Response content-type: %s doesn't match request content-type: %s", responseContentType, invokeReq.RequestHeaders["Content-Type"])
+		return "", nil, errors.Errorf(errors.GeneralError, "Response content-type: %s doesn't match request content-type: %s", responseContentType, invokeReq.RequestHeaders["Content-Type"])
 	}
 
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logger.Warnf("Read contents failed. url=%s, err=%s", invokeReq.RequestURL, err)
-		return "", nil, err
+		return "", nil, errors.Wrapf(errors.GeneralError, err, "Read contents failed. url=%s", invokeReq.RequestURL)
 	}
 
 	logger.Debugf("Got %s from url=%s", contents, invokeReq.RequestURL)
@@ -221,7 +221,7 @@ func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, p
 
 		c, err := tls.DialWithDialer(d, network, addr, tlsConfig)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(errors.GeneralError, err, "Failed tls.DialWithDialer")
 		}
 
 		var peerPins []string
@@ -240,7 +240,7 @@ func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, p
 		}
 
 		if pinValid == false {
-			return nil, errors.Errorf("Failed to validate peer cert pins %v against allowed pins: %v", peerPins, pins)
+			return nil, errors.Errorf(errors.GeneralError, "Failed to validate peer cert pins %v against allowed pins: %v", peerPins, pins)
 		}
 
 		return c, nil
@@ -270,7 +270,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		}
 		clientOverrideCrt := clientOverrideCrtMap[client]
 		if clientOverrideCrt == nil {
-			return nil, errors.Errorf("client[%s] crt not found", client)
+			return nil, errors.Errorf(errors.GeneralError, "client[%s] crt not found", client)
 		}
 
 		clientCert = clientOverrideCrt.Crt
@@ -281,12 +281,12 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		// Use default TLS config in https snap config
 		clientCert, err = config.GetClientCert()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get client cert from httpsnap config")
+			return nil, errors.WithMessage(errors.GeneralError, err, "failed to get client cert from httpsnap config")
 		}
 
 		caCerts, err = config.GetCaCerts()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get ca certs from httpsnap config")
+			return nil, errors.WithMessage(errors.GeneralError, err, "failed to get ca certs from httpsnap config")
 		}
 
 	}
@@ -294,11 +294,15 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	//Get Key from Pem bytes
 	key, err := httpServiceImpl.getCryptoSuiteKeyFromPem([]byte(clientCert), bccspSuite)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get key from client cert")
+		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get key from client cert")
 	}
 
 	//Get private key using SKI
 	pk, err = bccspSuite.GetKey(key.SKI())
+
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to get private key from SKI")
+	}
 
 	if pk != nil && pk.Private() {
 		//If private key available then get tls config from private key
@@ -308,21 +312,19 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		// If private key not found and allowPeerConfig enabled, then use peer tls client key
 		peerClientTLSKey, err := config.GetPeerClientKey()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get peer tls client key")
+			return nil, errors.WithMessage(errors.GeneralError, err, "failed to get peer tls client key")
 		}
 		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, peerClientTLSKey, caCerts, config.IsSystemCertPoolEnabled())
 
 	}
-
-	return nil, errors.Wrap(err, "failed to get private key from SKI")
-
+	return nil, nil
 }
 
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, error) {
 	// Load client cert
 	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
 
 	// Load CA certs
@@ -330,7 +332,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 	if systemCertPoolEnabled {
 		var err error
 		if caCertPool, err = x509.SystemCertPool(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(errors.GeneralError, err, "Failed SystemCertPool")
 		}
 		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
 	}
@@ -350,7 +352,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 	// Load client cert
 	tlscert, err := x509KeyPair([]byte(clientCert), clientKey, bccspSuite)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
 
 	// Load CA certs
@@ -358,7 +360,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 	if systemCertPoolEnabled {
 		var err error
 		if caCertPool, err = x509.SystemCertPool(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(errors.GeneralError, err, "Failed SystemCertPool")
 		}
 		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
 	}
@@ -397,7 +399,7 @@ func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCS
 	// We are parsing public key for TLS to find its type
 	x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
 	if err != nil {
-		return fail(err)
+		return fail(errors.Wrap(errors.GeneralError, err, "Failed x509.ParseCertificate"))
 	}
 
 	switch x509Cert.PublicKey.(type) {
@@ -406,7 +408,7 @@ func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCS
 	case *ecdsa.PublicKey:
 		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, &ecdsa.PublicKey{}}
 	default:
-		return fail(errors.New("tls: unknown public key algorithm"))
+		return fail(errors.New(errors.GeneralError, "tls: unknown public key algorithm"))
 	}
 
 	return cert, nil
@@ -418,7 +420,7 @@ func (httpServiceImpl *HTTPServiceImpl) validate(contentType string, schema stri
 	case "application/json":
 		return httpServiceImpl.validateJSON(schema, body)
 	default:
-		return errors.Errorf("Unsupported content type: '%s' ", contentType)
+		return errors.Errorf(errors.GeneralError, "Unsupported content type: '%s' ", contentType)
 	}
 }
 
@@ -428,7 +430,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 	schemaLoader := gojsonschema.NewStringLoader(jsonSchema)
 	result, err := gojsonschema.Validate(schemaLoader, gojsonschema.NewStringLoader(jsonStr))
 	if err != nil {
-		return err
+		return errors.Wrap(errors.GeneralError, err, "Failed gojsonschema.Validate")
 	}
 
 	if !result.Valid() {
@@ -439,7 +441,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 				errMsg += ", "
 			}
 		}
-		return errors.New(errMsg)
+		return errors.New(errors.GeneralError, errMsg)
 
 	}
 	return nil
@@ -447,23 +449,26 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 
 func (httpServiceImpl *HTTPServiceImpl) getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, error) {
 	if idBytes == nil {
-		return nil, errors.New("getCryptoSuiteKeyFromPem error: nil idBytes")
+		return nil, errors.New(errors.GeneralError, "getCryptoSuiteKeyFromPem error: nil idBytes")
 	}
 
 	// Decode the pem bytes
 	pemCert, _ := pem.Decode(idBytes)
 	if pemCert == nil {
-		return nil, errors.Errorf("getCryptoSuiteKeyFromPem error: could not decode pem bytes [%v]", idBytes)
+		return nil, errors.Errorf(errors.GeneralError, "getCryptoSuiteKeyFromPem error: could not decode pem bytes [%v]", idBytes)
 	}
 
 	// get a cert
 	cert, err := x509.ParseCertificate(pemCert.Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "getCryptoSuiteKeyFromPem error: failed to parse x509 cert")
+		return nil, errors.Wrap(errors.GeneralError, err, "getCryptoSuiteKeyFromPem error: failed to parse x509 cert")
 	}
 
 	// get the public key in the right format
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed KeyImport")
+	}
 
 	return certPubK, nil
 }
