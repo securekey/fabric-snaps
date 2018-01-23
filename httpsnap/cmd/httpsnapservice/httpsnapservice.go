@@ -16,6 +16,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"encoding/pem"
 
@@ -54,6 +55,10 @@ type HTTPServiceInvokeRequest struct {
 	PinSet         []string
 }
 
+const (
+	contentType = "content-type"
+)
+
 // Dialer is custom dialer to verify cert against pinset
 type Dialer func(network, addr string) (net.Conn, error)
 
@@ -72,13 +77,22 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.New(errors.GeneralError, "Missing request headers")
 	}
 
-	if _, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; !ok {
-		return nil, errors.New(errors.GeneralError, "Missing required Content-Type header")
+	headers := make(map[string]string)
+
+	// Converting header names to lowercase
+	for name, value := range httpServiceInvokeRequest.RequestHeaders {
+		headers[strings.ToLower(name)] = value
 	}
 
-	if val, ok := httpServiceInvokeRequest.RequestHeaders["Content-Type"]; ok && val == "" {
-		return nil, errors.New(errors.GeneralError, "Content-Type header is empty")
+	if _, ok := headers[contentType]; !ok {
+		return nil, errors.New(errors.GeneralError, "Missing required content-type header")
 	}
+
+	if val, ok := headers[contentType]; ok && val == "" {
+		return nil, errors.New(errors.GeneralError, "content-type header is empty")
+	}
+
+	httpServiceInvokeRequest.RequestHeaders = headers
 
 	if httpServiceInvokeRequest.RequestBody == "" {
 		return nil, errors.New(errors.GeneralError, "Missing RequestBody")
@@ -95,13 +109,13 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.Errorf(errors.GeneralError, "Unsupported scheme: %s", uri.Scheme)
 	}
 
-	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(httpServiceInvokeRequest.RequestHeaders["Content-Type"])
+	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(headers[contentType])
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetSchemaConfig return error")
 	}
 
 	// Validate request body against schema
-	if err := httpServiceImpl.validate(httpServiceInvokeRequest.RequestHeaders["Content-Type"], schemaConfig.Request, httpServiceInvokeRequest.RequestBody); err != nil {
+	if err := httpServiceImpl.validate(headers[contentType], schemaConfig.Request, httpServiceInvokeRequest.RequestBody); err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Failed to validate request body")
 	}
 
@@ -193,10 +207,10 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 		return "", nil, errors.Errorf(errors.GeneralError, "Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, invokeReq.RequestURL)
 	}
 
-	responseContentType = resp.Header.Get("Content-Type")
+	responseContentType = resp.Header.Get(contentType)
 
-	if invokeReq.RequestHeaders["Content-Type"] != responseContentType {
-		return "", nil, errors.Errorf(errors.GeneralError, "Response content-type: %s doesn't match request content-type: %s", responseContentType, invokeReq.RequestHeaders["Content-Type"])
+	if !strings.Contains(strings.ToLower(responseContentType), strings.ToLower(invokeReq.RequestHeaders[contentType])) {
+		return "", nil, errors.Errorf(errors.GeneralError, "Response content-type: %s doesn't match request content-type: %s", responseContentType, invokeReq.RequestHeaders[contentType])
 	}
 
 	contents, err := ioutil.ReadAll(resp.Body)

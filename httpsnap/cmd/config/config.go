@@ -150,20 +150,20 @@ func (c *config) getHeaderMap() (headerMap map[string]bool, err error) {
 
 	headerMap = make(map[string]bool, len(headers))
 	for _, h := range headers {
-		headerMap[h] = true
+		headerMap[strings.ToLower(h)] = true
 	}
 
 	return headerMap, nil
 }
 
-// IsHeaderAllowed returns true if specfied http header type is enabled
+// IsHeaderAllowed returns true if specified http header type is enabled
 func (c *config) IsHeaderAllowed(name string) (bool, error) {
 	headerMap, err := c.getHeaderMap()
 	if err != nil {
 		return false, err
 	}
 
-	val, ok := headerMap[name]
+	val, ok := headerMap[strings.ToLower(name)]
 	if !ok {
 		return false, nil
 	}

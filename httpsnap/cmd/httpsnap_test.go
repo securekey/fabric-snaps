@@ -37,8 +37,8 @@ var channelID = "testChannel"
 var peerTLSChannelID = "testPeerTLSChannel"
 var mspID = "Org1MSP"
 var headers = map[string]string{
-	"Content-Type":  "application/json",
-	"Authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+	"content-type":  "application/json",
+	"authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
 }
 
 func TestInit(t *testing.T) {
@@ -70,7 +70,7 @@ func TestInvalidParameters(t *testing.T) {
 	verifyFailure(t, stub, args, "Invoke should have failed due to missing required header")
 
 	// Required args: empty Content-Type header
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{"Content-Type": ""}, jsonStr)}
+	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{"content-type": ""}, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed due to empty content type")
 
 	// Required args: empty request body

@@ -51,11 +51,11 @@ func TestRequiredArg(t *testing.T) {
 
 	invalidHeaders["Test-Header"] = "Test"
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: invalidHeaders,
-		RequestBody: jsonStr}, "Missing required Content-Type header")
+		RequestBody: jsonStr}, "Missing required content-type header")
 
 	invalidHeaders["Content-Type"] = ""
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: invalidHeaders,
-		RequestBody: jsonStr}, "Content-Type header is empty")
+		RequestBody: jsonStr}, "content-type header is empty")
 
 	// Missing RequestBody
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,

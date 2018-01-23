@@ -158,5 +158,5 @@ schemas:
 }'
 
 headers: 
-  - Content-Type
-  - Authorization
+  - content-type
+  - authorization

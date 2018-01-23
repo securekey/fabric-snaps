@@ -83,18 +83,27 @@ func TestIsHeaderAllowed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if value == true {
 		t.Fatal("Expected false, got true for not-configured header")
 	}
 
+	// Test exact match
 	value, err = c.IsHeaderAllowed("Content-Type")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value == false {
+		t.Fatal("Expected true, got false for 'Content-Type' header")
+	}
+
+	// Test mixed case (http headers are not case sensitive)
+	value, err = c.IsHeaderAllowed("CONTENT-Type")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if value == false {
-		t.Fatal("Expected true, got false for 'Content-Type' header")
+		t.Fatal("Expected true, got false for 'content-type' header")
 	}
 
 }

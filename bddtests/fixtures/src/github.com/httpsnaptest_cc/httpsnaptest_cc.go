@@ -58,8 +58,8 @@ func (t *HTTPSnapTest) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	headers := map[string]string{
-		"Content-Type":  "application/json",
-		"Authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
+		"content-type":  "application/json",
+		"authorization": "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==",
 	}
 
 	req := HTTPSnapRequest{URL: url, Headers: headers, Body: `{"id":"123", "name": "Test Name"}`}

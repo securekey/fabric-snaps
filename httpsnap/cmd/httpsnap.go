@@ -7,6 +7,7 @@ package main
 
 import (
 	"encoding/json"
+	"strings"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 
@@ -69,19 +70,26 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Error("Missing request headers")
 	}
 
-	if _, ok := request.Headers["Content-Type"]; !ok {
-		return shim.Error("Missing required Content-Type header")
+	headers := make(map[string]string)
+
+	// Converting header names to lowercase
+	for name, value := range request.Headers {
+		headers[strings.ToLower(name)] = value
 	}
 
-	if val, ok := request.Headers["Content-Type"]; ok && val == "" {
-		return shim.Error("Content-Type header is empty")
+	if _, ok := headers["content-type"]; !ok {
+		return shim.Error("Missing required content-type header")
+	}
+
+	if val, ok := headers["content-type"]; ok && val == "" {
+		return shim.Error("content-type header is empty")
 	}
 
 	if request.Body == "" {
 		return shim.Error("Missing request body")
 	}
 
-	response, err := httpservice.Invoke(httpsnapservice.HTTPServiceInvokeRequest{RequestURL: request.URL, RequestHeaders: request.Headers,
+	response, err := httpservice.Invoke(httpsnapservice.HTTPServiceInvokeRequest{RequestURL: request.URL, RequestHeaders: headers,
 		RequestBody: request.Body, NamedClient: request.NamedClient, PinSet: request.PinSet})
 
 	if err != nil {
