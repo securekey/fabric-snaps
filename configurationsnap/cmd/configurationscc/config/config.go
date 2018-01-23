@@ -205,6 +205,7 @@ func getPluginOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 	//from config file
 	cfglib := GetLib(csconfig)
+	logger.Debugf("Security library from config %s", cfglib)
 	//if env variable was set get library config from it
 	//if no env was set parse input from ocnfig file
 	//and verify if lib exists

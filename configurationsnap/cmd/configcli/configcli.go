@@ -11,6 +11,7 @@ import (
 
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/deletecmd"
+	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/generateCSR"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/querycmd"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/updatecmd"
 	"github.com/spf13/cobra"
@@ -37,7 +38,7 @@ func newConfigCLICmd() *cobra.Command {
 	cliconfig.InitOrgID(flags)
 	cliconfig.InitMspID(flags)
 
-	mainCmd.AddCommand(querycmd.Cmd(), updatecmd.Cmd(), deletecmd.Cmd())
+	mainCmd.AddCommand(querycmd.Cmd(), updatecmd.Cmd(), deletecmd.Cmd(), generateCSR.Cmd())
 
 	return mainCmd
 }
