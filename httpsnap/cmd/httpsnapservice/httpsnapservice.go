@@ -120,7 +120,7 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 	}
 
 	// URL is ok, retrieve data using http client
-	responseContentType, response, err := httpServiceImpl.getData(httpServiceInvokeRequest, httpServiceImpl.config)
+	_, response, err := httpServiceImpl.getData(httpServiceInvokeRequest, httpServiceImpl.config)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "getData return error")
 	}
@@ -128,7 +128,7 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 	logger.Debugf("Successfully retrieved data from URL: %s", httpServiceInvokeRequest.RequestURL)
 
 	// Validate response body against schema
-	if err := httpServiceImpl.validate(responseContentType, schemaConfig.Response, string(response)); err != nil {
+	if err := httpServiceImpl.validate(headers[contentType], schemaConfig.Response, string(response)); err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "validate return error")
 	}
 	return response, nil

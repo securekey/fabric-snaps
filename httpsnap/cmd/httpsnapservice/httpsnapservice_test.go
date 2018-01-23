@@ -226,7 +226,7 @@ func startHTTPServer() {
 
 // HelloServer greeting (JSON)
 func HelloServer(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	io.WriteString(w, `{"description": "Hello"}`)
 }
 
