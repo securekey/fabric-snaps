@@ -70,31 +70,10 @@ func TestMain(m *testing.M) {
 }
 func TestFindPKCSLib(t *testing.T) {
 
-	lib, pin, label := FindPKCS11Lib("lib1,lib2,lib3")
+	lib := FindPKCS11Lib("lib1")
 	if lib != "" {
 		t.Fatalf("Expected empty lib")
 	}
-	if pin != "" {
-		t.Fatalf("Expected empty pin")
-	}
-	if label != "" {
-		t.Fatalf("Expected empty label")
-	}
-
-	os.Setenv("PKCS11_LIB", "SomeLib")
-	os.Setenv("PKCS11_PIN", "12345")
-	os.Setenv("PKCS11_LABEL", "system_label")
-	lib, pin, label = FindPKCS11Lib("s")
-	if lib != os.Getenv("PKCS11_LIB") {
-		t.Fatalf("Expected system config for lib")
-	}
-	if pin != os.Getenv("PKCS11_PIN") {
-		t.Fatalf("Expected system config for pin")
-	}
-	if label != os.Getenv("PKCS11_LABEL") {
-		t.Fatalf("Expected system config for label")
-	}
-
 }
 
 func TestCSROptions(t *testing.T) {

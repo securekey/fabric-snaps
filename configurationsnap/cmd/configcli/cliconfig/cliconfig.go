@@ -87,6 +87,16 @@ const (
 	noPromptFlag        = "noprompt"
 	noPromptDescription = "If specified then update and delete operations will not prompt for confirmation"
 	defaultNoPrompt     = false
+
+	keyType            = "keyType"
+	keyTypeDescription = "Key type to be used to generate CSR"
+
+	ephemeral            = "ephemeral"
+	ephemeralDescription = "To be used in generate CSR - default false - long lived keys"
+	ephemeralDefault     = "false"
+
+	sigAlg            = "sigAlg"
+	sigAlgDescription = "Signature Algorithm used to generate CSR"
 )
 
 var opts *options
@@ -109,6 +119,9 @@ type options struct {
 	peerID           string
 	appName          string
 	noPrompt         bool
+	keyType          string
+	ephemeralFlag    string
+	sigAlg           string
 }
 
 func init() {
@@ -249,6 +262,36 @@ func (c *CLIConfig) AppName() string {
 // InitAppName initializes the application name from the provided arguments
 func InitAppName(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.appName, appNameFlag, "", appNameDescription)
+}
+
+// KeyType returns an KeyType name (used in the config generteCSR command)
+func (c *CLIConfig) KeyType() string {
+	return opts.keyType
+}
+
+// InitKeyType initializes the KeyType from the provided arguments
+func InitKeyType(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.keyType, keyType, "", keyTypeDescription)
+}
+
+// EphemeralFlag returns an ephemeral flag (used in the config generteCSR command)
+func (c *CLIConfig) EphemeralFlag() string {
+	return opts.ephemeralFlag
+}
+
+// InitEphemeralFlag initializes the ephemeral flag from the provided arguments
+func InitEphemeralFlag(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.ephemeralFlag, ephemeral, ephemeralDefault, ephemeralDescription)
+}
+
+// SigAlg returns an signature algorithm  (used in the config generteCSR command)
+func (c *CLIConfig) SigAlg() string {
+	return opts.sigAlg
+}
+
+// InitSigAlg initializes the signature algorithm from the provided arguments
+func InitSigAlg(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.sigAlg, sigAlg, "", sigAlgDescription)
 }
 
 // NoPrompt is true if the user does not want top be prompted to confirm an update or delete
