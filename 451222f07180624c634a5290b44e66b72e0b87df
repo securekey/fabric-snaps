@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44fc5ccb_1104e578",
+        "filename": "bddtests/fixtures/httpserver/dummyserver.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-01-23T20:34:23Z",
+      "side": 1,
+      "message": "You will need to request a re-deploy of this server for this to take effect",
+      "revId": "451222f07180624c634a5290b44e66b72e0b87df",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
