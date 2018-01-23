@@ -205,20 +205,19 @@ func getPluginOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 	//from config file
 	cfglib := GetLib(csconfig)
-	//if env variable was set get library config from it
-	//if no env was set parse input from ocnfig file
-	//and verify if lib exists
-	syslib, syspin, syslabel := FindPKCS11Lib(cfglib)
-	if syslib != "" {
-		cfglib = syslib
+	logger.Debugf("Security library from config %s", cfglib)
+
+	lib := FindPKCS11Lib(cfglib)
+	if lib != "" {
+		errors.Errorf("PKCS Lib path was not set")
 	}
-	cfgpin := GetPin(csconfig)
-	if syspin != "" {
-		cfgpin = syspin
+	pin := GetPin(csconfig)
+	if pin != "" {
+		errors.Errorf("PKCS PIN  was not set")
 	}
-	cfglabel := GetLabel(csconfig)
-	if syslabel != "" {
-		cfglabel = syslabel
+	label := GetLabel(csconfig)
+	if label != "" {
+		errors.Errorf("PKCS Label  was not set")
 	}
 	ksopts := &pkcs11.FileKeystoreOpts{
 		KeyStorePath: GetKeystorePath(csconfig),
@@ -227,9 +226,9 @@ func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 		SecLevel:     GetLevel(csconfig),
 		HashFamily:   GetHashAlg(csconfig),
 		Ephemeral:    GetEphemeral(csconfig),
-		Library:      cfglib,
-		Pin:          cfgpin,
-		Label:        cfglabel,
+		Library:      lib,
+		Pin:          pin,
+		Label:        label,
 		FileKeystore: ksopts,
 	}
 	logger.Debugf("Creating PKCS11 provider with options %v", pkcsOpt)
@@ -323,12 +322,9 @@ func GetKeystorePath(csconfig *viper.Viper) string {
 }
 
 //FindPKCS11Lib to check which one of configured libs exist for current ARCH
-func FindPKCS11Lib(configuredLib string) (lib, pin, label string) {
-	lib = os.Getenv("PKCS11_LIB")
-	if lib == "" {
-		lib = os.Getenv("PKCS11_LIBRARY")
-	}
-	if lib == "" {
+func FindPKCS11Lib(configuredLib string) (lib string) {
+	logger.Debugf("PKCS library configurations paths  %s ", configuredLib)
+	if lib != "" {
 		possibilities := strings.Split(configuredLib, ",")
 		for _, path := range possibilities {
 			if _, err := os.Stat(strings.TrimSpace(path)); !os.IsNotExist(err) {
@@ -336,12 +332,9 @@ func FindPKCS11Lib(configuredLib string) (lib, pin, label string) {
 				break
 			}
 		}
-	} else {
-		pin = os.Getenv("PKCS11_PIN")
-		label = os.Getenv("PKCS11_LABEL")
 	}
-	logger.Debugf("Found pkcs library %s %s %s", lib, pin, label)
-	return lib, pin, label
+	logger.Debugf("Found pkcs library '%s'", lib)
+	return lib
 }
 
 //GetDefaultRefreshInterval get default interval
