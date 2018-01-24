@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
+	"crypto/x509"
 	"time"
 
 	"github.com/spf13/viper"
@@ -18,7 +19,9 @@ type Config interface {
 	GetMspID() string
 	GetMspConfigPath() string
 	GetTLSRootCertPath() string
+	GetTLSRootCert() *x509.Certificate
 	GetTLSCertPath() string
+	GetTLSCert() *x509.Certificate
 	GetTLSKeyPath() string
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string

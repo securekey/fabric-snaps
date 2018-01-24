@@ -19,7 +19,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/protos/common"
@@ -422,7 +422,7 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
-	errorMsg := "broadcast response is not success INTERNAL_SERVER_ERROR"
+	errorMsg := "INTERNAL_SERVER_ERROR"
 	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
 	}
@@ -537,7 +537,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionReturnError(t *testing.T) {
 	if response.Status != shim.ERROR {
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
-	errorMsg := "broadcast response is not success INTERNAL_SERVER_ERROR"
+	errorMsg := "INTERNAL_SERVER_ERROR"
 	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message contain(%s) but got %s", errorMsg, response.Message)
 	}
@@ -568,7 +568,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T
 		Args:        nil,
 		Fcn:         "fcn",
 	}
-	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetUser())
+	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetSigningIdentity())
 	if err != nil {
 		t.Fatalf("Error creating transaction proposal: %s", err)
 	}
@@ -603,7 +603,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 		Args:        nil,
 		Fcn:         "fcn",
 	}
-	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetUser())
+	txnProposal, err := newTransactionProposal("testChannel", req, fcClient.GetSigningIdentity())
 	if err != nil {
 		t.Fatalf("Error creating transaction proposal: %s", err)
 	}
@@ -671,7 +671,7 @@ func configureClient(config api.Config) api.Client {
 	newtworkConfig.Orderers["orderer.example.com"] = apiconfig.OrdererConfig{URL: broadcastTestURL}
 
 	//create selection service
-	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", fabricClient.GetConfig())
+	peer, _ := sdkpeer.New(fabricClient.GetConfig(), sdkpeer.WithURL(endorserTestURL), sdkpeer.WithServerName(""))
 	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
 		TestPeer:       api.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
 		InvalidChannel: ""}
@@ -683,7 +683,7 @@ func configureClient(config api.Config) api.Client {
 // newTransactionProposal creates a proposal for transaction. This involves assembling the proposal
 // with the data (chaincodeName, function to call, arguments, transient data, etc.) and signing it using the private key corresponding to the
 // ECert to sign.
-func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequest, user sdkApi.User) (*apitxn.TransactionProposal, error) {
+func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequest, signingIdentity sdkApi.IdentityContext) (*apitxn.TransactionProposal, error) {
 
 	// Add function name to arguments
 	argsArray := make([][]byte, len(request.Args)+1)
@@ -697,7 +697,7 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		Type: pb.ChaincodeSpec_GOLANG, ChaincodeId: &pb.ChaincodeID{Name: request.ChaincodeID},
 		Input: &pb.ChaincodeInput{Args: argsArray}}}
 
-	creator, err := user.Identity()
+	creator, err := signingIdentity.Identity()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting creator: %v", err)
 	}
@@ -713,12 +713,12 @@ func newTransactionProposal(channelID string, request apitxn.ChaincodeInvokeRequ
 		return nil, fmt.Errorf("Error marshalling proposal: %v", err)
 	}
 
-	if user == nil {
+	if signingIdentity == nil {
 		return nil, fmt.Errorf("Error getting user context: %s", err)
 	}
 
 	cryptoSuite := factories.GetSuite(bccspFactory.GetDefault())
-	signature, err := signObjectWithKey(proposalBytes, user.PrivateKey(),
+	signature, err := signObjectWithKey(proposalBytes, signingIdentity.PrivateKey(),
 		&bccsp.SHAOpts{}, nil, cryptoSuite)
 	if err != nil {
 		return nil, err
@@ -796,7 +796,7 @@ func TestMain(m *testing.M) {
 	newtworkConfig.Orderers["orderer.example.com"] = apiconfig.OrdererConfig{URL: broadcastTestURL}
 
 	//create selection service
-	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", txService.FcClient.GetConfig())
+	peer, _ := sdkpeer.New(fcClient.GetConfig(), sdkpeer.WithURL(endorserTestURL), sdkpeer.WithServerName(""))
 	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
 		TestPeer:       api.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
 		InvalidChannel: ""}
@@ -842,8 +842,7 @@ func TestMain(m *testing.M) {
 }
 
 func Peer(url string, mspID string) sdkApi.Peer {
-
-	peer, err := sdkFabApi.NewPeer(url, "", "", fcClient.GetConfig())
+	peer, err := sdkpeer.New(fcClient.GetConfig(), sdkpeer.WithURL(url), sdkpeer.WithServerName(""))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
