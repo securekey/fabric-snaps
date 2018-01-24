@@ -103,9 +103,9 @@ type Client interface {
 	// @returns {Config} config
 	GetConfig() sdkConfigApi.Config
 
-	// GetUser returns the user from the client context
-	// @retruns {User} user
-	GetUser() sdkApi.User
+	// GetSigningIdentity returns the signingIdentity (user) context from the client
+	// @retruns {sdkApi.IdentityContext} sdkApi.IdentityContext
+	GetSigningIdentity() sdkApi.IdentityContext
 }
 
 // CCDataProvider retrieves Chaincode Data for the given chaincode ID on the given channel

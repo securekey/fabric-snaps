@@ -19,7 +19,7 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -296,8 +296,8 @@ func queryChaincode(channelID string, ccID string, args []string, config api.Con
 		// Load anchor peer
 		//orgCertPool, err := client.GetTLSRootsForOrg(, channel)
 		anchor.Host = config.GetGRPCProtocol() + anchor.Host
-		peer, err := sdkFabApi.NewPeer(fmt.Sprintf("%s:%d", anchor.Host,
-			anchor.Port), config.GetTLSRootCertPath(), "", client.GetConfig())
+		peer, err := sdkpeer.New(client.GetConfig(), sdkpeer.WithURL(fmt.Sprintf("%s:%d", anchor.Host,
+			anchor.Port)), sdkpeer.WithTLSCert(config.GetTLSRootCert()), sdkpeer.WithServerName(""))
 		if err != nil {
 			queryErrors = append(queryErrors, err.Error())
 			continue

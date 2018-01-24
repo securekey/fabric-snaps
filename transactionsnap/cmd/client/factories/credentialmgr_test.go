@@ -131,7 +131,7 @@ func TestCredentialManagerProviderFactory(t *testing.T) {
 	if err == nil || err.Error() != errorCryptoSuiteRequired {
 		t.Fatalf("Expected error '%s' , but got : %v", errorCryptoSuiteRequired, err)
 	}
-	// test happey path using embedded users without org.CryptoPath (latest tNetWorkConfig assignment above)
+	// test happy path using embedded users without org.CryptoPath (latest tNetWorkConfig assignment above)
 	credentialMgr, err = credentialMgrfactory.NewCredentialManager(orgName, &testConfig{}, GetSuite(factory.GetDefault()))
 	if err != nil {
 		t.Fatalf("Unexpected error '%s'", err)
