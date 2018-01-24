@@ -15,6 +15,7 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
@@ -57,12 +58,12 @@ func (f *registerTxFilter) ProcessTxProposalResponse(txProposalResponses []*apit
 func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArgs string) error {
 	args := strings.Split(strArgs, ",")
 
-	chClient, err := t.BDDContext.Sdk.NewChannelClient(channelID, t.BDDContext.Org1User.Name())
+	chClient, err := t.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(t.BDDContext.Org1User)).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("NewChannelClient returned error: %v", err)
 	}
 
-	txnID, err := chClient.ExecuteTxWithOpts(
+	_, txnID, err := chClient.ExecuteTxWithOpts(
 		apitxn.ExecuteTxRequest{
 			ChaincodeID: ccID,
 			Fcn:         args[0],
@@ -87,7 +88,7 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 }
 
 func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...string) error {
-	chClient, err := ctx.Sdk.NewChannelClient(channelID, ctx.Org1User.Name())
+	chClient, err := ctx.Sdk.NewClient(fabsdk.WithIdentity(ctx.Org1User)).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("NewChannelClient returned error: %v", err)
 	}
