@@ -10,8 +10,8 @@ import (
 	"fmt"
 
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
@@ -52,7 +52,7 @@ type ChannelHeight struct {
 
 // New returns a new mock ChannelPeer
 func New(name string, mspID string, channelID string, blockHeight uint64, chHeights ...ChannelHeight) api.ChannelPeer {
-	peer, err := fabapi.NewPeer("grpc://"+name+":7051", "", "", config)
+	peer, err := sdkpeer.New(config, sdkpeer.WithURL("grpc://"+name+":7051"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

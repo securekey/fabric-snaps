@@ -28,9 +28,12 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	chmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/chmgmtclient"
 	resmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/resmgmtclient"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
 	sdkFabricClientChannel "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
+	sdkorderer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/orderer"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -81,7 +84,7 @@ func (d *CommonSteps) getDeployPath(ccType string) string {
 
 // getEventHub initilizes the event hub
 func (d *CommonSteps) getEventHub() (sdkApi.EventHub, error) {
-	eventHub, err := sdkFabApi.NewEventHub(d.BDDContext.Client)
+	eventHub, err := events.NewEventHub(d.BDDContext.Client)
 	if err != nil {
 		return nil, fmt.Errorf("GetDefaultImplEventHub failed: %v", err)
 	}
@@ -94,7 +97,11 @@ func (d *CommonSteps) getEventHub() (sdkApi.EventHub, error) {
 	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 		serverHostOverride = str
 	}
-	eventHub.SetPeerAddr(peerConfig.EventURL, peerConfig.TLSCACerts.Path, serverHostOverride)
+	peerCert, err := peerConfig.TLSCACerts.TLSCert()
+	if err != nil {
+		return nil, fmt.Errorf("Error reading peer cert from the config: %s", err)
+	}
+	eventHub.SetPeerAddr(peerConfig.EventURL, peerCert, serverHostOverride)
 
 	return eventHub, nil
 }
@@ -114,11 +121,14 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 		serverHostOverride = str
 	}
-
-	peer, err := sdkFabApi.NewPeer(peerConfig.URL,
-		peerConfig.TLSCACerts.Path, serverHostOverride, d.BDDContext.Client.Config())
+	peerCert, err := peerConfig.TLSCACerts.TLSCert()
 	if err != nil {
-		return fmt.Errorf("NewPeer failed: %v", err)
+		return fmt.Errorf("Error reading peer cert from the config: %s", err)
+	}
+	peer, err := sdkpeer.New(d.BDDContext.Client.Config(), sdkpeer.WithURL(peerConfig.URL),
+		sdkpeer.WithTLSCert(peerCert), sdkpeer.WithServerName(serverHostOverride))
+	if err != nil {
+		return fmt.Errorf("New Peer failed: %v", err)
 	}
 	channel.AddPeer(peer)
 
@@ -130,23 +140,24 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	if str, ok := ordererConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 		serverHostOverride = str
 	}
-	orderer, err := sdkFabApi.NewOrderer(ordererConfig.URL, ordererConfig.TLSCACerts.Path,
-		serverHostOverride, d.BDDContext.Client.Config())
+	ordererCert, err := ordererConfig.TLSCACerts.TLSCert()
+	orderer, err := sdkorderer.New(d.BDDContext.Client.Config(), sdkorderer.WithURL(ordererConfig.URL),
+		sdkorderer.WithTLSCert(ordererCert),
+		sdkorderer.WithServerName(serverHostOverride))
 	if err != nil {
-		return fmt.Errorf("NewPeer failed: %v", err)
+		return fmt.Errorf("New Orderer failed: %v", err)
 	}
 	channel.AddOrderer(orderer)
 
 	d.BDDContext.Channel = channel
 
-	// Check if primary peer has joined channel
-	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.Client, d.BDDContext.Org1Admin, channel)
+	alreadyJoined, err := swapUserAndCheckPrimaryPeerJoinedChannel(d.BDDContext, channel)
 	if err != nil {
-		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
+		return err
 	}
 
 	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.Sdk.NewChannelMgmtClientWithOpts("Admin", &sdkFabApi.ChannelMgmtClientOpts{OrgName: "peerorg1"})
+	chMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin), fabsdk.WithOrg("peerog1")).ChannelMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel management client: %s", err)
 	}
@@ -154,21 +165,21 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	if !alreadyJoined {
 		// Create and join channel
 		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
-			ChannelConfig: GetChannelTxPath(channelID),
-			SigningUser:   d.BDDContext.Org1Admin}
+			ChannelConfig:   GetChannelTxPath(channelID),
+			SigningIdentity: d.BDDContext.Org1Admin}
 
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
 		time.Sleep(time.Second * 3)
 		req = chmgmt.SaveChannelRequest{ChannelID: channelID,
-			ChannelConfig: GetChannelAnchorTxPath(channelID, "peerorg1"),
-			SigningUser:   d.BDDContext.Org1Admin}
+			ChannelConfig:   GetChannelAnchorTxPath(channelID, "peerorg1"),
+			SigningIdentity: d.BDDContext.Org1Admin}
 
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
-		resMgmtClient, err := d.BDDContext.Sdk.NewResourceMgmtClient("Admin")
+		resMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin)).ResourceMgmt()
 		if err != nil {
 			return fmt.Errorf("Failed to create new resource management client: %s", err)
 		}
@@ -179,11 +190,25 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	return nil
 }
 
+func swapUserAndCheckPrimaryPeerJoinedChannel(d *BDDContext, channel sdkApi.Channel) (bool, error) {
+	currentClient := d.Client
+	currentUser := d.GetUserFromClient(currentClient)
+	defer d.SetCurrentUserClient(currentUser)
+
+	d.SetCurrentUserClient(d.Org1Admin)
+	// Check if primary peer has joined channel
+	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.Client, d.Org1Admin, channel)
+	if err != nil {
+		return false, fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
+	}
+	return alreadyJoined, nil
+}
+
 func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, version string, ccPath string, args string) error {
 	// installCC requires AdminUser privileges so setting user context with Admin User
-	d.BDDContext.Client.SetUserContext(d.BDDContext.Org1Admin)
+	d.BDDContext.SetCurrentUserClient(d.BDDContext.Org1Admin)
 	// must reset client user context to normal user once done with Admin privilieges
-	defer d.BDDContext.Client.SetUserContext(d.BDDContext.Org1User)
+	defer d.BDDContext.SetCurrentUserClient(d.BDDContext.Org1User)
 
 	// Check if CC is installed
 	installed, err := IsChaincodeInstalled(d.BDDContext.Client, d.BDDContext.Channel.Peers()[0], ccID)
@@ -202,7 +227,7 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	}
 
 	// SendInstallCC
-	resMgmtClient, err := d.BDDContext.Sdk.NewResourceMgmtClient("Admin")
+	resMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin)).ResourceMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
@@ -506,7 +531,7 @@ func (d *CommonSteps) createTransactionSnapRequest(functionName string, chaincod
 }
 
 //queryChaincode ...
-func (d *CommonSteps) queryChaincode(client sdkApi.FabricClient, channel sdkApi.Channel, chaincodeID string,
+func (d *CommonSteps) queryChaincode(client sdkApi.Resource, channel sdkApi.Channel, chaincodeID string,
 	args []string, primaryPeer sdkApi.Peer) (string, error) {
 	transactionProposalResponses, _, err := d.createAndSendTransactionProposal(channel,
 		chaincodeID, args, []apitxn.ProposalProcessor{primaryPeer}, nil)
@@ -564,7 +589,7 @@ func (d *CommonSteps) RegisterTxEvent(txID apitxn.TransactionID, eventHub sdkApi
 }
 
 //invokeChaincode ...
-func (d *CommonSteps) invokeChaincode(client sdkApi.FabricClient, channel sdkApi.Channel, chaincodeID string,
+func (d *CommonSteps) invokeChaincode(client sdkApi.Resource, channel sdkApi.Channel, chaincodeID string,
 	args []string, primaryPeer sdkApi.Peer) error {
 	transactionProposalResponses, txID, err := d.createAndSendTransactionProposal(channel,
 		chaincodeID, args, []apitxn.ProposalProcessor{primaryPeer}, nil)

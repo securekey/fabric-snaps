@@ -15,14 +15,14 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi/context/defprovider"
+	"github.com/hyperledger/fabric-sdk-go/def/factory/defcore"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 )
 
 // DefaultCryptoSuiteProviderFactory is will provide custom factory default bccsp cryptosuite
 type DefaultCryptoSuiteProviderFactory struct {
-	defprovider.DefaultProviderFactory
+	defcore.ProviderFactory
 }
 
 // NewCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite

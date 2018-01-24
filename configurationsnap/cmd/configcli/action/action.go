@@ -12,16 +12,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"
+	"github.com/securekey/fabric-snaps/util/errors"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	deffab "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi/opt"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 )
 
@@ -41,7 +41,7 @@ type Action interface {
 type action struct {
 	peers       []apifabclient.Peer
 	orgIDByPeer map[string]string
-	sdk         *deffab.FabricSDK
+	sdk         *fabsdk.FabricSDK
 }
 
 // New returns a new Action
@@ -63,7 +63,7 @@ func (a *action) Initialize() error {
 
 	channelID := cliconfig.Config().ChannelID()
 	if channelID == "" {
-		return errors.New("no channel ID specified")
+		return errors.New(errors.GeneralError, "no channel ID specified")
 	}
 
 	return a.initTargetPeers()
@@ -72,13 +72,9 @@ func (a *action) Initialize() error {
 // ChannelClient creates a new channel client
 func (a *action) ChannelClient() (apitxn.ChannelClient, error) {
 	userName := cliconfig.Config().UserName()
-	chClient, err := a.sdk.NewChannelClientWithOpts(
-		cliconfig.Config().ChannelID(), userName,
-		&deffab.ChannelClientOpts{
-			OrgName: a.OrgID(),
-		})
+	chClient, err := a.sdk.NewClient(fabsdk.WithUser(userName), fabsdk.WithOrg(a.OrgID())).Channel(cliconfig.Config().ChannelID())
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create new channel client")
+		return nil, errors.Wrapf(errors.GeneralError, err, "failed to create new channel client")
 	}
 	return chClient, nil
 }
@@ -120,7 +116,7 @@ func (a *action) OrgID() string {
 func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) {
 	channelClient, err := a.ChannelClient()
 	if err != nil {
-		return nil, errors.Errorf("Error getting channel client: %v", err)
+		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
 	return channelClient.QueryWithOpts(
 		apitxn.QueryRequest{
@@ -138,9 +134,9 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 	channelClient, err := a.ChannelClient()
 	if err != nil {
-		return errors.Errorf("Error getting channel client: %v", err)
+		return errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
-	_, err = channelClient.ExecuteTxWithOpts(
+	_, _, err = channelClient.ExecuteTxWithOpts(
 		apitxn.ExecuteTxRequest{
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
@@ -159,7 +155,7 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 		queryBytes := []byte(cliconfig.Config().ConfigKey())
 		configKey, err := configkeyutil.Unmarshal(queryBytes)
 		if err != nil {
-			return nil, errors.Errorf("invalid config key: %v", err)
+			return nil, errors.Errorf(errors.GeneralError, "invalid config key: %v", err)
 		}
 		return configKey, nil
 	}
@@ -196,19 +192,12 @@ func YesNoPrompt(prompt string, args ...interface{}) bool {
 
 func (a *action) initSDK() error {
 	if cliconfig.Config().UserName() == "" {
-		return errors.New("user must be specified")
+		return errors.New(errors.GeneralError, "user must be specified")
 	}
 
-	sdkOptions := deffab.Options{
-		ProviderFactory: newProviderFactory(cliconfig.Config()),
-		StateStoreOpts: opt.StateStoreOpts{
-			Path: "/tmp/enroll_user",
-		},
-	}
-
-	sdk, err := deffab.NewSDK(sdkOptions)
+	sdk, err := fabsdk.New(fabsdk.WithConfig(cliconfig.Config()))
 	if err != nil {
-		return errors.Errorf("Error initializing SDK: %s", err)
+		return errors.Errorf(errors.GeneralError, "Error initializing SDK: %s", err)
 	}
 	a.sdk = sdk
 	return nil
@@ -234,12 +223,12 @@ func (a *action) initTargetPeers() error {
 
 		peersConfig, err := cliconfig.Config().PeersConfig(orgID)
 		if err != nil {
-			return errors.Wrapf(err, "error getting peer configs for org [%s]", orgID)
+			return errors.Wrapf(errors.GeneralError, err, "error getting peer configs for org [%s]", orgID)
 		}
 
 		mspID, err := cliconfig.Config().MspID(orgID)
 		if err != nil {
-			return errors.Wrapf(err, "error getting MSP ID for org [%s]", orgID)
+			return errors.Wrapf(errors.GeneralError, err, "error getting MSP ID for org [%s]", orgID)
 		}
 
 		cliconfig.Config().Logger().Debugf("Peers for org [%s]: %v\n", orgID, peersConfig)
@@ -261,9 +250,14 @@ func (a *action) initTargetPeers() error {
 
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %v\n", orgID, p.URL)
-				endorser, err := deffab.NewPeer(p.URL, p.TLSCACerts.Path, serverHostOverride, cliconfig.Config())
+				cert, err := p.TLSCACerts.TLSCert()
 				if err != nil {
-					return errors.Wrap(err, "NewPeer return error")
+					cliconfig.Config().Logger().Errorf("Unable to read peer's TLS cert: %s", err)
+				}
+
+				endorser, err := sdkpeer.New(cliconfig.Config(), sdkpeer.WithURL(p.URL), sdkpeer.WithTLSCert(cert), sdkpeer.WithServerName(serverHostOverride))
+				if err != nil {
+					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}
 				endorser.SetMSPID(mspID)
 				a.peers = append(a.peers, endorser)

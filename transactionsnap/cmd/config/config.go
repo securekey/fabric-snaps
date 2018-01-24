@@ -8,7 +8,10 @@ package config
 
 import (
 	"bytes"
+	"crypto/x509"
+	"encoding/pem"
 	"go/build"
+	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -154,9 +157,41 @@ func (c *Config) GetTLSRootCertPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.rootcert.file"))
 }
 
+// GetTLSRootCert returns root TLS certificate
+func (c *Config) GetTLSRootCert() *x509.Certificate {
+	certPath := c.GetTLSRootCertPath()
+	return getCertFromPath(certPath)
+}
+
+func getCertFromPath(certPath string) *x509.Certificate {
+	pemBuffer, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		logger.Warnf("cert fixture missing at path '%s', err: %s", certPath, err)
+	}
+
+	certBlock, _ := pem.Decode(pemBuffer)
+	if certBlock == nil {
+		logger.Warnf("failed to decode certificate bytes [%v]", pemBuffer)
+		return nil
+	}
+	cert, err := x509.ParseCertificate(certBlock.Bytes)
+	if err != nil {
+		logger.Warnf("failed to parse certificate: %s", err)
+		return nil
+	}
+
+	return cert
+}
+
 // GetTLSCertPath returns absolute path to the TLS certificate
 func (c *Config) GetTLSCertPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.cert.file"))
+}
+
+// GetTLSCert returns client TLS certificate
+func (c *Config) GetTLSCert() *x509.Certificate {
+	certPath := c.GetTLSCertPath()
+	return getCertFromPath(certPath)
 }
 
 // GetTLSKeyPath returns absolute path to the TLS key

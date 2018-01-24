@@ -19,7 +19,7 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
@@ -531,7 +531,8 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 	s := []string{peerConfig.Host, strconv.Itoa(peerConfig.Port)}
 	peerURL := strings.Join(s, ":")
 
-	targetPeer, err := fabapi.NewPeer(peerURL, txService.Config.GetTLSRootCertPath(), "", txService.ClientConfig())
+	targetPeer, err := sdkpeer.New(txService.ClientConfig(), sdkpeer.WithURL(peerURL),
+		sdkpeer.WithTLSCert(txService.Config.GetTLSRootCert()), sdkpeer.WithServerName(""))
 	if err != nil {
 		logger.Debugf("Error creating target peer: %v", err)
 	}
