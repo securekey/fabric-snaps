@@ -45,14 +45,10 @@ func randomString(strlen int) string {
 // HasPrimaryPeerJoinedChannel checks whether the primary peer of a channel
 // has already joined the channel. It returns true if it has, false otherwise,
 // or an error
-func HasPrimaryPeerJoinedChannel(client api.FabricClient, orgUser api.User, channel api.Channel) (bool, error) {
+func HasPrimaryPeerJoinedChannel(client api.Resource, orgUser api.IdentityContext, channel api.Channel) (bool, error) {
 	foundChannel := false
 	primaryPeer := channel.PrimaryPeer()
 
-	currentUser := client.UserContext()
-	defer client.SetUserContext(currentUser)
-
-	client.SetUserContext(orgUser)
 	response, err := client.QueryChannels(primaryPeer)
 	if err != nil {
 		return false, fmt.Errorf("Error querying channel for primary peer: %s", err)
@@ -67,7 +63,7 @@ func HasPrimaryPeerJoinedChannel(client api.FabricClient, orgUser api.User, chan
 }
 
 // IsChaincodeInstalled Helper function to check if chaincode has been deployed
-func IsChaincodeInstalled(client api.FabricClient, peer api.Peer, name string) (bool, error) {
+func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool, error) {
 	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(peer)
 	if err != nil {
 		return false, err

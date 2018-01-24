@@ -333,10 +333,10 @@
   version = "v1.1.0-alpha"
 
 [[projects]]
-  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "api/apiconfig",
+    "api/apicore",
     "api/apicryptosuite",
     "api/apifabca",
     "api/apifabclient",
@@ -344,10 +344,6 @@
     "api/apitxn",
     "api/apitxn/chmgmtclient",
     "api/apitxn/resmgmtclient",
-    "def/fabapi",
-    "def/fabapi/context",
-    "def/fabapi/context/defprovider",
-    "def/fabapi/opt",
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
@@ -369,6 +365,7 @@
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
     "pkg/config",
     "pkg/config/comm",
+    "pkg/config/cryptoutil",
     "pkg/config/urlutil",
     "pkg/cryptosuite",
     "pkg/cryptosuite/bccsp/sw",
@@ -388,6 +385,7 @@
     "pkg/fabric-client/mocks",
     "pkg/fabric-client/orderer",
     "pkg/fabric-client/peer",
+    "pkg/fabric-client/resource",
     "pkg/fabric-client/signingmgr",
     "pkg/fabric-txn/chclient",
     "pkg/fabric-txn/chmgmtclient",
@@ -395,10 +393,17 @@
     "pkg/fabric-txn/internal",
     "pkg/fabric-txn/resmgmtclient",
     "pkg/fabric-txn/selection/staticselection",
+    "pkg/fabsdk",
+    "pkg/fabsdk/api",
+    "pkg/fabsdk/factory/defclient",
+    "pkg/fabsdk/factory/defcore",
+    "pkg/fabsdk/factory/defsvc",
+    "pkg/fabsdk/provider/fabpvdr",
     "pkg/logging",
     "pkg/logging/decorator",
-    "pkg/logging/modulledlogger",
+    "pkg/logging/modlog",
     "pkg/logging/utils",
+    "pkg/status",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
@@ -411,8 +416,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "0d27664e8a5eea2f7a2e196b0bd6a5641363fa8b"
-  source = "github.com/securekey/fabric-sdk-go-next"
+  revision = "10205b28360735b561fc011274ff82640547c557"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -703,6 +707,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66f4931bda8769e52a5d8c42bcaf2a3e0c4764d7a7482fbb60e2c8f615b67489"
+  inputs-digest = "4f5876c0bade4b3f790c82fbe1436ff92e606ffb6d90a8c212332d5244473fd7"
   solver-name = "gps-cdcl"
   solver-version = 1
