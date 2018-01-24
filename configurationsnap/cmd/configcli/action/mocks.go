@@ -11,9 +11,9 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
 	fabapimocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/spf13/pflag"
@@ -75,7 +75,7 @@ func InitGlobalFlags(flags *pflag.FlagSet) {
 // NewMockPeer creates a mock peer
 func NewMockPeer(url string, mspID string) apifabclient.Peer {
 	config := fabapimocks.NewMockConfig()
-	peer, err := fabapi.NewPeer(url, "", "", config)
+	peer, err := sdkpeer.New(config, sdkpeer.WithURL(url))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

@@ -9,7 +9,7 @@ package client
 import (
 	"sync"
 
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -69,7 +69,7 @@ func parsePeerEndpoints(channelID string, endpoints []*protosPeer.PeerEndpoint, 
 
 	for _, endpoint := range endpoints {
 		enpoint := config.GetGRPCProtocol() + endpoint.GetEndpoint()
-		peer, err := sdkFabApi.NewPeer(enpoint, "", "", clientInstance.GetConfig())
+		peer, err := sdkpeer.New(clientInstance.GetConfig(), sdkpeer.WithURL(enpoint), sdkpeer.WithServerName(""))
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new peer")
 		}
