@@ -24,8 +24,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -417,7 +417,7 @@ func configureClient(fabricClient api.Client, config api.Config, sdkConfig []byt
 	newtworkConfig.Orderers["orderer.example.com"] = apiconfig.OrdererConfig{URL: broadcastTestURL}
 
 	//create selection service
-	peer, _ := sdkFabApi.NewPeer(endorserTestURL, "", "", fabricClient.GetConfig())
+	peer, _ := sdkpeer.New(fabricClient.GetConfig(), sdkpeer.WithURL(endorserTestURL))
 	selectionService := mocks.MockSelectionService{TestEndorsers: []sdkApi.Peer{peer},
 		TestPeer:       api.PeerConfig{EventHost: endorserTestEventHost, EventPort: endorserTestEventPort},
 		InvalidChannel: ""}

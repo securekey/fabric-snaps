@@ -117,8 +117,8 @@ func (c *MockClient) GetConfig() sdkConfigApi.Config {
 	return c.fcClient.GetConfig()
 }
 
-// GetUser returns the user from the client context
-// @retruns {User} user
-func (c *MockClient) GetUser() sdkApi.User {
-	return c.fcClient.GetUser()
+// GetSigningIdentity returns the signingIdentity (user) context from the client
+// @retruns {sdkApi.IdentityContext} sdkApi.IdentityContext
+func (c *MockClient) GetSigningIdentity() sdkApi.IdentityContext {
+	return c.fcClient.GetSigningIdentity()
 }

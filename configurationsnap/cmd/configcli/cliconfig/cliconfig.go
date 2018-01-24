@@ -7,10 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package cliconfig
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/securekey/fabric-snaps/util/errors"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	// ConfigSnapID is the name/ID of the configuraton snap
+	// ConfigSnapID is the name/ID of the configuration snap
 	ConfigSnapID = "configurationsnap"
 
 	loggerName = "configcli"
@@ -146,15 +147,15 @@ func InitConfig() error {
 	}
 
 	if opts.clientConfigFile == "" {
-		return errors.New("no client config file specified")
+		return errors.New(errors.GeneralError, "no client config file specified")
 	}
 
-	cnfg, err := config.InitConfig(opts.clientConfigFile)
+	cnfg := config.FromFile(opts.clientConfigFile)
+	config, err := cnfg()
 	if err != nil {
-		return err
+		return errors.WithMessage(errors.GeneralError, err, "error loading the configs")
 	}
-
-	instance.Config = cnfg
+	instance.Config = config
 
 	return nil
 }
