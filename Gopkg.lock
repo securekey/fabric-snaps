@@ -332,10 +332,10 @@
   revision = "2dca155e8407366d49e531f1daa27b786c545374"
 
 [[projects]]
-  branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "api/apiconfig",
+    "api/apicore",
     "api/apicryptosuite",
     "api/apifabca",
     "api/apifabclient",
@@ -343,10 +343,6 @@
     "api/apitxn",
     "api/apitxn/chmgmtclient",
     "api/apitxn/resmgmtclient",
-    "def/fabapi",
-    "def/fabapi/context",
-    "def/fabapi/context/defprovider",
-    "def/fabapi/opt",
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
@@ -368,6 +364,7 @@
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
     "pkg/config",
     "pkg/config/comm",
+    "pkg/config/cryptoutil",
     "pkg/config/urlutil",
     "pkg/cryptosuite",
     "pkg/cryptosuite/bccsp/sw",
@@ -387,6 +384,7 @@
     "pkg/fabric-client/mocks",
     "pkg/fabric-client/orderer",
     "pkg/fabric-client/peer",
+    "pkg/fabric-client/resource",
     "pkg/fabric-client/signingmgr",
     "pkg/fabric-txn/chclient",
     "pkg/fabric-txn/chmgmtclient",
@@ -394,10 +392,17 @@
     "pkg/fabric-txn/internal",
     "pkg/fabric-txn/resmgmtclient",
     "pkg/fabric-txn/selection/staticselection",
+    "pkg/fabsdk",
+    "pkg/fabsdk/api",
+    "pkg/fabsdk/factory/defclient",
+    "pkg/fabsdk/factory/defcore",
+    "pkg/fabsdk/factory/defsvc",
+    "pkg/fabsdk/provider/fabpvdr",
     "pkg/logging",
     "pkg/logging/decorator",
-    "pkg/logging/modulledlogger",
+    "pkg/logging/modlog",
     "pkg/logging/utils",
+    "pkg/status",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
@@ -410,8 +415,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "0d27664e8a5eea2f7a2e196b0bd6a5641363fa8b"
-  source = "github.com/securekey/fabric-sdk-go-next"
+  revision = "10205b28360735b561fc011274ff82640547c557"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -702,6 +706,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "75e74c2d8b2258e98b3ae19c9abb0c6791aa66dbf8f6ac2891e6b84a5639dbf1"
+  inputs-digest = "64eae288319af5e1c397a57b0f2aa65ba1fe3469e0f2f65a94a54c45c3697e05"
   solver-name = "gps-cdcl"
   solver-version = 1

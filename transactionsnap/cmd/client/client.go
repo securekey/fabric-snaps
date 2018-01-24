@@ -16,8 +16,12 @@ import (
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	"github.com/hyperledger/fabric-sdk-go/pkg/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric-sdk-go/pkg/status"
 	"github.com/securekey/fabric-snaps/util/errors"
+
+	sdkorderer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/orderer"
 
 	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
@@ -26,6 +30,8 @@ import (
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/cmd/utils"
@@ -40,7 +46,7 @@ const (
 
 type clientImpl struct {
 	sync.RWMutex
-	client           sdkApi.FabricClient
+	client           sdkApi.Resource
 	selectionService api.SelectionService
 	config           api.Config
 }
@@ -113,13 +119,39 @@ func (c *clientImpl) NewChannel(name string) (sdkApi.Channel, error) {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetRandomOrdererConfig return error")
 	}
 
-	orderer, err := sdkFabApi.NewOrderer(ordererConfig.URL, ordererConfig.TLSCACerts.Path, "", c.client.Config())
+	opts, err := withOrdererOptions(ordererConfig)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "withOrdererOptions return error")
+	}
+	orderer, err := sdkorderer.New(c.client.Config(), opts...)
+
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Error adding orderer")
 	}
 	channel.AddOrderer(orderer)
 
 	return channel, nil
+}
+
+func withOrdererOptions(ordererConfig *sdkConfigApi.OrdererConfig) ([]sdkorderer.Option, error) {
+	opts := []sdkorderer.Option{}
+	opts = append(opts, sdkorderer.WithURL(ordererConfig.URL))
+	opts = append(opts, sdkorderer.WithServerName(""))
+
+	ocert, err := ordererConfig.TLSCACerts.TLSCert()
+
+	if err != nil {
+		s, ok := status.FromError(err)
+		// if error is other than EmptyCert, then it should not be ignored, else simply set TLS with no cert
+		if !ok || s.Code != status.EmptyCert.ToInt32() {
+			return nil, errors.Wrap(errors.GeneralError, err, "error getting orderer cert from the configs")
+		}
+	}
+	if ocert != nil {
+		opts = append(opts, sdkorderer.WithTLSCert(ocert))
+	}
+
+	return opts, nil
 }
 
 func (c *clientImpl) GetChannel(name string) (sdkApi.Channel, error) {
@@ -353,9 +385,9 @@ func (c *clientImpl) GetSelectionService() api.SelectionService {
 }
 
 func (c *clientImpl) GetEventHub() (sdkApi.EventHub, error) {
-	eventHub, err := sdkFabApi.NewEventHub(c.client)
+	eventHub, err := events.NewEventHub(c.client)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed NewEventHub")
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed to get NewEventHub")
 	}
 	return eventHub, err
 }
@@ -385,7 +417,7 @@ func (c *clientImpl) InitializeChannel(channel sdkApi.Channel) error {
 }
 
 func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
-	globalCertPool, err := c.client.Config().TLSCACertPool("")
+	globalCertPool, err := c.client.Config().TLSCACertPool()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "Failed TLSCACertPool")
 	}
@@ -412,14 +444,9 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 
 func (c *clientImpl) initialize(sdkConfig []byte) error {
 
-	sdkOptions := sdkFabApi.Options{
-		ConfigByte:      sdkConfig,
-		ConfigType:      "yaml",
-		ProviderFactory: &factories.DefaultCryptoSuiteProviderFactory{},
-		ContextFactory:  &factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()},
-	}
-
-	sdk, err := sdkFabApi.NewSDK(sdkOptions)
+	sdk, err := fabsdk.New(config.FromRaw(sdkConfig, "yaml"),
+		fabsdk.WithContextPkg(&factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()}),
+		fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{}))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
@@ -447,13 +474,13 @@ func (c *clientImpl) initialize(sdkConfig []byte) error {
 		}
 	}
 
-	userSession, err := sdk.NewPreEnrolledUserSession(orgname, txnSnapUser)
+	userSession, err := sdk.NewClient(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname)).Session()
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to get NewPreEnrolledUserSession")
+		return errors.Wrapf(errors.GeneralError, err, "failed getting user session for org %s", orgname)
 	}
-	client, err := sdk.NewSystemClient(userSession)
+	client, err := sdk.FabricProvider().NewResourceClient(userSession.Identity())
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to get new client")
+		return errors.WithMessage(errors.GeneralError, err, "NewResourceClient failed")
 	}
 	c.client = client
 
@@ -474,6 +501,6 @@ func (c *clientImpl) GetConfig() sdkConfigApi.Config {
 	return c.client.Config()
 }
 
-func (c *clientImpl) GetUser() sdkApi.User {
-	return c.client.UserContext()
+func (c *clientImpl) GetSigningIdentity() sdkApi.IdentityContext {
+	return c.client.IdentityContext()
 }
