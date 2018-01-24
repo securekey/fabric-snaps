@@ -16,9 +16,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
-	sdkFabApi "github.com/hyperledger/fabric-sdk-go/def/fabapi"
-	mocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
+	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
@@ -292,7 +292,7 @@ func pg(peers ...api.ChannelPeer) api.PeerGroup {
 }
 
 func peer(name string, mspID string) api.ChannelPeer {
-	peer, err := sdkFabApi.NewPeer(name+":7051", "", "", configImp)
+	peer, err := sdkpeer.New(configImp, sdkpeer.WithURL(name+":7051"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

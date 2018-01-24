@@ -18,7 +18,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/def/fabapi/context/defprovider"
+	"github.com/hyperledger/fabric-sdk-go/def/factory/defclient"
 	"github.com/hyperledger/fabric/bccsp"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -29,7 +29,7 @@ var logger = logging.NewLogger("txnsnap")
 
 // CredentialManagerProviderFactory is will provide custom context factory for SDK
 type CredentialManagerProviderFactory struct {
-	defprovider.OrgClientFactory
+	defclient.OrgClientFactory
 	CryptoPath string
 }
 
