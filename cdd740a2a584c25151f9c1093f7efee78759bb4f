@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a12a46a_8b84c434",
+        "filename": "bddtests/common_steps.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "Can the following 15 lines be done with passing config only (instead of calculating override, certs etc.)?",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3886829f_69c4dd3e",
+        "filename": "bddtests/common_steps.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "Can we try to use direct client instead of swap and defer?",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29654b3b_095771ed",
+        "filename": "configurationsnap/cmd/configcli/action/action.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "Can new peer be done from config?",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16140fbc_6f8bc509",
+        "filename": "configurationsnap/cmd/configcli/action/sdkprovider.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "Is this file needed?",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7912e45_85c5b758",
+        "filename": "transactionsnap/cmd/client/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "Is it valid case that orderer cert is empty in config? \nAlso, configuration should be changed to read from pem.",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55c63e4b_e03e6904",
+        "filename": "transactionsnap/cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "You should return here, no point in going further.",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e841c8e1_fa109129",
+        "filename": "transactionsnap/cmd/config/config_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-25T17:57:53Z",
+      "side": 1,
+      "message": "spelling",
+      "revId": "cdd740a2a584c25151f9c1093f7efee78759bb4f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
