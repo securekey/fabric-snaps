@@ -16,17 +16,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudflare/cfssl/log"
 	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	errors "github.com/pkg/errors"
+	//errors "github.com/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -34,6 +34,7 @@ import (
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
+	errors "github.com/securekey/fabric-snaps/util/errors"
 )
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
@@ -49,7 +50,7 @@ var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb
 var supportedAlgs = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024", "RSA2048", "RSA3072", "RSA4096"}
 var availableFunctions = functionSet()
 
-var logger = shim.NewLogger("configuration-snap")
+var logger = logging.NewLogger("configsnap")
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
@@ -64,11 +65,11 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
-			return shim.Error(fmt.Sprintf("error getting peer's msp id %v", err))
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		peerID, err := config.GetPeerID(peerConfigPath)
 		if err != nil {
-			return shim.Error(fmt.Sprintf("error getting peer's  id %v", err))
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		interval := config.GetDefaultRefreshInterval()
 		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
@@ -260,12 +261,13 @@ func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType
 	if err != nil {
 		return csrTemplate, err
 	}
+
 	csrConfig, err := config.GetCSRConfigOptions(channelID, peerConfigPath)
 	if err != nil {
 		return csrTemplate, err
 	}
 	if keys == nil {
-		return csrTemplate, errors.Errorf("Invalid key")
+		return csrTemplate, errors.Errorf(errors.GeneralError, "Invalid key")
 	}
 	pubKey, err := keys.PublicKey()
 	if err != nil {
@@ -295,6 +297,9 @@ func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType
 }
 
 func getCSRSubject(channelID string) ([]byte, error) {
+	if channelID == "" {
+		return nil, errors.Errorf(errors.GeneralError, "Channel is required")
+	}
 	//get csr configuration - from config(HL)
 	csrConfig, err := getCSRConfig(channelID, peerConfigPath)
 	if err != nil {
@@ -321,27 +326,32 @@ func getCSRSubject(channelID string) ([]byte, error) {
 }
 
 func getCSRConfig(channelID string, peerConfigPath string) (*config.CSRConfig, error) {
+	if channelID == "" {
+		return nil, errors.Errorf(errors.GeneralError, "Channel is required")
+	}
+
 	csrConfig, err := config.GetCSRConfigOptions(channelID, peerConfigPath)
 	if err != nil {
 		return nil, err
 	}
 	if csrConfig.CommonName == "" {
-		return nil, errors.Errorf("Common name is required")
+		return nil, errors.Errorf(errors.GeneralError, "Common name is required")
+
 	}
 	if csrConfig.Country == "" {
-		return nil, errors.Errorf("Country is required")
+		return nil, errors.Errorf(errors.GeneralError, "Country name is required")
 	}
 	if csrConfig.StateProvince == "" {
-		return nil, errors.Errorf("StateProvince is required")
+		return nil, errors.Errorf(errors.GeneralError, "StateProvince name is required")
 	}
 	if csrConfig.Locality == "" {
-		return nil, errors.Errorf("Locality is required")
+		return nil, errors.Errorf(errors.GeneralError, "Locality name is required")
 	}
 	if csrConfig.Org == "" {
-		return nil, errors.Errorf("Organization is required")
+		return nil, errors.Errorf(errors.GeneralError, "Organization name is required")
 	}
 	if csrConfig.OrgUnit == "" {
-		return nil, errors.Errorf("Organizational Unit is required")
+		return nil, errors.Errorf(errors.GeneralError, "OrganizationalUnit name is required")
 	}
 	return csrConfig, nil
 
@@ -351,16 +361,20 @@ func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, b
 	var k bccsp.Key
 	var err error
 	var bccspsuite bccsp.BCCSP
+
+	if channelID == "" {
+		return bccspsuite, k, errors.Errorf(errors.GeneralError, "Channel is required")
+
+	}
+	if opts == nil {
+		return bccspsuite, k, errors.Errorf(errors.GeneralError, "The key gen option is required")
+	}
+
 	cfgopts, err := config.GetBCCSPOpts(channelID, peerConfigPath)
 	if err != nil {
 		return bccspsuite, k, err
 	}
-	if channelID == "" {
-		return bccspsuite, k, errors.Errorf("Channel is required")
-	}
-	if opts == nil {
-		return bccspsuite, k, errors.Errorf("The key gen option is required")
-	}
+
 	logger.Debugf("BCCSP Plugin option config map %v", cfgopts)
 	//just once - initialize factory with options
 	//if factory was already initialized this call will be ignored
@@ -388,7 +402,7 @@ func getPublicKeyAlg(algorithm string) (x509.PublicKeyAlgorithm, error) {
 	case "ECDSA":
 		return x509.RSA, nil
 	default:
-		return sigAlg, errors.Errorf("Public key algorithm is not supported %s", algorithm)
+		return sigAlg, errors.Errorf(errors.GeneralError, "Public key algorithm is not supported %s", algorithm)
 	}
 }
 func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
@@ -425,7 +439,8 @@ func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
 	case "MD2WithRSA":
 		return x509.MD2WithRSA, nil
 	default:
-		return sigAlg, errors.Errorf("Alg not supported")
+		return sigAlg, errors.Errorf(errors.GeneralError, "Alg is not supported.")
+
 	}
 }
 
@@ -450,7 +465,7 @@ func getKeyOpts(keyType string, ephemeral bool) (bccsp.KeyGenOpts, error) {
 		return &bccsp.RSA4096KeyGenOpts{Temporary: ephemeral}, nil
 	default:
 		supportedAlgsMsg := strings.Join(supportedAlgs, ",")
-		return nil, errors.Errorf("The key algorithm is invalid. Supported options: %s", supportedAlgsMsg)
+		return nil, errors.Errorf(errors.GeneralError, "The key algorithm is invalid. Supported options: %s", supportedAlgsMsg)
 	}
 
 }
@@ -473,14 +488,14 @@ func parseKey(k bccsp.Key) pb.Response {
 	if k.Private() {
 		pubKey, err = k.PublicKey()
 		if err != nil {
-			return shim.Error(fmt.Sprintf("Error:getting public key %v", err))
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 	} else {
 		pubKey = k
 	}
 	pubKeyBts, err := pubKey.Bytes()
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Error:getting public key bytes %v", err))
+		return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 	}
 	logger.Debugf("***PubKey - len '%d' - SKI: '%v'", len(pubKeyBts), pubKey.SKI())
 	return shim.Success(pubKeyBts)
@@ -495,7 +510,7 @@ func periodicRefresh(channelID string, peerID string, peerMSPID string, refreshI
 			sendRefreshRequest(channelID, peerID, peerMSPID)
 			csccconfig, err := config.New(channelID, peerConfigPath)
 			if err != nil {
-				log.Debugf("Got error while creating config for channel %v\n", channelID)
+				logger.Debugf("Got error while creating config for channel %v\n", channelID)
 			}
 			if csccconfig == nil {
 				refreshInterval = config.GetDefaultRefreshInterval()
@@ -558,18 +573,17 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 	configKey := &mgmtapi.ConfigKey{}
 	if len(args) == 0 {
 		logger.Error("Config is empty (no args)")
-		return configKey, errors.New("Config is empty (no args)")
+		return configKey, errors.Errorf(errors.GeneralError, "Config is empty (no args)")
 	}
 
 	configBytes := args[0]
 	if len(configBytes) == 0 {
 		logger.Error("Config is empty (no key)")
-		return configKey, errors.New("Config is empty (no key)")
+		return configKey, errors.Errorf(errors.GeneralError, "Config is empty (no key)")
 	}
 	if err := json.Unmarshal(configBytes, &configKey); err != nil {
-		errStr := fmt.Sprintf("Got error %v unmarshalling config key %s", err, string(configBytes[:]))
-		logger.Error(errStr)
-		return configKey, errors.New(errStr)
+		logger.Errorf("Got error %v unmarshalling config key %s", err, string(configBytes[:]))
+		return configKey, errors.Errorf(errors.GeneralError, "Got error %v unmarshalling config key %s", err, string(configBytes[:]))
 	}
 
 	return configKey, nil
@@ -578,7 +592,7 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 //getIdentity gets associated membership service provider
 func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
 	if stub == nil {
-		return "", errors.New("Stub is nil")
+		return "", errors.Errorf(errors.GeneralError, "Stub is nil")
 	}
 	creator, err := stub.GetCreator()
 	if err != nil {
