@@ -22,6 +22,29 @@
       "revId": "5f256f25011b23dabb5760b9806feae1844be48f",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1007f7f0_4e620be5",
+        "filename": "Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-01-25T21:12:01Z",
+      "side": 1,
+      "message": "we need to update FABRIC_BASE_IMAGE_VERSION",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 25
+      },
+      "revId": "5f256f25011b23dabb5760b9806feae1844be48f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
