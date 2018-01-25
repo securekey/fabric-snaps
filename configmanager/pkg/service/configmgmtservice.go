@@ -15,15 +15,15 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/stringutils"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
-	logging "github.com/op/go-logging"
-	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	errors "github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.MustGetLogger("configmngmt-service")
+var logger = logging.NewLogger("cfg-mgmt-service")
 
 type cache map[string][]byte
 
@@ -56,7 +56,7 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 //Get items from cache
 func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, error) {
 	if csi == nil {
-		return nil, errors.New("ConfigServiceImpl was not initialized")
+		return nil, errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 
 	channelCache := csi.getCache(channelID)
@@ -72,7 +72,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 
 	val := channelCache[keyStr]
 	if len(val) == 0 {
-		logger.Infof("Config cache does not contain config for key [%s] on channel [%s]. Getting config from ledger.\n", keyStr, channelID)
+		logger.Debugf("Config cache does not contain config for key [%s] on channel [%s]. Getting config from ledger.\n", keyStr, channelID)
 		//not in cache get from ledger
 		return csi.GetConfigFromLedger(channelID, configKey)
 	}
@@ -99,12 +99,12 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 //Refresh adds new items into cache and refreshes existing ones
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) error {
-	logger.Infof("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
+	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
-		return errors.New("ConfigServiceImpl was not initialized")
+		return errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 	if stub == nil {
-		return errors.New("Stub is nil")
+		return errors.Errorf(errors.GeneralError, "Stub is nil")
 	}
 
 	configManager := mgmt.NewConfigManager(stub)
@@ -112,11 +112,11 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 	configKey := api.ConfigKey{MspID: mspID}
 	configMessages, err := configManager.Get(configKey)
 	if err != nil {
-		return errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
+		return errors.Errorf(errors.GeneralError, "Cannot create criteria for search by mspID %v", configMessages)
 	}
 
 	if len(configMessages) == 0 {
-		return errors.Errorf("Cannot create criteria for search by mspID %v", configMessages)
+		return errors.Errorf(errors.GeneralError, "Cannot create criteria for search by mspID %v", configMessages)
 	}
 
 	return csi.refreshCache(stub.GetChannelID(), configMessages)
@@ -133,7 +133,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
 			logger.Errorf("Cannot create transaction simulator %v", err)
-			return nil, errors.Errorf("Cannot create transaction simulator %v ", err)
+			return nil, errors.Errorf(errors.GeneralError, "Cannot create transaction simulator %v ", err)
 		}
 		defer txsim.Done()
 
@@ -141,20 +141,20 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
 			logger.Errorf("Error getting state for app %s %v", keyStr, err)
-			return nil, errors.Errorf("Error getting state %v", err)
+			return nil, errors.Errorf(errors.GeneralError, "Error getting state %v", err)
 		}
 		return config, nil
 	}
 
-	return nil, errors.Errorf("Cannot obtain ledger for channel %s", channelID)
+	return nil, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
 }
 
 func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) error {
 	if csi == nil {
-		return errors.New("ConfigServiceImpl was not initialized")
+		return errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 
-	logger.Infof("Updating cache for channel %s\n", channelID)
+	logger.Debugf("Updating cache for channel %s\n", channelID)
 
 	cache := make(map[string][]byte)
 
@@ -163,14 +163,14 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 		if err != nil {
 			return err
 		}
-		logger.Infof("Adding item to cache [%s]=[%s] for channel [%s]\n", keyStr, val.Value, channelID)
+		logger.Debugf("Adding item for key [%s] and channel [%s] to cache\n", keyStr, channelID)
 		cache[keyStr] = val.Value
 	}
 	csi.mtx.Lock()
 	defer csi.mtx.Unlock()
 	instance.cacheMap[channelID] = cache
 
-	logger.Infof("Updated cache for channel %s\n", channelID)
+	logger.Debugf("Updated cache for channel %s\n", channelID)
 	return nil
 }
 

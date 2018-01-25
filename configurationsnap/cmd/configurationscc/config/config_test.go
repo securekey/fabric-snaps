@@ -111,16 +111,13 @@ func TestCSROptions(t *testing.T) {
 
 func TestBCCSPOptions(t *testing.T) {
 
-	configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
-	x := configmgmtService.GetInstance()
-	instance := x.(*configmgmtService.ConfigServiceImpl)
-
-	csconfig, err := instance.GetViper("testChannel", configKey, configmanagerApi.YAML)
+	csconfig, err := New("testChannel", "../sampleconfig")
 	if err != nil {
-		t.Fatalf("Got error while getting vipers %v", err)
+		t.Fatalf("Error creating new config: %s", err)
 	}
+	fmt.Printf("%v", csconfig.ConfigSnapConfig)
 	//test PKCS11 options
-	opts, err := getPKCSOptions(csconfig)
+	opts, err := getPKCSOptions(csconfig.ConfigSnapConfig)
 	if err != nil {
 		t.Fatalf("Got error while getting BCCSP opts %v", err)
 	}
@@ -128,7 +125,7 @@ func TestBCCSPOptions(t *testing.T) {
 		t.Fatalf("Expected PKCS11 provider")
 	}
 	//test PLUGIN options
-	opts, err = getPluginOptions(csconfig)
+	opts, err = getPluginOptions(csconfig.ConfigSnapConfig)
 	if err != nil {
 		t.Fatalf("Got error while getting BCCSP opts %v", err)
 	}
@@ -141,7 +138,7 @@ func TestBCCSPOptions(t *testing.T) {
 	if opts.PluginOpts.Config == nil {
 		t.Fatalf("Expected PluginOpts - Config to be set")
 	}
-	//Config map is requred
+	//Config map is required
 	pluginCfgOptsMap := opts.PluginOpts.Config
 	val, _ := pluginCfgOptsMap["key"]
 	if val == nil {
