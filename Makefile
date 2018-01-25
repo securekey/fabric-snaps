@@ -27,10 +27,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = v1.1.0-0.0.4
+FABRIC_NEXT_VERSION = v1.1.0-0.0.5
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.1.0-0.0.4
+export FABRIC_NEXT_IMAGE_TAG = 1.1.0-0.0.5
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -47,7 +47,7 @@ PACKAGE_NAME = github.com/$(PROJECT_NAME)
 #fabric base image parameters
 FABRIC_BASE_IMAGE_NS=securekey
 FABRIC_BASE_IMAGE=fabric-baseimage
-FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.2
+FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.5
 
 GO_BUILD_TAGS ?= "experimental"
 
@@ -56,7 +56,7 @@ FABRIC_SNAPS_POPULATE_VENDOR ?= true
 DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
-export GO_DEP_COMMIT=v0.3.2 # the version of dep that will be installed by depend-install (or in the CI)
+export GO_DEP_COMMIT=v0.4.1 # the version of dep that will be installed by depend-install (or in the CI)
 
 snaps: clean populate
 	@echo "Building snap plugins"
