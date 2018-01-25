@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c37651a3_975ce1cf",
+        "filename": "Gopkg.toml",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-25T18:13:00Z",
+      "side": 0,
+      "message": "removed to dep warning that package is not referenced.",
+      "range": {
+        "startLine": 51,
+        "startChar": 2,
+        "endLine": 51,
+        "endChar": 33
+      },
+      "revId": "bcc0e8817d673a9c4aa31f4b0f9ae9d8dbb88ee5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
