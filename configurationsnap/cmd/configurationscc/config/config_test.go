@@ -109,47 +109,6 @@ func TestCSROptions(t *testing.T) {
 
 }
 
-func TestBCCSPOptions(t *testing.T) {
-
-	configKey := configmanagerApi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
-	x := configmgmtService.GetInstance()
-	instance := x.(*configmgmtService.ConfigServiceImpl)
-
-	csconfig, err := instance.GetViper("testChannel", configKey, configmanagerApi.YAML)
-	if err != nil {
-		t.Fatalf("Got error while getting vipers %v", err)
-	}
-	//test PKCS11 options
-	opts, err := getPKCSOptions(csconfig)
-	if err != nil {
-		t.Fatalf("Got error while getting BCCSP opts %v", err)
-	}
-	if opts.ProviderName != "PKCS11" {
-		t.Fatalf("Expected PKCS11 provider")
-	}
-	//test PLUGIN options
-	opts, err = getPluginOptions(csconfig)
-	if err != nil {
-		t.Fatalf("Got error while getting BCCSP opts %v", err)
-	}
-	if opts.PluginOpts == nil {
-		t.Fatalf("Expected PluginOpts to be set")
-	}
-	if opts.PluginOpts.Library == "" {
-		t.Fatalf("Expected PluginOpts - Library to be set")
-	}
-	if opts.PluginOpts.Config == nil {
-		t.Fatalf("Expected PluginOpts - Config to be set")
-	}
-	//Config map is requred
-	pluginCfgOptsMap := opts.PluginOpts.Config
-	val, _ := pluginCfgOptsMap["key"]
-	if val == nil {
-		t.Fatalf("Expected value for key")
-	}
-
-}
-
 func getMockStub() *shim.MockStub {
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
