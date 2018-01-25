@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0bcd27b_7116b8d1",
+        "filename": "bddtests/fixtures/.env",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-25T18:08:53Z",
+      "side": 1,
+      "message": "we should remember to update this once alpha is tagged.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 21
+      },
+      "revId": "0bf08a3fe27de086fce802d1f3508852cf7cd742",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
