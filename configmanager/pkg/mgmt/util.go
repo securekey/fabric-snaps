@@ -9,7 +9,7 @@ package mgmt
 import (
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 
 	"github.com/securekey/fabric-snaps/configmanager/api"
 )
@@ -31,13 +31,13 @@ func CreateConfigKey(mspID string, peerID string, appName string) (api.ConfigKey
 //ValidateConfigKey validates component parts of ConfigKey
 func ValidateConfigKey(configKey api.ConfigKey) error {
 	if len(configKey.MspID) == 0 {
-		return errors.New("Cannot create config key using empty MspId")
+		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty MspId")
 	}
 	if len(configKey.PeerID) == 0 {
-		return errors.New("Cannot create config key using empty PeerID")
+		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty PeerID")
 	}
 	if len(configKey.AppName) == 0 {
-		return errors.New("Cannot create config key using empty AppName")
+		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty AppName")
 	}
 	return nil
 }
@@ -45,7 +45,7 @@ func ValidateConfigKey(configKey api.ConfigKey) error {
 //ConfigKeyToString converts configKey to string
 func ConfigKeyToString(configKey api.ConfigKey) (string, error) {
 	if err := ValidateConfigKey(configKey); err != nil {
-		return "", errors.Errorf("Config Key is not valid %v", err)
+		return "", errors.Errorf(errors.GeneralError, "Config Key is not valid %v", err)
 	}
 	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName}, KeyDivider), nil
 }
@@ -55,7 +55,7 @@ func StringToConfigKey(key string) (api.ConfigKey, error) {
 	ck := api.ConfigKey{}
 	keyParts := strings.Split(key, KeyDivider)
 	if len(keyParts) < 3 {
-		return ck, errors.Errorf("Invalid config key %v", key)
+		return ck, errors.Errorf(errors.GeneralError, "Invalid config key %v", key)
 	}
 	ck.MspID = keyParts[0]
 	ck.PeerID = keyParts[1]
