@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a4d2a0e_7191d089",
+        "filename": "configurationsnap/cmd/configurationscc/sampleconfig/config.yaml",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-25T15:23:46Z",
+      "side": 1,
+      "message": "shouldn\u0027t these be mapped to a volume in docker-compose and only 1 value in this config?",
+      "range": {
+        "startLine": 17,
+        "startChar": 14,
+        "endLine": 17,
+        "endChar": 260
+      },
+      "revId": "abab21ca913faadc5f45dfc4c7034804956e3efb",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
