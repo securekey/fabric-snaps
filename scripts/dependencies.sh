@@ -15,7 +15,7 @@
     go get -u github.com/AlekSi/gocov-xml
     go get -u github.com/client9/misspell/cmd/misspell
     go get -u github.com/golang/lint/golint
-    go get -u golang.org/x/tools/cmd/goimports
+    go get -u github.com/golang/tools/cmd/goimports
 
 # Install specific version of go dep (particularly for CI)
     echo "Installing dep@$GO_DEP_COMMIT to $GOPATH/bin ..."
@@ -35,7 +35,7 @@ type gocov >/dev/null 2>&1 || { echo >& 2 "gocov is not installed (go get -u git
 type gocov-xml >/dev/null 2>&1 || { echo >& 2 "gocov-xml is not installed (go get -u github.com/AlekSi/gocov-xml)"; ABORT=1; }
 type misspell >/dev/null 2>&1 || { echo >& 2 "misspell is not installed (go get -u github.com/client9/misspell/cmd/misspell)"; ABORT=1; }
 type golint >/dev/null 2>&1 || { echo >& 2 "golint is not installed (go get -u github.com/golang/lint/golint)"; ABORT=1; }
-type goimports >/dev/null 2>&1 || { echo >& 2 "goimports is not installed (go get -u golang.org/x/tools/cmd/goimports)"; ABORT=1; }
+type goimports >/dev/null 2>&1 || { echo >& 2 "goimports is not installed (go get -u github.com/golang/tools/cmd/goimports)"; ABORT=1; }
 type dep >/dev/null 2>&1 || { echo >& 2 "dep is not installed (go get -u github.com/golang/dep/cmd/dep)"; ABORT=1; }
 
 if [ -n "$ABORT" ]; then

@@ -35,7 +35,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "github.com/golang/protobuf"
 
 [[constraint]]
-  revision = "ef806275b1d2d1c56d4d539f14ad514fc8ce4351"
+  revision = "ac3975ab4977311ba1afd9c188ae79b63802dd31"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
@@ -61,6 +61,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 [[override]]
   name = "google.golang.org/grpc"
   revision = "b3ddf786825de56a4178401b7e174ee332173b66"
+  source = "github.com/grpc/grpc-go"
 
 ################
 # Downstream overrides to enable testing
