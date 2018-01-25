@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2221ea82_7c0e7859",
+        "filename": "Gopkg.lock",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-01-25T18:13:54Z",
+      "side": 1,
+      "message": "file is reformatted in dep 0.4.1",
+      "range": {
+        "startLine": 1,
+        "startChar": 1,
+        "endLine": 1,
+        "endChar": 90
+      },
+      "revId": "5f256f25011b23dabb5760b9806feae1844be48f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
