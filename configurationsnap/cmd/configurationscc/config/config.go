@@ -79,7 +79,7 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		PeerID: peerConfig.GetString("peer.id"), AppName: "configurationsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, errors.Errorf(errors.GeneralError, "Cannot create cache instance")
+		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
 
 	}
 	var refreshInterval = defaultRefreshInterval
@@ -92,7 +92,7 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 			return nil, err
 		}
 		if dataConfig == nil {
-			return nil, errors.Errorf(errors.GeneralError, "config data is empty")
+			return nil, errors.New(errors.GeneralError, "config data is empty")
 		}
 		replacer := strings.NewReplacer(".", "_")
 		customConfig = viper.New()
@@ -153,7 +153,7 @@ func GetPeerMSPID(peerConfigPathOverride string) (string, error) {
 	}
 	peerConfig, err := newPeerViper(peerConfigPath)
 	if err != nil {
-		return "", errors.Errorf(errors.GeneralError, "Error reading peer config")
+		return "", errors.New(errors.GeneralError, "Error reading peer config")
 	}
 
 	mspID := peerConfig.GetString("peer.localMspId")
@@ -171,7 +171,7 @@ func GetPeerID(peerConfigPathOverride string) (string, error) {
 	}
 	peerConfig, err := newPeerViper(peerConfigPath)
 	if err != nil {
-		return "", errors.Errorf(errors.GeneralError, "Error reading peer config:PeerID")
+		return "", errors.New(errors.GeneralError, "Error reading peer config:PeerID")
 	}
 	peerID := peerConfig.GetString("peer.id")
 	return peerID, nil
@@ -242,15 +242,15 @@ func getPKCSOptions(csconfig *viper.Viper) (*factory.FactoryOpts, error) {
 
 	lib := FindPKCS11Lib(cfglib)
 	if lib == "" {
-		return nil, errors.Errorf(errors.GeneralError, "PKCS Lib path was not set")
+		return nil, errors.New(errors.GeneralError, "PKCS Lib path was not set")
 	}
 	pin := GetPin(csconfig)
 	if pin == "" {
-		return nil, errors.Errorf(errors.GeneralError, "PKCS PIN  was not set")
+		return nil, errors.New(errors.GeneralError, "PKCS PIN  was not set")
 	}
 	label := GetLabel(csconfig)
 	if label == "" {
-		return nil, errors.Errorf(errors.GeneralError, "PKCS Label  was not set")
+		return nil, errors.New(errors.GeneralError, "PKCS Label  was not set")
 	}
 	ksopts := &pkcs11.FileKeystoreOpts{
 		KeyStorePath: GetKeystorePath(csconfig),

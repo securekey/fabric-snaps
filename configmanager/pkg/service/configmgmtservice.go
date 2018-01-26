@@ -56,7 +56,7 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 //Get items from cache
 func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, error) {
 	if csi == nil {
-		return nil, errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 
 	channelCache := csi.getCache(channelID)
@@ -101,10 +101,10 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) error {
 	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
-		return errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 	if stub == nil {
-		return errors.Errorf(errors.GeneralError, "Stub is nil")
+		return errors.New(errors.GeneralError, "Stub is nil")
 	}
 
 	configManager := mgmt.NewConfigManager(stub)
@@ -133,7 +133,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
 			logger.Errorf("Cannot create transaction simulator %v", err)
-			return nil, errors.Errorf(errors.GeneralError, "Cannot create transaction simulator %v ", err)
+			return nil, errors.WithMessage(errors.GeneralError, err, "Cannot create transaction simulator")
 		}
 		defer txsim.Done()
 
@@ -151,7 +151,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 
 func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) error {
 	if csi == nil {
-		return errors.Errorf(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 
 	logger.Debugf("Updating cache for channel %s\n", channelID)

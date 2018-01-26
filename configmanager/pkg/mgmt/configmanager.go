@@ -41,7 +41,7 @@ func NewConfigManager(stub shim.ChaincodeStubInterface) api.ConfigManager {
 func (cmngr *configManagerImpl) Save(configData []byte) error {
 
 	if len(configData) == 0 {
-		return errors.Errorf(errors.GeneralError, "Configuration must be provided")
+		return errors.New(errors.GeneralError, "Configuration must be provided")
 	}
 	//parse configuration request
 	configMessageMap, err := parseConfigMessage(configData)
@@ -58,7 +58,7 @@ func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][
 		logger.Debugf("Saving configs %v,%s", key, string(value[:]))
 		strkey, err := ConfigKeyToString(key)
 		if err != nil {
-			return errors.Errorf(errors.GeneralError, "Cannot put state. Invalid key %s", err)
+			return errors.WithMessage(errors.GeneralError, err, "Cannot put state. Invalid key")
 		}
 		if err = cmngr.stub.PutState(strkey, value); err != nil {
 			return errors.Wrap(errors.GeneralError, err, "PutState failed")

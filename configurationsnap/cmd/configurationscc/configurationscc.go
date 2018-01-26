@@ -26,7 +26,6 @@ import (
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	//errors "github.com/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -327,7 +326,7 @@ func getCSRSubject(channelID string) ([]byte, error) {
 
 func getCSRConfig(channelID string, peerConfigPath string) (*config.CSRConfig, error) {
 	if channelID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Channel is required")
+		return nil, errors.New(errors.GeneralError, "Channel is required")
 	}
 
 	csrConfig, err := config.GetCSRConfigOptions(channelID, peerConfigPath)
@@ -335,23 +334,23 @@ func getCSRConfig(channelID string, peerConfigPath string) (*config.CSRConfig, e
 		return nil, err
 	}
 	if csrConfig.CommonName == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Common name is required")
+		return nil, errors.New(errors.GeneralError, "Common name is required")
 
 	}
 	if csrConfig.Country == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Country name is required")
+		return nil, errors.New(errors.GeneralError, "Country name is required")
 	}
 	if csrConfig.StateProvince == "" {
-		return nil, errors.Errorf(errors.GeneralError, "StateProvince name is required")
+		return nil, errors.New(errors.GeneralError, "StateProvince name is required")
 	}
 	if csrConfig.Locality == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Locality name is required")
+		return nil, errors.New(errors.GeneralError, "Locality name is required")
 	}
 	if csrConfig.Org == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Organization name is required")
+		return nil, errors.New(errors.GeneralError, "Organization name is required")
 	}
 	if csrConfig.OrgUnit == "" {
-		return nil, errors.Errorf(errors.GeneralError, "OrganizationalUnit name is required")
+		return nil, errors.New(errors.GeneralError, "OrganizationalUnit name is required")
 	}
 	return csrConfig, nil
 
@@ -439,7 +438,7 @@ func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
 	case "MD2WithRSA":
 		return x509.MD2WithRSA, nil
 	default:
-		return sigAlg, errors.Errorf(errors.GeneralError, "Alg is not supported.")
+		return sigAlg, errors.New(errors.GeneralError, "Alg is not supported.")
 
 	}
 }
@@ -573,13 +572,13 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 	configKey := &mgmtapi.ConfigKey{}
 	if len(args) == 0 {
 		logger.Error("Config is empty (no args)")
-		return configKey, errors.Errorf(errors.GeneralError, "Config is empty (no args)")
+		return configKey, errors.New(errors.GeneralError, "Config is empty (no args)")
 	}
 
 	configBytes := args[0]
 	if len(configBytes) == 0 {
 		logger.Error("Config is empty (no key)")
-		return configKey, errors.Errorf(errors.GeneralError, "Config is empty (no key)")
+		return configKey, errors.New(errors.GeneralError, "Config is empty (no key)")
 	}
 	if err := json.Unmarshal(configBytes, &configKey); err != nil {
 		logger.Errorf("Got error %v unmarshalling config key %s", err, string(configBytes[:]))
@@ -592,7 +591,7 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 //getIdentity gets associated membership service provider
 func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
 	if stub == nil {
-		return "", errors.Errorf(errors.GeneralError, "Stub is nil")
+		return "", errors.New(errors.GeneralError, "Stub is nil")
 	}
 	creator, err := stub.GetCreator()
 	if err != nil {

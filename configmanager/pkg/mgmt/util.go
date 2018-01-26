@@ -31,13 +31,13 @@ func CreateConfigKey(mspID string, peerID string, appName string) (api.ConfigKey
 //ValidateConfigKey validates component parts of ConfigKey
 func ValidateConfigKey(configKey api.ConfigKey) error {
 	if len(configKey.MspID) == 0 {
-		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty MspId")
+		return errors.New(errors.GeneralError, "Cannot create config key using empty MspId")
 	}
 	if len(configKey.PeerID) == 0 {
-		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty PeerID")
+		return errors.New(errors.GeneralError, "Cannot create config key using empty PeerID")
 	}
 	if len(configKey.AppName) == 0 {
-		return errors.Errorf(errors.GeneralError, "Cannot create config key using empty AppName")
+		return errors.New(errors.GeneralError, "Cannot create config key using empty AppName")
 	}
 	return nil
 }
@@ -45,7 +45,7 @@ func ValidateConfigKey(configKey api.ConfigKey) error {
 //ConfigKeyToString converts configKey to string
 func ConfigKeyToString(configKey api.ConfigKey) (string, error) {
 	if err := ValidateConfigKey(configKey); err != nil {
-		return "", errors.Errorf(errors.GeneralError, "Config Key is not valid %v", err)
+		return "", errors.WithMessage(errors.GeneralError, err, "Config Key is not valid")
 	}
 	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName}, KeyDivider), nil
 }
