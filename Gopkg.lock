@@ -329,7 +329,8 @@
     "protos/peer",
     "protos/utils"
   ]
-  revision = "2dca155e8407366d49e531f1daa27b786c545374"
+  revision = "0f38dbc4d432fe07e63643966026ec9cfb44c358"
+  version = "v1.1.0-alpha"
 
 [[projects]]
   branch = "master"
@@ -702,6 +703,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "75e74c2d8b2258e98b3ae19c9abb0c6791aa66dbf8f6ac2891e6b84a5639dbf1"
+  inputs-digest = "7382c27449b232102bc7439588b3892e2500551f1a85a163e3ed357c29c25946"
   solver-name = "gps-cdcl"
   solver-version = 1
