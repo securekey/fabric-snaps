@@ -10,24 +10,25 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
 // NewMockStub creates a mock configuration snap stub
-func NewMockStub(channelID string) *shim.MockStub {
-	stub := shim.NewMockStub("configurationsnap", nil)
-	stub.MockTransactionStart("txid")
+func NewMockStub(channelID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
 }
 
 // SaveConfig saves the config data to the configuration snap using the given stub
 // and caches the data in the configuration service
-func SaveConfig(stub *shim.MockStub, mspID, peerID, appName string, configData []byte) error {
+func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName string, configData []byte) error {
 	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{api.PeerConfig{PeerID: peerID, App: []api.AppConfig{api.AppConfig{AppName: appName, Config: string(configData)}}}}}
 	configBytes, err := json.Marshal(config)
 	if err != nil {
@@ -42,7 +43,7 @@ func SaveConfig(stub *shim.MockStub, mspID, peerID, appName string, configData [
 
 // SaveConfigFromFile reads the config data from the given file and saves it to the configuration snap
 // using the given stub and caches the data in the configuration service
-func SaveConfigFromFile(stub *shim.MockStub, mspID, peerID, appName, configFile string) error {
+func SaveConfigFromFile(stub *mockstub.MockStub, mspID, peerID, appName, configFile string) error {
 	configData, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return errors.Wrap(err, "error reading config file")

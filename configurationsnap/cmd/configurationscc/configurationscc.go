@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -24,7 +23,6 @@ import (
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
-	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
@@ -587,24 +585,6 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 	}
 
 	return configKey, nil
-}
-
-//getIdentity gets associated membership service provider
-func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
-	if stub == nil {
-		return "", errors.New(errors.GeneralError, "Stub is nil")
-	}
-	creator, err := stub.GetCreator()
-	if err != nil {
-		logger.Errorf("Cannot get creatorBytes error %v", err)
-		return "", err
-	}
-	sid := &protosMSP.SerializedIdentity{}
-	if err := proto.Unmarshal(creator, sid); err != nil {
-		logger.Errorf("Unmarshal creatorBytes error %v", err)
-		return "", err
-	}
-	return sid.Mspid, nil
 }
 
 // New chaincode implementation

@@ -383,6 +383,7 @@ func (d *CommonSteps) checkCSR(ccID string) error {
 	csr := pem.EncodeToMemory(&pem.Block{
 		Type: "CERTIFICATE REQUEST", Bytes: raw,
 	})
+
 	logger.Debugf("CSR was created \n%v\n", string(csr))
 	//returned certificate request should have fields configured in config.yaml
 	c, e := x509.ParseCertificateRequest(raw)

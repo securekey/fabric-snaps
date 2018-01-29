@@ -21,15 +21,17 @@ import (
 
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	validMsg = `{"MspID":"msp.one","Peers":
+	orgMsp   = "Org1MSP"
+	validMsg = `{"MspID":"Org1MSP","Peers":
 		[{"PeerID":    
 				"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
-	validMsgMultiplePeersAndApps = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Config":"configstringgoeshere"},{"AppName":"appNameB","Config":"config for appNametwo"},{"AppName":"appNameC","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Config":"BLTwo"}]}]}`
-	invalidJSONMsg               = `{"MspID":"msp.one","Peers":this willnot fly
+	validMsgMultiplePeersAndApps = `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Config":"configstringgoeshere"},{"AppName":"appNameB","Config":"config for appNametwo"},{"AppName":"appNameC","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Config":"BLTwo"}]}]}`
+	invalidJSONMsg               = `{"MspID":"Org1MSP","Peers":this willnot fly
 		[{"PeerID":    
 				"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
 )
@@ -53,7 +55,7 @@ func TestInvoke(t *testing.T) {
 	testGenerateCSR(t, stub)
 }
 
-func testInvalidFunctionName(t *testing.T, stub *shim.MockStub) {
+func testInvalidFunctionName(t *testing.T, stub *mockstub.MockStub) {
 
 	// Test function name not provided
 	_, err := invoke(stub, [][]byte{})
@@ -69,7 +71,7 @@ func testInvalidFunctionName(t *testing.T, stub *shim.MockStub) {
 
 }
 
-func testGenerateCSR(t *testing.T, stub *shim.MockStub) {
+func testGenerateCSR(t *testing.T, stub *mockstub.MockStub) {
 	peerConfigPath = "./sampleconfig"
 	// configuration Scc call generateCSR
 	echoBytes, err := invoke(stub, [][]byte{[]byte("generateCSR")})
@@ -88,7 +90,7 @@ func testGenerateCSR(t *testing.T, stub *shim.MockStub) {
 
 	logger.Infof("Message received from healthcheck: %s", echoBytes)
 }
-func testHealthcheck(t *testing.T, stub *shim.MockStub) {
+func testHealthcheck(t *testing.T, stub *mockstub.MockStub) {
 	// configuration Scc healthcheck call
 	echoBytes, err := invoke(stub, [][]byte{[]byte("healthCheck")})
 	if err != nil {
@@ -98,7 +100,7 @@ func testHealthcheck(t *testing.T, stub *shim.MockStub) {
 	logger.Infof("Message received from healthcheck: %s", echoBytes)
 }
 
-func invoke(stub *shim.MockStub, args [][]byte) ([]byte, error) {
+func invoke(stub *mockstub.MockStub, args [][]byte) ([]byte, error) {
 	res := stub.MockInvoke("1", args)
 	stub.ChannelID = "testChannel"
 	if res.Status != shim.OK {
@@ -107,16 +109,16 @@ func invoke(stub *shim.MockStub, args [][]byte) ([]byte, error) {
 	return res.Payload, nil
 }
 
-func newMockStub(configErr error, httpErr error) *shim.MockStub {
-	return shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+func newMockStub(configErr error, httpErr error) *mockstub.MockStub {
+	return mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
 }
 
 func TestSave(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
-	_, stub := saveConfigsForTesting(t)
-
+	stub := getMockStub("testChannel")
+	//verify that saved configs are accessible
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -139,16 +141,17 @@ func TestSave(t *testing.T) {
 func TestGet(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 
-	response, stub := saveConfigsForTesting(t)
+	stub := getMockStub("testChannel")
+	uplaodConfigToHL(t, stub, []byte(validMsgMultiplePeersAndApps))
 	//get configuration - pass config key that has only MspID field set
 	//implicitly designed criteria by MspID
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "", AppName: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
-	response, err = invoke(stub, [][]byte{funcName, keyBytes})
+	response, err := invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
@@ -161,7 +164,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("Expected six records, but got  %d", len(*expected))
 	}
 	//config key is explicit - expect to get only one record back
-	configKey = mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.one.one.example.com", AppName: "appNameB"}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -182,10 +185,13 @@ func TestGet(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
+	stub := getMockStub("testChannel")
 
-	_, stub := saveConfigsForTesting(t)
+	configManager := mgmt.NewConfigManager(stub)
+	err := configManager.Save([]byte(validMsgMultiplePeersAndApps))
+
 	funcName := []byte("delete")
-	configKey := mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName"}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -195,7 +201,7 @@ func TestDelete(t *testing.T) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 
-	configKey = mgmtapi.ConfigKey{MspID: "msp.one", PeerID: "", AppName: ""}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -212,7 +218,7 @@ func TestDelete(t *testing.T) {
 	}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
-		t.Fatalf("Expect error: Cannot create config key using empty MspID")
+		t.Fatalf("Expect error: 'Config Key does not have valid MSPId'")
 	}
 
 	_, err = invoke(stub, [][]byte{funcName, nil})
@@ -257,20 +263,10 @@ func TestGetKey(t *testing.T) {
 	}
 }
 
-func TestGetIdentity(t *testing.T) {
-	_, err := getIdentity(nil)
-	if err == nil {
-		t.Fatalf("expected error 'Sub is nil'")
-	}
-	stub := newMockStub(nil, nil)
-	_, err = getIdentity(stub)
-	if err != nil {
-		t.Fatalf("error %v", err)
-	}
-
-}
 func TestGetConfigUsingInvalidKey(t *testing.T) {
-	_, stub := saveConfigsForTesting(t)
+	stub := getMockStub("testChannel")
+	configManager := mgmt.NewConfigManager(stub)
+	err := configManager.Save([]byte(validMsgMultiplePeersAndApps))
 
 	funcName := []byte("get")
 	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: ""}
@@ -305,7 +301,7 @@ func TestGetConfigUsingInvalidKey(t *testing.T) {
 
 }
 func TestSaveErrors(t *testing.T) {
-	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub := getMockStub("testChannel")
 
 	_, err := invoke(stub, getBytes("save", []string{validMsgMultiplePeersAndApps}))
 	if err != nil {
@@ -322,7 +318,7 @@ func TestSaveErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error: Cannot create config key using empty MspId  %v", err)
 	}
-	configKey = api.ConfigKey{MspID: "msp.one", PeerID: "peerOne", AppName: "AppName"}
+	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName"}
 	//pass key string instead of configkey struct
 	configKeyStr, err = mgmt.ConfigKeyToString(configKey)
 	if err != nil {
@@ -330,13 +326,13 @@ func TestSaveErrors(t *testing.T) {
 	}
 	_, err = invoke(stub, getBytes("getConfiguration", []string{configKeyStr}))
 	if err == nil {
-		t.Fatalf("expected error: invalid character 'm' looking for beginning of value unmarshalling msp.one!peerOne!AppName")
+		t.Fatalf("expected error: invalid character 'm' looking for beginning of value unmarshalling Org1MSP!peerOne!AppName")
 	}
 
 }
 
 func TestSaveConfigurationsWithEmptyPayload(t *testing.T) {
-	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub := mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
 	_, err := invoke(stub, getBytes("save", []string{""}))
 	if err == nil {
 		t.Fatalf("Expected error : 'Config is empty-cannot be saved'")
@@ -345,7 +341,7 @@ func TestSaveConfigurationsWithEmptyPayload(t *testing.T) {
 }
 
 func TestSaveConfigurationsWithBogusPayload(t *testing.T) {
-	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub := mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
 	funcName := []byte("save")
 	payload := []byte(invalidJSONMsg)
 	_, err := invoke(stub, [][]byte{funcName, payload})
@@ -393,8 +389,9 @@ func TestGettingBCCSP(t *testing.T) {
 }
 
 func TestGenerateKeyArgs(t *testing.T) {
-	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
-	stub.ChannelID = "testChannel"
+
+	stub := getMockStub("testChannel")
+
 	funcName := []byte("generateKeyPair")
 	_, err := invoke(stub, [][]byte{funcName, []byte("ECDSA")})
 	if err == nil {
@@ -693,9 +690,9 @@ func TestNew(t *testing.T) {
 
 }
 func TestConversion(t *testing.T) {
-	key := api.ConfigKey{MspID: "msp.one", PeerID: "peerOne", AppName: "AppName"}
+	key := api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName"}
 	c := api.ConfigKV{Key: key, Value: []byte("whatever")}
-	key1 := api.ConfigKey{MspID: "msp.one", PeerID: "peerwo", AppName: "AppNameTwo"}
+	key1 := api.ConfigKey{MspID: "Org1MSP", PeerID: "peerwo", AppName: "AppNameTwo"}
 	c1 := api.ConfigKV{Key: key1, Value: []byte("whateverTwo")}
 	a := []*api.ConfigKV{&c, &c1}
 	b, err := json.Marshal(a)
@@ -721,9 +718,11 @@ func getBytes(function string, args []string) [][]byte {
 	return bytes
 }
 
-func saveConfigsForTesting(t *testing.T) ([]byte, *shim.MockStub) {
-	stub := shim.NewMockStub("configurationsnap", new(ConfigurationSnap))
+func saveConfigsForTesting(t *testing.T) ([]byte, *mockstub.MockStub) {
+
+	stub := getMockStub("testChannel")
 	stub.ChannelID = "testChannel"
+	stub.SetMspID("Org1MSP")
 	funcName := []byte("save")
 	payload := []byte(validMsgMultiplePeersAndApps)
 	response, err := invoke(stub, [][]byte{funcName, payload})
@@ -733,12 +732,9 @@ func saveConfigsForTesting(t *testing.T) ([]byte, *shim.MockStub) {
 	return response, stub
 }
 
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
-	if configManager == nil {
-		return fmt.Errorf("Cannot instantiate config manager")
-	}
-	err := configManager.Save(config)
+	err := configManager.Save(message)
 	return err
 
 }
@@ -754,25 +750,33 @@ func TestMain(m *testing.M) {
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
 				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
-	stub := getMockStub()
-	stub.ChannelID = "testChannel"
+
+	stub := getMockStub("testChannel")
+
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
 	fmt.Printf("***** Config data %s", string(configBytes))
 	//upload valid message to HL
-	err = uplaodConfigToHL(stub, configBytes)
+	configManager := mgmt.NewConfigManager(stub)
+	err = configManager.Save(configBytes)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
+	//initialize and refresh
 	configmgmtService.Initialize(stub, "Org1MSP")
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+	instance.Refresh(stub, "Org1MSP")
 
 	os.Exit(m.Run())
 }
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
-	stub.ChannelID = "testChannel"
+
+func getMockStub(channelID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
+	stub.ChannelID = channelID
 	return stub
 }

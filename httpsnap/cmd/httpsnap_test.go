@@ -23,6 +23,7 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 
 	"github.com/spf13/viper"
 
@@ -43,7 +44,7 @@ var headers = map[string]string{
 
 func TestInit(t *testing.T) {
 
-	stub := newMockStub(channelID)
+	stub := newMockStub(channelID, mspID)
 
 	res := stub.MockInit("txID", [][]byte{})
 	if res.Status != shim.OK {
@@ -53,7 +54,7 @@ func TestInit(t *testing.T) {
 
 func TestInvalidParameters(t *testing.T) {
 
-	stub := newMockStub(channelID)
+	stub := newMockStub(channelID, mspID)
 
 	// Test required argument: function name
 	testRequiredArg(t, stub, [][]byte{}, "function name")
@@ -92,7 +93,7 @@ func TestInvalidParameters(t *testing.T) {
 
 func TestUsingHttpService(t *testing.T) {
 
-	stub := newMockStub(channelID)
+	stub := newMockStub(channelID, mspID)
 	// Happy path: Should get "Hello" back - use default TLS settings
 	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
@@ -104,7 +105,7 @@ func TestUsingHttpService(t *testing.T) {
 
 func TestUsingHttpServiceOnPeerTLSConfig(t *testing.T) {
 
-	stub := newMockStub(peerTLSChannelID)
+	stub := newMockStub(peerTLSChannelID, mspID)
 	// Happy path: Should get "Hello" back - use default TLS settings
 	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
@@ -114,7 +115,7 @@ func TestUsingHttpServiceOnPeerTLSConfig(t *testing.T) {
 
 }
 
-func verifySuccess(t *testing.T, stub *shim.MockStub, args [][]byte, expected string) {
+func verifySuccess(t *testing.T, stub *mockstub.MockStub, args [][]byte, expected string) {
 	res := stub.MockInvoke("txID", args)
 	if res.Status != shim.OK {
 		t.Fatalf("Invoke should have completed successfully args: %v", res.Message)
@@ -125,7 +126,7 @@ func verifySuccess(t *testing.T, stub *shim.MockStub, args [][]byte, expected st
 	}
 }
 
-func verifyFailure(t *testing.T, stub *shim.MockStub, args [][]byte, msg string) {
+func verifyFailure(t *testing.T, stub *mockstub.MockStub, args [][]byte, msg string) {
 	res := stub.MockInvoke("txID", args)
 	fmt.Println(res.Message)
 	if res.Status == shim.OK {
@@ -134,7 +135,7 @@ func verifyFailure(t *testing.T, stub *shim.MockStub, args [][]byte, msg string)
 
 }
 
-func testRequiredArg(t *testing.T, stub *shim.MockStub, args [][]byte, argName string) {
+func testRequiredArg(t *testing.T, stub *mockstub.MockStub, args [][]byte, argName string) {
 
 	// Test missing argument
 	verifyFailure(t, stub, args, fmt.Sprintf("Should have failed due missing %s", argName))
@@ -223,7 +224,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
 	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: string(configData)}}}}}
-	stub := newConfigMockStub(channelID)
+	stub := newConfigMockStub(channelID, mspID)
 	configBytes, err := json.Marshal(config)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
@@ -243,7 +244,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
-	stub2 := newConfigMockStub(peerTLSChannelID)
+	stub2 := newConfigMockStub(peerTLSChannelID, mspID)
 	//upload valid message to HL
 	err = uploadConfigToHL(stub2, configBytes2)
 	if err != nil {
@@ -269,7 +270,7 @@ func TestMain(m *testing.M) {
 }
 
 //uploadConfigToHL to upload key&config to repository
-func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
+func uploadConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

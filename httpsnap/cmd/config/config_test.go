@@ -13,12 +13,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 
 	"strings"
 
@@ -218,15 +218,16 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func getMockStub(channelID string) *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
+func getMockStub(channelID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
 }
 
 //uploadConfigToHL to upload key&config to repository
-func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
+func uploadConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

@@ -30,6 +30,7 @@ import (
 
 	pbsdk "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
@@ -871,15 +872,16 @@ func (cs *clientServiceMock) GetClientMembership(config api.Config) api.Membersh
 	return membership
 }
 
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
+func getMockStub() *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
 }
 
 //uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+func uplaodConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

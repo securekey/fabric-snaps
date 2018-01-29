@@ -12,9 +12,9 @@ import (
 
 	"testing"
 
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
 const (
@@ -78,9 +78,13 @@ const (
 
 func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
 	stub := getMockStub()
-
+	stub.SetMspID(mspID)
+	_, err := stub.GetCreator()
+	if err != nil {
+		t.Fatalf("Creator err %s", err)
+	}
 	//upload valid message to HL
-	_, err := uplaodConfigToHL(t, stub, validMsg)
+	_, err = uplaodConfigToHL(t, stub, validMsg)
 	if err != nil {
 		t.Fatalf("Cannot upload %s", err)
 	}
@@ -133,7 +137,7 @@ func TestGetCacheByMspID(t *testing.T) {
 }
 
 func TestGetViper(t *testing.T) {
-	mspID := "msp1"
+
 	peerID := "peer1"
 	appName := "app1"
 
@@ -192,6 +196,7 @@ someconfig:
 func TestTwoChannels(t *testing.T) {
 
 	stub := getMockStub()
+	stub.SetMspID("msp.one")
 	key := "msp.one!peer.zero.example.com!testAppName"
 	configK, err := mgmt.StringToConfigKey(key)
 	if err != nil {
@@ -214,7 +219,7 @@ func TestTwoChannels(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//second channel
-	stub1 := shim.NewMockStub("testConfigState", nil)
+	stub1 := mockstub.NewMockStub("testConfigState", nil)
 	stub1.MockTransactionStart("testTX")
 	stub1.ChannelID = "channelIDTwo"
 	_, err = uplaodConfigToHL(t, stub1, validMsgRefresh)
@@ -307,17 +312,12 @@ func TestMngmtServiceRefreshSameConfig(t *testing.T) {
 func TestCreateSearchCriteriaForNonexistingMspID(t *testing.T) {
 
 	stub := getMockStub()
-
-	cacheInstance := Initialize(stub, mspID)
+	stub.SetMspID("msp.one")
+	_ = Initialize(stub, mspID)
 	//upload valid message to HL
 	_, err := uplaodConfigToHL(t, stub, inValidMsg)
-	if err != nil {
-		t.Fatalf("Cannot upload %s", err)
-	}
-	//do refresh cache
-	if err := cacheInstance.Refresh(stub, mspID); err == nil {
-		//Found no configs for criteria ByMspID error
-		t.Fatalf("Expected error: 'Cannot create criteria for search by mspID &map[]'")
+	if err == nil {
+		t.Fatalf("Expected error: 'The caller MSP does not match configured MSP'")
 	}
 
 	stub.MockTransactionEnd("saveConfiguration")
@@ -371,7 +371,7 @@ func TestGetWithInvalidKey(t *testing.T) {
 }
 
 //uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(t *testing.T, stub *shim.MockStub, message string) ([]*api.ConfigKV, error) {
+func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message string) ([]*api.ConfigKV, error) {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		t.Fatal("Cannot instantiate config manager")
@@ -381,7 +381,7 @@ func uplaodConfigToHL(t *testing.T, stub *shim.MockStub, message string) ([]*api
 		return nil, err
 	}
 	key := api.ConfigKey{}
-	key.MspID = "msp.one"
+	key.MspID = mspID
 	key.PeerID = ""
 	key.AppName = ""
 	configsKV, err := configManager.Get(key)
@@ -391,9 +391,10 @@ func uplaodConfigToHL(t *testing.T, stub *shim.MockStub, message string) ([]*api
 	return configsKV, nil
 }
 
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
+func getMockStub() *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
 	stub.ChannelID = channelID
+	stub.SetMspID("msp.one")
 	return stub
 }

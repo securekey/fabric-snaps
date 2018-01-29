@@ -9,13 +9,19 @@ package mgmt
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("configsnap")
+
+//this is used for unit test only
+//to set and verify caller identity
+var callerIdentity string
 
 const (
 	// indexOrg is the name of the index to retrieve configurations per org
@@ -54,14 +60,27 @@ func (cmngr *configManagerImpl) Save(configData []byte) error {
 //saveConfigs saves key&configs to the repository.
 //also it adds indexes for saved records
 func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][]byte) error {
+	var mspID string
+	var err error
+	mspID, err = cmngr.getCallerIdentity()
+	if err != nil {
+		return errors.Wrapf(errors.GeneralError, err, "Cannot save config. Caller identity is not same as peer's")
+	}
+
+	logger.Debugf("Caller MspID %s", mspID)
 	for key, value := range configMessageMap {
+		//in case of any discrepancy between caller MSP and configured MSP
+		//reject whole config
+		if key.MspID != mspID {
+			return errors.New(errors.GeneralError, "The caller MSP does not match configured MSP ")
+		}
 		logger.Debugf("Saving configs %v,%s", key, string(value[:]))
 		strkey, err := ConfigKeyToString(key)
 		if err != nil {
-			return errors.WithMessage(errors.GeneralError, err, "Cannot put state. Invalid key")
+			return errors.Errorf(errors.GeneralError, "Cannot put state. Invalid key %s", err)
 		}
 		if err = cmngr.stub.PutState(strkey, value); err != nil {
-			return errors.Wrap(errors.GeneralError, err, "PutState failed")
+			return errors.Wrap(errors.GeneralError, err, "PutState has failed")
 		}
 		//add index for saved state
 		if err := cmngr.addIndexes(key); err != nil {
@@ -71,9 +90,31 @@ func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][
 	return nil
 }
 
+func (cmngr *configManagerImpl) verifyCallerID(configKey api.ConfigKey) error {
+	var err error
+	if configKey.MspID == "" {
+		return errors.New(errors.GeneralError, "Config Key does not have valid MSPId")
+	}
+	mspID, err := cmngr.getCallerIdentity()
+	if err != nil {
+		return errors.Wrapf(errors.GeneralError, err, "Cannot verify caller identity")
+	}
+	if mspID != configKey.MspID {
+		return errors.New(errors.GeneralError, "Caller identity is not same as peer's MSPId")
+
+	}
+	return nil
+}
+
 // Get gets configuration from the ledger using config key
 func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, error) {
-	err := ValidateConfigKey(configKey)
+
+	err := cmngr.verifyCallerID(configKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
 		return cmngr.getConfigs(configKey)
@@ -85,6 +126,41 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	}
 	configKeys := []*api.ConfigKV{&api.ConfigKV{Key: configKey, Value: config}}
 	return configKeys, nil
+}
+
+//to get caller identity -creator bytes from request
+func (cmngr *configManagerImpl) getCallerIdentity() (string, error) {
+	var mspID string
+	var err error
+
+	if callerIdentity != "" {
+		mspID = callerIdentity
+	} else {
+		mspID, err = getIdentity(cmngr.stub)
+		if err != nil {
+			return mspID, errors.Wrapf(errors.GeneralError, err, "Cannot get identity of caller (MSPID)")
+		}
+	}
+	logger.Debugf("Caller identity %s", mspID)
+	return mspID, nil
+}
+
+//getIdentity gets associated membership service provider
+func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
+	if stub == nil {
+		return "", errors.New(errors.GeneralError, "Stub is nil")
+	}
+	creator, err := stub.GetCreator()
+	if err != nil {
+		logger.Errorf("Cannot get creatorBytes error %v", err)
+		return "", errors.Wrap(errors.GeneralError, err, "Error getting creator")
+	}
+	sid := &protosMSP.SerializedIdentity{}
+	if err := proto.Unmarshal(creator, sid); err != nil {
+		logger.Errorf("Unmarshal creatorBytes error %v", err)
+		return "", errors.Wrap(errors.GeneralError, err, "Unmarshal creatorBytes error")
+	}
+	return sid.Mspid, nil
 }
 
 //getConfig to get config for valid key
@@ -143,7 +219,11 @@ func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) error {
 
 //Delete delets configuration from the ledger using config key
 func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
-	err := ValidateConfigKey(configKey)
+	err := cmngr.verifyCallerID(configKey)
+	if err != nil {
+		return err
+	}
+	err = ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
 		return cmngr.deleteConfigs(configKey)
