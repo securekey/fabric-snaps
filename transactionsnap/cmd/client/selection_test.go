@@ -20,12 +20,12 @@ import (
 	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 	"github.com/hyperledger/fabric/protos/common"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/channelpeer"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/pgresolver"
@@ -136,15 +136,17 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
+func getMockStub() *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
+
 	return stub
 }
 
 //uplaodConfigToHL to upload key&config to repository
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+func uplaodConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")

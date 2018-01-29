@@ -7,19 +7,21 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
-func newMockStub(channelID string) *shim.MockStub {
+func newMockStub(channelID string, MspID string) *mockstub.MockStub {
 	snap := new(HTTPSnap)
-	stub := shim.NewMockStub("httpsnap", snap)
+	stub := mockstub.NewMockStub("httpsnap", snap)
 	stub.ChannelID = channelID
+	stub.SetMspID(MspID)
 	return stub
 }
 
-func newConfigMockStub(channelID string) *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
+func newConfigMockStub(channelID string, MspID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
 	stub.ChannelID = channelID
+	stub.SetMspID(MspID)
 	return stub
 }

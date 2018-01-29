@@ -80,7 +80,10 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	}
 	txnSnapConfig := viper.New()
 	txnSnapConfig.SetConfigType("YAML")
-	txnSnapConfig.ReadConfig(bytes.NewBuffer(dataConfig))
+	err = txnSnapConfig.ReadConfig(bytes.NewBuffer(dataConfig))
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+	}
 	txnSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	txnSnapConfig.AutomaticEnv()
 	txnSnapConfig.SetEnvKeyReplacer(replacer)

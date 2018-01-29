@@ -141,7 +141,7 @@ func newPeerViper(configPath string) (*viper.Viper, error) {
 	peerViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := peerViper.ReadInConfig(); err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
 	}
 	return peerViper, nil
 }

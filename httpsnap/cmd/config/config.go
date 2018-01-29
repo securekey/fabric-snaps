@@ -73,7 +73,10 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
-	httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
+	err = httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+	}
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(replacer)

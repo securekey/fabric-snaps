@@ -12,7 +12,6 @@ import (
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 )
 
 var orgname = "peerorg1"
@@ -40,7 +39,7 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 
 	confileFilePath := "./fixtures/clientconfig/config.yaml"
 
-	sdk, err := fabsdk.New(config.FromFile(confileFilePath), fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{}))
+	sdk, err := fabsdk.New(config.FromFile(confileFilePath))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}

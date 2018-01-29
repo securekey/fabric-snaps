@@ -14,14 +14,13 @@ import (
 	"testing"
 
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
-	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
 func TestInvalidConfig(t *testing.T) {
-	_, err := New("", "./invalid")
+	_, err := New("testChannel", "./invalid")
 	if err == nil {
 		t.Fatalf("Expecting error for invalid config but received none")
 	}
@@ -49,18 +48,18 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
-	fmt.Printf("Configuration for config snap %s", string(configData))
+	stub := getMockStub("testChannel")
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
 				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
-	stub := getMockStub()
+
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
 	//upload valid message to HL
-	err = uplaodConfigToHL(stub, configBytes)
+	err = uplaodConfigToHL(m, stub, configBytes)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
@@ -109,19 +108,17 @@ func TestCSROptions(t *testing.T) {
 
 }
 
-func getMockStub() *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
+func getMockStub(channelID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
-	stub.ChannelID = "testChannel"
+	stub.ChannelID = channelID
+	stub.SetMspID("Org1MSP")
 	return stub
 }
 
-func uplaodConfigToHL(stub *shim.MockStub, config []byte) error {
+func uplaodConfigToHL(t *testing.M, stub *mockstub.MockStub, message []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
-	if configManager == nil {
-		return fmt.Errorf("Cannot instantiate config manager")
-	}
-	err := configManager.Save(config)
+	err := configManager.Save(message)
 	return err
 
 }

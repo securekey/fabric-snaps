@@ -92,8 +92,10 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 	v := viper.New()
 	v.SetConfigType(string(configType))
-	v.ReadConfig(bytes.NewBuffer(configData))
-
+	err = v.ReadConfig(bytes.NewBuffer(configData))
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+	}
 	return v, err
 }
 

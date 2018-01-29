@@ -21,11 +21,10 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/spf13/viper"
 
 	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 )
 
@@ -290,7 +289,7 @@ func TestMain(m *testing.M) {
 }
 
 //uploadConfigToHL to upload key&config to repository
-func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
+func uploadConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	if configManager == nil {
 		return fmt.Errorf("Cannot instantiate config manager")
@@ -300,9 +299,10 @@ func uploadConfigToHL(stub *shim.MockStub, config []byte) error {
 
 }
 
-func newConfigMockStub(channelID string) *shim.MockStub {
-	stub := shim.NewMockStub("testConfigState", nil)
-	stub.MockTransactionStart("saveConfiguration")
+func newConfigMockStub(channelID string) *mockstub.MockStub {
+	stub := mockstub.NewMockStub("testConfigState", nil)
+	stub.SetMspID("Org1MSP")
+	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
 }
