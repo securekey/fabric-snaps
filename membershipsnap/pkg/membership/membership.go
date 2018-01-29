@@ -9,7 +9,7 @@ package membership
 import (
 	"sync/atomic"
 
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/gossip/discovery"
@@ -17,11 +17,11 @@ import (
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/pkg/errors"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = flogging.MustGetLogger("membershipsnap/service")
+var logger = logging.NewLogger("membershipsnap")
 
 var initialized uint32
 var membershipService memserviceapi.Service
@@ -63,7 +63,7 @@ func Get() (memserviceapi.Service, error) {
 	memService, err := newService()
 	if err != nil {
 		logger.Errorf("error initializing membership service: %s\n", err)
-		return nil, errors.Wrap(err, "error initializing membership service")
+		return nil, errors.Wrap(errors.GeneralError, err, "error initializing membership service")
 	}
 
 	if atomic.CompareAndSwapUint32(&initialized, 0, 1) {
@@ -77,12 +77,12 @@ func Get() (memserviceapi.Service, error) {
 func newService() (*Service, error) {
 	localMSPID, err := mspmgmt.GetLocalMSP().GetIdentifier()
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting local MSP Identifier")
+		return nil, errors.Wrap(errors.GeneralError, err, "error getting local MSP Identifier")
 	}
 
 	peerEndpoint, err := peer.GetPeerEndpoint()
 	if err != nil {
-		return nil, errors.Wrap(err, "error reading peer endpoint")
+		return nil, errors.Wrap(errors.GeneralError, err, "error reading peer endpoint")
 	}
 
 	gossipService := service.GetGossipService()
@@ -110,7 +110,7 @@ func (s *Service) GetAllPeers() []*memserviceapi.PeerEndpoint {
 // GetPeersOfChannel returns all peers on the gossip network joined to the given channel
 func (s *Service) GetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndpoint, error) {
 	if channelID == "" {
-		return nil, errors.Errorf("channel ID must be provided")
+		return nil, errors.New(errors.GeneralError, "channel ID must be provided")
 	}
 	localPeerJoined := false
 	for _, ch := range s.chInfoProvider.GetChannelsInfo() {
@@ -136,7 +136,7 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 		}
 
 		if ledgerHeight == 0 {
-			logger.Warningf("Ledger height for channel [%s] on peer [%s] is 0.\n", channelID, member.Endpoint)
+			logger.Warnf("Ledger height for channel [%s] on peer [%s] is 0.\n", channelID, member.Endpoint)
 		}
 
 		peerEndpoints = append(peerEndpoints, &memserviceapi.PeerEndpoint{

@@ -7,13 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 package channelutil
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/protos/utils"
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // ChannelIDFromEvent returns the ID of the channel for the given event.
@@ -24,7 +23,7 @@ func ChannelIDFromEvent(eptr *pb.Event) (channelID string, err error) {
 	case *pb.Event_FilteredBlock:
 		return ChannelIDFromFilteredBlock(event.FilteredBlock)
 	default:
-		return "", errors.Errorf("unsuported event type: %s", reflect.TypeOf(eptr.Event))
+		return "", errors.Errorf(errors.GeneralError, "unsuported event type: %s", reflect.TypeOf(eptr.Event))
 	}
 }
 
@@ -36,12 +35,12 @@ func ChannelIDFromFilteredBlock(fblock *pb.FilteredBlock) (channelID string, err
 // ChannelIDFromBlock returns the ID of the channel for the given block.
 func ChannelIDFromBlock(block *common.Block) (channelID string, err error) {
 	if block == nil || block.Data == nil || len(block.Data.Data) == 0 {
-		return "", fmt.Errorf("invalid block data")
+		return "", errors.New(errors.GeneralError, "invalid block data")
 	}
 
 	data := block.Data.Data[0]
 	if data == nil {
-		return "", fmt.Errorf("invalid block data")
+		return "", errors.New(errors.GeneralError, "invalid block data")
 	}
 
 	env, err := utils.GetEnvelopeFromBlock(data)
@@ -49,16 +48,16 @@ func ChannelIDFromBlock(block *common.Block) (channelID string, err error) {
 		return "", err
 	}
 	if env == nil {
-		return "", fmt.Errorf("no envelope found in block data")
+		return "", errors.New(errors.GeneralError, "no envelope found in block data")
 	}
 
 	payload, err := utils.GetPayload(env)
 	if err != nil {
-		return "", fmt.Errorf("could not extract payload from envelope: %s", err)
+		return "", errors.WithMessage(errors.GeneralError, err, "could not extract payload from envelope")
 	}
 
 	if payload == nil || payload.Header == nil {
-		return "", fmt.Errorf("invalid payload")
+		return "", errors.New(errors.GeneralError, "invalid payload")
 	}
 
 	chdr, err := utils.UnmarshalChannelHeader(payload.Header.ChannelHeader)

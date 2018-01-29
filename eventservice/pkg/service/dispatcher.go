@@ -11,8 +11,8 @@ import (
 	"time"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 const (
@@ -171,7 +171,7 @@ func (ed *Dispatcher) HandleEvent(e Event) {
 	case *pb.Event_FilteredBlock:
 		ed.handleFilteredBlockEvent(evt)
 	default:
-		logger.Warningf("Unsupported event type: %v", reflect.TypeOf(event.Event))
+		logger.Warnf("Unsupported event type: %v", reflect.TypeOf(event.Event))
 	}
 }
 
@@ -179,7 +179,7 @@ func (ed *Dispatcher) handleRegisterBlockEvent(e Event) {
 	event := e.(*registerBlockEvent)
 
 	if !ed.IsAuthorized(BLOCKEVENT) {
-		event.RespCh <- ErrorResponse(errors.New("client not authorized to receive block events"))
+		event.RespCh <- ErrorResponse(errors.New(errors.GeneralError, "client not authorized to receive block events"))
 	} else {
 		ed.blockRegistrations = append(ed.blockRegistrations, event.reg)
 		event.RespCh <- SuccessResponse(event.reg)
@@ -190,7 +190,7 @@ func (ed *Dispatcher) handleRegisterFilteredBlockEvent(e Event) {
 	event := e.(*registerFilteredBlockEvent)
 
 	if !ed.IsAuthorized(FILTEREDBLOCKEVENT) {
-		event.RespCh <- ErrorResponse(errors.New("client not authorized to receive filtered block events"))
+		event.RespCh <- ErrorResponse(errors.New(errors.GeneralError, "client not authorized to receive filtered block events"))
 	} else {
 		ed.filteredBlockRegistrations = append(ed.filteredBlockRegistrations, event.reg)
 		event.RespCh <- SuccessResponse(event.reg)
@@ -202,9 +202,9 @@ func (ed *Dispatcher) handleRegisterCCEvent(e Event) {
 
 	key := getCCKey(event.reg.ccID, event.reg.eventFilter)
 	if !ed.IsAuthorized(FILTEREDBLOCKEVENT) {
-		event.RespCh <- ErrorResponse(errors.New("client not authorized to receive chaincode events"))
+		event.RespCh <- ErrorResponse(errors.New(errors.GeneralError, "client not authorized to receive chaincode events"))
 	} else if _, exists := ed.ccRegistrations[key]; exists {
-		event.RespCh <- ErrorResponse(errors.Errorf("registration already exists for chaincode [%s] and event [%s]", event.reg.ccID, event.reg.eventFilter))
+		event.RespCh <- ErrorResponse(errors.Errorf(errors.GeneralError, "registration already exists for chaincode [%s] and event [%s]", event.reg.ccID, event.reg.eventFilter))
 	} else {
 		ed.ccRegistrations[key] = event.reg
 		event.RespCh <- SuccessResponse(event.reg)
@@ -215,9 +215,9 @@ func (ed *Dispatcher) handleRegisterTxStatusEvent(e Event) {
 	event := e.(*registerTxStatusEvent)
 
 	if !ed.IsAuthorized(FILTEREDBLOCKEVENT) {
-		event.RespCh <- ErrorResponse(errors.New("client not authorized to receive TX events"))
+		event.RespCh <- ErrorResponse(errors.New(errors.GeneralError, "client not authorized to receive TX events"))
 	} else if _, exists := ed.txRegistrations[event.reg.txID]; exists {
-		event.RespCh <- ErrorResponse(errors.Errorf("registration already exists for TX ID [%s]", event.reg.txID))
+		event.RespCh <- ErrorResponse(errors.Errorf(errors.GeneralError, "registration already exists for TX ID [%s]", event.reg.txID))
 	} else {
 		ed.txRegistrations[event.reg.txID] = event.reg
 		event.RespCh <- SuccessResponse(event.reg)
@@ -238,10 +238,10 @@ func (ed *Dispatcher) handleUnregisterEvent(e Event) {
 	case *txRegistration:
 		err = ed.unregisterTXEvents(registration)
 	default:
-		err = errors.Errorf("Unsupported registration type: %v", reflect.TypeOf(registration))
+		err = errors.Errorf(errors.GeneralError, "Unsupported registration type: %v", reflect.TypeOf(registration))
 	}
 	if err != nil {
-		logger.Warningf("Error in unregister: %s\n", err)
+		logger.Warnf("Error in unregister: %s\n", err)
 	}
 }
 
@@ -258,7 +258,7 @@ func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 			select {
 			case reg.eventch <- &eventapi.FilteredBlockEvent{FilteredBlock: event.FilteredBlock}:
 			default:
-				logger.Warningf("Unable to send to filtered block event channel.")
+				logger.Warnf("Unable to send to filtered block event channel.")
 			}
 		} else if ed.timeout == 0 {
 			reg.eventch <- &eventapi.FilteredBlockEvent{FilteredBlock: event.FilteredBlock}
@@ -266,7 +266,7 @@ func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 			select {
 			case reg.eventch <- &eventapi.FilteredBlockEvent{FilteredBlock: event.FilteredBlock}:
 			case <-time.After(ed.timeout):
-				logger.Warningf("Timed out sending filtered block event.")
+				logger.Warnf("Timed out sending filtered block event.")
 			}
 		}
 	}
@@ -297,7 +297,7 @@ func (ed *Dispatcher) handleBlockEvent(event *pb.Event_Block) {
 			select {
 			case reg.eventch <- &eventapi.BlockEvent{Block: event.Block}:
 			default:
-				logger.Warningf("Unable to send to block event channel.")
+				logger.Warnf("Unable to send to block event channel.")
 			}
 		} else if ed.timeout == 0 {
 			reg.eventch <- &eventapi.BlockEvent{Block: event.Block}
@@ -305,7 +305,7 @@ func (ed *Dispatcher) handleBlockEvent(event *pb.Event_Block) {
 			select {
 			case reg.eventch <- &eventapi.BlockEvent{Block: event.Block}:
 			case <-time.After(ed.timeout):
-				logger.Warningf("Timed out sending block event.")
+				logger.Warnf("Timed out sending block event.")
 			}
 		}
 	}
@@ -321,7 +321,7 @@ func (ed *Dispatcher) unregisterBlockEvents(registration *blockRegistration) err
 			return nil
 		}
 	}
-	return errors.New("the provided registration is invalid")
+	return errors.New(errors.GeneralError, "the provided registration is invalid")
 }
 
 func (ed *Dispatcher) unregisterFilteredBlockEvents(registration *filteredBlockRegistration) error {
@@ -334,14 +334,14 @@ func (ed *Dispatcher) unregisterFilteredBlockEvents(registration *filteredBlockR
 			return nil
 		}
 	}
-	return errors.New("the provided registration is invalid")
+	return errors.New(errors.GeneralError, "the provided registration is invalid")
 }
 
 func (ed *Dispatcher) unregisterCCEvents(registration *ccRegistration) error {
 	key := getCCKey(registration.ccID, registration.eventFilter)
 	reg, ok := ed.ccRegistrations[key]
 	if !ok {
-		return errors.New("the provided registration is invalid")
+		return errors.New(errors.GeneralError, "the provided registration is invalid")
 	}
 
 	logger.Debugf("Unregistering CC event for CC ID [%s] and event filter [%s]...\n", registration.ccID, registration.eventFilter)
@@ -353,7 +353,7 @@ func (ed *Dispatcher) unregisterCCEvents(registration *ccRegistration) error {
 func (ed *Dispatcher) unregisterTXEvents(registration *txRegistration) error {
 	reg, ok := ed.txRegistrations[registration.txID]
 	if !ok {
-		return errors.New("the provided registration is invalid")
+		return errors.New(errors.GeneralError, "the provided registration is invalid")
 	}
 
 	logger.Debugf("Unregistering Tx Status event for TxID [%s]...\n", registration.txID)
@@ -371,7 +371,7 @@ func (ed *Dispatcher) triggerTxStatusEvent(tx *pb.FilteredTransaction) {
 			select {
 			case reg.eventch <- newTxStatusEvent(tx.Txid, tx.TxValidationCode):
 			default:
-				logger.Warningf("Unable to send to Tx Status event channel.")
+				logger.Warnf("Unable to send to Tx Status event channel.")
 			}
 		} else if ed.timeout == 0 {
 			reg.eventch <- newTxStatusEvent(tx.Txid, tx.TxValidationCode)
@@ -379,7 +379,7 @@ func (ed *Dispatcher) triggerTxStatusEvent(tx *pb.FilteredTransaction) {
 			select {
 			case reg.eventch <- newTxStatusEvent(tx.Txid, tx.TxValidationCode):
 			case <-time.After(ed.timeout):
-				logger.Warningf("Timed out sending Tx Status event.")
+				logger.Warnf("Timed out sending Tx Status event.")
 			}
 		}
 	}
@@ -395,7 +395,7 @@ func (ed *Dispatcher) triggerCCEvent(ccEvent *pb.ChaincodeEvent) {
 				select {
 				case reg.eventch <- newCCEvent(ccEvent.ChaincodeId, ccEvent.EventName, ccEvent.TxId):
 				default:
-					logger.Warningf("Unable to send to CC event channel.")
+					logger.Warnf("Unable to send to CC event channel.")
 				}
 			} else if ed.timeout == 0 {
 				reg.eventch <- newCCEvent(ccEvent.ChaincodeId, ccEvent.EventName, ccEvent.TxId)
@@ -403,7 +403,7 @@ func (ed *Dispatcher) triggerCCEvent(ccEvent *pb.ChaincodeEvent) {
 				select {
 				case reg.eventch <- newCCEvent(ccEvent.ChaincodeId, ccEvent.EventName, ccEvent.TxId):
 				case <-time.After(ed.timeout):
-					logger.Warningf("Timed out sending CC event.")
+					logger.Warnf("Timed out sending CC event.")
 				}
 			}
 		}

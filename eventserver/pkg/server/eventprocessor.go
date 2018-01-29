@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package server
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 //eventProcessor has a map of channel ids to handlers interested in that
@@ -143,7 +143,7 @@ func (ep *eventProcessor) deregisterHandler(channelID string, ch *channelHandler
 	defer ep.Unlock()
 	hl, ok := ep.registeredListeners[channelID]
 	if !ok {
-		return fmt.Errorf("channel handler list does not exist for channel [%s]", channelID)
+		return errors.Errorf(errors.GeneralError, "channel handler list does not exist for channel [%s]", channelID)
 	}
 	hl.del(ch)
 	return nil
@@ -169,7 +169,7 @@ func (ep *eventProcessor) send(e *pb.Event) error {
 	defer logger.Debugf("Exit")
 	if e.Event == nil {
 		logger.Error("event not set")
-		return fmt.Errorf("event not set")
+		return errors.New(errors.GeneralError, "event not set")
 	}
 
 	if ep == nil {
@@ -184,7 +184,7 @@ func (ep *eventProcessor) send(e *pb.Event) error {
 		case ep.eventChannel <- e:
 			logger.Debugf("****** Sent event...\n")
 		default:
-			return fmt.Errorf("could not send the block event")
+			return errors.New(errors.GeneralError, "could not send the block event")
 		}
 	} else if ep.timeout == 0 {
 		logger.Debugf("Event processor timeout = 0")
@@ -198,7 +198,7 @@ func (ep *eventProcessor) send(e *pb.Event) error {
 		case ep.eventChannel <- e:
 			logger.Debugf("****** Sent event...\n")
 		case <-time.After(ep.timeout):
-			return fmt.Errorf("could not send the block event")
+			return errors.New(errors.GeneralError, "could not send the block event")
 		}
 	}
 

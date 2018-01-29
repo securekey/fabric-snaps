@@ -48,7 +48,7 @@ func (m *mspIDMgr) GetMSPID(pkiID gcommon.PKIidType) string {
 
 	mspID, ok := m.mspIDMap[string(pkiID)]
 	if !ok {
-		logger.Warningf("MSP ID not found for PKI ID [%v]", pkiID)
+		logger.Warnf("MSP ID not found for PKI ID [%v]", pkiID)
 	}
 	return mspID
 }

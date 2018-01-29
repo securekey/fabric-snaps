@@ -18,8 +18,6 @@ package relay
 
 import (
 	"crypto/tls"
-	"errors"
-	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -29,16 +27,17 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/common/util"
 	cutil "github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/comm"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	ehpb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/protos/utils"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var consumerLogger = flogging.MustGetLogger("eventsnap")
+var consumerLogger = logging.NewLogger("eventsnap")
 
 //EventsClient holds the stream and adapter for consumer to work with
 type EventsClient struct {
@@ -63,10 +62,10 @@ func NewEventsClient(peerAddress string, regTimeout time.Duration, adapter Event
 	var err error
 	if regTimeout < 100*time.Millisecond {
 		regTimeout = 100 * time.Millisecond
-		err = fmt.Errorf("regTimeout >= 0, setting to 100 msec")
+		err = errors.New(errors.GeneralError, "regTimeout >= 0, setting to 100 msec")
 	} else if regTimeout > 60*time.Second {
 		regTimeout = 60 * time.Second
-		err = fmt.Errorf("regTimeout > 60, setting to 60 sec")
+		err = errors.New(errors.GeneralError, "regTimeout > 60, setting to 60 sec")
 	}
 	return &EventsClient{
 		RWMutex:        sync.RWMutex{},
@@ -97,24 +96,24 @@ func (ec *EventsClient) send(emsg *ehpb.Event) error {
 	// obtain the default signing identity for this peer; it will be used to sign the event
 	localMsp := mspmgmt.GetLocalMSP()
 	if localMsp == nil {
-		return errors.New("nil local MSP manager")
+		return errors.New(errors.GeneralError, "nil local MSP manager")
 	}
 
 	signer, err := localMsp.GetDefaultSigningIdentity()
 	if err != nil {
-		return fmt.Errorf("could not obtain the default signing identity, err %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "could not obtain the default signing identity")
 	}
 
 	//pass the signer's cert to Creator
 	signerCert, err := signer.Serialize()
 	if err != nil {
-		return fmt.Errorf("fail to serialize the default signing identity, err %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "fail to serialize the default signing identity")
 	}
 	emsg.Creator = signerCert
 
 	signedEvt, err := utils.GetSignedEvent(emsg, signer)
 	if err != nil {
-		return fmt.Errorf("could not sign outgoing event, err %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "could not sign outgoing event")
 	}
 
 	return ec.stream.Send(signedEvt)
@@ -124,7 +123,7 @@ func (ec *EventsClient) send(emsg *ehpb.Event) error {
 func (ec *EventsClient) RegisterAsync(config *RegistrationConfig) error {
 	creator, err := getCreatorFromLocalMSP()
 	if err != nil {
-		return fmt.Errorf("error getting creator from MSP: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "error getting creator from MSP")
 	}
 	emsg := &ehpb.Event{
 		Event:       &ehpb.Event_Register{Register: &ehpb.Register{Events: config.InterestedEvents}},
@@ -157,15 +156,15 @@ func (ec *EventsClient) register(config *RegistrationConfig) error {
 		switch in.Event.(type) {
 		case *ehpb.Event_Register:
 		case nil:
-			err = fmt.Errorf("invalid nil object for register")
+			err = errors.New(errors.GeneralError, "invalid nil object for register")
 		default:
-			err = fmt.Errorf("invalid registration object")
+			err = errors.New(errors.GeneralError, "invalid registration object")
 		}
 	}()
 	select {
 	case <-regChan:
 	case <-time.After(ec.regTimeout):
-		err = fmt.Errorf("timeout waiting for registration")
+		err = errors.New(errors.GeneralError, "timeout waiting for registration")
 	}
 	return err
 }
@@ -174,12 +173,12 @@ func (ec *EventsClient) register(config *RegistrationConfig) error {
 func (ec *EventsClient) UnregisterAsync(ies []*ehpb.Interest) error {
 	creator, err := getCreatorFromLocalMSP()
 	if err != nil {
-		return fmt.Errorf("error getting creator from MSP: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "error getting creator from MSP")
 	}
 	emsg := &ehpb.Event{Event: &ehpb.Event_Unregister{Unregister: &ehpb.Unregister{Events: ies}}, Creator: creator}
 
 	if err = ec.send(emsg); err != nil {
-		err = fmt.Errorf("error on unregister send %s", err)
+		err = errors.WithMessage(errors.GeneralError, err, "error on unregister send")
 	}
 
 	return err
@@ -233,22 +232,22 @@ func (ec *EventsClient) processEvents() error {
 func (ec *EventsClient) Start() error {
 	conn, err := newEventsClientConnectionWithAddress(ec.peerAddress, ec.tlsCredentials)
 	if err != nil {
-		return fmt.Errorf("could not create client conn to %s:%s", ec.peerAddress, err)
+		return errors.Errorf(errors.GeneralError, "could not create client conn to %s:%s", ec.peerAddress, err)
 	}
 
 	ies, err := ec.adapter.GetInterestedEvents()
 	if err != nil {
-		return fmt.Errorf("error getting interested events:%s", err)
+		return errors.WithMessage(errors.GeneralError, err, "error getting interested events")
 	}
 
 	if len(ies) == 0 {
-		return fmt.Errorf("must supply interested events")
+		return errors.New(errors.GeneralError, "must supply interested events")
 	}
 
 	serverClient := ehpb.NewEventsClient(conn)
 	ec.stream, err = serverClient.Chat(context.Background())
 	if err != nil {
-		return fmt.Errorf("could not create client conn to %s:%s", ec.peerAddress, err)
+		return errors.Errorf(errors.GeneralError, "could not create client conn to %s:%s", ec.peerAddress, err)
 	}
 
 	regConfig := &RegistrationConfig{InterestedEvents: ies, Timestamp: util.CreateUtcTimestamp()}
@@ -273,15 +272,15 @@ func (ec *EventsClient) Stop() error {
 func getCreatorFromLocalMSP() ([]byte, error) {
 	localMsp := mspmgmt.GetLocalMSP()
 	if localMsp == nil {
-		return nil, errors.New("nil local MSP manager")
+		return nil, errors.New(errors.GeneralError, "nil local MSP manager")
 	}
 	signer, err := localMsp.GetDefaultSigningIdentity()
 	if err != nil {
-		return nil, fmt.Errorf("could not obtain the default signing identity, err %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "could not obtain the default signing identity")
 	}
 	creator, err := signer.Serialize()
 	if err != nil {
-		return nil, fmt.Errorf("error serializing the signer: %s", err)
+		return nil, errors.WithMessage(errors.GeneralError, err, "error serializing the signer")
 	}
 	return creator, nil
 }

@@ -7,11 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package server
 
 import (
-	"fmt"
 	"sync"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 type channelHandler struct {
@@ -40,7 +40,7 @@ func (ch *channelHandler) addInterestedEvent(eventName string) {
 func (ch *channelHandler) SendMessage(msg *eventserverapi.ChannelServiceResponse) error {
 	err := ch.ChatStream.Send(msg)
 	if err != nil {
-		return fmt.Errorf("error Sending message through ChatStream: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "error Sending message through ChatStream")
 	}
 	return nil
 }
@@ -72,11 +72,11 @@ type channelHandlerList struct {
 
 func (hl *channelHandlerList) add(ch *channelHandler) bool {
 	if ch == nil {
-		logger.Warningf("cannot add nil channel handler")
+		logger.Warnf("cannot add nil channel handler")
 		return false
 	}
 	if _, ok := hl.handlers[ch]; ok {
-		logger.Warningf("handler exists for channel")
+		logger.Warnf("handler exists for channel")
 		return false
 	}
 	hl.handlers[ch] = true
@@ -85,7 +85,7 @@ func (hl *channelHandlerList) add(ch *channelHandler) bool {
 
 func (hl *channelHandlerList) del(ch *channelHandler) bool {
 	if _, ok := hl.handlers[ch]; !ok {
-		logger.Warningf("handler does not exist for channel")
+		logger.Warnf("handler does not exist for channel")
 		return false
 	}
 	delete(hl.handlers, ch)

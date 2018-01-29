@@ -13,16 +13,17 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/aclmgmt"
 	aclres "github.com/hyperledger/fabric/core/aclmgmt/resources"
 	"github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/protos/utils"
 	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = flogging.MustGetLogger("eventserver")
+var logger = logging.NewLogger("eventserver")
 
 // ChannelServer implementation of the channel service
 type ChannelServer struct {
@@ -80,7 +81,7 @@ func (c *ChannelServer) handleMessage(stream eventserverapi.Channel_ChatServer, 
 	csreq := &eventserverapi.ChannelServiceRequest{}
 	chdr, err := utils.UnmarshalEnvelopeOfType(env, common.HeaderType(eventserverapi.HeaderType_CHANNEL_SERVICE_REQUEST), csreq)
 	if err != nil {
-		logger.Warningf("error unmarshaling channel service request: %s", err)
+		logger.Warnf("error unmarshaling channel service request: %s", err)
 		return nil
 	}
 	if err = c.validateTimestamp(chdr.GetTimestamp()); err != nil {
@@ -105,13 +106,13 @@ func (c *ChannelServer) handleMessage(stream eventserverapi.Channel_ChatServer, 
 	} else if csreq.GetDeregisterChannel() != nil {
 		response = c.processDeregistration(csreq.GetDeregisterChannel().GetChannelIds(), stream)
 	} else {
-		logger.Warningf("received empty channel service request from client. Expected request containing RegisterChannel or DeregisterChannel message")
+		logger.Warnf("received empty channel service request from client. Expected request containing RegisterChannel or DeregisterChannel message")
 		return nil
 	}
 
 	logger.Debugf("sending channel service response: %v", response)
 	if err := stream.Send(response); err != nil {
-		return fmt.Errorf("error sending registration response %v:  %s", response, err)
+		return errors.Errorf(errors.GeneralError, "error sending registration response %v:  %s", response, err)
 	}
 
 	return nil
@@ -123,8 +124,8 @@ func (c *ChannelServer) validateTimestamp(timestamp *timestamp.Timestamp) error 
 	evtTime := time.Unix(timestamp.Seconds, int64(timestamp.Nanos)).UTC()
 	peerTime := time.Now()
 	if math.Abs(float64(peerTime.UnixNano()-evtTime.UnixNano())) > float64(c.gEventProcessor.timeWindow.Nanoseconds()) {
-		logger.Warningf("event timestamp %s is more than the %s `peer.channelservice.timewindow` difference above/below peer time %s. either the peer and client clocks are out of sync or a replay attack has been attempted", evtTime, c.gEventProcessor.timeWindow, peerTime)
-		return fmt.Errorf("event timestamp out of acceptable range. must be within %s above/below peer time", c.gEventProcessor.timeWindow)
+		logger.Warnf("event timestamp %s is more than the %s `peer.channelservice.timewindow` difference above/below peer time %s. either the peer and client clocks are out of sync or a replay attack has been attempted", evtTime, c.gEventProcessor.timeWindow, peerTime)
+		return errors.Errorf(errors.GeneralError, "event timestamp out of acceptable range. must be within %s above/below peer time", c.gEventProcessor.timeWindow)
 	}
 	return nil
 }
@@ -203,7 +204,7 @@ func (c *ChannelServer) createHandler(channelID string, allowedEvents []string, 
 
 func checkACL(res string, cid string, env *common.Envelope) error {
 	if err := aclmgmt.GetACLProvider().CheckACL(res, cid, env); err != nil {
-		return fmt.Errorf("authorization request for [%s] on channel [%s] failed: [%s]", res, cid, err)
+		return errors.Errorf(errors.GeneralError, "authorization request for [%s] on channel [%s] failed: [%s]", res, cid, err)
 	}
 	return nil
 }

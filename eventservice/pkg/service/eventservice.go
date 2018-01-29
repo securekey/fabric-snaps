@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	logging "github.com/op/go-logging"
-	"github.com/pkg/errors"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.MustGetLogger("eventservice")
+var logger = logging.NewLogger("eventservice")
 
 // EventProducer produces events which are dispatched to clients
 type EventProducer interface {
@@ -107,7 +107,7 @@ func (s *EventService) Submit(event interface{}) {
 		// During shutdown, events may still be produced and we may
 		// get a 'send on closed channel' panic. Just log and ignore the error.
 		if p := recover(); p != nil {
-			logger.Warningf("panic while submitting event: %s", p)
+			logger.Warnf("panic while submitting event: %s", p)
 		}
 	}()
 
@@ -157,15 +157,15 @@ func (s *EventService) RegisterFilteredBlockEvent() (eventapi.Registration, <-ch
 // - eventFilter is the chaincode event name for which events are to be received
 func (s *EventService) RegisterChaincodeEvent(ccID, eventFilter string) (eventapi.Registration, <-chan *eventapi.CCEvent, error) {
 	if ccID == "" {
-		return nil, nil, errors.New("chaincode ID is required")
+		return nil, nil, errors.New(errors.GeneralError, "chaincode ID is required")
 	}
 	if eventFilter == "" {
-		return nil, nil, errors.New("event filter is required")
+		return nil, nil, errors.New(errors.GeneralError, "event filter is required")
 	}
 
 	regExp, err := regexp.Compile(eventFilter)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "invalid event filter [%s] for chaincode [%s]", eventFilter, ccID)
+		return nil, nil, errors.Wrapf(errors.GeneralError, err, "invalid event filter [%s] for chaincode [%s]", eventFilter, ccID)
 	}
 
 	eventch := make(chan *eventapi.CCEvent, s.eventBufferSize)
@@ -181,7 +181,7 @@ func (s *EventService) RegisterChaincodeEvent(ccID, eventFilter string) (eventap
 // - txID is the transaction ID for which events are to be received
 func (s *EventService) RegisterTxStatusEvent(txID string) (eventapi.Registration, <-chan *eventapi.TxStatusEvent, error) {
 	if txID == "" {
-		return nil, nil, errors.New("txID must be provided")
+		return nil, nil, errors.New(errors.GeneralError, "txID must be provided")
 	}
 
 	eventch := make(chan *eventapi.TxStatusEvent, s.eventBufferSize)

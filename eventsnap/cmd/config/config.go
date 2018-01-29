@@ -14,14 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hyperledger/fabric/common/flogging"
-	"github.com/pkg/errors"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/viper"
 )
 
-var logger = flogging.MustGetLogger("eventsnap/config")
+var logger = logging.NewLogger("eventsnap")
 
 const (
 	// EventSnapAppName is the name/ID of the eventsnap system chaincode
@@ -88,7 +88,7 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 
 	peerConfig, err := newPeerViper(peerConfigPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading peer config")
+		return nil, errors.Wrapf(errors.GeneralError, err, "error reading peer config")
 	}
 
 	peerID := peerConfig.GetString("peer.id")
@@ -108,7 +108,7 @@ func New(channelID, peerConfigPathOverride string) (*EventSnapConfig, error) {
 
 		config, err := configservice.GetInstance().GetViper(channelID, configapi.ConfigKey{MspID: mspID, PeerID: peerID, AppName: EventSnapAppName}, configapi.YAML)
 		if err != nil {
-			return nil, errors.Wrap(err, "error getting event snap configuration")
+			return nil, errors.Wrap(errors.GeneralError, err, "error getting event snap configuration")
 		}
 		if config != nil {
 
@@ -163,17 +163,17 @@ func getTLSConfig(peerConfig, config *viper.Viper) (*tls.Config, error) {
 
 		rawData, err := ioutil.ReadFile(peerConfig.GetString("peer.tls.rootcert.file"))
 		if err != nil {
-			return nil, errors.Wrapf(err, "error reading peer tls root cert file")
+			return nil, errors.Wrapf(errors.GeneralError, err, "error reading peer tls root cert file")
 		}
 
 		block, _ := pem.Decode(rawData)
 		if block == nil {
-			return nil, errors.Wrapf(err, "pem data missing")
+			return nil, errors.Wrapf(errors.GeneralError, err, "pem data missing")
 		}
 
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return nil, errors.Wrapf(err, "parse certificate from block failed")
+			return nil, errors.Wrapf(errors.GeneralError, err, "parse certificate from block failed")
 		}
 
 		tlsCaCertPool.AddCert(cert)
@@ -196,17 +196,17 @@ func getTLSConfig(peerConfig, config *viper.Viper) (*tls.Config, error) {
 	if config.GetString("eventsnap.eventhub.tlsCerts.client.certpem") != "" {
 		keyBytes, err := ioutil.ReadFile(config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
 		if err != nil {
-			return nil, errors.Errorf("Error reading key TLS client credentials: %v", err)
+			return nil, errors.Wrap(errors.GeneralError, err, "Error reading key TLS client credentials")
 		}
 		clientCerts, err := tls.X509KeyPair([]byte(config.GetString("eventsnap.eventhub.tlsCerts.client.certpem")), keyBytes)
 		if err != nil {
-			return nil, errors.Errorf("Error loading embedded cert/key pair as TLS client credentials: %v", err)
+			return nil, errors.Wrap(errors.GeneralError, err, "Error loading embedded cert/key pair as TLS client credentials")
 		}
 		certificates = []tls.Certificate{clientCerts}
 	} else if config.GetString("eventsnap.eventhub.tlsCerts.client.certfile") != "" {
 		clientCerts, err := tls.LoadX509KeyPair(config.GetString("eventsnap.eventhub.tlsCerts.client.certfile"), config.GetString("eventsnap.eventhub.tlsCerts.client.keyfile"))
 		if err != nil {
-			return nil, errors.Errorf("Error loading cert/key pair as TLS client credentials: %v", err)
+			return nil, errors.Wrap(errors.GeneralError, err, "Error loading cert/key pair as TLS client credentials")
 		}
 		certificates = []tls.Certificate{clientCerts}
 	}

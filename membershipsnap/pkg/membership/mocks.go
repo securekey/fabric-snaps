@@ -308,7 +308,7 @@ func newmockMSPIDMgr(m map[string]string) *mockMSPIDMgr {
 func (m *mockMSPIDMgr) GetMSPID(pkiID gcommon.PKIidType) string {
 	mspID, ok := m.mspIDMap[string(pkiID)]
 	if !ok {
-		logger.Warningf("MSP ID not found for PKI ID [%s]", pkiID)
+		logger.Warnf("MSP ID not found for PKI ID [%s]", pkiID)
 	}
 	return mspID
 }

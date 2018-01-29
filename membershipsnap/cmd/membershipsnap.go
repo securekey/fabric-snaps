@@ -10,18 +10,18 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/core/policy"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	logging "github.com/op/go-logging"
-	"github.com/pkg/errors"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
-var logger = logging.MustGetLogger("membershipsnap")
+var logger = logging.NewLogger("membershipsnap")
 
 // Available function:
 const (
@@ -47,7 +47,7 @@ var initializer ccInitializer = func(mscc *MembershipSnap) error {
 	service, err := memservice.Get()
 	if err != nil {
 		logger.Errorf("Error getting membership service: %s\n", err)
-		return errors.Wrap(err, "error getting membership service")
+		return errors.Wrap(errors.GeneralError, err, "error getting membership service")
 	}
 
 	// Init policy checker for access control

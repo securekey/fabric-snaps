@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
+	"github.com/securekey/fabric-snaps/util/errors"
 
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-var logger = flogging.MustGetLogger("eventsnap")
+var logger = logging.NewLogger("eventsnap")
 
 // EventHub is an abstraction of the Event Hub
 type EventHub interface {
@@ -80,11 +80,11 @@ var defaultEHProvider EventHubProvider = func(channelID string, address string, 
 // New creates a new event relay on the given channel.
 func New(channelID string, eventHubAddress string, tlsConfig *tls.Config, opts *Opts) (*EventRelay, error) {
 	if channelID == "" {
-		return nil, errors.New("channelID is required")
+		return nil, errors.New(errors.GeneralError, "channelID is required")
 	}
 
 	if eventHubAddress == "" {
-		return nil, errors.New("eventHubAddress is required")
+		return nil, errors.New(errors.GeneralError, "eventHubAddress is required")
 	}
 
 	// tlsCredentials are not required if insecure
@@ -138,7 +138,7 @@ func (er *EventRelay) Recv(event *pb.Event) (bool, error) {
 	logger.Debugf("Received event: %s\n", event)
 
 	if channelID, err := channelutil.ChannelIDFromEvent(event); err != nil {
-		logger.Warningf("Unable to extract channel ID from the event: %s.\n", err)
+		logger.Warnf("Unable to extract channel ID from the event: %s.\n", err)
 		return true, nil
 	} else if channelID != er.channelID {
 		logger.Debugf("Received event from inapplicable channel [%s].\n", channelID)
@@ -154,7 +154,7 @@ func (er *EventRelay) Recv(event *pb.Event) (bool, error) {
 			select {
 			case eventch <- event:
 			default:
-				logger.Warningf("Unable to relay event over channel since buffer is full.")
+				logger.Warnf("Unable to relay event over channel since buffer is full.")
 			}
 		} else if er.relayTimeout == 0 {
 			// Send will block.
@@ -164,7 +164,7 @@ func (er *EventRelay) Recv(event *pb.Event) (bool, error) {
 			select {
 			case eventch <- event:
 			case <-time.After(er.relayTimeout):
-				logger.Warningf("Timed out relaying event over channel.")
+				logger.Warnf("Timed out relaying event over channel.")
 			}
 		}
 	}
@@ -175,7 +175,7 @@ func (er *EventRelay) Recv(event *pb.Event) (bool, error) {
 // Disconnected implements EventAdapter.Disconnected
 // This function handles the disconnect by attempting to reconnect to a new event hub.
 func (er *EventRelay) Disconnected(err error) {
-	logger.Warningf("Disconnected: %s. Attempting to reconnect...\n", err)
+	logger.Warnf("Disconnected: %s. Attempting to reconnect...\n", err)
 
 	er.ehmutex.Lock()
 	defer er.ehmutex.Unlock()

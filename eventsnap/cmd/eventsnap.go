@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"google.golang.org/grpc"
 
-	"github.com/hyperledger/fabric/common/flogging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -28,7 +28,7 @@ import (
 	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
 )
 
-var logger = flogging.MustGetLogger("eventSnap")
+var logger = logging.NewLogger("eventSnap")
 
 const (
 	channelConfigCheckDuration = 1 * time.Second
@@ -65,8 +65,8 @@ func (cfgprovider *cfgProvider) GetConfig(channelID string) (*config.EventSnapCo
 
 	esconfig, err := config.New(channelID, "")
 	if err != nil {
-		logger.Warningf("Error initializing event snap: %s\n", err)
-		return nil, errors.Wrap(err, "error initializing event snap ")
+		logger.Warnf("Error initializing event snap: %s\n", err)
+		return nil, errors.Wrap(errors.GeneralError, err, "error initializing event snap ")
 	}
 	return esconfig, nil
 }
@@ -75,7 +75,7 @@ func (cfgprovider *cfgProvider) GetConfig(channelID string) (*config.EventSnapCo
 // The Event Server is registered when Init is called without a channel and
 // a new, channel-specific event service is registered each time Init is called with a channel.
 func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Warningf("******** Init Event Snap on channel [%s]\n", stub.GetChannelID())
+	logger.Warnf("******** Init Event Snap on channel [%s]\n", stub.GetChannelID())
 
 	channelID := stub.GetChannelID()
 
@@ -101,7 +101,7 @@ func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 		} else {
 			// Check the config periodically and start
 			// the event service when the config is available.
-			logger.Warningf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.\n", stub.GetChannelID())
+			logger.Warnf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.\n", stub.GetChannelID())
 			go s.delayStartChannelEvents(stub.GetChannelID())
 		}
 	}
@@ -144,14 +144,14 @@ func (s *eventSnap) startChannelEvents(channelID string, config *config.EventSna
 	existingLocalEventService := localservice.Get(channelID)
 	if existingLocalEventService != nil {
 		logger.Errorf("Event service already initialized for channel [%s]\n", channelID)
-		return errors.Errorf("Event service already initialized for channel [%s]\n", channelID)
+		return errors.Errorf(errors.GeneralError, "Event service already initialized for channel [%s]\n", channelID)
 	}
 
 	// Create an event relay which gets events from the event hub
 	eventRelay, err := s.startEventRelay(channelID, config)
 	if err != nil {
 		logger.Errorf("Error starting event relay: %s\n", err)
-		return errors.Errorf("Error starting event relay: %s\n", err)
+		return errors.WithMessage(errors.GeneralError, err, "Error starting event relay")
 	}
 
 	// Create a new channel event service which gets its events from the event relay
@@ -160,7 +160,7 @@ func (s *eventSnap) startChannelEvents(channelID string, config *config.EventSna
 	// Register the local event service for the channel
 	if err := localservice.Register(channelID, service); err != nil {
 		logger.Errorf("Error registering local event service: %s\n", err)
-		return errors.Errorf("Error registering local event service: %s\n", err)
+		return errors.WithMessage(errors.GeneralError, err, "Error registering local event service")
 	}
 
 	// Relay events to the channel event server
@@ -174,7 +174,7 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 
 		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
 		if config, err := config.New(channelID, ""); err != nil {
-			logger.Warningf("Error reading configuration: %s\n", err)
+			logger.Warnf("Error reading configuration: %s\n", err)
 		} else if config.ChannelConfigLoaded {
 			if err := s.startChannelEvents(channelID, config); err != nil {
 				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!\n", channelID, err.Error())
@@ -204,7 +204,7 @@ func (s *eventSnap) startEventRelay(channelID string, config *config.EventSnapCo
 
 	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, config.TLSConfig, opts)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error creating event relay")
+		return nil, errors.Wrapf(errors.GeneralError, err, "error creating event relay")
 	}
 
 	eventRelay.Start()
@@ -247,7 +247,7 @@ func (s *eventSnap) startChannelServerEventRelay(eventRelay *eventrelay.EventRel
 		for {
 			event, ok := <-eventch
 			if !ok {
-				logger.Warningf("Event channel closed.\n")
+				logger.Warnf("Event channel closed.\n")
 				return
 			}
 
@@ -260,7 +260,7 @@ func (s *eventSnap) startChannelServerEventRelay(eventRelay *eventrelay.EventRel
 					}
 				}()
 			} else {
-				logger.Warningf("Unsupported event type: %s\n", reflect.TypeOf(event))
+				logger.Warnf("Unsupported event type: %s\n", reflect.TypeOf(event))
 			}
 		}
 	}()

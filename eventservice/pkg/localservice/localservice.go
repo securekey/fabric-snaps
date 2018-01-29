@@ -9,12 +9,12 @@ package localservice
 import (
 	"sync"
 
-	logging "github.com/op/go-logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
-var logger = logging.MustGetLogger("eventservice/localservice")
+var logger = logging.NewLogger("eventservice/localservice")
 
 var channelServices map[string]eventapi.EventService
 var initonce sync.Once
@@ -30,7 +30,7 @@ func Register(channelID string, service eventapi.EventService) error {
 	defer mutex.Unlock()
 
 	if _, ok := channelServices[channelID]; ok {
-		logger.Warningf("Event service already registered for channel [%s]\n", channelID)
+		logger.Warnf("Event service already registered for channel [%s]\n", channelID)
 		return errors.Errorf("event service already registered for channel [%s]", channelID)
 	}
 
