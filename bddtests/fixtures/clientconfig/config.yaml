@@ -36,17 +36,17 @@ client:
 
    # BCCSP config for the client. Used by GO SDK.
   BCCSP:
-    security:
-      enabled: true
-      default:
-        provider: "SW"
-      hashAlgorithm: "SHA2"
-      softVerify: true
-      ephemeral: false
-      level: 256
-      pin: ""
-      label: ""
-      library: ""
+    Security:
+      Provider: "PKCS11"
+      HashAlgorithm: "SHA2"
+      Ephemeral: false
+      Level: 256
+      Pin: "98765432"
+      Label: "ForFabric"
+      Library: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so,/usr/lib/softhsm/libsofthsm2.so,/usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so,/usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so, /usr/local/Cellar/softhsm/2.1.0/lib/softhsm/libsofthsm2.so"
+      KeystorePath: "/"
+      Config:
+        {"key":"a"} 
 
   tlsCerts:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
