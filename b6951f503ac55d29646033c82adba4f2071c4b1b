@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8734aba1_5de2e372",
+        "filename": "Gopkg.lock",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-30T14:56:28Z",
+      "side": 1,
+      "message": "have you modified Gopkg.toml? not sure if it\u0027s necessary to commit .lock without .toml changes",
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fba1918e_018d8fad",
         "filename": "configmanager/pkg/mgmt/configmanager.go",
         "patchSetId": 1
