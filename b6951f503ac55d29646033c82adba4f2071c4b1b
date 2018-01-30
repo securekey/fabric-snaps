@@ -85,6 +85,29 @@
       "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c736174_4cac39c3",
+        "filename": "transactionsnap/cmd/config/config.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-30T14:59:10Z",
+      "side": 1,
+      "message": "the format of the message content is different from other errors.WithMessage() calls.. do we need the \u0027_\u0027s in the message ? is it a code?",
+      "range": {
+        "startLine": 85,
+        "startChar": 60,
+        "endLine": 85,
+        "endChar": 82
+      },
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
