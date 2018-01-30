@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fba1918e_018d8fad",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-30T14:20:56Z",
+      "side": 1,
+      "message": "This isn\u0027t being used.",
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a74a40eb_8f7bfe72",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-30T14:20:56Z",
+      "side": 1,
+      "message": "I think you can just short circuit this loop by:\nif key.MspID !\u003d mspID {\n  return error\n}",
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82381eee_8b4d7f21",
+        "filename": "mocks/mockstub/mockstub.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-01-30T14:20:56Z",
+      "side": 1,
+      "message": "Instead of copying the entire MockStub from fabric, can you just extend the existing MockStub and override the functions that you need to?",
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
