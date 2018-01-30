@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "38fe2f23_e3e46b4d",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-01-30T14:53:07Z",
+      "side": 1,
+      "message": "I see it being referenced at lines 135/136 below, but I don\u0027t see where it\u0027s been set",
+      "parentUuid": "fba1918e_018d8fad",
+      "revId": "b6951f503ac55d29646033c82adba4f2071c4b1b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a74a40eb_8f7bfe72",
         "filename": "configmanager/pkg/mgmt/configmanager.go",
         "patchSetId": 1
