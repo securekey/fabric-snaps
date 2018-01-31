@@ -9,7 +9,7 @@ services:
 
   pkcs11-image:
     container_name: pkcs11-image
-    image: repo.onetap.ca:8443/softhsmv2:alpine
+    image: ${FABRIC_NEXT_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
     volumes:
-        - ../../:/go/src/github.com/securekey/fabric-snaps
-    command: /go/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh
+        - ../../:/opt/gopath/src/github.com/securekey/fabric-snaps
+    command: /opt/gopath/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh

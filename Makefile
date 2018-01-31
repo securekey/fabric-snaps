@@ -109,8 +109,7 @@ integration-test: clean depend populate snaps
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 
-#TODO: pkcs11-unit-test target should be added to 'all' once issue with s390 build is solved
-all: clean checks snaps unit-test integration-test http-server
+all: clean checks snaps unit-test pkcs11-unit-test integration-test http-server
 
 populate: populate-vendor
 
