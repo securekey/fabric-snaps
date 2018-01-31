@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "355e2857_3a26e0f3",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-31T23:06:41Z",
+      "side": 1,
+      "message": "Loading orgUser, getting orgAdmin session",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2ef3eb2_eb1a1b06",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-31T23:06:41Z",
+      "side": 1,
+      "message": "Do you need orgUserResourceClient? Usually it is adminUserResourceClient since admin manages resources.",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc939762_d69d62b7",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-01-31T23:06:41Z",
+      "side": 1,
+      "message": "You are loading orderer admin, however you are getting orgAdminClient session. Is this correct?",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
