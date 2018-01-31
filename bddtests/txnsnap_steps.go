@@ -24,7 +24,7 @@ func NewTxnSnapSteps(context *BDDContext) *TxnSnapSteps {
 }
 
 func (t *TxnSnapSteps) assertMembershipResponse(arg string) error {
-	peerConfig, err := t.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0.org1.example.com")
+	peerConfig, err := t.BDDContext.resourceClients[t.BDDContext.Org1User].Config().PeerConfig("peerorg1", "peer0.org1.example.com")
 	if err != nil {
 		return fmt.Errorf("Error reading peer config: %s", err)
 	}
