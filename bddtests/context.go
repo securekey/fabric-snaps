@@ -25,20 +25,19 @@ var orgname = "peerorg1"
 
 // BDDContext ...
 type BDDContext struct {
-	Client       sdkApi.Resource
 	Channel      sdkApi.Channel
 	Org1Admin    sdkApi.IdentityContext
 	OrdererAdmin sdkApi.IdentityContext
 	Org1User     sdkApi.IdentityContext
 	Composition  *Composition
-	Sdk          *fabsdk.FabricSDK
 	// clients contains a map of user IdentityContext (keys) with their respective client Resource (values)
-	clients map[sdkApi.IdentityContext]sdkApi.Resource
+	clients         map[sdkApi.IdentityContext]*fabsdk.Client
+	resourceClients map[sdkApi.IdentityContext]sdkApi.Resource
 }
 
 // NewBDDContext create new BDDContext
 func NewBDDContext() (*BDDContext, error) {
-	instance := BDDContext{clients: make(map[sdkApi.IdentityContext]sdkApi.Resource, 3)}
+	instance := BDDContext{resourceClients: make(map[sdkApi.IdentityContext]sdkApi.Resource, 3), clients: make(map[sdkApi.IdentityContext]*fabsdk.Client, 3)}
 	return &instance, nil
 }
 
@@ -54,49 +53,38 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
-	// Create SDK setup for the integration tests
-	b.Sdk = sdk
 
-	userSession, err := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgname)).Session()
+	// load org admin
+	orgAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgname))
+	orgAdminSession, err := orgAdminClient.Session()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create new userSession for orgAdmin1: %s", err))
+		panic(fmt.Sprintf("Failed to get userSession of orgAdminClient: %s", err))
 	}
-
-	client, err := sdk.FabricProvider().NewResourceClient(userSession.Identity())
+	orgAdminResourceClient, err := sdk.FabricProvider().NewResourceClient(orgAdminSession.Identity())
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create new client for userSession of orgAdmin1: %s", err))
+		panic(fmt.Sprintf("Failed to create new resource client for userSession of orgAdminClient: %s", err))
 	}
-	b.Org1Admin = client.IdentityContext()
-	b.clients[b.Org1Admin] = client
+	b.Org1Admin = orgAdminSession.Identity()
+	b.clients[b.Org1Admin] = orgAdminClient
+	b.resourceClients[b.Org1Admin] = orgAdminResourceClient
 
-	userSession, err = sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgname)).Session()
+	// load org user
+	orgUserClient := sdk.NewClient(fabsdk.WithUser("User1"), fabsdk.WithOrg(orgname))
+	orgUserSession, err := orgUserClient.Session()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create new userSession for OrdererAdmin: %s", err))
+		panic(fmt.Sprintf("Failed to get userSession of orgUserClient: %s", err))
 	}
+	b.Org1User = orgUserSession.Identity()
+	b.clients[b.Org1User] = orgUserClient
 
-	client, err = sdk.FabricProvider().NewResourceClient(userSession.Identity())
+	// load orderer admin
+	ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg("ordererorg"))
+	ordererAdminSession, err := ordererAdminClient.Session()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create new client for userSession of OrdererAdmin: %s", err))
+		panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
 	}
-
-	b.OrdererAdmin = client.IdentityContext()
-	b.clients[b.OrdererAdmin] = client
-
-	userSession, err = sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orgname)).Session()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create new userSession for Org1User: %s", err))
-	}
-
-	client, err = sdk.FabricProvider().NewResourceClient(userSession.Identity())
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create new client for userSession of Org1User: %s", err))
-	}
-
-	b.Org1User = client.IdentityContext()
-	b.clients[b.Org1User] = client
-
-	// the current user client is Org1User's
-	b.Client = client
+	b.OrdererAdmin = ordererAdminSession.Identity()
+	b.clients[b.OrdererAdmin] = ordererAdminClient
 
 }
 func (b *BDDContext) afterScenario(interface{}, error) {

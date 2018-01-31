@@ -34,7 +34,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
 	sdkorderer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/orderer"
 	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -89,8 +88,7 @@ func (d *CommonSteps) getEventHub(client sdkApi.Resource) (sdkApi.EventHub, erro
 	if err != nil {
 		return nil, fmt.Errorf("GetDefaultImplEventHub failed: %v", err)
 	}
-
-	peerConfig, err := d.BDDContext.Client.Config().PeerConfig("peerorg1", "peer0.org1.example.com")
+	peerConfig, err := d.BDDContext.resourceClients[d.BDDContext.Org1Admin].Config().PeerConfig("peerorg1", "peer0.org1.example.com")
 	if err != nil {
 		return nil, fmt.Errorf("Error reading peer config: %s", err)
 	}
@@ -109,9 +107,9 @@ func (d *CommonSteps) getEventHub(client sdkApi.Resource) (sdkApi.EventHub, erro
 
 func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	// Get client Config
-	config := d.BDDContext.Client.Config()
+	config := d.BDDContext.resourceClients[d.BDDContext.Org1Admin].Config()
 	//Get Channel
-	channel, err := d.BDDContext.Client.NewChannel(channelID)
+	channel, err := d.BDDContext.resourceClients[d.BDDContext.Org1Admin].NewChannel(channelID)
 	if err != nil {
 		return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
 	}
@@ -144,13 +142,13 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 	d.BDDContext.Channel = channel
 
 	// Check if primary peer has joined channel
-	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.clients[d.BDDContext.Org1Admin], d.BDDContext.Org1Admin, channel)
+	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.resourceClients[d.BDDContext.Org1Admin], d.BDDContext.Org1Admin, channel)
 	if err != nil {
 		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
 	}
 
 	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin), fabsdk.WithOrg("peerog1")).ChannelMgmt()
+	chMgmtClient, err := d.BDDContext.clients[d.BDDContext.OrdererAdmin].ChannelMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel management client: %s", err)
 	}
@@ -172,7 +170,7 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
-		resMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin)).ResourceMgmt()
+		resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
 		if err != nil {
 			return fmt.Errorf("Failed to create new resource management client: %s", err)
 		}
@@ -184,7 +182,7 @@ func (d *CommonSteps) createChannelAndPeerJoinChannel(channelID string) error {
 }
 
 func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, version string, ccPath string, args string) error {
-	org1AdminClient := d.BDDContext.clients[d.BDDContext.Org1Admin]
+	org1AdminClient := d.BDDContext.resourceClients[d.BDDContext.Org1Admin]
 	// Check if CC is installed
 	installed, err := IsChaincodeInstalled(org1AdminClient, d.BDDContext.Channel.Peers()[0], ccID)
 	if err != nil {
@@ -202,7 +200,7 @@ func (d *CommonSteps) installAndInstantiateCC(ccType string, ccID string, versio
 	}
 
 	// SendInstallCC
-	resMgmtClient, err := d.BDDContext.Sdk.NewClient(fabsdk.WithIdentity(d.BDDContext.Org1Admin)).ResourceMgmt()
+	resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
@@ -311,7 +309,7 @@ func (d *CommonSteps) invokeCC(ccID string, channelID string, args string) error
 		return fmt.Errorf("Channel(%s) not created", channelID)
 	}
 
-	err := d.invokeChaincode(d.BDDContext.Client, d.BDDContext.Channel, ccID, argsArray, d.BDDContext.Channel.PrimaryPeer())
+	err := d.invokeChaincode(d.BDDContext.resourceClients[d.BDDContext.Org1Admin], d.BDDContext.Channel, ccID, argsArray, d.BDDContext.Channel.PrimaryPeer())
 
 	if err != nil {
 		return fmt.Errorf("invokeChaincode return error: %v", err)
@@ -465,7 +463,7 @@ func (d *CommonSteps) createAndSendTransactionProposal(channel sdkApi.Channel, c
 	var txnID apitxn.TransactionID
 	var err error
 	if channel == nil {
-		transactionProposalResponses, txnID, err = sdkFabricClientChannel.SendTransactionProposalWithChannelID("", request, d.BDDContext.Client)
+		transactionProposalResponses, txnID, err = sdkFabricClientChannel.SendTransactionProposalWithChannelID("", request, d.BDDContext.resourceClients[d.BDDContext.Org1Admin])
 	} else {
 		transactionProposalResponses, txnID, err = channel.SendTransactionProposal(request)
 	}
@@ -537,7 +535,7 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 		}
 		argsArray = append(argsArray, "save")
 		argsArray = append(argsArray, string(configBytes))
-		err = d.invokeChaincode(d.BDDContext.Client, d.BDDContext.Channel, "configurationsnap", argsArray, d.BDDContext.Channel.PrimaryPeer())
+		err = d.invokeChaincode(d.BDDContext.resourceClients[d.BDDContext.Org1Admin], d.BDDContext.Channel, "configurationsnap", argsArray, d.BDDContext.Channel.PrimaryPeer())
 		if err != nil {
 			return fmt.Errorf("invokeChaincode return error: %v", err)
 		}
