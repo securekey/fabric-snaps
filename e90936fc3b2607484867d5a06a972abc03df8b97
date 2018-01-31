@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a8d6763_834e5662",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-01-31T23:45:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "355e2857_3a26e0f3",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2ef3eb2_eb1a1b06",
         "filename": "bddtests/context.go",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3c3a6ac8_59190dee",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-01-31T23:45:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2ef3eb2_eb1a1b06",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc939762_d69d62b7",
         "filename": "bddtests/context.go",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2018-01-31T23:06:41Z",
       "side": 1,
       "message": "You are loading orderer admin, however you are getting orgAdminClient session. Is this correct?",
+      "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f88981bb_f16de218",
+        "filename": "bddtests/context.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-01-31T23:45:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc939762_d69d62b7",
       "revId": "e90936fc3b2607484867d5a06a972abc03df8b97",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
