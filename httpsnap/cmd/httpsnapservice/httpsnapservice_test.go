@@ -273,7 +273,9 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
 	configmgmtService.Initialize(stub, mspID)
-	PeerConfigPath = "../sampleconfig"
+
+	//Change peer config path
+	PeerConfigPath = sampleconfig.ResolvPeerConfig("../sampleconfig")
 
 	//Setup bccsp factory
 	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../sampleconfig")

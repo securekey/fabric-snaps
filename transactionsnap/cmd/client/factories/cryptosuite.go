@@ -18,16 +18,22 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // DefaultCryptoSuiteProviderFactory is will provide custom factory default bccsp cryptosuite
 type DefaultCryptoSuiteProviderFactory struct {
 	defcore.ProviderFactory
+	ProviderName string
 }
 
 // NewCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
 func (f *DefaultCryptoSuiteProviderFactory) NewCryptoSuiteProvider(config apiconfig.Config) (apicryptosuite.CryptoSuite, error) {
-	return GetSuite(factory.GetDefault()), nil
+	bccspSuite, err := factory.GetBCCSP(f.ProviderName)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new cryptosuite provider")
+	}
+	return GetSuite(bccspSuite), nil
 }
 
 //GetSuite returns cryptosuite adaptor for given bccsp.BCCSP implementation

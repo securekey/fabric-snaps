@@ -28,7 +28,7 @@ const (
 
 func TestDefaultCryptoSuiteFactory(t *testing.T) {
 
-	cryptoSuiteFactory := &DefaultCryptoSuiteProviderFactory{}
+	cryptoSuiteFactory := &DefaultCryptoSuiteProviderFactory{ProviderName: "SW"}
 	cryptoSuiteProvider, err := cryptoSuiteFactory.NewCryptoSuiteProvider(nil)
 
 	if err != nil {

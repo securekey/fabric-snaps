@@ -43,6 +43,7 @@ go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventsnap.so github.com/hyp
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./txnsnapinvoker.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/txnsnapinvoker
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./configurationscc.so github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventconsumersnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/eventconsumersnap
+go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./bootstrapsnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/bootstrap
 
 
 cp httpsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
@@ -52,3 +53,4 @@ cp eventsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp txnsnapinvoker.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
 cp configurationscc.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp eventconsumersnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
+cp bootstrapsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/

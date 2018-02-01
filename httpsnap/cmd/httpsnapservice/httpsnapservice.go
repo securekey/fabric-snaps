@@ -269,12 +269,21 @@ func (httpServiceImpl *HTTPServiceImpl) GeneratePin(c *x509.Certificate) string 
 
 func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config) (*tls.Config, error) {
 
-	bccspSuite := factory.GetDefault()
+	//Get cryptosuite provider name from name from peerconfig
+	cryptoProvider, err := config.GetCryptoProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	//Get cryptosuite from peer bccsp pool
+	cryptoSuite, err := factory.GetBCCSP(cryptoProvider)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get cryptoSuite for httpsnap")
+	}
 
 	var clientCert string
 	var caCerts []string
 	var pk bccsp.Key
-	var err error
 
 	if client != "" {
 		//Use client TLS config override in https snap config
@@ -306,13 +315,13 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	}
 
 	//Get Key from Pem bytes
-	key, err := httpServiceImpl.getCryptoSuiteKeyFromPem([]byte(clientCert), bccspSuite)
+	key, err := httpServiceImpl.getCryptoSuiteKeyFromPem([]byte(clientCert), cryptoSuite)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get key from client cert")
 	}
 
 	//Get private key using SKI
-	pk, err = bccspSuite.GetKey(key.SKI())
+	pk, err = cryptoSuite.GetKey(key.SKI())
 
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to get private key from SKI")
@@ -320,7 +329,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	if pk != nil && pk.Private() {
 		//If private key available then get tls config from private key
-		return httpServiceImpl.prepareTLSConfigFromPrivateKey(bccspSuite, pk, clientCert, caCerts, config.IsSystemCertPoolEnabled())
+		return httpServiceImpl.prepareTLSConfigFromPrivateKey(cryptoSuite, pk, clientCert, caCerts, config.IsSystemCertPoolEnabled())
 
 	} else if config.IsPeerTLSConfigEnabled() {
 		// If private key not found and allowPeerConfig enabled, then use peer tls client key

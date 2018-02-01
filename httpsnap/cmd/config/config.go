@@ -320,6 +320,14 @@ func (c *config) TimeoutOrDefault(tt httpsnapApi.HTTPClientTimeoutType) time.Dur
 	return timeout
 }
 
+func (c *config) GetCryptoProvider() (string, error) {
+	cryptoProvider := c.peerConfig.GetString("peer.BCCSP.Default")
+	if cryptoProvider == "" {
+		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
+	}
+	return cryptoProvider, nil
+}
+
 // substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
 // has multiple GOPATHs then the first is used.
 func substGoPath(s string) string {

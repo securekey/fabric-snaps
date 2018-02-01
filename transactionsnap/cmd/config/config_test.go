@@ -287,3 +287,15 @@ func uplaodConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	return err
 
 }
+
+func TestGetCryptoProvider(t *testing.T) {
+	swCryptoProvider, err := c.GetCryptoProvider()
+
+	if err != nil {
+		t.Fatal("Not supposed to get error for GetCryptoProvider for SW")
+	}
+
+	if swCryptoProvider != "SW" {
+		t.Fatalf(" GetCryptoProvider expected to return 'SW' but got '%s'", swCryptoProvider)
+	}
+}

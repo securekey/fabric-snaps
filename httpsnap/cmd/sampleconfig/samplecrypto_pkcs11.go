@@ -53,3 +53,8 @@ func FindPKCS11Lib(configuredLib string) string {
 	}
 	return lib
 }
+
+//ResolvPeerConfig returns peer config file updated based on build flag
+func ResolvPeerConfig(peerConfigPath string) string {
+	return peerConfigPath + "/core-config-pkcs11"
+}

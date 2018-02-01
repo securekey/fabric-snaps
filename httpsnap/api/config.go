@@ -51,6 +51,7 @@ type Config interface {
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() ([]string, error)
 	GetPeerClientKey() (string, error)
+	GetCryptoProvider() (string, error)
 	IsSystemCertPoolEnabled() bool
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool

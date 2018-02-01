@@ -444,9 +444,15 @@ func (c *clientImpl) initializeTLSPool(channel sdkApi.Channel) error {
 
 func (c *clientImpl) initialize(sdkConfig []byte) error {
 
+	//Get cryptosuite provider name from name from peerconfig
+	cryptoProvider, err := c.config.GetCryptoProvider()
+	if err != nil {
+		return err
+	}
+
 	sdk, err := fabsdk.New(config.FromRaw(sdkConfig, "yaml"),
 		fabsdk.WithContextPkg(&factories.CredentialManagerProviderFactory{CryptoPath: c.config.GetMspConfigPath()}),
-		fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{}))
+		fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{ProviderName: cryptoProvider}))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}

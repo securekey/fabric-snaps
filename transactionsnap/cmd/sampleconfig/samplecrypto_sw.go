@@ -22,3 +22,9 @@ func GetSampleBCCSPFactoryOpts(ksPath string) *factory.FactoryOpts {
 		},
 	}
 }
+
+//ResolvPeerConfig returns peer config file updated based on build flag
+func ResolvPeerConfig(peerConfigPath string) string {
+	//do nothing
+	return peerConfigPath
+}

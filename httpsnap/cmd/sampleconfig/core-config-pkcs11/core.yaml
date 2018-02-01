@@ -16,43 +16,27 @@ logging:
 
     #     CRITICAL | ERROR | WARNING | NOTICE | INFO | DEBUG
 
-    # The overall default logging level can be specified in various ways,
+    # The logging levels specified here can be overridden in various ways,
     # listed below from strongest to weakest:
     #
     # 1. The --logging-level=<level> command line option overrides all other
-    #    default specifications.
+    #    specifications.
     #
     # 2. The environment variable CORE_LOGGING_LEVEL otherwise applies to
     #    all peer commands if defined as a non-empty string.
     #
-    # 3. The value of `level` that directly follows in this file.
-    #
-    # If no overall default level is provided via any of the above methods,
-    # the peer will default to INFO (the value of defaultLevel in
-    # common/flogging/logging.go)
+    # 3. Otherwise, the specifications below apply.
 
-    # Default for all modules running within the scope of a peer.
-    # Note: this value is only used when --logging-level or CORE_LOGGING_LEVEL
-    #       are not set
-    level:       info
+    # Default for all modules running within the scope of a peer
+    peer:       info
 
-    # The overall default values mentioned above can be overridden for the
-    # specific components listed in the override section below.
-
-    # Override levels for various peer modules. These levels will be
-    # applied once the peer has completely started. They are applied at this
-    # time in order to be sure every logger has been registered with the
-    # logging package.
-    # Note: the modules listed below are the only acceptable modules at this
-    #       time.
+    # Override levels for various 'peer' modules
     cauthdsl:   warning
     gossip:     warning
-    grpc:       error
     ledger:     info
     msp:        warning
     policies:   warning
-    peer:
-        gossip: warning
+    grpc:       error
 
     # Message format for the peer logs
     format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
@@ -67,7 +51,7 @@ peer:
     # The Peer id is used for identifying this Peer instance.
     id: jdoe
 
-    # The networkId allows for logical separation of networks
+    # The networkId allows for logical seperation of networks
     networkId: dev
 
     # The Address at local network interface this Peer will listen on.
@@ -75,12 +59,20 @@ peer:
     listenAddress: 0.0.0.0:7051
 
     # The endpoint this peer uses to listen for inbound chaincode connections.
-    # If this is commented-out, the listen address is selected to be
-    # the peer's address (see below) with port 7052
-    # chaincodeListenAddress: 0.0.0.0:7052
+    #
+    # The chaincode connection does not support TLS-mutual auth. Having a
+    # separate listener for the chaincode helps isolate the chaincode
+    # environment for enhanced security, so it is strongly recommended to
+    # uncomment chaincodeListenAddress and specify a protected endpoint.
+    #
+    # If chaincodeListenAddress is not configured or equals to the listenAddress,
+    # listenAddress will be used for chaincode connections. This is not
+    # recommended for production.
+    #
+    # chaincodeListenAddress: 127.0.0.1:7052
 
     # When used as peer config, this represents the endpoint to other peers
-    # in the same organization. For peers in other organization, see
+    # in the same organization for peers in other organization, see
     # gossip.externalEndpoint for more info.
     # When used as CLI config, this means the peer's endpoint to interact with
     address: 0.0.0.0:7051
@@ -113,12 +105,12 @@ peer:
         # connection with ordering service and use delivery protocol
         # to pull ledger blocks from ordering service. It is recommended to
         # use leader election for large networks of peers.
-        useLeaderElection: true
+        useLeaderElection: false
         # Statically defines peer to be an organization "leader",
         # where this means that current peer will maintain connection
         # with ordering service and disseminate block across peers in
         # its own organization
-        orgLeader: false
+        orgLeader: true
 
         # Overrides the endpoint that the peer publishes to peers
         # in its organization. For peers in foreign organizations
@@ -155,7 +147,7 @@ peer:
         # Buffer size of received messages
         recvBuffSize: 20
         # Buffer size of sending messages
-        sendBuffSize: 200
+        sendBuffSize: 20
         # Time to wait before pull engine processes incoming digests (unit: second)
         digestWaitTime: 1s
         # Time to wait before pull engine removes incoming nonce (unit: second)
@@ -182,25 +174,6 @@ peer:
             # Time between peer sends propose message and declares itself as a leader (sends declaration message) (unit: second)
             leaderElectionDuration: 5s
 
-        pvtData:
-            # pullRetryThreshold determines the maximum duration of time private data corresponding for a given block
-            # would be attempted to be pulled from peers until the block would be committed without the private data
-            pullRetryThreshold: 60s
-            # minPeers defines the minimum number of peers
-            # that an endorsement containing private data would target for dissemination.
-            # The endorsement would fail if an insufficient number of acknowledgements from
-            # peers of the peer's organization wasn't obtained.
-            minPeers: 1
-            # maxPeers defines the maximum number of peers
-            # that an endorsement containing private data would target for dissemination
-            maxPeers: 1
-            # As private data enters the transient store, it is associated with the peer's ledger's height at that time.
-            # transientstoreMaxBlockRetention defines the maximum difference between the current ledger's height upon commit,
-            # and the private data residing inside the transient store that is guaranteed not to be purged.
-            # Private data is purged from the transient store when blocks with sequences that are multiples
-            # of transientstoreMaxBlockRetention are committed.
-            transientstoreMaxBlockRetention: 1000
-
     # EventHub related configuration
     events:
         # The address that the Event service will be enabled on the peer
@@ -215,58 +188,29 @@ peer:
         # if > 0, if buffer full, blocks till timeout
         timeout: 10ms
 
-        # timewindow is the acceptable difference between the peer's current
-        # time and the client's time as specified in a registration event
-        timewindow: 15m
-
-    # Channel Service configuration - runs on the peer endpoint
-    channelserver:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
-
-        # timeout duration for producer to send an event.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
-
-        # timewindow is the acceptable difference between the peer's current
-        # time and the client's time as specified in a registration event
-        timewindow: 15m
-
     # TLS Settings
     # Note that peer-chaincode connections through chaincodeListenAddress is
     # not mutual TLS auth. See comments on chaincodeListenAddress for more info
     tls:
-        # require server-side TLS
         enabled:  false
-        # require client certificates / mutual TLS.
-        # note that clients that are not configured to use a certificate will
-        # fail to connect to the peer.
-        clientAuthRequired: false
-        # X.509 certificate used for TLS server (and client if clientAuthEnabled
-        # is set to true
         cert:
             file: tls/server.crt
-        # private key used for TLS server (and client if clientAuthEnabled
-        # is set to true
         key:
             file: tls/server.key
-        # trusted root certificate chain for tls.cert
         rootcert:
             file: tls/ca.crt
-        # set of root certificate authorities used to verify client certificates
+        # Set of root certificate authorities used to verify client certificates
         clientRootCAs:
             files:
               - tls/ca.crt
         # Private key used for TLS when making client connections.  If
         # not set, peer.tls.key.file will be used instead
         clientKey:
-            file:
+            file: tls/test-client.key
         # X.509 certificate used for TLS when making client connections.
         # If not set, peer.tls.cert.file will be used instead
         clientCert:
-            file:
+            file: tls/test-client-cert.crt
 
         # The server name use to verify the hostname returned by TLS handshake
         serverhostoverride:
@@ -279,18 +223,7 @@ peer:
     # BCCSP (Blockchain crypto provider): Select which crypto implementation or
     # library to use
     BCCSP:
-      Default: SW
-      SW:
-        # TODO: The default Hash and Security level needs refactoring to be
-        # fully configurable. Changing these defaults requires coordination
-        # SHA2 is hardcoded in several places, not only BCCSP
-        Hash: SHA2
-        Security: 256
-        # Location of Key Store
-        FileKeyStore:
-        # If "", defaults to 'mspConfigPath'/keystore
-        # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
-          KeyStore:
+      Default: PKCS11
       PKCS11:
         # TODO: The default Hash and Security level needs refactoring to be
         # fully configurable. Changing these defaults requires coordination
@@ -307,7 +240,7 @@ peer:
           KeyStore: "/tmp"
 
     # Path on the file system where peer will find MSP local configurations
-    mspConfigPath: msp
+    mspConfigPath: msp/sampleconfig
 
     # Identifier of the local MSP
     # ----!!!!IMPORTANT!!!-!!!IMPORTANT!!!-!!!IMPORTANT!!!!----
@@ -316,56 +249,13 @@ peer:
     # to match the name of one of the MSPs in each of the channel
     # that this peer is a member of. Otherwise this peer's messages
     # will not be identified as valid by other nodes.
-    localMspId: DEFAULT
-
-    # Delivery service related config
-    deliveryclient:
-        # It sets the total time the delivery service may spend in reconnection
-        # attempts until its retry logic gives up and returns an error
-        reconnectTotalTimeThreshold: 3600s
+    localMspId: Org1MSP
 
     # Used with Go profiling tools only in none production environment. In
     # production, it should be disabled (eg enabled: false)
     profile:
         enabled:     false
         listenAddress: 0.0.0.0:6060
-
-    # Handlers defines custom handlers that can filter and mutate
-    # objects passing within the peer, such as:
-    #   Auth filter - reject or forward proposals from clients
-    #   Decorators  - append or mutate the chaincode input passed to the chaincode
-    # Valid handler definition contains:
-    #   - A name which is a factory method name defined in
-    #     core/handlers/library/library.go for statically compiled handlers
-    #   - library path to shared object binary for pluggable filters
-    # Auth filters and decorators are chained and executed in the order that
-    # they are defined. For example:
-    # authFilters:
-    #   -
-    #     name: FilterOne
-    #     library: /opt/lib/filter.so
-    #   -
-    #     name: FilterTwo
-    # decorators:
-    #   -
-    #     name: DecoratorOne
-    #   -
-    #     name: DecoratorTwo
-    #     library: /opt/lib/decorator.so
-    handlers:
-        authFilters:
-          -
-            name: DefaultAuth
-        decorators:
-          -
-            name: DefaultDecorator
-
-    # Number of goroutines that will execute transaction validation in parallel.
-    # By default, the peer chooses the number of CPUs on the machine. Set this
-    # variable to override that choice.
-    # NOTE: overriding this value might negatively influence the performance of
-    # the peer so please change this value only if you know what you're doing
-    validatorPoolSize:
 
 ###############################################################################
 #
@@ -442,9 +332,6 @@ chaincode:
         # golang will never need more than baseos
         runtime: $(BASE_DOCKER_NS)/fabric-baseos:$(ARCH)-$(BASE_VERSION)
 
-        # whether or not golang chaincode should be linked dynamically
-        dynamicLink: false
-
     car:
         # car may need more facilities (JVM, etc) in the future as the catalog
         # of platforms are expanded.  For now, we can just use baseos
@@ -457,11 +344,6 @@ chaincode:
         # for Java chaincode runtime.
         Dockerfile:  |
             from $(DOCKER_NS)/fabric-javaenv:$(ARCH)-$(PROJECT_VERSION)
-
-    node:
-        # need node.js engine at runtime, currently available in baseimage
-        # but not in baseos
-        runtime: $(BASE_DOCKER_NS)/fabric-baseimage:$(ARCH)-$(BASE_VERSION)
 
     # Timeout duration for starting up a container and waiting for Register
     # to come through. 1sec should be plenty for chaincode unit tests
@@ -498,68 +380,13 @@ chaincode:
         escc: enable
         vscc: enable
         qscc: enable
-        rscc: disable
-        configurationsnap: enable
-        httpsnap: enable
-        txnsnap: enable
         mscc: enable
-        eventsnap: enable
+        snapsscc: enable
+        kevlarscc: enable
+        config:
+          kevlarscc:
+           kevlarInvokePort: 8087
 
-        # Snaps used in BDD tests
-        txnsnapinvoker: enable
-        eventconsumersnap: enable
-        bootstrapsnap: enable
-
-    # System chaincode plugins: in addition to being imported and compiled
-    # into fabric through core/chaincode/importsysccs.go, system chaincodes
-    # can also be loaded as shared objects compiled as Go plugins.
-    # See examples/plugins/scc for an example.
-    # Like regular system chaincodes, plugins must also be white listed in the
-    # chaincode.system section above.
-    systemPlugins:
-      # example configuration:
-      - enabled: true
-        name: configurationsnap
-        path: /opt/extsysccs/configurationscc.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: httpsnap
-        path: /opt/extsysccs/httpsnap.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: txnsnap
-        path: /opt/extsysccs/transactionsnap.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: mscc
-        path: /opt/extsysccs/membership.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: eventsnap
-        path: /opt/extsysccs/eventsnap.so
-        invokableExternal: false
-        invokableCC2CC: false
-
-      # Snaps used in BDD tests
-      - enabled: true
-        name: txnsnapinvoker
-        path: /opt/extsysccs/txnsnapinvoker.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: eventconsumersnap
-        path: /opt/extsysccs/eventconsumersnap.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: bootstrapsnap
-        path: /opt/extsysccs/bootstrapsnap.so
-        invokableExternal: false
-        invokableCC2CC: false
     # Logging section for the chaincode container
     logging:
       # Default level for all loggers within the chaincode container
@@ -571,7 +398,7 @@ chaincode:
 
 ###############################################################################
 #
-#    Ledger section - ledger configuration encompasses both the blockchain
+#    Ledger section - ledger configuration encompases both the blockchain
 #    and the state
 #
 ###############################################################################
@@ -605,8 +432,6 @@ ledger:
        requestTimeout: 35s
        # Limit on the number of records to return per query
        queryLimit: 10000
-       # Limit on the number of records per CouchDB bulk update batch
-       maxBatchUpdateSize: 1000
 
 
   history:
@@ -615,37 +440,3 @@ ledger:
     # All history 'index' will be stored in goleveldb, regardless if using
     # CouchDB or alternate database for the state.
     enableHistoryDatabase: true
-
-###############################################################################
-#
-#    Metrics section
-#
-#
-###############################################################################
-metrics:
-        # enable or disable metrics server
-        enabled: false
-
-        # when enable metrics server, must specific metrics reporter type
-        # currently supported type: "statsd","prom"
-        reporter: statsd
-
-        # determines frequency of report metrics(unit: second)
-        interval: 1s
-
-        statsdReporter:
-
-              # statsd server address to connect
-              address: 0.0.0.0:8125
-
-              # determines frequency of push metrics to statsd server(unit: second)
-              flushInterval: 2s
-
-              # max size bytes for each push metrics request
-              # intranet recommend 1432 and internet recommend 512
-              flushBytes: 1432
-
-        promReporter:
-
-              # prometheus http server listen address for pull metrics
-              listenAddress: 0.0.0.0:8080

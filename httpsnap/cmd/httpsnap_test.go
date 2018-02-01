@@ -253,7 +253,7 @@ func TestMain(m *testing.M) {
 
 	configmgmtService.Initialize(stub2, mspID)
 
-	httpsnapservice.PeerConfigPath = "./sampleconfig"
+	httpsnapservice.PeerConfigPath = sampleconfig.ResolvPeerConfig("./sampleconfig")
 
 	go startHTTPServer()
 

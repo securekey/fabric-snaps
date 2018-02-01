@@ -784,7 +784,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	txsnapservice.PeerConfigPath = "./sampleconfig"
+
+	txsnapservice.PeerConfigPath = sampleconfig.ResolvPeerConfig("./sampleconfig")
 
 	txService, err := txsnapservice.Get("testChannel")
 	if err != nil {

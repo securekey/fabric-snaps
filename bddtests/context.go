@@ -49,7 +49,8 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 
 	confileFilePath := "./fixtures/clientconfig/config.yaml"
 
-	sdk, err := fabsdk.New(config.FromFile(confileFilePath), fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{}))
+	//TODO: hardcoded DefaultCryptoSuiteProviderFactory to SW, should be dynamic based on bccsp provider type (DEV-5240)
+	sdk, err := fabsdk.New(config.FromFile(confileFilePath), fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{ProviderName: "SW"}))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}

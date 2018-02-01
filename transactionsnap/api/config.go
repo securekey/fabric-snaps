@@ -32,6 +32,7 @@ type Config interface {
 	GetEndorsementMaxAttempts() int
 	GetEndorsementRetryInterval() time.Duration
 	GetCommitTimeout() time.Duration
+	GetCryptoProvider() (string, error)
 }
 
 // PeerConfig represents the server addresses of a fabric peer

@@ -284,6 +284,15 @@ func (c *Config) GetCommitTimeout() time.Duration {
 	return interval
 }
 
+//GetCryptoProvider returns crypto provider name from peer config
+func (c *Config) GetCryptoProvider() (string, error) {
+	cryptoProvider := c.peerConfig.GetString("peer.BCCSP.Default")
+	if cryptoProvider == "" {
+		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
+	}
+	return cryptoProvider, nil
+}
+
 // initializeLogging initializes the logger
 func (c *Config) initializeLogging() error {
 	logLevel := c.txnSnapConfig.GetString("txnsnap.loglevel")
