@@ -41,6 +41,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/cmd/mocks"
+	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 )
 
 var channelID = "testChannel"
@@ -228,20 +229,12 @@ func newMockTxService(callback EndorsedCallback) *TxServiceImpl {
 
 func TestMain(m *testing.M) {
 
-	path := "../sampleconfig/msp/keystore"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		panic(fmt.Sprintf("Wrong path: %v\n", err))
-	}
-	opts := &bccspFactory.FactoryOpts{
-		ProviderName: "SW",
-		SwOpts: &bccspFactory.SwOpts{
-			HashFamily:   "SHA2",
-			SecLevel:     256,
-			Ephemeral:    false,
-			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "../sampleconfig/msp/keystore"},
-		},
-	}
+	//Setup bccsp factory
+	// note: use of 'pkcs11' tag in the unit test will load the PCKS11 version of the factory opts.
+	// otherwise default SW version will be used.
+	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../sampleconfig")
 	bccspFactory.InitFactories(opts)
+
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
