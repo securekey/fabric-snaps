@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package generateCSR
 
 import (
+	"encoding/pem"
+	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -118,6 +120,7 @@ func (a *queryAction) generateCSR() error {
 		return err
 	}
 	cliconfig.Config().Logger().Debugf("***Generated CSR*** \n%v\n", response)
+	fmt.Printf("\nPEM encoded CSR:\n%s\n",csrToPem(response))
 	return nil
 }
 
@@ -128,4 +131,10 @@ func contains(arr []string, str string) bool {
 		}
 	}
 	return false
+}
+
+func csrToPem(csr []byte) (csrPEM string) {
+	csrPEMBytes := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csr})
+	csrPEM = string(csrPEMBytes[:])
+	return
 }
