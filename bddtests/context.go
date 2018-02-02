@@ -23,25 +23,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-var org1 = "peerorg1"
+var ADMIN = "admin"
+var USER = "user"
 
 // BDDContext ...
 type BDDContext struct {
-	Org1Admin    sdkApi.IdentityContext
-	OrdererAdmin sdkApi.IdentityContext
-	Org1User     sdkApi.IdentityContext
-	Composition  *Composition
-	// clients contains a map of user IdentityContext (keys) with their respective client Resource (values)
-	clients           map[sdkApi.IdentityContext]*fabsdk.Client
-	resourceClients   map[sdkApi.IdentityContext]sdkApi.Resource
-	ClientConfig      apiconfig.Config
+	composition       *Composition
+	clientConfig      apiconfig.Config
+	mutex             sync.RWMutex
+	sdk               *fabsdk.FabricSDK
 	orgs              []string
-	Sdk               *fabsdk.FabricSDK
-	orgClients        map[string]*fabsdk.Client
+	orderers          []string
 	peersByChannel    map[string][]*PeerConfig
 	orgsByChannel     map[string][]string
-	mutex             sync.RWMutex
 	collectionConfigs map[string]*CollectionConfig
+	clients           map[string]*fabsdk.Client
+	resourceClients   map[string]sdkApi.Resource
+	users             map[string]sdkApi.IdentityContext
 	primaryPeer       sdkApi.Peer
 }
 
@@ -62,14 +60,15 @@ type CollectionConfig struct {
 }
 
 // NewBDDContext create new BDDContext
-func NewBDDContext() (*BDDContext, error) {
+func NewBDDContext(orgs []string, orderers []string) (*BDDContext, error) {
 	instance := BDDContext{
-		orgs:              []string{org1},
-		orgClients:        make(map[string]*fabsdk.Client),
+		orgs:              orgs,
+		orderers:          orderers,
 		peersByChannel:    make(map[string][]*PeerConfig),
+		users:             make(map[string]sdkApi.IdentityContext),
 		orgsByChannel:     make(map[string][]string),
-		resourceClients:   make(map[sdkApi.IdentityContext]sdkApi.Resource),
-		clients:           make(map[sdkApi.IdentityContext]*fabsdk.Client),
+		resourceClients:   make(map[string]sdkApi.Resource),
+		clients:           make(map[string]*fabsdk.Client),
 		collectionConfigs: make(map[string]*CollectionConfig),
 	}
 	return &instance, nil
@@ -88,42 +87,47 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
-	b.Sdk = sdk
+	b.sdk = sdk
+	for _, org := range b.orgs {
+		// load org admin
+		orgAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+		orgAdminSession, err := orgAdminClient.Session()
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get userSession of orgAdminClient: %s", err))
+		}
+		orgAdminResourceClient, err := sdk.FabricProvider().NewResourceClient(orgAdminSession.Identity())
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create new resource client for userSession of orgAdminClient: %s", err))
+		}
+		orgAdmin := fmt.Sprintf("%s_%s", org, ADMIN)
+		b.users[orgAdmin] = orgAdminSession.Identity()
+		b.clients[orgAdmin] = orgAdminClient
+		b.resourceClients[orgAdmin] = orgAdminResourceClient
 
-	// load org admin
-	orgAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org1))
-	orgAdminSession, err := orgAdminClient.Session()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to get userSession of orgAdminClient: %s", err))
-	}
-	orgAdminResourceClient, err := sdk.FabricProvider().NewResourceClient(orgAdminSession.Identity())
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create new resource client for userSession of orgAdminClient: %s", err))
-	}
-	b.Org1Admin = orgAdminSession.Identity()
-	b.clients[b.Org1Admin] = orgAdminClient
-	b.resourceClients[b.Org1Admin] = orgAdminResourceClient
-	b.orgClients[org1] = orgAdminClient
+		b.clientConfig = orgAdminResourceClient.Config()
 
-	b.ClientConfig = orgAdminResourceClient.Config()
-
-	// load org user
-	orgUserClient := sdk.NewClient(fabsdk.WithUser("User1"), fabsdk.WithOrg(org1))
-	orgUserSession, err := orgUserClient.Session()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to get userSession of orgUserClient: %s", err))
+		// load org user
+		orgUserClient := sdk.NewClient(fabsdk.WithUser("User1"), fabsdk.WithOrg(org))
+		orgUserSession, err := orgUserClient.Session()
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get userSession of orgUserClient: %s", err))
+		}
+		orgUser := fmt.Sprintf("%s_%s", org, USER)
+		b.users[orgUser] = orgUserSession.Identity()
+		b.clients[orgUser] = orgUserClient
 	}
-	b.Org1User = orgUserSession.Identity()
-	b.clients[b.Org1User] = orgUserClient
+	for _, orderer := range b.orderers {
 
-	// load orderer admin
-	ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg("ordererorg"))
-	ordererAdminSession, err := ordererAdminClient.Session()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
+		// load orderer admin
+		ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orderer))
+		ordererAdminSession, err := ordererAdminClient.Session()
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
+		}
+		ordererAdmin := fmt.Sprintf("%s_%s", orderer, ADMIN)
+		b.users[ordererAdmin] = ordererAdminSession.Identity()
+		b.clients[ordererAdmin] = ordererAdminClient
 	}
-	b.OrdererAdmin = ordererAdminSession.Identity()
-	b.clients[b.OrdererAdmin] = ordererAdminClient
 
 }
 func (b *BDDContext) afterScenario(interface{}, error) {
@@ -212,11 +216,11 @@ func (b *BDDContext) Orgs() []string {
 	return b.orgs
 }
 
-// ClientForOrg returns the FabricClient for the given org
-func (b *BDDContext) ClientForOrg(orgID string) *fabsdk.Client {
+// Orderers returns the orderers
+func (b *BDDContext) Orderers() []string {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
-	return b.orgClients[orgID]
+	return b.orderers
 }
 
 // PeersByChannel returns the peers for the given channel
@@ -239,6 +243,27 @@ func (b *BDDContext) CollectionConfig(coll string) *CollectionConfig {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	return b.collectionConfigs[coll]
+}
+
+// OrgClient returns the org client
+func (b *BDDContext) OrgClient(org, userType string) *fabsdk.Client {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+	return b.clients[fmt.Sprintf("%s_%s", org, userType)]
+}
+
+// OrgResourceClient returns the org resource client
+func (b *BDDContext) OrgResourceClient(org, userType string) sdkApi.Resource {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+	return b.resourceClients[fmt.Sprintf("%s_%s", org, userType)]
+}
+
+// OrgResourceClient returns the org resource client
+func (b *BDDContext) OrgUser(org, userType string) sdkApi.IdentityContext {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+	return b.users[fmt.Sprintf("%s_%s", org, userType)]
 }
 
 // AddPeerConfigToChannel adds a peer to a channel

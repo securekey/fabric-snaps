@@ -124,17 +124,18 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 		return fmt.Errorf("no orgs specified")
 	}
 	// Create Orderer
-	ordererConfig, err := d.BDDContext.ClientConfig.OrdererConfig("orderer.example.com")
+	//TODO figure out better way to get ordererConfig
+	orderersConfig, err := d.BDDContext.clientConfig.OrderersConfig()
 	if err != nil {
 		return fmt.Errorf("Could not load orderer config: %v", err)
 	}
-	orderer, err := sdkorderer.New(d.BDDContext.ClientConfig, sdkorderer.FromOrdererConfig(ordererConfig))
+	orderer, err := sdkorderer.New(d.BDDContext.clientConfig, sdkorderer.FromOrdererConfig(&orderersConfig[0]))
 	if err != nil {
 		return fmt.Errorf("New orderer failed: %v", err)
 	}
 
 	for index, orgID := range orgs {
-		peersConfig, err := d.BDDContext.ClientConfig.PeersConfig(orgID)
+		peersConfig, err := d.BDDContext.clientConfig.PeersConfig(orgID)
 		if err != nil {
 			return fmt.Errorf("error getting peers config: %s", err)
 		}
@@ -156,15 +157,11 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 		serverHostOverride = str
 	}
-	peer, err := d.BDDContext.Sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: peerConfig})
+	peer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: peerConfig})
 	if err != nil {
 		return errors.WithMessage(err, "NewPeer failed")
 	}
 
-	orgClient := d.BDDContext.ClientForOrg(orgID)
-	if orgClient == nil {
-		return fmt.Errorf("org client for org: %s not found in BDD context", orgID)
-	}
 	//TODO temp solution to get peer id and msp id
 	peerMspID := make(map[string]string)
 	peerMspID["peer0.org1.example.com"] = "Org1MSP"
@@ -172,7 +169,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	d.BDDContext.AddPeerConfigToChannel(&PeerConfig{Config: peerConfig, OrgID: orgID, MspID: peerMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
 
 	//Get Channel
-	channel, err := d.BDDContext.resourceClients[d.BDDContext.Org1Admin].NewChannel(channelID)
+	channel, err := d.BDDContext.OrgResourceClient(orgID, ADMIN).NewChannel(channelID)
 	if err != nil {
 		return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
 	}
@@ -184,7 +181,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	d.BDDContext.primaryPeer = peer
 
 	// Check if primary peer has joined channel
-	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.resourceClients[d.BDDContext.Org1Admin], d.BDDContext.Org1Admin, channel)
+	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.OrgResourceClient(orgID, ADMIN), d.BDDContext.OrgUser(orgID, ADMIN), channel)
 	if err != nil {
 		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
 	} else if alreadyJoined {
@@ -192,7 +189,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	}
 
 	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.clients[d.BDDContext.OrdererAdmin].ChannelMgmt()
+	chMgmtClient, err := d.BDDContext.OrgClient(d.BDDContext.Orderers()[0], ADMIN).ChannelMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel management client: %s", err)
 	}
@@ -208,7 +205,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 		// Create and join channel
 		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
 			ChannelConfig:   txPath,
-			SigningIdentity: d.BDDContext.Org1Admin}
+			SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
 
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
@@ -231,7 +228,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 		// Create channel (or update if it already exists)
 		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
 			ChannelConfig:   anchorTxPath,
-			SigningIdentity: d.BDDContext.Org1Admin}
+			SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
 
 		if err = chMgmtClient.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
@@ -239,7 +236,8 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	}
 
 	// Join Channel without error for anchor peers only. ignore JoinChannel error for other peers as AnchorePeer with JoinChannel will add all org's peers
-	resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
+
+	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
@@ -315,16 +313,17 @@ func (d *CommonSteps) invokeCCWithArgs(ccID, channelID string, args []string, tr
 
 	var prosalProcessors []apitxn.ProposalProcessor
 
+	var orgID string
 	for _, target := range targets {
-
-		targetPeer, err := d.BDDContext.Sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
+		orgID = target.OrgID
+		targetPeer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
 		prosalProcessors = append(prosalProcessors, targetPeer)
 	}
 
-	chClient, err := d.BDDContext.clients[d.BDDContext.Org1User].Channel(channelID)
+	chClient, err := d.BDDContext.OrgClient(orgID, USER).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel client: %s", err)
 	}
@@ -351,7 +350,7 @@ func (d *CommonSteps) createAndSendTransactionProposal(chainCodeID string,
 	}
 	var transactionProposalResponses []*apitxn.TransactionProposalResponse
 	var txnID apitxn.TransactionID
-	transactionProposalResponses, txnID, err := sdkFabricClientChannel.SendTransactionProposalWithChannelID("", request, d.BDDContext.resourceClients[d.BDDContext.Org1Admin])
+	transactionProposalResponses, txnID, err := sdkFabricClientChannel.SendTransactionProposalWithChannelID("", request, d.BDDContext.OrgResourceClient(d.BDDContext.Orgs()[0], ADMIN))
 	if err != nil {
 		return nil, txnID, err
 	}
@@ -425,10 +424,10 @@ func (d *CommonSteps) queryCCWithOpts(ccID, channelID string, args []string, tim
 	}
 
 	var processors []apitxn.ProposalProcessor
-
+	var orgID string
 	for _, target := range targets {
-
-		targetPeer, err := d.BDDContext.Sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
+		orgID = target.OrgID
+		targetPeer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
 			return "", errors.WithMessage(err, "NewPeer failed")
 		}
@@ -436,8 +435,7 @@ func (d *CommonSteps) queryCCWithOpts(ccID, channelID string, args []string, tim
 		processors = append(processors, targetPeer)
 	}
 
-	client := d.BDDContext.clients[d.BDDContext.Org1Admin]
-	chClient, err := client.Channel(channelID)
+	chClient, err := d.BDDContext.OrgClient(orgID, ADMIN).Channel(channelID)
 	if err != nil {
 		logger.Errorf("Failed to create new channel client: %s\n", err)
 		return "", errors.Wrap(err, "Failed to create new channel client")
@@ -543,7 +541,7 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 
 	for _, orgID := range oIDs {
 
-		resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
+		resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
 		if err != nil {
 			return fmt.Errorf("Failed to create new resource management client: %s", err)
 		}
@@ -575,10 +573,12 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 	}
 
 	var sdkPeers []sdkApi.Peer
+	var orgID string
 
 	for _, pconfig := range peers {
+		orgID = pconfig.OrgID
 
-		sdkPeer, err := d.BDDContext.Sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
+		sdkPeer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
@@ -606,7 +606,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 		}
 	}
 
-	resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
+	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
@@ -648,30 +648,26 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 
 	for _, pconfig := range peers {
 		orgID = pconfig.OrgID
-		orgClient := d.BDDContext.ClientForOrg(orgID)
-		if orgClient == nil {
-			return fmt.Errorf("Org client for org: %s not found in BDD context", orgID)
-		}
 
-		chClient, err := orgClient.Channel(channelID)
+		chClient, err := d.BDDContext.OrgClient(orgID, ADMIN).Channel(channelID)
 		if err != nil {
 			return errors.Wrap(err, "Failed to create new channel client")
 		}
 		defer chClient.Close()
 
-		sdkPeer, err := d.BDDContext.Sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
+		sdkPeer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
 
-		isInstalled, err = IsChaincodeInstalled(d.BDDContext.resourceClients[d.BDDContext.Org1Admin], sdkPeer, ccID)
+		isInstalled, err = IsChaincodeInstalled(d.BDDContext.OrgResourceClient(orgID, ADMIN), sdkPeer, ccID)
 		if err != nil {
 			return fmt.Errorf("Error querying installed chaincodes: %s", err)
 		}
 
 		if !isInstalled {
 
-			resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
+			resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
 			if err != nil {
 				return fmt.Errorf("Failed to create new resource management client: %s", err)
 			}
@@ -710,7 +706,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 		}
 	}
 
-	resMgmtClient, err := d.BDDContext.clients[d.BDDContext.Org1Admin].ResourceMgmt()
+	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new resource management client: %s", err)
 	}
@@ -730,7 +726,7 @@ func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCom
 	// Default policy is 'signed by any member' for all known orgs
 	var mspIDs []string
 	for _, orgID := range d.BDDContext.OrgsByChannel(channelID) {
-		mspID, err := d.BDDContext.ClientConfig.MspID(orgID)
+		mspID, err := d.BDDContext.clientConfig.MspID(orgID)
 		if err != nil {
 			return nil, errors.Errorf("Unable to get the MSP ID from org ID %s: %s", orgID, err)
 		}
