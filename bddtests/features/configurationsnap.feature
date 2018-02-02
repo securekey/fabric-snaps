@@ -43,5 +43,5 @@ Feature:  Test configuration snap Features
 	    Given fabric has channel "mychannel" and p0 joined channel
   		And client C1 invokes configuration snap on channel "mychannel" to load "txnsnap" configuration on p0
 		And client C1 invokes configuration snap on channel "mychannel" to load "configurationsnap" configuration on p0
-		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateCSR,ECDSA,false,ECDSAWithSHA1" on p0
+		And client C1 query chaincode "configurationsnap" on channel "mychannel" with args "generateCSR,ECDSA,false,ECDSAWithSHA1,abdgsgewyy" on p0
         And response from "configurationsnap" to client C1 has CSR on p0
