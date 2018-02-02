@@ -94,8 +94,9 @@ func FeatureContext(s *godog.Suite) {
 	// Context is shared between tests - for now
 	// Note: Each test after NewcommonSteps. should add unique steps only
 	NewCommonSteps(context).registerSteps(s)
-	NewTxnSnapSteps(context).registerSteps(s)
 	NewEventSnapSteps(context).registerSteps(s)
+	NewConfigurationsSnapSteps(context).registerSteps(s)
+
 }
 
 func initBDDConfig() {
