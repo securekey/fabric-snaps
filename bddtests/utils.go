@@ -12,6 +12,7 @@ import (
 	"time"
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 
 	"github.com/spf13/viper"
 )
@@ -62,6 +63,33 @@ func HasPrimaryPeerJoinedChannel(client api.Resource, orgUser api.IdentityContex
 	return foundChannel, nil
 }
 
+// GetByteArgs is a utility which converts []string to [][]bytes
+func GetByteArgs(argsArray []string) [][]byte {
+	txArgs := make([][]byte, len(argsArray))
+	for i, val := range argsArray {
+		txArgs[i] = []byte(val)
+	}
+	return txArgs
+}
+
+// NewCollectionConfig return CollectionConfig
+func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32, policy *common.SignaturePolicyEnvelope) *common.CollectionConfig {
+	return &common.CollectionConfig{
+		Payload: &common.CollectionConfig_StaticCollectionConfig{
+			StaticCollectionConfig: &common.StaticCollectionConfig{
+				Name:              collName,
+				RequiredPeerCount: requiredPeerCount,
+				MaximumPeerCount:  maxPeerCount,
+				MemberOrgsPolicy: &common.CollectionPolicyConfig{
+					Payload: &common.CollectionPolicyConfig_SignaturePolicy{
+						SignaturePolicy: policy,
+					},
+				},
+			},
+		},
+	}
+}
+
 // IsChaincodeInstalled Helper function to check if chaincode has been deployed
 func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool, error) {
 	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(peer)
@@ -75,13 +103,4 @@ func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool
 		}
 	}
 	return false, nil
-}
-
-// GetByteArgs is a utility which converts []string to [][]bytes
-func GetByteArgs(argsArray []string) [][]byte {
-	txArgs := make([][]byte, len(argsArray))
-	for i, val := range argsArray {
-		txArgs[i] = []byte(val)
-	}
-	return txArgs
 }

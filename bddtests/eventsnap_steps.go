@@ -19,6 +19,8 @@ import (
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
+var lastTxnID apitxn.TransactionID
+
 // EventSnapSteps ...
 type EventSnapSteps struct {
 	BDDContext *BDDContext

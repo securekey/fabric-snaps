@@ -14,6 +14,21 @@ bddtest:
 
 client:
 
+  # Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      queryResponse: 30s
+      executeTxResponse: 30s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 3s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 5s
+
   # Which organization does this application instance belong to? The value must be the name of an org
   # defined under "organizations"
   organization: peerorg1
@@ -96,20 +111,6 @@ channels:
         ledgerQuery: true
         eventSource: true
 
-# Global configuration for peer, event service and orderer timeouts
-  peer:
-    timeout:
-      connection: 3s
-      queryResponse: 30s
-      executeTxResponse: 30s
-  eventService:
-    timeout:
-      connection: 3s
-      registrationResponse: 3s
-  orderer:
-    timeout:
-      connection: 3s
-      response: 5s
 
 orderers:
   orderer.example.com:
