@@ -31,6 +31,9 @@ CLI Required Args:
 	MD2WithRSA, MD5WithRSA, SHA1WithRSA, SHA256WithRSA, SHA384WithRSA, SHA512WithRSA
 	DSAWithSHA1, DSAWithSHA256, ECDSAWithSHA1, ECDSAWithSHA256, ECDSAWithSHA384
 	ECDSAWithSHA512, SHA256WithRSAPSS, SHA384WithRSAPSS, SHA512WithRSAPSS)
+
+-csrCommonName (string)
+
 `
 
 var keyOpts = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024", "RSA2048", "RSA3072", "RSA4096"}
@@ -41,7 +44,7 @@ var sigAlgOpts = []string{"MD2WithRSA", "MD5WithRSA", "SHA1WithRSA",
 
 const examples = `
 - Generate CSR by running command:
-    $ ./configcli generateCSR --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel  --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --keyType ECDSA  --ephemeral false  --sigAlg ECDSAWithSHA512
+    $ ./configcli generateCSR --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel  --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --keyType ECDSA  --ephemeral false  --sigAlg ECDSAWithSHA512 --csrCommonName certcommonname1234567
 `
 
 // Cmd returns the Query command
@@ -57,7 +60,7 @@ func newCmd(baseAction action.Action) *cobra.Command {
 	validArgs := []string{"keyType", "ephemeral", "sigAlg", "user", "peer", "peerurl", "configfile", "clientconfig"}
 	cmd := &cobra.Command{
 		Use:       "generateCSR",
-		Short:     "Generate CSR: mandatory flags are: 'keyType', 'ephemeral' and 'sigAlg'",
+		Short:     "Generate CSR: mandatory flags are: 'keyType', 'ephemeral' ,'sigAlg','csrCommonName'",
 		Long:      description,
 		Example:   examples,
 		ValidArgs: validArgs,
@@ -77,7 +80,7 @@ func newCmd(baseAction action.Action) *cobra.Command {
 	cliconfig.InitKeyType(flags)
 	cliconfig.InitEphemeralFlag(flags)
 	cliconfig.InitSigAlg(flags)
-
+	cliconfig.InitCSRCommonName(flags)
 	return cmd
 }
 
@@ -111,7 +114,12 @@ func (a *queryAction) generateCSR() error {
 	if !b {
 		return errors.Errorf("Unsuported signature algorithm %s ", sigAlg)
 	}
-	args := [][]byte{[]byte(keyType), []byte([]byte(ephemeralstr)), []byte(sigAlg)}
+	csrCommonName := cliconfig.Config().CSRCommonName()
+	if csrCommonName == "" {
+		return errors.Errorf("csrCommonName is mandatory field")
+	}
+
+	args := [][]byte{[]byte(keyType), []byte([]byte(ephemeralstr)), []byte(sigAlg), []byte(csrCommonName)}
 
 	cliconfig.Config().Logger().Debugf("Using generate csr args: %v\n", args)
 	//invoke configuration snap -function name: 'generateCSR'

@@ -20,30 +20,40 @@ const (
 )
 
 func TestValidRequestParameters(t *testing.T) {
-	execute(t, false, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512")
+	execute(t, false, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "something")
 }
 
 func TestAnEmptyKey(t *testing.T) {
 	//key type is mandatory field
-	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512")
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "something")
 }
 
 func TestInvalidKey(t *testing.T) {
 	//key type is mandatory field
-	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "FAKE", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512")
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "FAKE", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "something")
 }
 func TestInvalidEphemeralFlag(t *testing.T) {
 	//ephemeral flag should be set
-	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "", "--ephemeral", "false-FAKE", "--sigAlg", "ECDSAWithSHA512")
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "", "--ephemeral", "false-FAKE", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "something")
 }
 
 func TestAnEmptySigAlg(t *testing.T) {
-	//ephemeral flag should be set
-	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "")
+	//SigAlg flag should be set
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "", "--csrCommonName", "something")
 }
 func TestInvalidSigAlg(t *testing.T) {
-	//ephemeral flag should be set
-	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ABC")
+	//SigAlg flag should be set
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ABC", "--csrCommonName", "something")
+}
+
+func TestValidCSRName(t *testing.T) {
+	//csr common name flag should be set
+	execute(t, false, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "something")
+}
+
+func TestInValidCSRName(t *testing.T) {
+	//csr common name flag should be set
+	execute(t, true, nil, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--keyType", "ECDSA", "--ephemeral", "false", "--sigAlg", "ECDSAWithSHA512", "--csrCommonName", "")
 }
 
 func execute(t *testing.T, expectError bool, response []byte, args ...string) {

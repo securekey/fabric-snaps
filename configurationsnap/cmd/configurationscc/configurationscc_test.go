@@ -48,11 +48,10 @@ func TestInit(t *testing.T) {
 func TestInvoke(t *testing.T) {
 
 	stub := newMockStub(nil, nil)
-
 	testInvalidFunctionName(t, stub)
 
 	testHealthcheck(t, stub)
-	testGenerateCSR(t, stub)
+
 }
 
 func testInvalidFunctionName(t *testing.T, stub *mockstub.MockStub) {
@@ -71,24 +70,30 @@ func testInvalidFunctionName(t *testing.T, stub *mockstub.MockStub) {
 
 }
 
-func testGenerateCSR(t *testing.T, stub *mockstub.MockStub) {
+func TestGenerateCSR(t *testing.T) {
+	stub := newMockStub(nil, nil)
 	peerConfigPath = "./sampleconfig"
 	// configuration Scc call generateCSR
-	echoBytes, err := invoke(stub, [][]byte{[]byte("generateCSR")})
+	_, err := invoke(stub, [][]byte{[]byte("generateCSR")})
 	if err == nil {
 		t.Fatalf("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
 	}
-	echoBytes, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("keyType"), []byte("false"), []byte("sigalg")})
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"),
+		[]byte("keyType"), []byte("false"), []byte("sigalg"), []byte("CSRCommoName")})
 	if err == nil {
 		t.Fatalf("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
 	}
 
-	echoBytes, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA")})
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
 	if err == nil {
 		t.Fatalf("Expected: 'Could not initialize BCCSP'")
 	}
 
-	logger.Infof("Message received from healthcheck: %s", echoBytes)
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
+	if err == nil {
+		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+	}
+
 }
 func testHealthcheck(t *testing.T, stub *mockstub.MockStub) {
 	// configuration Scc healthcheck call
@@ -412,11 +417,34 @@ func TestGenerateKeyArgs(t *testing.T) {
 
 }
 func TestGetCSRSubject(t *testing.T) {
+	stub := newMockStub(nil, nil)
 	peerConfigPath = "./sampleconfig"
-	raw, err := getCSRSubject("testChannel")
+	raw, err := getCSRSubject("testChannel", "CSRCommonName")
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
+	peerConfigPath = "./sampleconfig"
+	// configuration Scc call generateCSR
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR")})
+	if err == nil {
+		t.Fatalf("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
+	}
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"),
+		[]byte("keyType"), []byte("false"), []byte("sigalg"), []byte("CSRCommoName")})
+	if err == nil {
+		t.Fatalf("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
+	}
+
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
+	if err == nil {
+		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+	}
+
+	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
+	if err == nil {
+		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+	}
+
 	csr := pem.EncodeToMemory(&pem.Block{
 		Type: "CERTIFICATE REQUEST", Bytes: raw,
 	})
@@ -427,7 +455,7 @@ func TestGetCSRSubject(t *testing.T) {
 	}
 
 }
-func TestGetBCCSPAndKeyPair(t *testing.T) {
+func testGetBCCSPAndKeyPair(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	_, _, err := getBCCSPAndKeyPair("", nil)
 	if err == nil {
@@ -439,7 +467,7 @@ func TestGetBCCSPAndKeyPair(t *testing.T) {
 	}
 }
 
-func TestGenerateKeyWithOpts(t *testing.T) {
+func testGenerateKeyWithOpts(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	rsp := generateKeyWithOpts("", nil)
 	if rsp.Message == "" {
@@ -456,27 +484,27 @@ func TestGenerateKeyWithOpts(t *testing.T) {
 	}
 }
 
-func TestGetCSRTemplate(t *testing.T) {
+func testGetCSRTemplate(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
-	_, err := getCSRTemplate("", nil, "ECDSA", "ECDSAWithSHA1")
+	_, err := getCSRTemplate("", nil, "ECDSA", "ECDSAWithSHA1", "CommonName")
 	if err == nil {
 		t.Fatalf("Expected error: 'Cannot obtain ledger for channel")
 	}
-	_, err = getCSRTemplate("testChannel", nil, "", "ECDSAWithSHA1")
+	_, err = getCSRTemplate("testChannel", nil, "", "ECDSAWithSHA1", "CommonName")
 	if err == nil {
 		t.Fatalf("Expected error: 'Invalid key ")
 	}
-	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "ECDSAWithSHA1")
+	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "ECDSAWithSHA1", "CommonName")
 	if err == nil {
 		t.Fatalf("Expected error: 'Invalid key ")
 	}
-	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "FAKE")
+	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "FAKE", "CommonName")
 	if err == nil {
 		t.Fatalf("Expected error: 'Alg not supported,")
 	}
 }
 
-func TestGetPublicKeyAlg(t *testing.T) {
+func testGetPublicKeyAlg(t *testing.T) {
 
 	peerConfigPath = "./sampleconfig"
 	_, err := getPublicKeyAlg("FAKE")
@@ -497,7 +525,7 @@ func TestGetPublicKeyAlg(t *testing.T) {
 	}
 }
 
-func TestGetCSRConfig(t *testing.T) {
+func testGetCSRConfig(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	cfg, err := getCSRConfig("testChannel", peerConfigPath)
 	if err != nil {
@@ -540,7 +568,7 @@ func TestGetCSRConfig(t *testing.T) {
 	}
 
 }
-func TestGetSignatureAlg(t *testing.T) {
+func testGetSignatureAlg(t *testing.T) {
 
 	_, err := getSignatureAlg("ECDSAWithSHA256")
 	if err != nil {
@@ -618,7 +646,7 @@ func TestGetSignatureAlg(t *testing.T) {
 
 }
 
-func TestGetKeyOpts(t *testing.T) {
+func testGetKeyOpts(t *testing.T) {
 	key, err := getKeyOpts("ECDSA", false)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -684,12 +712,12 @@ func TestGetKeyOpts(t *testing.T) {
 
 }
 
-func TestNew(t *testing.T) {
+func testNew(t *testing.T) {
 	ccsnap := New()
 	assert.NotNil(t, ccsnap, "ccsnap should not be nil")
 
 }
-func TestConversion(t *testing.T) {
+func testConversion(t *testing.T) {
 	key := api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName"}
 	c := api.ConfigKV{Key: key, Value: []byte("whatever")}
 	key1 := api.ConfigKey{MspID: "Org1MSP", PeerID: "peerwo", AppName: "AppNameTwo"}
@@ -740,7 +768,7 @@ func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message []byte) err
 }
 
 func TestMain(m *testing.M) {
-
+	fmt.Printf("****IN test main****")
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
