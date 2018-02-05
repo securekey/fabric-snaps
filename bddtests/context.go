@@ -159,7 +159,7 @@ func initializeFactory() error {
 	alg := cViper.GetString("client.BCCSP.Security.HashAlgorithm")
 	pin := cViper.GetString("client.BCCSP.Security.Pin")
 	label := cViper.GetString("client.BCCSP.Security.Label")
-	logger.Debugf("Configured BCCSP provider \nlib %s \npin %s \nlabel %s", lib, pin, label)
+	logger.Debugf("Configured BCCSP provider \nlib [%s] \npin [%s] \nlabel [%s]", lib, pin, label)
 
 	switch configuredProvider {
 	case "PKCS11":

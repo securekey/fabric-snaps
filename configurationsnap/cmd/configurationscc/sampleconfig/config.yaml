@@ -10,19 +10,6 @@ configsnap:
 cache:
     refreshInterval: 5s
 
-BCCSP:
-  Security:
-    Provider: "PKCS11"
-    HashAlgorithm: "SHA2"
-    Ephemeral: false
-    Level: 256
-    Pin: "98765432"
-    Label: "SkLogs"
-    Library: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so, /usr/lib/softhsm/libsofthsm2.so ,/usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so, /usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so, /usr/local/Cellar/softhsm/2.1.0/lib/softhsm/libsofthsm2.so"
-    KeystorePath: "/"
-    Config:
-     {"key":"a"} 
-
 csr:
   cn: sk-server
   names:

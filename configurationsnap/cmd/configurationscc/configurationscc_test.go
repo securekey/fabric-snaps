@@ -355,43 +355,6 @@ func TestSaveConfigurationsWithBogusPayload(t *testing.T) {
 	}
 
 }
-func TestGettingBCCSP(t *testing.T) {
-
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
-	x := configmgmtService.GetInstance()
-	instance := x.(*configmgmtService.ConfigServiceImpl)
-
-	csconfig, err := instance.GetViper("testChannel", configKey, api.YAML)
-	if err != nil {
-		t.Fatalf("Expected: Getting channel cache from ledge ")
-	}
-
-	provider := csconfig.GetString("BCCSP.security.provider")
-	if provider == "" {
-		t.Fatalf("Expected: provider")
-	}
-	bccspHashAlg := csconfig.GetString("BCCSP.security.hashAlgorithm")
-	if bccspHashAlg == "" {
-		t.Fatalf("Expected: provider")
-	}
-	level := csconfig.GetInt("BCCSP.security.level")
-	if level == 0 {
-		t.Fatalf("Expected: level")
-	}
-	pin := csconfig.GetString("BCCSP.security.pin")
-	if pin == "" {
-		t.Fatalf("Expected: pin")
-	}
-
-	label := csconfig.GetString("BCCSP.security.label")
-	if label == "" {
-		t.Fatalf("Expected: label")
-	}
-	lib := csconfig.GetString("BCCSP.security.library")
-	if lib == "" {
-		t.Fatalf("Expected: lib")
-	}
-}
 
 func TestGenerateKeyArgs(t *testing.T) {
 

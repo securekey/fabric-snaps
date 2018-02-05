@@ -12,6 +12,7 @@ import (
 	"encoding/asn1"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -369,21 +370,17 @@ func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, b
 		return bccspsuite, k, errors.New(errors.GeneralError, "The key gen option is required")
 	}
 
-	cfgopts, err := config.GetBCCSPOpts(channelID, peerConfigPath)
+	bccspProvider, err := config.GetBCCSPProvider(peerConfigPath)
 	if err != nil {
 		return bccspsuite, k, err
 	}
-
-	logger.Debugf("BCCSP Plugin option config map %v", cfgopts)
-	//just once - initialize factory with options
-	//if factory was already initialized this call will be ignored
-	factory.InitFactories(cfgopts)
-	logger.Debugf("****Passing opts %s %v", cfgopts.ProviderName, cfgopts)
-	bccspsuite, err = factory.GetBCCSPFromOpts(cfgopts)
+	logger.Debugf("***Configured BCCSP provider's ID is %s", bccspProvider)
+	bccspsuite, err = factory.GetBCCSP(bccspProvider)
 	if err != nil {
-		logger.Debugf("Error initializing with options %s %s %s ", cfgopts.Pkcs11Opts.Library, cfgopts.Pkcs11Opts.Pin, cfgopts.Pkcs11Opts.Label)
+		logger.Debugf("Error getting BCCSP based on provider ID %s %v", bccspProvider, err)
 		return bccspsuite, k, errors.Wrap(errors.GeneralError, err, "BCCSP Initialize failed")
 	}
+	logger.Debugf("***Configured BCCSP provider is %s", reflect.TypeOf(bccspsuite))
 	k, err = bccspsuite.KeyGen(opts)
 	if err != nil {
 		return bccspsuite, k, errors.Wrap(errors.GeneralError, err, "Key Gen failed")

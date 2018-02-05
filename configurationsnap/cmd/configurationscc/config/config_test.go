@@ -78,11 +78,43 @@ func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
-func TestFindPKCSLib(t *testing.T) {
 
-	lib := FindPKCS11Lib("lib1")
-	if lib != "" {
-		t.Fatalf("Expected empty lib")
+func TestGetBCCSPProvider(t *testing.T) {
+	csrCfg, err := GetBCCSPProvider("")
+	if err == nil {
+		t.Fatalf("Expected error ")
+	}
+	csrCfg, err = GetBCCSPProvider("../sampleconfig")
+	if err != nil {
+		t.Fatalf("Got error while getting BCCSP provider %v", err)
+	}
+	if csrCfg == "" {
+		t.Fatalf("BCCSP provider is not set")
+	}
+}
+
+func TestGetDefaultRefreshInterval(t *testing.T) {
+	csrCfg := GetDefaultRefreshInterval()
+	if csrCfg == 0 {
+		t.Fatalf("The default refresh interval is not set")
+	}
+}
+
+func TestGetPeerID(t *testing.T) {
+	peerID, err := GetPeerID("")
+	if err == nil {
+		t.Fatalf("Expected error")
+	}
+	peerID, err = GetPeerID("../sampleconfig")
+	if peerID == "" {
+		t.Fatalf("Expected peer ID")
+	}
+}
+
+func TestGetMinimumRefreshInterval(t *testing.T) {
+	csrCfg := GetMinimumRefreshInterval()
+	if csrCfg == 0 {
+		t.Fatalf("The default refresh interval is not set")
 	}
 }
 
