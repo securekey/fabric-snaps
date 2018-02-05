@@ -78,13 +78,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(m.Run())
 }
-func TestFindPKCSLib(t *testing.T) {
-
-	lib := FindPKCS11Lib("lib1")
-	if lib != "" {
-		t.Fatalf("Expected empty lib")
-	}
-}
 
 func TestCSROptions(t *testing.T) {
 
