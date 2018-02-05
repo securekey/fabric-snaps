@@ -288,9 +288,10 @@ peer:
         Security: 256
         # Location of Key Store
         FileKeyStore:
-        # If "", defaults to 'mspConfigPath'/keystore
-        # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
-          KeyStore:
+          # If "", defaults to 'mspConfigPath'/keystore
+          # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
+          KeyStore: "/etc/hyperledger/msp/peer/keystore"
+
       PKCS11:
         # TODO: The default Hash and Security level needs refactoring to be
         # fully configurable. Changing these defaults requires coordination
