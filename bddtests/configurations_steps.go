@@ -114,8 +114,8 @@ func (c *ConfigurationsSnapSteps) checkKeyGenResponse(ccID string, expectedKeyTy
 }
 
 func (c *ConfigurationsSnapSteps) registerSteps(s *godog.Suite) {
-	s.BeforeScenario(c.BDDContext.beforeScenario)
-	s.AfterScenario(c.BDDContext.afterScenario)
+	s.BeforeScenario(c.BDDContext.BeforeScenario)
+	s.AfterScenario(c.BDDContext.AfterScenario)
 	s.Step(`^response from "([^"]*)" to client C1 has key and key type is "([^"]*)" on p0$`, c.checkKeyGenResponse)
 	s.Step(`^response from "([^"]*)" to client C1 has CSR on p0$`, c.checkCSR)
 }
