@@ -248,7 +248,7 @@ func TestMain(m *testing.M) {
 			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "../sampleconfig/msp/keystore"},
 		},
 	}
-	// TDOD
+	// TODO
 	bccspFactory.InitFactories(opts)
 
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
