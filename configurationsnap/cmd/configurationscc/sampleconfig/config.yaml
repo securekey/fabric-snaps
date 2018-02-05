@@ -13,10 +13,10 @@ cache:
 csr:
   cn: sk-server
   names:
-    Country: Canada        #Country
-    StateProvince: "Yonge" #street
+    Country: "CA"        #Country
+    StateProvince: "ON"  #Province
     Locality: "TO"         #locality
-    Org: SK                #organization
+    Org: "SK"                #organization
     OrgUnit: Fabric-Snaps  #org unit
   alternativenames:
     DNSNames:

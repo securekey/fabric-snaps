@@ -11,11 +11,11 @@ import (
 	"errors"
 	"fmt"
 
-	"os"
 	"strings"
 
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/pkcs11"
+	"github.com/hyperledger/fabric/common/viperutil"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/spf13/viper"
@@ -27,6 +27,9 @@ const (
 	peerConfigFileName = "core"
 	peerConfigPath     = "/etc/hyperledger/fabric"
 	cmdRootPrefix      = "core"
+	envLabel           = "CORE_PEER_BCCSP_PKCS11_LABEL"
+	envPin             = "CORE_PEER_BCCSP_PKCS11_PIN"
+	envLib             = "CORE_PEER_BCCSP_PKCS11_LIBRARY"
 )
 
 var encryptLogging bool
@@ -42,7 +45,7 @@ type BootstrapSnap struct {
 
 // Init snap
 func (bootstrapSnap *BootstrapSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-
+	fmt.Printf("################## Bootstrap CC ###############")
 	err := bootstrapSnap.initBCCSP()
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to initialize bootstrap snap. Error : %v", err))
@@ -68,21 +71,25 @@ func (bootstrapSnap *BootstrapSnap) initBCCSP() error {
 	if err != nil {
 		return err
 	}
-
-	configuredProvider := peerConfig.GetString("peer.BCCSP.Default")
-	if configuredProvider == "" {
-		return errors.New("BCCSP Default provider not found")
+	//get peer BCCSP config
+	var bccspConfig *factory.FactoryOpts
+	err = viperutil.EnhancedExactUnmarshalKey("peer.BCCSP", &bccspConfig)
+	if err != nil {
+		return errors.New(err.Error())
 	}
+	logger.Debugf("BCCSP config from unmarshaller-Provider %v ", bccspConfig.ProviderName)
+	logger.Debugf("BCCSP Lib %v", bccspConfig.Pkcs11Opts.Library)
+	logger.Debugf("BCCSP Pin %v", bccspConfig.Pkcs11Opts.Pin)
+	logger.Debugf("BCCSP Label %v", bccspConfig.Pkcs11Opts.Label)
+	configuredProvider := bccspConfig.ProviderName
+	level := bccspConfig.Pkcs11Opts.SecLevel
+	hashFamily := bccspConfig.Pkcs11Opts.HashFamily
+	ksPath := bccspConfig.Pkcs11Opts.FileKeystore.KeyStorePath
+	pin := bccspConfig.Pkcs11Opts.Pin
+	label := bccspConfig.Pkcs11Opts.Label
+	lib := bccspConfig.Pkcs11Opts.Library
 
-	level := peerConfig.GetInt(fmt.Sprintf("peer.BCCSP.%s.Security", configuredProvider))
-	hashFamily := peerConfig.GetString(fmt.Sprintf("peer.BCCSP.%s.Hash", configuredProvider))
-	ksPath := peerConfig.GetString(fmt.Sprintf("peer.BCCSP.%s.FileKeyStore.KeyStore", configuredProvider))
-
-	pin := peerConfig.GetString(fmt.Sprintf("peer.BCCSP.%s.Pin", configuredProvider))
-	label := peerConfig.GetString(fmt.Sprintf("peer.BCCSP.%s.Label", configuredProvider))
-	lib := FindPKCS11Lib(peerConfig.GetString(fmt.Sprintf("peer.BCCSP.%s.Library", configuredProvider)))
-
-	logger.Debug("Configured BCCSP provider '%s' \nlib: %s \npin: %s \nlabel: %s\n keystore: %s\n", configuredProvider, lib, pin, label, ksPath)
+	logger.Debug("Bootstrap Configured BCCSP provider '%s' \nlib: %s \npin: %s \nlabel: %s\n keystore: %s\n", configuredProvider, lib, pin, label, ksPath)
 
 	var opts *factory.FactoryOpts
 	switch configuredProvider {
@@ -114,24 +121,6 @@ func (bootstrapSnap *BootstrapSnap) initBCCSP() error {
 		return errors.New("Unsupported PKCS11 provider")
 	}
 	return factory.InitFactories(opts)
-}
-
-//FindPKCS11Lib find lib based on configuration
-func FindPKCS11Lib(configuredLib string) string {
-	logger.Debugf("PKCS library configurations paths  %s ", configuredLib)
-	var lib string
-	if configuredLib != "" {
-		possibilities := strings.Split(configuredLib, ",")
-		for _, path := range possibilities {
-			trimpath := strings.TrimSpace(path)
-			if _, err := os.Stat(trimpath); !os.IsNotExist(err) {
-				lib = trimpath
-				break
-			}
-		}
-	}
-	logger.Debugf("Found pkcs library '%s'", lib)
-	return lib
 }
 
 func main() {

@@ -280,7 +280,7 @@ peer:
     # library to use. To use with HSM set default to PKCS11 and uncomment
     # PKCS11 config below
     BCCSP:
-      Default: SW
+      Default: PKCS11
       SW:
         # TODO: The default Hash and Security level needs refactoring to be
         # fully configurable. Changing these defaults requires coordination
@@ -293,20 +293,20 @@ peer:
           # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
           KeyStore: "/etc/hyperledger/msp/peer/keystore"
 
-      #PKCS11:
+      PKCS11:
         # TODO: The default Hash and Security level needs refactoring to be
         # fully configurable. Changing these defaults requires coordination
         # SHA2 is hardcoded in several places, not only BCCSP
-       # Hash: SHA2
-       # Security: 256
-       # Level: 256
-       # Pin: "98765432"
-       # Label: "ForFabric"
-       # Library: "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so"
+        Hash: SHA2
+        Security: 256
+        Level: 256
+        Pin: 
+        Label: 
+        Library: 
         # Location of Key Store
-       # FileKeyStore:
-       #   # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
-       #  KeyStore: "/etc/hyperledger/msp/peer/keystore"
+        FileKeyStore:
+          # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
+          KeyStore: "/etc/hyperledger/msp/peer/keystore"
 
     # Path on the file system where peer will find MSP local configurations
     mspConfigPath: msp
