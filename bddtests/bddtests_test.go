@@ -85,8 +85,7 @@ func TestMain(m *testing.M) {
 }
 
 func FeatureContext(s *godog.Suite) {
-
-	context, err := NewBDDContext()
+	context, err := NewBDDContext([]string{"peerorg1"}, []string{"ordererorg"})
 	if err != nil {
 		panic(fmt.Sprintf("ERROR return from NewBDDContext: %v" + err.Error()))
 	}

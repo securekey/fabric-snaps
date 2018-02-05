@@ -59,7 +59,7 @@ func (f *registerTxFilter) ProcessTxProposalResponse(txProposalResponses []*apit
 func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArgs string) error {
 	args := strings.Split(strArgs, ",")
 
-	chClient, err := t.BDDContext.clients[t.BDDContext.Org1User].Channel(channelID)
+	chClient, err := t.BDDContext.OrgClient(t.BDDContext.Orgs()[0], USER).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("NewChannelClient returned error: %v", err)
 	}
@@ -90,7 +90,7 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 
 func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...string) error {
 
-	chClient, err := ctx.clients[ctx.Org1User].Channel(channelID)
+	chClient, err := ctx.OrgClient(ctx.Orgs()[0], USER).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("NewChannelClient returned error: %v", err)
 	}
