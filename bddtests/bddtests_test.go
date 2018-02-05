@@ -85,14 +85,18 @@ func TestMain(m *testing.M) {
 }
 
 func FeatureContext(s *godog.Suite) {
-	context, err := NewBDDContext([]string{"peerorg1"}, []string{"ordererorg"})
+	//TODO temp solution to get peer id and msp id
+	peersMspID := make(map[string]string)
+	peersMspID["peer0.org1.example.com"] = "Org1MSP"
+	context, err := NewBDDContext([]string{"peerorg1"}, []string{"ordererorg"}, "./fixtures/clientconfig/",
+		"config.yaml", "./fixtures/config/snaps/", peersMspID, "./fixtures")
 	if err != nil {
 		panic(fmt.Sprintf("ERROR return from NewBDDContext: %v" + err.Error()))
 	}
 
 	// Context is shared between tests - for now
 	// Note: Each test after NewcommonSteps. should add unique steps only
-	NewCommonSteps(context).registerSteps(s)
+	NewCommonSteps(context).RegisterSteps(s)
 	NewEventSnapSteps(context).registerSteps(s)
 	NewConfigurationsSnapSteps(context).registerSteps(s)
 

@@ -300,8 +300,8 @@ func getTxEvents(jsonstr string) ([]*eventapi.TxStatusEvent, error) {
 }
 
 func (t *EventSnapSteps) registerSteps(s *godog.Suite) {
-	s.BeforeScenario(t.BDDContext.beforeScenario)
-	s.AfterScenario(t.BDDContext.afterScenario)
+	s.BeforeScenario(t.BDDContext.BeforeScenario)
+	s.AfterScenario(t.BDDContext.AfterScenario)
 	s.Step(`^client C1 queries for block events on channel "([^"]*)"$`, t.getBlockEvents)
 	s.Step(`^client C1 queries for filtered block events on channel "([^"]*)"$`, t.getFilteredBlockEvents)
 	s.Step(`^client C1 queries for chaincode events on channel "([^"]*)"$`, t.getCCEvents)

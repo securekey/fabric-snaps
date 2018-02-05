@@ -31,19 +31,23 @@ var USER = "user"
 
 // BDDContext ...
 type BDDContext struct {
-	composition       *Composition
-	clientConfig      apiconfig.Config
-	mutex             sync.RWMutex
-	sdk               *fabsdk.FabricSDK
-	orgs              []string
-	orderers          []string
-	peersByChannel    map[string][]*PeerConfig
-	orgsByChannel     map[string][]string
-	collectionConfigs map[string]*CollectionConfig
-	clients           map[string]*fabsdk.Client
-	resourceClients   map[string]sdkApi.Resource
-	users             map[string]sdkApi.IdentityContext
-	primaryPeer       sdkApi.Peer
+	composition          *Composition
+	clientConfig         apiconfig.Config
+	mutex                sync.RWMutex
+	sdk                  *fabsdk.FabricSDK
+	orgs                 []string
+	orderers             []string
+	peersByChannel       map[string][]*PeerConfig
+	orgsByChannel        map[string][]string
+	collectionConfigs    map[string]*CollectionConfig
+	clients              map[string]*fabsdk.Client
+	resourceClients      map[string]sdkApi.Resource
+	users                map[string]sdkApi.IdentityContext
+	peersMspID           map[string]string
+	clientConfigFilePath string
+	clientConfigFileName string
+	snapsConfigFilePath  string
+	testCCPath           string
 }
 
 // PeerConfig holds the peer configuration and org ID
@@ -63,30 +67,35 @@ type CollectionConfig struct {
 }
 
 // NewBDDContext create new BDDContext
-func NewBDDContext(orgs []string, orderers []string) (*BDDContext, error) {
+func NewBDDContext(orgs []string, orderers []string, clientConfigFilePath string, clientConfigFileName string,
+	snapsConfigFilePath string, peersMspID map[string]string, testCCPath string) (*BDDContext, error) {
 	instance := BDDContext{
-		orgs:              orgs,
-		orderers:          orderers,
-		peersByChannel:    make(map[string][]*PeerConfig),
-		users:             make(map[string]sdkApi.IdentityContext),
-		orgsByChannel:     make(map[string][]string),
-		resourceClients:   make(map[string]sdkApi.Resource),
-		clients:           make(map[string]*fabsdk.Client),
-		collectionConfigs: make(map[string]*CollectionConfig),
+		orgs:                 orgs,
+		orderers:             orderers,
+		peersByChannel:       make(map[string][]*PeerConfig),
+		users:                make(map[string]sdkApi.IdentityContext),
+		orgsByChannel:        make(map[string][]string),
+		resourceClients:      make(map[string]sdkApi.Resource),
+		clients:              make(map[string]*fabsdk.Client),
+		collectionConfigs:    make(map[string]*CollectionConfig),
+		clientConfigFilePath: clientConfigFilePath,
+		clientConfigFileName: clientConfigFileName,
+		snapsConfigFilePath:  snapsConfigFilePath,
+		peersMspID:           peersMspID,
+		testCCPath:           testCCPath,
 	}
 	return &instance, nil
 }
 
-func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
+// BeforeScenario execute code before bdd scenario
+func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 	//to initialize BCCSP factory based on config options
-	if err := initializeFactory(); err != nil {
+	if err := initializeFactory(b.clientConfigFilePath); err != nil {
 		panic(fmt.Sprintf("Failed to initialize BCCSP factory %v", err))
 	}
 
-	confileFilePath := "./fixtures/clientconfig/config.yaml"
-
 	//TODO: hardcoded DefaultCryptoSuiteProviderFactory to SW, should be dynamic based on bccsp provider type (DEV-5240)
-	sdk, err := fabsdk.New(config.FromFile(confileFilePath), fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{ProviderName: "SW"}))
+	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath+b.clientConfigFileName), fabsdk.WithCorePkg(&factories.DefaultCryptoSuiteProviderFactory{ProviderName: "SW"}))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
@@ -133,17 +142,19 @@ func (b *BDDContext) beforeScenario(scenarioOrScenarioOutline interface{}) {
 	}
 
 }
-func (b *BDDContext) afterScenario(interface{}, error) {
+
+// AfterScenario execute code after bdd scenario
+func (b *BDDContext) AfterScenario(interface{}, error) {
 	// Holder for common functionality
 
 }
 
-func initializeFactory() error {
+func initializeFactory(clientConfigFilePath string) error {
 	//read BCCSP config from client config file and intiailize BCCSP factory
 	//this test does not support the PLUGIN option
 	cViper := viper.New()
 	cViper.SetConfigType("yaml")
-	cViper.AddConfigPath("./fixtures/clientconfig")
+	cViper.AddConfigPath(clientConfigFilePath)
 	viper.SetConfigName("config")
 	viper.SetEnvPrefix("core")
 	cViper.AutomaticEnv()
@@ -267,6 +278,11 @@ func (b *BDDContext) OrgUser(org, userType string) sdkApi.IdentityContext {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	return b.users[fmt.Sprintf("%s_%s", org, userType)]
+}
+
+// ClientConfig returns client config
+func (b *BDDContext) ClientConfig() apiconfig.Config {
+	return b.clientConfig
 }
 
 // AddPeerConfigToChannel adds a peer to a channel
