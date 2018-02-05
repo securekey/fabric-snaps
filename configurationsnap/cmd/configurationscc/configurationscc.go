@@ -209,8 +209,8 @@ func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte) pb.Respons
 //third  arg: signature algorithm (one of x509.SignatureAlgorithm)
 func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	//check args
-	if len(args) < 3 {
-		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag and CSR's signature algorithm"))
+	if len(args) < 4 {
+		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag, CSR's signature algorithm and common name"))
 	}
 	keyType := string(args[0])
 	ephemeral, err := strconv.ParseBool(string(args[1]))
@@ -218,6 +218,7 @@ func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		return shim.Error(fmt.Sprintf("Ephemeral flag is not set"))
 	}
 	sigAlgType := string(args[2])
+	csrCommonName := string(args[3])
 	//get requested key options
 	options, err := getKeyOpts(keyType, ephemeral)
 	if err != nil {
@@ -228,7 +229,7 @@ func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	csrTemplate, err := getCSRTemplate(stub.GetChannelID(), keys, keyType, sigAlgType)
+	csrTemplate, err := getCSRTemplate(stub.GetChannelID(), keys, keyType, sigAlgType, csrCommonName)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -247,14 +248,15 @@ func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 }
 
-func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType string) (x509.CertificateRequest, error) {
+func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType string, csrCommonName string) (x509.CertificateRequest, error) {
+
 	var csrTemplate x509.CertificateRequest
 	sigAlg, err := getSignatureAlg(sigAlgType)
 	if err != nil {
 		return csrTemplate, err
 	}
 	//generate subject for CSR
-	asn1Subj, err := getCSRSubject(channelID)
+	asn1Subj, err := getCSRSubject(channelID, csrCommonName)
 	if err != nil {
 		return csrTemplate, err
 	}
@@ -293,7 +295,7 @@ func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType
 
 }
 
-func getCSRSubject(channelID string) ([]byte, error) {
+func getCSRSubject(channelID string, csrCommonName string) ([]byte, error) {
 	if channelID == "" {
 		return nil, errors.Errorf(errors.GeneralError, "Channel is required")
 	}
@@ -304,7 +306,7 @@ func getCSRSubject(channelID string) ([]byte, error) {
 	}
 	logger.Debugf("csrConfig options %v", csrConfig)
 	subj := pkix.Name{
-		CommonName:         csrConfig.CommonName,
+		CommonName:         csrCommonName,
 		Country:            []string{csrConfig.Country},
 		Province:           []string{csrConfig.StateProvince},
 		Locality:           []string{csrConfig.Locality},

@@ -98,6 +98,9 @@ const (
 
 	sigAlg            = "sigAlg"
 	sigAlgDescription = "Signature Algorithm used to generate CSR"
+
+	csrCommonName     = "csrCommonName"
+	csrCommonNameDesc = "CSR common name"
 )
 
 var opts *options
@@ -123,6 +126,7 @@ type options struct {
 	keyType          string
 	ephemeralFlag    string
 	sigAlg           string
+	csrCommonName    string
 }
 
 func init() {
@@ -293,6 +297,16 @@ func (c *CLIConfig) SigAlg() string {
 // InitSigAlg initializes the signature algorithm from the provided arguments
 func InitSigAlg(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.sigAlg, sigAlg, "", sigAlgDescription)
+}
+
+// CSRCommonName returns CSR common  name  (used in the config generteCSR command)
+func (c *CLIConfig) CSRCommonName() string {
+	return opts.csrCommonName
+}
+
+// InitCSRCommonName initializes the CSR common name field
+func InitCSRCommonName(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.csrCommonName, csrCommonName, "", csrCommonNameDesc)
 }
 
 // NoPrompt is true if the user does not want top be prompted to confirm an update or delete

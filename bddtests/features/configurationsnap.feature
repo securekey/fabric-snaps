@@ -26,6 +26,6 @@ Feature:  Test configuration snap Features
 	Scenario: Invoke Transaction Snap generateCSR and ECDSA function. Last argument in call is signature algorithm string
 		Given the channel "mychannel" is created and all peers have joined
         And client invokes configuration snap on channel "mychannel" to load "txnsnap,configurationsnap" configuration on all peers
-		And client queries chaincode "configurationsnap" with args "generateCSR,ECDSA,false,ECDSAWithSHA1" on all peers in the "peerorg1" org on the "mychannel" channel
+		And client queries chaincode "configurationsnap" with args "generateCSR,ECDSA,false,ECDSAWithSHA1,csrCommonName" on all peers in the "peerorg1" org on the "mychannel" channel
         And response from "configurationsnap" to client C1 has CSR on p0
 

@@ -36,6 +36,17 @@ func TestConfigNoChannel(t *testing.T) {
 	checkString(t, "PeerID", config.PeerID, "peer1")
 }
 
+func TestInitializeLogging(t *testing.T) {
+	config, err := New("testChannel", "../sampleconfig")
+	if err != nil {
+		t.Fatalf("Error creating new config: %s", err)
+	}
+	err = config.initializeLogging()
+	if err != nil {
+		t.Fatalf("Error initializing logging: %s", err)
+	}
+}
+
 func checkString(t *testing.T, field string, value string, expectedValue string) {
 	if value != expectedValue {
 		t.Fatalf("Expecting [%s] for [%s] but got [%s]", expectedValue, field, value)
