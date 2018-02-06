@@ -85,13 +85,7 @@ func NewCredentialManager(orgName, mspConfigPath string, config apiconfig.Config
 		return nil, errors.New(errors.GeneralError, "either mspConfigPath or an embedded list of users is required")
 	}
 
-	if !filepath.IsAbs(mspConfigPath) {
-		cryptoConfPath := orgConfig.CryptoPath
-		if strings.HasPrefix(mspConfigPath, "../") && cryptoConfPath != "" { // for paths starting  with '../' trim the prefix so the following line joins the absolute path correctly
-			mspConfigPath = strings.Trim(mspConfigPath, "../")
-		}
-		mspConfigPath = filepath.Join(cryptoConfPath, mspConfigPath)
-	}
+	mspConfigPath = filepath.Join(orgConfig.CryptoPath, mspConfigPath)
 
 	return &credentialManager{orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
 }
@@ -147,14 +141,12 @@ func (mgr *credentialManager) getEnrollmentCert(userName string) ([]byte, error)
 		enrollmentCertBytes = []byte(certPem)
 	} else if certPath != "" {
 		enrollmentCertBytes, err = ioutil.ReadFile(certPath)
-
 		if err != nil {
 			return nil, errors.Wrap(errors.GeneralError, err, "reading enrollment cert path failed")
 		}
 	} else if mgr.certDir != "" {
 		enrollmentCertDir := strings.Replace(mgr.certDir, "{userName}", userName, -1)
 		enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
-
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "find enrollment cert path failed")
 		}
