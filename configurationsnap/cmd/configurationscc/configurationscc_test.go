@@ -95,6 +95,22 @@ func TestGenerateCSR(t *testing.T) {
 	}
 
 }
+
+func TestGetCSRTemplate(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
+	//	getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType string, csrCommonName string) (x509.CertificateRequest, error) {
+	_, err := getCSRTemplate("testChannel", nil, "ECDSA", "ECDSA", "csrCommonName")
+	if err == nil {
+		t.Fatalf("Expected: ' Alg is not supported'")
+	}
+	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "ECDSAWithSHA1", "csrCommonName")
+	if err == nil {
+		t.Fatalf("Expected 'Error Invalid key'")
+	}
+
+}
+
 func testHealthcheck(t *testing.T, stub *mockstub.MockStub) {
 	// configuration Scc healthcheck call
 	echoBytes, err := invoke(stub, [][]byte{[]byte("healthCheck")})
@@ -418,7 +434,8 @@ func TestGetCSRSubject(t *testing.T) {
 	}
 
 }
-func testGetBCCSPAndKeyPair(t *testing.T) {
+func TestGetBCCSPAndKeyPair(t *testing.T) {
+
 	peerConfigPath = "./sampleconfig"
 	_, _, err := getBCCSPAndKeyPair("", nil)
 	if err == nil {
