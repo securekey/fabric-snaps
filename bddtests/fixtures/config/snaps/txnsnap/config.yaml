@@ -15,7 +15,7 @@ txnsnap:
   # Endorsement options
   endorsement:
     # maxAttempts is the number of attempts that should be made
-    # until a successfull endorsement is received from all endorsers
+    # until a successful endorsement is received from all endorsers
     maxattempts: 5
 
     # interval is the time between endorsement attempts
@@ -162,16 +162,16 @@ organizations:
         cert:
           pem: |
             -----BEGIN CERTIFICATE-----
-            MIICGDCCAb+gAwIBAgIQXOaCoTss6vG3zb/vRGWXuDAKBggqhkjOPQQDAjBzMQsw
-            CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
-            YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEcMBoGA1UEAxMTY2Eu
-            b3JnMS5leGFtcGxlLmNvbTAeFw0xNzA3MjgxNDI3MjBaFw0yNzA3MjYxNDI3MjBa
-            MFsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1T
-            YW4gRnJhbmNpc2NvMR8wHQYDVQQDExZwZWVyMC5vcmcxLmV4YW1wbGUuY29tMFkw
-            EwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWXupBEBzx/Mnjz1hzIUeOGiVR4CV/7aS
-            Qv0aokqJanTD+x8MaavBNYbPUwwzUNc7c1Ydd12gUNHPnyj/r1YyuaNNMEswDgYD
-            VR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgh5HRNj6JUV+a
-            +gQrBpOixwS7jdldKPl9NUmiuePENS0wCgYIKoZIzj0EAwIDRwAwRAIgT2CAHCtr
-            Ro1YX8QuD6dSZUAOmptC+xU5xhp+2MeY2BkCIHmLOMBU5KIyJ5Rah4QeiswJ/pge
-            0eiDDUjXWGduFy4x
+            MIICGTCCAcCgAwIBAgIRALR/1GXtEud5GQL2CZykkOkwCgYIKoZIzj0EAwIwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+            WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWVXNlcjFAb3JnMS5leGFtcGxlLmNvbTBZ
+            MBMGByqGSM49AgEGCCqGSM49AwEHA0IABPIVPS+hdftwDg8+02y1aV5pOnCO9tIn
+            f60wZMbrt/5N0J8PFZgylBjEuUTxWRsTMpYPAJi8NlEwoJB+/YSs29ujTTBLMA4G
+            A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+            mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0cAMEQCID+dZ7H5
+            AiaiI2BjxnL3/TetJ8iFJYZyWvK//an13WV/AiARBJd/pI5A7KZgQxJhXmmR8bie
+            XdsmTcdRvJ3TS/6HCA==
             -----END CERTIFICATE-----

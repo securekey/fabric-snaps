@@ -17,6 +17,7 @@ GO_SRC=/opt/gopath/src
 #Add entry here below for your key to be imported into softhsm
 declare -a PRIVATE_KEYS=(
     "/etc/hyperledger/msp/peer/keystore/a23272f898441edb0f415f028b3b3b42627d75e150dfbae23543234751814983_sk"
+    "/etc/hyperledger/msp/peer/keystore/abbe8ee0f86c227b1917d208921497603d2ff28f4ba8e902d703744c4a6fa7b7_sk"
 )
 
 
