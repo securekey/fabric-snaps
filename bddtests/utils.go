@@ -12,7 +12,12 @@ import (
 	"time"
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
+	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/viper"
 )
@@ -103,4 +108,28 @@ func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool
 		}
 	}
 	return false, nil
+}
+
+func processorsAsString(processors ...apitxn.ProposalProcessor) string {
+	str := ""
+	for _, p := range processors {
+		str += p.(sdkApi.Peer).URL() + " "
+	}
+	return str
+}
+
+func peersAsString(peers []sdkApi.Peer) string {
+	str := ""
+	for _, p := range peers {
+		str += p.URL() + " "
+	}
+	return str
+}
+
+func newPolicy(policyString string) (*fabricCommon.SignaturePolicyEnvelope, error) {
+	ccPolicy, err := cauthdsl.FromString(policyString)
+	if err != nil {
+		return nil, errors.Errorf("invalid chaincode policy [%s]: %s", policyString, err)
+	}
+	return ccPolicy, nil
 }

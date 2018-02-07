@@ -88,7 +88,7 @@ func FeatureContext(s *godog.Suite) {
 	//TODO temp solution to get peer id and msp id
 	peersMspID := make(map[string]string)
 	peersMspID["peer0.org1.example.com"] = "Org1MSP"
-	context, err := NewBDDContext([]string{"peerorg1"}, []string{"ordererorg"}, "./fixtures/clientconfig/",
+	context, err := NewBDDContext([]string{"peerorg1"}, "orderer.example.com", "./fixtures/clientconfig/",
 		"config.yaml", "./fixtures/config/snaps/", peersMspID, "./fixtures")
 	if err != nil {
 		panic(fmt.Sprintf("ERROR return from NewBDDContext: %v" + err.Error()))
