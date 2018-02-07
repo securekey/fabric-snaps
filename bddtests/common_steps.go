@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,6 +45,12 @@ var trxPR []*apitxn.TransactionProposalResponse
 var queryValue string
 var queryResult string
 
+type queryInfoResponse struct {
+	Height            string
+	CurrentBlockHash  string
+	PreviousBlockHash string
+}
+
 // NewCommonSteps create new CommonSteps struct
 func NewCommonSteps(context *BDDContext) *CommonSteps {
 	return &CommonSteps{BDDContext: context}
@@ -57,11 +64,11 @@ func (d *CommonSteps) getDeployPath(ccType string) string {
 	return path.Join(pwd, d.BDDContext.testCCPath)
 }
 
-//queryChaincode ...
-func (d *CommonSteps) queryChaincode(chaincodeID string,
-	args []string, primaryPeer sdkApi.Peer, orgID string) (string, error) {
+//QueryChaincode ...
+func (d *CommonSteps) QueryChaincode(chaincodeID string,
+	args []string, primaryPeer sdkApi.Peer, orgID string, transientData map[string][]byte) (string, error) {
 	transactionProposalResponses, _, err := d.createAndSendTransactionProposal(
-		chaincodeID, args, []apitxn.ProposalProcessor{primaryPeer}, nil, orgID)
+		chaincodeID, args, []apitxn.ProposalProcessor{primaryPeer}, transientData, orgID)
 
 	if err != nil {
 		return "", fmt.Errorf("CreateAndSendTransactionProposal returned error: %v", err)
@@ -70,29 +77,63 @@ func (d *CommonSteps) queryChaincode(chaincodeID string,
 	return string(transactionProposalResponses[0].ProposalResponse.GetResponse().Payload), nil
 }
 
-// RegisterSteps register steps
-func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
-	s.BeforeScenario(d.BDDContext.BeforeScenario)
-	s.AfterScenario(d.BDDContext.AfterScenario)
+func (d *CommonSteps) displayBlockFromChannel(blockNum int, channelID string) error {
+	block, err := d.getBlocks(channelID, blockNum, 1)
+	if err != nil {
+		return err
+	}
+	logger.Infof("%s\n", block)
+	return nil
+}
 
-	s.Step(`^the channel "([^"]*)" is created and all peers have joined$`, d.createChannelAndJoinAllPeers)
-	s.Step(`^the channel "([^"]*)" is created and all peers from org "([^"]*)" have joined$`, d.createChannelAndJoinPeersFromOrg)
-	s.Step(`^client invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on all peers$`, d.loadConfig)
-	s.Step(`^we wait (\d+) seconds$`, d.wait)
-	s.Step(`^client queries chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.queryCConOrg)
-	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on peer "([^"]*)"$`, d.querySystemCC)
-	s.Step(`^response from "([^"]*)" to client contains value "([^"]*)"$`, d.containsInQueryValue)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers$`, d.installChaincodeToAllPeers)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers in the "([^"]*)" org$`, d.installChaincodeToOrg)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincodeOnOrg)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincode)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is deployed from path "([^"]*)" to all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.deployChaincodeToOrg)
-	s.Step(`^"([^"]*)" chaincode "([^"]*)" is deployed from path "([^"]*)" to all peers on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.deployChaincode)
-	s.Step(`^chaincode "([^"]*)" is warmed up on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.warmUpCConOrg)
-	s.Step(`^chaincode "([^"]*)" is warmed up on all peers on the "([^"]*)" channel$`, d.warmUpCC)
-	s.Step(`^client invokes chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.InvokeCConOrg)
-	s.Step(`^collection config "([^"]*)" is defined for collection "([^"]*)" as policy="([^"]*)", requiredPeerCount=(\d+), and maxPeerCount=(\d+)$`, d.defineCollectionConfig)
+func (d *CommonSteps) getBlocks(channelID string, blockNum, numBlocks int) (string, error) {
+	orgID, err := d.BDDContext.OrgIDForChannel(channelID)
+	if err != nil {
+		return "", err
+	}
 
+	strBlockNum := fmt.Sprintf("%d", blockNum)
+	strNumBlocks := fmt.Sprintf("%d", numBlocks)
+	return NewFabCLI().Exec("query", "block", "--config", d.BDDContext.clientConfigFilePath+d.BDDContext.clientConfigFileName, "--cid", channelID, "--orgid", orgID, "--num", strBlockNum, "--traverse", strNumBlocks)
+}
+
+func (d *CommonSteps) displayBlocksFromChannel(numBlocks int, channelID string) error {
+	height, err := d.getChannelBlockHeight(channelID)
+	if err != nil {
+		return fmt.Errorf("error getting channel height: %s", err)
+	}
+
+	block, err := d.getBlocks(channelID, height-1, numBlocks)
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("%s\n", block)
+
+	return nil
+}
+
+func (d *CommonSteps) getChannelBlockHeight(channelID string) (int, error) {
+	orgID, err := d.BDDContext.OrgIDForChannel(channelID)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := NewFabCLI().GetJSON("query", "info", "--config", d.BDDContext.clientConfigFilePath+d.BDDContext.clientConfigFileName, "--cid", channelID, "--orgid", orgID)
+	if err != nil {
+		return 0, err
+	}
+
+	var info queryInfoResponse
+	if err := json.Unmarshal([]byte(resp), &info); err != nil {
+		return 0, fmt.Errorf("Error unmarshalling JSON response: %v", err)
+	}
+
+	return strconv.Atoi(info.Height)
+}
+
+func (d *CommonSteps) displayLastBlockFromChannel(channelID string) error {
+	return d.displayBlocksFromChannel(1, channelID)
 }
 
 func (d *CommonSteps) wait(seconds int) error {
@@ -121,11 +162,11 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 	}
 	// Create Orderer
 	//TODO figure out better way to get ordererConfig
-	orderersConfig, err := d.BDDContext.clientConfig.OrderersConfig()
+	ordererConfig, err := d.BDDContext.ClientConfig().OrdererConfig(d.BDDContext.OrdererOrgID())
 	if err != nil {
 		return fmt.Errorf("Could not load orderer config: %v", err)
 	}
-	orderer, err := sdkorderer.New(d.BDDContext.clientConfig, sdkorderer.FromOrdererConfig(&orderersConfig[0]))
+	orderer, err := sdkorderer.New(d.BDDContext.clientConfig, sdkorderer.FromOrdererConfig(ordererConfig))
 	if err != nil {
 		return fmt.Errorf("New orderer failed: %v", err)
 	}
@@ -161,9 +202,18 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	d.BDDContext.AddPeerConfigToChannel(&PeerConfig{Config: peerConfig, OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
 
 	//Get Channel
-	channel, err := d.BDDContext.OrgResourceClient(orgID, ADMIN).NewChannel(channelID)
-	if err != nil {
-		return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
+	orgClient := d.BDDContext.OrgResourceClient(orgID, ADMIN)
+
+	channel := orgClient.Channel(channelID)
+	if channel == nil {
+		//Create Channel Object
+		channel, err = orgClient.NewChannel(channelID)
+
+		if err != nil {
+			return fmt.Errorf("Create channel (%s) failed: %v", channelID, err)
+		}
+
+		channel.SetPrimaryPeer(peer)
 	}
 
 	if updateAnchorPeers {
@@ -180,7 +230,7 @@ func (d *CommonSteps) joinPeerToChannel(orderer *sdkorderer.Orderer, channelID, 
 	}
 
 	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.OrgClient(d.BDDContext.Orderers()[0], ADMIN).ChannelMgmt()
+	chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel management client: %s", err)
 	}
@@ -276,7 +326,7 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 		var argsArray []string
 		argsArray = append(argsArray, "save")
 		argsArray = append(argsArray, string(configBytes))
-		err = d.InvokeCCWithArgs("configurationsnap", channelID, argsArray, nil, []*PeerConfig{peerConfig}...)
+		err = d.InvokeCCWithArgs("configurationsnap", channelID, []*PeerConfig{peerConfig}, argsArray, nil)
 
 		if err != nil {
 			return fmt.Errorf("invokeChaincode return error: %v", err)
@@ -288,7 +338,7 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 
 // InvokeCConOrg invoke cc on org
 func (d *CommonSteps) InvokeCConOrg(ccID, args, orgIDs, channelID string) error {
-	err := d.InvokeCCWithArgs(ccID, channelID, strings.Split(args, ","), nil, d.OrgPeers(orgIDs, channelID)...)
+	err := d.InvokeCCWithArgs(ccID, channelID, d.OrgPeers(orgIDs, channelID), strings.Split(args, ","), nil)
 	if err != nil {
 		return fmt.Errorf("InvokeCCWithArgs return error: %v", err)
 	}
@@ -296,7 +346,7 @@ func (d *CommonSteps) InvokeCConOrg(ccID, args, orgIDs, channelID string) error 
 }
 
 // InvokeCCWithArgs ...
-func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, args []string, transientData map[string][]byte, targets ...*PeerConfig) error {
+func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte) error {
 	if len(targets) == 0 {
 		return fmt.Errorf("no target peer specified")
 	}
@@ -305,9 +355,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, args []string, tr
 
 	var prosalProcessors []apitxn.ProposalProcessor
 
-	var orgID string
 	for _, target := range targets {
-		orgID = target.OrgID
 		targetPeer, err := d.BDDContext.sdk.FabricProvider().NewPeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
@@ -315,7 +363,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, args []string, tr
 		prosalProcessors = append(prosalProcessors, targetPeer)
 	}
 
-	chClient, err := d.BDDContext.OrgClient(orgID, USER).Channel(channelID)
+	chClient, err := d.BDDContext.OrgClient(targets[0].OrgID, USER).Channel(channelID)
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel client: %s", err)
 	}
@@ -390,7 +438,7 @@ func (d *CommonSteps) querySystemCC(ccID, args, target string) error {
 		argsArray[3] = queryResult
 	}
 
-	queryResult, err = d.queryChaincode(ccID, argsArray, sdkPeer, orgAndPeer[0])
+	queryResult, err = d.QueryChaincode(ccID, argsArray, sdkPeer, orgAndPeer[0], nil)
 	if err != nil {
 		return fmt.Errorf("QueryChaincode return error: %v", err)
 	}
@@ -786,26 +834,30 @@ func (d *CommonSteps) defineCollectionConfig(id, collection, policy string, requ
 	return nil
 }
 
-func processorsAsString(processors ...apitxn.ProposalProcessor) string {
-	str := ""
-	for _, p := range processors {
-		str += p.(sdkApi.Peer).URL() + " "
-	}
-	return str
-}
+// RegisterSteps register steps
+func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
+	s.BeforeScenario(d.BDDContext.BeforeScenario)
+	s.AfterScenario(d.BDDContext.AfterScenario)
 
-func peersAsString(peers []sdkApi.Peer) string {
-	str := ""
-	for _, p := range peers {
-		str += p.URL() + " "
-	}
-	return str
-}
+	s.Step(`^the channel "([^"]*)" is created and all peers have joined$`, d.createChannelAndJoinAllPeers)
+	s.Step(`^the channel "([^"]*)" is created and all peers from org "([^"]*)" have joined$`, d.createChannelAndJoinPeersFromOrg)
+	s.Step(`^client invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on all peers$`, d.loadConfig)
+	s.Step(`^we wait (\d+) seconds$`, d.wait)
+	s.Step(`^client queries chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.queryCConOrg)
+	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on peer "([^"]*)"$`, d.querySystemCC)
+	s.Step(`^response from "([^"]*)" to client contains value "([^"]*)"$`, d.containsInQueryValue)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers$`, d.installChaincodeToAllPeers)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers in the "([^"]*)" org$`, d.installChaincodeToOrg)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincodeOnOrg)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincode)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is deployed from path "([^"]*)" to all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.deployChaincodeToOrg)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is deployed from path "([^"]*)" to all peers on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.deployChaincode)
+	s.Step(`^chaincode "([^"]*)" is warmed up on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.warmUpCConOrg)
+	s.Step(`^chaincode "([^"]*)" is warmed up on all peers on the "([^"]*)" channel$`, d.warmUpCC)
+	s.Step(`^client invokes chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.InvokeCConOrg)
+	s.Step(`^collection config "([^"]*)" is defined for collection "([^"]*)" as policy="([^"]*)", requiredPeerCount=(\d+), and maxPeerCount=(\d+)$`, d.defineCollectionConfig)
+	s.Step(`^block (\d+) from the "([^"]*)" channel is displayed$`, d.displayBlockFromChannel)
+	s.Step(`^the last (\d+) blocks from the "([^"]*)" channel are displayed$`, d.displayBlocksFromChannel)
+	s.Step(`^the last block from the "([^"]*)" channel is displayed$`, d.displayLastBlockFromChannel)
 
-func newPolicy(policyString string) (*fabricCommon.SignaturePolicyEnvelope, error) {
-	ccPolicy, err := cauthdsl.FromString(policyString)
-	if err != nil {
-		return nil, errors.Errorf("invalid chaincode policy [%s]: %s", policyString, err)
-	}
-	return ccPolicy, nil
 }

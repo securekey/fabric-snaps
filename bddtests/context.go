@@ -8,6 +8,7 @@ package bddtests
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/pkcs11"
@@ -36,7 +38,7 @@ type BDDContext struct {
 	mutex                sync.RWMutex
 	sdk                  *fabsdk.FabricSDK
 	orgs                 []string
-	orderers             []string
+	ordererOrgID         string
 	peersByChannel       map[string][]*PeerConfig
 	orgsByChannel        map[string][]string
 	collectionConfigs    map[string]*CollectionConfig
@@ -44,6 +46,7 @@ type BDDContext struct {
 	resourceClients      map[string]sdkApi.Resource
 	users                map[string]sdkApi.IdentityContext
 	peersMspID           map[string]string
+	orgEventHubs         map[string]sdkApi.EventHub
 	clientConfigFilePath string
 	clientConfigFileName string
 	snapsConfigFilePath  string
@@ -67,22 +70,23 @@ type CollectionConfig struct {
 }
 
 // NewBDDContext create new BDDContext
-func NewBDDContext(orgs []string, orderers []string, clientConfigFilePath string, clientConfigFileName string,
+func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath string, clientConfigFileName string,
 	snapsConfigFilePath string, peersMspID map[string]string, testCCPath string) (*BDDContext, error) {
 	instance := BDDContext{
 		orgs:                 orgs,
-		orderers:             orderers,
 		peersByChannel:       make(map[string][]*PeerConfig),
 		users:                make(map[string]sdkApi.IdentityContext),
 		orgsByChannel:        make(map[string][]string),
 		resourceClients:      make(map[string]sdkApi.Resource),
 		clients:              make(map[string]*fabsdk.Client),
 		collectionConfigs:    make(map[string]*CollectionConfig),
+		orgEventHubs:         make(map[string]sdkApi.EventHub),
 		clientConfigFilePath: clientConfigFilePath,
 		clientConfigFileName: clientConfigFileName,
 		snapsConfigFilePath:  snapsConfigFilePath,
 		peersMspID:           peersMspID,
 		testCCPath:           testCCPath,
+		ordererOrgID:         ordererOrgID,
 	}
 	return &instance, nil
 }
@@ -127,25 +131,30 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		orgUser := fmt.Sprintf("%s_%s", org, USER)
 		b.users[orgUser] = orgUserSession.Identity()
 		b.clients[orgUser] = orgUserClient
-	}
-	for _, orderer := range b.orderers {
 
-		// load orderer admin
-		ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orderer))
-		ordererAdminSession, err := ordererAdminClient.Session()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
-		}
-		ordererAdmin := fmt.Sprintf("%s_%s", orderer, ADMIN)
-		b.users[ordererAdmin] = ordererAdminSession.Identity()
-		b.clients[ordererAdmin] = ordererAdminClient
+		b.orgEventHubs[org] = b.newEventHub(org)
+
 	}
+	//	for _, orderer := range b.orderers {
+
+	//		// load orderer admin
+	//		ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orderer))
+	//		ordererAdminSession, err := ordererAdminClient.Session()
+	//		if err != nil {
+	//			panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
+	//		}
+	//		ordererAdmin := fmt.Sprintf("%s_%s", orderer, ADMIN)
+	//		b.users[ordererAdmin] = ordererAdminSession.Identity()
+	//		b.clients[ordererAdmin] = ordererAdminClient
+	//	}
 
 }
 
 // AfterScenario execute code after bdd scenario
 func (b *BDDContext) AfterScenario(interface{}, error) {
-	// Holder for common functionality
+	for _, orgID := range b.orgs {
+		b.orgEventHubs[orgID].Disconnect()
+	}
 
 }
 
@@ -230,13 +239,6 @@ func (b *BDDContext) Orgs() []string {
 	return b.orgs
 }
 
-// Orderers returns the orderers
-func (b *BDDContext) Orderers() []string {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
-	return b.orderers
-}
-
 // PeersByChannel returns the peers for the given channel
 func (b *BDDContext) PeersByChannel(channelID string) []*PeerConfig {
 	b.mutex.RLock()
@@ -285,6 +287,43 @@ func (b *BDDContext) ClientConfig() apiconfig.Config {
 	return b.clientConfig
 }
 
+// Sdk returns client sdk
+func (b *BDDContext) Sdk() *fabsdk.FabricSDK {
+	return b.sdk
+}
+
+// OrdererOrgID returns orderer org id
+func (b *BDDContext) OrdererOrgID() string {
+	return b.ordererOrgID
+}
+
+// PeerConfigForChannel returns a single peer for the given channel or nil if
+// no peers are configured for the channel
+func (b *BDDContext) PeerConfigForChannel(channelID string) *PeerConfig {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	pconfigs := b.peersByChannel[channelID]
+	if len(pconfigs) == 0 {
+		logger.Warnf("Peer config not found for channel [%s]\n", channelID)
+		return nil
+	}
+	return pconfigs[rand.Intn(len(pconfigs))]
+}
+
+// OrgIDForChannel returns a single org ID for the given channel or an error if
+// no orgs are configured for the channel
+func (b *BDDContext) OrgIDForChannel(channelID string) (string, error) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	orgIDs := b.orgsByChannel[channelID]
+	if len(orgIDs) == 0 {
+		return "", fmt.Errorf("org not found for channel [%s]", channelID)
+	}
+	return orgIDs[rand.Intn(len(orgIDs))], nil
+}
+
 // AddPeerConfigToChannel adds a peer to a channel
 func (b *BDDContext) AddPeerConfigToChannel(pconfig *PeerConfig, channelID string) {
 	b.mutex.Lock()
@@ -323,4 +362,47 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 	}
 	b.collectionConfigs[id] = config
 	return config
+}
+
+func (b *BDDContext) newEventHub(orgID string) sdkApi.EventHub {
+
+	eventHub, err := events.NewEventHub(b.OrgResourceClient(orgID, ADMIN))
+	if err != nil {
+		panic(fmt.Errorf("GetDefaultImplEventHub failed: %v", err))
+	}
+
+	peersConfig, err := b.clientConfig.PeersConfig(orgID)
+	if err != nil {
+		panic(fmt.Errorf("error reading peer config: %s", err))
+	}
+	if len(peersConfig) == 0 {
+		panic(fmt.Errorf("no peers for org [%s]", orgID))
+	}
+	peerConfig := peersConfig[0]
+	serverHostOverride := ""
+	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+		serverHostOverride = str
+	}
+
+	peerCert, err := peerConfig.TLSCACerts.TLSCert()
+	if err != nil {
+		panic(fmt.Errorf("Error reading peer cert from the config: %s", err))
+	}
+
+	eventHub.SetPeerAddr(peerConfig.EventURL, peerCert, serverHostOverride)
+	return eventHub
+}
+
+// EventHubForOrg returns the FabricClient for the given org
+func (b *BDDContext) EventHubForOrg(orgID string) sdkApi.EventHub {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	eventHub := b.orgEventHubs[orgID]
+	if !eventHub.IsConnected() {
+		if err := eventHub.Connect(); err != nil {
+			panic(fmt.Errorf("Failed eventHub.Connect() [%s]", err))
+		}
+	}
+	return eventHub
 }
