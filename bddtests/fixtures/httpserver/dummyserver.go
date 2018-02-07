@@ -64,6 +64,8 @@ func startTestHTTPServer() {
 	if err != nil {
 		fmt.Println("HTTP Server: Failed to start. " + err.Error())
 		os.Exit(1)
+	} else {
+		fmt.Println("HTTP Server: Started")
 	}
 
 }
