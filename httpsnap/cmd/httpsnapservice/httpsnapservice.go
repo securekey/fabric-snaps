@@ -27,6 +27,8 @@ import (
 
 	"crypto/ecdsa"
 
+	"fmt"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
@@ -339,8 +341,9 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		}
 		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, peerClientTLSKey, caCerts, config.IsSystemCertPoolEnabled())
 
+	} else {
+		return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf(" failed to get private key from client cert"))
 	}
-	return nil, nil
 }
 
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, error) {
