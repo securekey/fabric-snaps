@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69f25709_46fd0f75",
+        "filename": "bddtests/fixtures/config/snaps/httpsnap/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-02-07T00:18:26Z",
+      "side": 1,
+      "message": "was this change related? @sandra",
+      "range": {
+        "startLine": 149,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 16
+      },
+      "revId": "10e07c49347c6fb10254920ec271ccc5c657d52d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
