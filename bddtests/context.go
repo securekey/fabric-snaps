@@ -135,18 +135,6 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		b.orgEventHubs[org] = b.newEventHub(org)
 
 	}
-	//	for _, orderer := range b.orderers {
-
-	//		// load orderer admin
-	//		ordererAdminClient := sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(orderer))
-	//		ordererAdminSession, err := ordererAdminClient.Session()
-	//		if err != nil {
-	//			panic(fmt.Sprintf("Failed to get userSession of ordererAdminClient: %s", err))
-	//		}
-	//		ordererAdmin := fmt.Sprintf("%s_%s", orderer, ADMIN)
-	//		b.users[ordererAdmin] = ordererAdminSession.Identity()
-	//		b.clients[ordererAdmin] = ordererAdminClient
-	//	}
 
 }
 
