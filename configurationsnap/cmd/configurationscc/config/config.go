@@ -8,6 +8,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -188,6 +189,11 @@ func getMyConfig(channelID string, peerConfigPath string) (*viper.Viper, error) 
 	csconfig, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
 	if err != nil {
 		return nil, err
+	}
+	if csconfig == nil {
+		errMsg := fmt.Sprintf("Trying to get config for msp [%s], peer [%s] and app [configurationsnap]", peerMspID, peerID)
+		logger.Debugf(errMsg)
+		return nil, errors.New(errors.GeneralError, errMsg)
 	}
 	return csconfig, nil
 }
