@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -14,13 +15,14 @@ import (
 	"os"
 	"testing"
 
+	bccsp "github.com/hyperledger/fabric/bccsp"
+	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
-	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,6 +43,31 @@ func TestInit(t *testing.T) {
 	res := stub.MockInit("txID", [][]byte{})
 	if res.Status != shim.OK {
 		t.Fatalf("Init failed: %v", res.Message)
+	}
+	stub.ChannelID = "testChannel"
+	args := [][]byte{[]byte("testChannel")}
+	res = stub.MockInit("txID", args)
+	if res.Message == "" {
+		t.Fatalf("Expected error peer config path ... ")
+	}
+	peerConfigPath = "./sampleconfig"
+	res = stub.MockInit("txID", args)
+	if res.Status != shim.OK {
+		t.Fatalf("Init failed: %v", res.Message)
+	}
+
+}
+
+func TestRefresh(t *testing.T) {
+	stub := newMockStub(nil, nil)
+
+	stub.ChannelID = "testChannel"
+	args := [][]byte{[]byte("testChannel")}
+	peerConfigPath = "./sampleconfig"
+
+	response := refresh(stub, args)
+	if response.Status != 200 {
+		t.Fatalf("Refresh failed: %v", response.Message)
 	}
 
 }
@@ -96,6 +123,47 @@ func TestGenerateCSR(t *testing.T) {
 
 }
 
+func TestSendRefreshRequest(t *testing.T) {
+	sendRefreshRequest("testChannel", "peer1", "Org1MSP")
+}
+
+func TestNew(t *testing.T) {
+	cc := New()
+	if cc == nil {
+		t.Fatalf("Chain code is not created")
+	}
+}
+
+func TestParseKey(t *testing.T) {
+	var jsonBCCSP *factory.FactoryOpts
+	jsonCFG := []byte(
+		`{ "default": "SW", "SW":{ "security": 384, "hash": "SHA3" } }`)
+
+	err := json.Unmarshal(jsonCFG, &jsonBCCSP)
+	if err != nil {
+		fmt.Printf("Could not parse JSON config [%s]", err)
+		os.Exit(-1)
+	}
+	factory.InitFactories(jsonBCCSP)
+	bccspDef := factory.GetDefault()
+	testOpts := &bccsp.ECDSAKeyGenOpts{Temporary: true}
+	k, err := bccspDef.KeyGen(testOpts)
+	if err != nil {
+		t.Fatalf("Error  %v", err)
+	}
+	response := parseKey(k)
+	if response.Status != 200 {
+		t.Fatalf("Error  %v", response.Message)
+	}
+
+}
+func TestCreateSnapTxRequest(t *testing.T) {
+	req := createTransactionSnapRequest("ccid", "testchannel", nil, nil, nil, false)
+	if req == nil {
+		t.Fatalf("Request should have been created ")
+	}
+}
+
 func TestGetCSRTemplate(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 
@@ -109,6 +177,27 @@ func TestGetCSRTemplate(t *testing.T) {
 		t.Fatalf("Expected 'Error Invalid key'")
 	}
 
+	var jsonBCCSP *factory.FactoryOpts
+	jsonCFG := []byte(
+		`{ "default": "SW", "SW":{ "security": 384, "hash": "SHA3" } }`)
+
+	err = json.Unmarshal(jsonCFG, &jsonBCCSP)
+	if err != nil {
+		fmt.Printf("Could not parse JSON config [%s]", err)
+		os.Exit(-1)
+	}
+	factory.InitFactories(jsonBCCSP)
+	bccspDef := factory.GetDefault()
+	testOpts := &bccsp.ECDSAKeyGenOpts{Temporary: true}
+	k, err := bccspDef.KeyGen(testOpts)
+	if err != nil {
+		t.Fatalf("Error  %v", err)
+	}
+
+	_, err = getCSRTemplate("testChannel", k, "ECDSA", "ECDSAWithSHA1", "csrCommonName")
+	if err != nil {
+		t.Fatalf("Expected 'Error Invalid key' %v", err)
+	}
 }
 
 func testHealthcheck(t *testing.T, stub *mockstub.MockStub) {
@@ -178,9 +267,7 @@ func TestGet(t *testing.T) {
 	}
 	expected := &[]*mgmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
-	for ind, config := range *expected {
-		fmt.Printf("Response %d %s\n", ind, *config)
-	}
+
 	if len(*expected) != 6 {
 		t.Fatalf("Expected six records, but got  %d", len(*expected))
 	}
@@ -196,9 +283,7 @@ func TestGet(t *testing.T) {
 	}
 	expected = &[]*mgmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
-	for ind, config := range *expected {
-		fmt.Printf("Response %d %s\n", ind, *config)
-	}
+
 	if len(*expected) != 1 {
 		t.Fatalf("Expected six records, but got  %d", len(*expected))
 	}
@@ -447,7 +532,7 @@ func TestGetBCCSPAndKeyPair(t *testing.T) {
 	}
 }
 
-func testGenerateKeyWithOpts(t *testing.T) {
+func TestGenerateKeyWithOpts(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	rsp := generateKeyWithOpts("", nil)
 	if rsp.Message == "" {
@@ -464,32 +549,17 @@ func testGenerateKeyWithOpts(t *testing.T) {
 	}
 }
 
-func testGetCSRTemplate(t *testing.T) {
+func TestGetPublicKeyAlg(t *testing.T) {
+	var alg x509.PublicKeyAlgorithm
+	var err error
 	peerConfigPath = "./sampleconfig"
-	_, err := getCSRTemplate("", nil, "ECDSA", "ECDSAWithSHA1", "CommonName")
-	if err == nil {
-		t.Fatalf("Expected error: 'Cannot obtain ledger for channel")
-	}
-	_, err = getCSRTemplate("testChannel", nil, "", "ECDSAWithSHA1", "CommonName")
-	if err == nil {
-		t.Fatalf("Expected error: 'Invalid key ")
-	}
-	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "ECDSAWithSHA1", "CommonName")
-	if err == nil {
-		t.Fatalf("Expected error: 'Invalid key ")
-	}
-	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "FAKE", "CommonName")
-	if err == nil {
-		t.Fatalf("Expected error: 'Alg not supported,")
-	}
-}
-
-func testGetPublicKeyAlg(t *testing.T) {
-
-	peerConfigPath = "./sampleconfig"
-	_, err := getPublicKeyAlg("FAKE")
+	alg, err = getPublicKeyAlg("FAKE")
 	if err == nil {
 		t.Fatalf("Expected error: 'Public key algorithm is not supported FAKE")
+	}
+	if alg != 0 {
+		t.Fatalf("Alg should be nil")
+
 	}
 	_, err = getPublicKeyAlg("RSA")
 	if err != nil {
@@ -505,9 +575,13 @@ func testGetPublicKeyAlg(t *testing.T) {
 	}
 }
 
-func testGetCSRConfig(t *testing.T) {
+func TestGetCSRConfig(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
-	cfg, err := getCSRConfig("testChannel", peerConfigPath)
+	cfg, err := getCSRConfig("", peerConfigPath)
+	if err == nil {
+		t.Fatalf("Expected Error: Channel is required")
+	}
+	cfg, err = getCSRConfig("testChannel", peerConfigPath)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
@@ -548,7 +622,7 @@ func testGetCSRConfig(t *testing.T) {
 	}
 
 }
-func testGetSignatureAlg(t *testing.T) {
+func TestGetSignatureAlg(t *testing.T) {
 
 	_, err := getSignatureAlg("ECDSAWithSHA256")
 	if err != nil {
@@ -626,7 +700,7 @@ func testGetSignatureAlg(t *testing.T) {
 
 }
 
-func testGetKeyOpts(t *testing.T) {
+func TestGetKeyOpts(t *testing.T) {
 	key, err := getKeyOpts("ECDSA", false)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -748,12 +822,10 @@ func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message []byte) err
 }
 
 func TestMain(m *testing.M) {
-	fmt.Printf("****IN test main****")
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
-	fmt.Printf("Configuration for config snap %s", string(configData))
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
@@ -765,7 +837,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))
 	}
-	fmt.Printf("***** Config data %s", string(configBytes))
 	//upload valid message to HL
 	configManager := mgmt.NewConfigManager(stub)
 	err = configManager.Save(configBytes)
