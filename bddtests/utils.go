@@ -13,7 +13,6 @@ import (
 
 	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -110,7 +109,7 @@ func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool
 	return false, nil
 }
 
-func processorsAsString(processors ...apitxn.ProposalProcessor) string {
+func processorsAsString(processors ...sdkApi.ProposalProcessor) string {
 	str := ""
 	for _, p := range processors {
 		str += p.(sdkApi.Peer).URL() + " "

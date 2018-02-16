@@ -7,25 +7,6 @@
 txnsnap:
  loglevel: debug
 
-  # Endorser selection attempts
-  selection:
-    maxattempts: 20
-    interval: 2s
-
-  # Endorsement options
-  endorsement:
-    # maxAttempts is the number of attempts that should be made
-    # until a successfull endorsement is received from all endorsers
-    maxattempts: 5
-
-    # interval is the time between endorsement attempts
-    interval: 2s
-
-  # Commit options
-  commit:
-    # timeout is the time to wait for a commit
-    timeout: 30s
-
 # Configurations for the fabric client
 client:
 
