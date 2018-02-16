@@ -9,19 +9,16 @@ import (
 	"encoding/json"
 
 	"fmt"
-	"strconv"
 
 	"github.com/golang/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 
-	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 
-	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	client "github.com/securekey/fabric-snaps/transactionsnap/cmd/client"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -33,12 +30,6 @@ type TxnSnap struct {
 	// getTxService is used by unit tests
 	getTxService txServiceProvider
 }
-
-// clientServiceImpl implements client service
-type clientServiceImpl struct {
-}
-
-var clientService = newClientService()
 
 var logger = logging.NewLogger("txnsnap")
 
@@ -59,7 +50,7 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 //required args are function name and SnapTransactionRequest
 func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	//service will be used to endorse and commit transaction
-	function, args := stub.GetFunctionAndParameters()
+	function, _ := stub.GetFunctionAndParameters()
 
 	switch function {
 	case "endorseTransaction":
@@ -75,19 +66,11 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
 
-		_, err := es.commitTransaction(stub.GetArgs())
+		err := es.commitTransaction(stub.GetArgs())
 		if err != nil {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		//TODO QQQ Check the response code
-		return pb.Response{Payload: nil, Status: shim.OK}
-
-	case "endorseAndCommitTransaction":
-
-		err := es.endorseAndCommitTransaction(stub.GetArgs())
-		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
-		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 
 	case "verifyTransactionProposalSignature":
@@ -101,62 +84,13 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
-	case "getPeersOfChannel":
-		payload, err := es.getPeersOfChannel(args)
-		if err != nil {
-			logger.Errorf("getPeersOfChannel error: %s", err.Error())
-			return shim.Error(err.Error())
-		}
-		logger.Debugf("getPeersOfChannel payload: %s", string(payload))
-		return shim.Success(payload)
 	default:
 		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
 	}
 
 }
 
-// getPeersOfChannel returns peers that are available for that channel
-func (es *TxnSnap) getPeersOfChannel(args []string) ([]byte, error) {
-
-	if len(args) < 1 || args[0] == "" {
-
-		return nil, errors.New(errors.GeneralError, "Channel name must be provided")
-	}
-
-	// First argument is channel
-	channel := args[0]
-	logger.Debugf("Retrieving peers on channel: %s", channel)
-	srvc, err := es.getTxService(channel)
-	if err != nil {
-		return nil, err
-	}
-	channelMembership := srvc.Membership.GetPeersOfChannel(channel)
-	if channelMembership.QueryError != nil && channelMembership.Peers == nil {
-		return nil, errors.Errorf(errors.GeneralError, "Could not get peers on channel %s: %s", channel, channelMembership.QueryError)
-	}
-	if channelMembership.QueryError != nil && channelMembership.Peers != nil {
-		logger.Warnf(
-			"Error polling peers on channel %s, using last known configuration. Error: %s",
-			channelMembership.QueryError)
-	}
-
-	logger.Debugf("Peers on channel(%s): %s", channel, channelMembership.Peers)
-
-	// Construct list of endpoints
-	endpoints := make([]protosPeer.PeerEndpoint, 0, len(channelMembership.Peers))
-	for _, peer := range channelMembership.Peers {
-		endpoints = append(endpoints, protosPeer.PeerEndpoint{Endpoint: peer.URL(), MSPid: []byte(peer.MSPID())})
-	}
-
-	peerBytes, err := json.Marshal(endpoints)
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "Failed json Marshal")
-	}
-
-	return peerBytes, nil
-}
-
-func (es *TxnSnap) endorseTransaction(args [][]byte) ([]*apitxn.TransactionProposalResponse, error) {
+func (es *TxnSnap) endorseTransaction(args [][]byte) ([]*sdkApi.TransactionProposalResponse, error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
@@ -184,66 +118,47 @@ func (es *TxnSnap) endorseTransaction(args [][]byte) ([]*apitxn.TransactionPropo
 		return nil, err
 	}
 
-	tpxResponse, err := srvc.EndorseTransaction(snapTxRequest, nil)
+	response, err := srvc.EndorseTransaction(snapTxRequest, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return tpxResponse, nil
+	return response, nil
 }
 
-func (es *TxnSnap) commitTransaction(args [][]byte) (pb.TxValidationCode, error) {
-	if len(args) < 4 {
-		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "Not enough arguments in call to commit transaction")
-	}
+func (es *TxnSnap) commitTransaction(args [][]byte) error {
 
-	channelID := string(args[1])
-	if channelID == "" {
-		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "Cannot create channel Error creating new channel: name is required")
-
-	}
-
-	registerTxEvent, err := strconv.ParseBool(string(args[3]))
-	if err != nil {
-		return pb.TxValidationCode(-1), errors.WithMessage(errors.GeneralError, err, "Cannot ParseBool the fourth arg to registerTxEvent")
-	}
-
-	var tpResponses []*apitxn.TransactionProposalResponse
-	if err := json.Unmarshal(args[2], &tpResponses); err != nil {
-		return pb.TxValidationCode(-1), errors.New(errors.GeneralError, "Cannot unmarshal responses")
-	}
-	srvc, err := es.getTxService(channelID)
-	if err != nil {
-		return pb.TxValidationCode(-1), err
-	}
-	validationCode, err := srvc.CommitTransaction(channelID, tpResponses, registerTxEvent)
-	if err != nil {
-		return validationCode, errors.WithMessage(errors.GeneralError, err, "CommitTransaction returned error")
-	}
-	return validationCode, nil
-}
-
-//endorseAndCommitTransaction returns error
-
-func (es *TxnSnap) endorseAndCommitTransaction(args [][]byte) error {
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
-		return errors.New(errors.GeneralError, "Not enough arguments in call to endorse and commit transaction")
+		return errors.New(errors.GeneralError, "Not enough arguments in call to commit transaction")
 	}
-
+	//second argument is SnapTransactionRequest
 	snapTxRequest, err := getSnapTransactionRequest(args[1])
 	if err != nil {
 		return err
 	}
+	if snapTxRequest.ChannelID == "" {
+		return errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
+	}
 
+	//cc code args
+	endorserArgs := snapTxRequest.EndorserArgs
+	var ccargs []string
+	for _, ccArg := range endorserArgs {
+		ccargs = append(ccargs, string(ccArg))
+
+	}
+	logger.Debug("Endorser args:", ccargs)
 	srvc, err := es.getTxService(snapTxRequest.ChannelID)
 	if err != nil {
 		return err
 	}
 
-	if _, err := srvc.EndorseAndCommitTransaction(snapTxRequest, nil); err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "CommitTransaction returned error")
+	_, err = srvc.CommitTransaction(snapTxRequest, nil)
+	if err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -261,7 +176,7 @@ func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) error {
 	if err != nil {
 		return err
 	}
-	err = srvc.VerifyTxnProposalSignature(channelID, signedProposal)
+	err = srvc.VerifyTxnProposalSignature(signedProposal)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "VerifyTxnProposalSignature returned error")
 	}
@@ -276,27 +191,6 @@ func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTr
 		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot decode parameters from request to Snap Transaction Request")
 	}
 	return &snapTxRequest, nil
-}
-
-func newClientService() api.ClientService {
-	return &clientServiceImpl{}
-}
-
-// GetFabricClient return fabric client
-func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
-	fcClient, err := client.GetInstance(channelID, config)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
-	}
-	return fcClient, nil
-}
-
-// GetClientMembership return client membership
-func (cs *clientServiceImpl) GetClientMembership(config api.Config) api.MembershipManager {
-	// membership mananger
-	membership := client.GetMembershipInstance(config)
-
-	return membership
 }
 
 func main() {

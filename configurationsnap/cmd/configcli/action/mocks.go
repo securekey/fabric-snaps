@@ -10,11 +10,11 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
-	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
 	fabapimocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
 	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/spf13/pflag"
 )
@@ -46,7 +46,7 @@ func (a *MockAction) Initialize() error {
 }
 
 // ChannelClient creates a new channel client
-func (a *MockAction) ChannelClient() (apitxn.ChannelClient, error) {
+func (a *MockAction) ChannelClient() (chclient.ChannelClient, error) {
 	panic("not implemented")
 }
 

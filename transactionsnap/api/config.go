@@ -22,6 +22,7 @@ type Config interface {
 	GetTLSRootCert() *x509.Certificate
 	GetTLSCertPath() string
 	GetTLSCert() *x509.Certificate
+	GetTLSCertPem() []byte
 	GetTLSKeyPath() string
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string
