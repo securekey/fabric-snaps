@@ -7,12 +7,17 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
+	"time"
+
 	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	apitxn "github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	common "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/core/common/ccprovider"
 )
+
+// EndorsedCallback is a function that is invoked after the endorsement
+// phase of CommitTransaction. (Used in unit tests.)
+type EndorsedCallback func([]*sdkApi.TransactionProposalResponse) error
 
 // EndorseTxRequest contains the parameters for the EndorseTransaction function
 type EndorseTxRequest struct {
@@ -30,6 +35,8 @@ type EndorseTxRequest struct {
 	ChaincodeIDs []string
 	// PeerFilter filters out peers using application-specific logic (optional)
 	PeerFilter PeerFilter
+	// RWSetIgnoreNameSpace rw set ignore list
+	RWSetIgnoreNameSpace []string
 }
 
 // Client is a wrapper interface around the fabric client
@@ -40,21 +47,19 @@ type Client interface {
 	// @param {string} name of the channel
 	// @returns {Channel} channel object
 	// @returns {error} error, if any
-	NewChannel(string) (sdkApi.Channel, error)
+	//NewChannel(string) (sdkApi.Channel, error)
 
 	// GetChannel returns a channel object that has been added to the fabric client
 	// @param {string} name of the channel
 	// @returns {Channel} channel that was requested
 	// @returns {error} error, if any
-	GetChannel(string) (sdkApi.Channel, error)
+	//GetChannel(string) (sdkApi.Channel, error)
 
 	// EndorseTransaction request endorsement from the peers on this channel
 	// for a transaction with the given parameters
-	// @param {Channel} channel on which we want to transact
 	// @param {EndorseTxRequest} reuest identifies the chaincode to invoke
-	// @returns {[]TransactionProposalResponse} responses from endorsers
 	// @returns {error} error, if any
-	EndorseTransaction(channel sdkApi.Channel, request *EndorseTxRequest) ([]*apitxn.TransactionProposalResponse, error)
+	EndorseTransaction(endorseRequest *EndorseTxRequest) ([]byte, error)
 
 	// CommitTransaction submits the given endorsements on the specified channel for
 	// commit
@@ -62,7 +67,7 @@ type Client interface {
 	// @param {[]TransactionProposalResponse} responses from endorsers
 	// @param {bool} register for Tx event
 	// @returns {error} error, if any
-	CommitTransaction(sdkApi.Channel, []*apitxn.TransactionProposalResponse, bool) error
+	CommitTransaction(endorseRequest *EndorseTxRequest, timeout time.Duration, callback EndorsedCallback) error
 
 	// QueryChannels joined by the given peer
 	// @param {Peer} The peer to query
@@ -74,30 +79,30 @@ type Client interface {
 	// @param {Channel} channel on which the transaction is taking place
 	// @param {[]byte} Txn Proposal
 	// @returns {error} error, if any
-	VerifyTxnProposalSignature(sdkApi.Channel, []byte) error
+	VerifyTxnProposalSignature([]byte) error
 
 	// SetSelectionService is used to inject a selection service for testing
 	// @param {SelectionService} SelectionService
-	SetSelectionService(SelectionService)
+	//SetSelectionService(SelectionService)
 
 	// GetSelectionService returns the SelectionService
-	GetSelectionService() SelectionService
+	//GetSelectionService() SelectionService
 
 	// GetEventHub returns the GetEventHub
 	// @returns {EventHub} EventHub
 	// @returns {error} error, if any
-	GetEventHub() (sdkApi.EventHub, error)
+	//GetEventHub() (sdkApi.EventHub, error)
 
 	// Hash message
 	// @param {[]byte} message to hash
 	// @returns {[[]byte} hash
 	// @returns {error} error, if any
-	Hash([]byte) ([]byte, error)
+	//Hash([]byte) ([]byte, error)
 
 	// InitializeChannel initializes the given channel
 	// @param {Channel} Channel that needs to be initialized
 	// @returns {error} error, if any
-	InitializeChannel(channel sdkApi.Channel) error
+	//InitializeChannel(channel sdkApi.Channel) error
 
 	// GetConfig get client config
 	// @returns {Config} config

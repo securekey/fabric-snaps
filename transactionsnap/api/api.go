@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
+import (
+	"time"
+)
+
 //SnapTransactionRequest type will be passed as argument to a transaction snap
 //ChannelID and ChaincodeID are mandatory fields
 type SnapTransactionRequest struct {
@@ -14,12 +18,11 @@ type SnapTransactionRequest struct {
 	TransientMap        map[string][]byte // optional transient Map
 	EndorserArgs        [][]byte          // optional args for endorsement
 	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
-	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
+	TimeoutTxEvent      time.Duration     // optional args for timeout Tx event (default is 0)
 	PeerFilter          *PeerFilterOpts   // optional peer filter
 }
 
 // ClientService interface
 type ClientService interface {
 	GetFabricClient(channelID string, config Config) (Client, error)
-	GetClientMembership(config Config) MembershipManager
 }
