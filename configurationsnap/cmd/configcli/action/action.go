@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
@@ -29,9 +29,9 @@ import (
 // Action defines the common methods for an command action
 type Action interface {
 	Initialize() error
-	ChannelClient() (apitxn.ChannelClient, error)
+	ChannelClient() (chclient.ChannelClient, error)
 	Peers() []apifabclient.Peer
-	ProposalProcessors() []apitxn.ProposalProcessor
+	ProposalProcessors() []apifabclient.ProposalProcessor
 	OrgID() string
 	Query(chaincodeID, fctn string, args [][]byte) ([]byte, error)
 	ExecuteTx(chaincodeID, fctn string, args [][]byte) error
@@ -71,7 +71,7 @@ func (a *action) Initialize() error {
 }
 
 // ChannelClient creates a new channel client
-func (a *action) ChannelClient() (apitxn.ChannelClient, error) {
+func (a *action) ChannelClient() (chclient.ChannelClient, error) {
 	userName := cliconfig.Config().UserName()
 	chClient, err := a.sdk.NewClient(fabsdk.WithUser(userName), fabsdk.WithOrg(a.OrgID())).Channel(cliconfig.Config().ChannelID())
 	if err != nil {
@@ -86,8 +86,8 @@ func (a *action) Peers() []apifabclient.Peer {
 }
 
 // ProposalProcessors returns the proposal processors
-func (a *action) ProposalProcessors() []apitxn.ProposalProcessor {
-	targets := make([]apitxn.ProposalProcessor, len(a.Peers()))
+func (a *action) ProposalProcessors() []apifabclient.ProposalProcessor {
+	targets := make([]apifabclient.ProposalProcessor, len(a.Peers()))
 	for i, p := range a.Peers() {
 		targets[i] = p
 	}
@@ -119,16 +119,16 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 	if err != nil {
 		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
-	return channelClient.QueryWithOpts(
-		apitxn.QueryRequest{
-			ChaincodeID: chaincodeID,
-			Fcn:         fctn,
-			Args:        args,
-		},
-		apitxn.QueryOpts{
-			ProposalProcessors: a.ProposalProcessors(),
-		},
-	)
+
+	resp, err := channelClient.Query(chclient.Request{
+		ChaincodeID: chaincodeID,
+		Fcn:         fctn,
+		Args:        args,
+	}, chclient.WithProposalProcessor(a.ProposalProcessors()...))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Payload, nil
 }
 
 // ExecuteTx executes a transaction on the given chaincode with the given function and args
@@ -137,16 +137,13 @@ func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
-	_, _, err = channelClient.ExecuteTxWithOpts(
-		apitxn.ExecuteTxRequest{
+	_, err = channelClient.Execute(
+		chclient.Request{
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
 			Args:        args,
-		},
-		apitxn.ExecuteTxOpts{
-			ProposalProcessors: a.ProposalProcessors(),
-		},
-	)
+		}, chclient.WithProposalProcessor(a.ProposalProcessors()...))
+
 	return err
 }
 

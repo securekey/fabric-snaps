@@ -14,12 +14,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/txnhandler"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
-var lastTxnID apitxn.TransactionID
+var lastTxnID sdkApi.TransactionID
 
 // EventSnapSteps ...
 type EventSnapSteps struct {
@@ -31,29 +33,45 @@ func NewEventSnapSteps(context *BDDContext) *EventSnapSteps {
 	return &EventSnapSteps{BDDContext: context}
 }
 
-type registerTxFilter struct {
+func newRegisterTxFilterHandler(channelID string, bddContext *BDDContext, chaincodeID string, next ...chclient.Handler) *registerTxFilterHandler {
+	return &registerTxFilterHandler{channelID: channelID, bddContext: bddContext, chaincodeID: chaincodeID, next: getNext(next)}
+}
+
+type registerTxFilterHandler struct {
+	next        chclient.Handler
 	channelID   string
-	BDDContext  *BDDContext
+	bddContext  *BDDContext
 	chaincodeID string
 }
 
-func (f *registerTxFilter) ProcessTxProposalResponse(txProposalResponses []*apitxn.TransactionProposalResponse) ([]*apitxn.TransactionProposalResponse, error) {
-	var txnID apitxn.TransactionID
-	for _, resp := range txProposalResponses {
+func (f *registerTxFilterHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
+	var txnID sdkApi.TransactionID
+	for _, resp := range requestContext.Response.Responses {
 		txnID = resp.Proposal.TxnID
 		break
 	}
 
 	logger.Infof("Registering Tx Status event for Tx ID %s\n", txnID.ID)
 
-	err := queryEventConsumer(f.BDDContext, "registertx", f.channelID, txnID.ID)
+	err := queryEventConsumer(f.bddContext, "registertx", f.channelID, txnID.ID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error querying chaincode %s", f.chaincodeID)
+		requestContext.Error = errors.Wrapf(err, "error querying chaincode %s", f.chaincodeID)
+		return
 	}
 
 	logger.Infof("Successfully registered Tx Status event for Tx ID %s\n", txnID.ID)
 
-	return txProposalResponses, nil
+	//Delegate to next step if any
+	if f.next != nil {
+		f.next.Handle(requestContext, clientContext)
+	}
+}
+
+func getNext(next []chclient.Handler) chclient.Handler {
+	if len(next) > 0 {
+		return next[0]
+	}
+	return nil
 }
 
 func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArgs string) error {
@@ -64,26 +82,27 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 		return fmt.Errorf("NewChannelClient returned error: %v", err)
 	}
 
-	_, txnID, err := chClient.ExecuteTxWithOpts(
-		apitxn.ExecuteTxRequest{
-			ChaincodeID: ccID,
-			Fcn:         args[0],
-			Args:        GetByteArgs(args[1:]),
-		},
-		apitxn.ExecuteTxOpts{
-			TxFilter: &registerTxFilter{
-				BDDContext:  t.BDDContext,
-				chaincodeID: ccID,
-				channelID:   channelID,
-			},
-			Timeout: 10 * time.Second,
-		},
-	)
+	customExecuteHandler :=
+		txnhandler.NewProposalProcessorHandler(
+			txnhandler.NewEndorsementHandler(
+				txnhandler.NewEndorsementValidationHandler(
+					newRegisterTxFilterHandler(channelID, t.BDDContext, ccID,
+						txnhandler.NewSignatureValidationHandler(
+							txnhandler.NewCommitHandler(),
+						),
+					),
+				),
+			),
+		)
+
+	resp, err := chClient.InvokeHandler(customExecuteHandler, chclient.Request{ChaincodeID: ccID, Fcn: args[0],
+		Args: GetByteArgs(args[1:])}, chclient.WithTimeout(10*time.Second))
+
 	if err != nil {
 		return errors.Wrapf(err, "error invoking chaincode %s", ccID)
 	}
 
-	lastTxnID = txnID
+	lastTxnID = resp.TransactionID
 
 	return nil
 }
@@ -99,21 +118,17 @@ func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...s
 	bargs = append(bargs, []byte(channelID))
 	bargs = append(bargs, GetByteArgs(args)...)
 
-	response, err := chClient.QueryWithOpts(
-		apitxn.QueryRequest{
+	response, err := chClient.Query(
+		chclient.Request{
 			ChaincodeID: "eventconsumersnap",
 			Fcn:         fcn,
 			Args:        bargs,
-		},
-		apitxn.QueryOpts{
-			Timeout: 10 * time.Second,
-		},
-	)
+		}, chclient.WithTimeout(10*time.Second))
 	if err != nil {
 		return errors.Wrap(err, "error querying eventconumersnap")
 	}
 
-	queryValue = string(response)
+	queryValue = string(response.Payload)
 
 	return nil
 }

@@ -31,7 +31,7 @@ import (
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/txsnapservice"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	errors "github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -548,20 +548,19 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 		logger.Debugf("Error creating target peer: %v", err)
 	}
 	args := [][]byte{[]byte("refresh")}
-	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil, false)
+	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil)
 	txService.EndorseTransaction(txSnapReq, []sdkApi.Peer{targetPeer})
 }
 
 func createTransactionSnapRequest(chaincodeID string, chnlID string,
 	endorserArgs [][]byte, transientMap map[string][]byte,
-	ccIDsForEndorsement []string, registerTxEvent bool) *api.SnapTransactionRequest {
+	ccIDsForEndorsement []string) *api.SnapTransactionRequest {
 
 	return &api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
 		TransientMap:        transientMap,
 		EndorserArgs:        endorserArgs,
-		CCIDsForEndorsement: ccIDsForEndorsement,
-		RegisterTxEvent:     registerTxEvent}
+		CCIDsForEndorsement: ccIDsForEndorsement}
 
 }
 

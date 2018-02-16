@@ -153,7 +153,6 @@
   revision = "b710c8433bd175204919eb38776e944233235d03"
 
 [[projects]]
-  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -163,7 +162,8 @@
     "ptypes/empty",
     "ptypes/timestamp"
   ]
-  revision = "17ce1425424ab154092bbb43af630bd647f3bb0d"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/golang/snappy"
@@ -336,14 +336,14 @@
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "api/apiconfig",
-    "api/apicore",
     "api/apicryptosuite",
     "api/apifabca",
     "api/apifabclient",
     "api/apilogging",
-    "api/apitxn",
+    "api/apitxn/chclient",
     "api/apitxn/chmgmtclient",
     "api/apitxn/resmgmtclient",
+    "api/kvstore",
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
@@ -357,7 +357,9 @@
     "internal/github.com/hyperledger/fabric/bccsp/utils",
     "internal/github.com/hyperledger/fabric/common/channelconfig",
     "internal/github.com/hyperledger/fabric/common/crypto",
+    "internal/github.com/hyperledger/fabric/common/ledger",
     "internal/github.com/hyperledger/fabric/common/util",
+    "internal/github.com/hyperledger/fabric/core/ledger",
     "internal/github.com/hyperledger/fabric/events/consumer",
     "internal/github.com/hyperledger/fabric/msp",
     "internal/github.com/hyperledger/fabric/protos/orderer",
@@ -370,42 +372,50 @@
     "pkg/cryptosuite",
     "pkg/cryptosuite/bccsp/sw",
     "pkg/cryptosuite/bccsp/wrapper",
-    "pkg/errors",
+    "pkg/errors/retry",
+    "pkg/errors/status",
     "pkg/fabric-ca-client",
     "pkg/fabric-client",
     "pkg/fabric-client/ccpackager/gopackager",
     "pkg/fabric-client/channel",
+    "pkg/fabric-client/chconfig",
     "pkg/fabric-client/credentialmgr",
+    "pkg/fabric-client/credentialmgr/persistence",
     "pkg/fabric-client/events",
     "pkg/fabric-client/events/consumer",
     "pkg/fabric-client/identity",
-    "pkg/fabric-client/internal",
-    "pkg/fabric-client/internal/txnproc",
     "pkg/fabric-client/keyvaluestore",
     "pkg/fabric-client/mocks",
     "pkg/fabric-client/orderer",
     "pkg/fabric-client/peer",
     "pkg/fabric-client/resource",
     "pkg/fabric-client/signingmgr",
+    "pkg/fabric-client/txn",
     "pkg/fabric-txn/chclient",
     "pkg/fabric-txn/chmgmtclient",
+    "pkg/fabric-txn/discovery",
+    "pkg/fabric-txn/discovery/greylist",
     "pkg/fabric-txn/discovery/staticdiscovery",
-    "pkg/fabric-txn/internal",
+    "pkg/fabric-txn/mocks",
     "pkg/fabric-txn/resmgmtclient",
+    "pkg/fabric-txn/selection/dynamicselection",
+    "pkg/fabric-txn/selection/dynamicselection/pgresolver",
     "pkg/fabric-txn/selection/staticselection",
+    "pkg/fabric-txn/txnhandler",
     "pkg/fabsdk",
     "pkg/fabsdk/api",
     "pkg/fabsdk/factory/defclient",
     "pkg/fabsdk/factory/defcore",
     "pkg/fabsdk/factory/defsvc",
+    "pkg/fabsdk/provider/chpvdr",
     "pkg/fabsdk/provider/fabpvdr",
     "pkg/logging",
     "pkg/logging/decorator",
     "pkg/logging/modlog",
     "pkg/logging/utils",
-    "pkg/status",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
+    "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
     "third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
     "third_party/github.com/hyperledger/fabric/core/ledger/util",
     "third_party/github.com/hyperledger/fabric/protos/common",
@@ -416,7 +426,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "10205b28360735b561fc011274ff82640547c557"
+  revision = "031b888f2ff7c9b8cbfe02447373230c0ae9041a"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -640,10 +650,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sync"
-  packages = [
-    "semaphore",
-    "syncmap"
-  ]
+  packages = ["semaphore"]
   revision = "f52d1811a62927559de87708c8913c1650ce4f26"
 
 [[projects]]
@@ -707,6 +714,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4f5876c0bade4b3f790c82fbe1436ff92e606ffb6d90a8c212332d5244473fd7"
+  inputs-digest = "6d3bc01a5b45f3fc970b7b19d11422f886977f4ea11b944799a0fa3f3629e0fc"
   solver-name = "gps-cdcl"
   solver-version = 1
