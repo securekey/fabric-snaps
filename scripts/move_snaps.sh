@@ -37,6 +37,9 @@ echo "Deleting dependencies that have a mismatch with fabric..."
 rm -rf ./vendor/golang.org/x/crypto/sha3/
 rm -rf ./vendor/golang.org/x/net/context/
 rm -rf ./vendor/golang.org/x/sys/unix/
+rm -rf ./vendor/github.com/golang/protobuf/proto
+
+
 
 echo "Restoring exceptions"
 cp -r ./vendor_backup/* ./vendor/

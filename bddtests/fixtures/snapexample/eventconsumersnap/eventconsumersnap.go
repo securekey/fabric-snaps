@@ -484,7 +484,7 @@ func (s *eventConsumerSnap) registerTxEvents(stub shim.ChaincodeStubInterface, a
 
 	reg, eventch, err := eventService.RegisterTxStatusEvent(txID)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Error registering for Tx Status events on channel %s and TxID %s", channelID, txID))
+		return shim.Error(fmt.Sprintf("Error registering for Tx Status events on channel %s and TxID %s err:%v", channelID, txID, err))
 	}
 
 	s.txRegistrations[regKey] = reg
