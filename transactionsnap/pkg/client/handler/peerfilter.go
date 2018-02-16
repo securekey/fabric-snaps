@@ -1,0 +1,79 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+package handler
+
+import (
+	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
+)
+
+//NewPeerFilterHandler returns a handler that filter peers
+func NewPeerFilterHandler(peerFilter api.PeerFilter, next ...chclient.Handler) *PeerFilterHandler {
+	return &PeerFilterHandler{peerFilter: peerFilter, next: getNext(next)}
+}
+
+//PeerFilterHandler for handling peers filter
+type PeerFilterHandler struct {
+	next       chclient.Handler
+	peerFilter api.PeerFilter
+}
+
+//Handle for endorsing transactions
+func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
+	//Get proposal processor, if not supplied then use discovery service to get available peers as endorser
+	//If selection service available then get endorser peers for this chaincode
+	if len(requestContext.Opts.ProposalProcessors) == 0 {
+		// Use discovery service to figure out proposal processors
+		peers, err := clientContext.Discovery.GetPeers()
+		if err != nil {
+			requestContext.Error = errors.WithMessage(err, "GetPeers failed")
+			return
+		}
+		endorsers := peers
+		if clientContext.Selection != nil {
+			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(peers, requestContext.Request.ChaincodeID)
+			if err != nil {
+				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
+				return
+			}
+		}
+
+		requestContext.Opts.ProposalProcessors = peer.PeersToTxnProcessors(p.filterTargets(endorsers, p.peerFilter))
+	}
+
+	//Delegate to next step if any
+	if p.next != nil {
+		p.next.Handle(requestContext, clientContext)
+	}
+}
+
+// filterTargets is helper method to filter peers
+func (p *PeerFilterHandler) filterTargets(peers []apifabclient.Peer, filter api.PeerFilter) []apifabclient.Peer {
+
+	if filter == nil {
+		return peers
+	}
+
+	filteredPeers := []apifabclient.Peer{}
+	for _, peer := range peers {
+		if filter.Accept(peer) {
+			filteredPeers = append(filteredPeers, peer)
+		}
+	}
+
+	return filteredPeers
+}
+
+func getNext(next []chclient.Handler) chclient.Handler {
+	if len(next) > 0 {
+		return next[0]
+	}
+	return nil
+}

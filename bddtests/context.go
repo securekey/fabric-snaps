@@ -16,12 +16,11 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/config"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/events"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/pkcs11"
 	"github.com/pkg/errors"
-	"github.com/securekey/fabric-snaps/transactionsnap/cmd/client/factories"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 	"github.com/spf13/viper"
 )
 
@@ -42,11 +41,10 @@ type BDDContext struct {
 	peersByChannel       map[string][]*PeerConfig
 	orgsByChannel        map[string][]string
 	collectionConfigs    map[string]*CollectionConfig
-	clients              map[string]*fabsdk.Client
+	clients              map[string]*fabsdk.ClientContext
 	resourceClients      map[string]sdkApi.Resource
 	users                map[string]sdkApi.IdentityContext
 	peersMspID           map[string]string
-	orgEventHubs         map[string]sdkApi.EventHub
 	clientConfigFilePath string
 	clientConfigFileName string
 	snapsConfigFilePath  string
@@ -78,9 +76,8 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 		users:                make(map[string]sdkApi.IdentityContext),
 		orgsByChannel:        make(map[string][]string),
 		resourceClients:      make(map[string]sdkApi.Resource),
-		clients:              make(map[string]*fabsdk.Client),
+		clients:              make(map[string]*fabsdk.ClientContext),
 		collectionConfigs:    make(map[string]*CollectionConfig),
-		orgEventHubs:         make(map[string]sdkApi.EventHub),
 		clientConfigFilePath: clientConfigFilePath,
 		clientConfigFileName: clientConfigFileName,
 		snapsConfigFilePath:  snapsConfigFilePath,
@@ -111,16 +108,16 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get userSession of orgAdminClient: %s", err))
 		}
-		orgAdminResourceClient, err := sdk.FabricProvider().NewResourceClient(orgAdminSession.Identity())
+		orgAdminResourceClient, err := sdk.FabricProvider().CreateResourceClient(orgAdminSession)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to create new resource client for userSession of orgAdminClient: %s", err))
 		}
 		orgAdmin := fmt.Sprintf("%s_%s", org, ADMIN)
-		b.users[orgAdmin] = orgAdminSession.Identity()
+		b.users[orgAdmin] = orgAdminSession
 		b.clients[orgAdmin] = orgAdminClient
 		b.resourceClients[orgAdmin] = orgAdminResourceClient
 
-		b.clientConfig = orgAdminResourceClient.Config()
+		b.clientConfig = sdk.Config()
 
 		// load org user
 		orgUserClient := sdk.NewClient(fabsdk.WithUser("User1"), fabsdk.WithOrg(org))
@@ -129,10 +126,8 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 			panic(fmt.Sprintf("Failed to get userSession of orgUserClient: %s", err))
 		}
 		orgUser := fmt.Sprintf("%s_%s", org, USER)
-		b.users[orgUser] = orgUserSession.Identity()
+		b.users[orgUser] = orgUserSession
 		b.clients[orgUser] = orgUserClient
-
-		b.orgEventHubs[org] = b.newEventHub(org)
 
 	}
 
@@ -140,9 +135,6 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 
 // AfterScenario execute code after bdd scenario
 func (b *BDDContext) AfterScenario(interface{}, error) {
-	for _, orgID := range b.orgs {
-		b.orgEventHubs[orgID].Disconnect()
-	}
 
 }
 
@@ -250,7 +242,7 @@ func (b *BDDContext) CollectionConfig(coll string) *CollectionConfig {
 }
 
 // OrgClient returns the org client
-func (b *BDDContext) OrgClient(org, userType string) *fabsdk.Client {
+func (b *BDDContext) OrgClient(org, userType string) *fabsdk.ClientContext {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	return b.clients[fmt.Sprintf("%s_%s", org, userType)]
@@ -352,9 +344,9 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 	return config
 }
 
-func (b *BDDContext) newEventHub(orgID string) sdkApi.EventHub {
+func (b *BDDContext) newEventHub(orgID, channelID string) sdkApi.EventHub {
 
-	eventHub, err := events.NewEventHub(b.OrgResourceClient(orgID, ADMIN))
+	eventHub, err := b.sdk.FabricProvider().CreateEventHub(b.OrgUser(orgID, ADMIN), channelID)
 	if err != nil {
 		panic(fmt.Errorf("GetDefaultImplEventHub failed: %v", err))
 	}
@@ -382,15 +374,15 @@ func (b *BDDContext) newEventHub(orgID string) sdkApi.EventHub {
 }
 
 // EventHubForOrg returns the FabricClient for the given org
-func (b *BDDContext) EventHubForOrg(orgID string) sdkApi.EventHub {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+//func (b *BDDContext) EventHubForOrg(orgID string) sdkApi.EventHub {
+//	b.mutex.RLock()
+//	defer b.mutex.RUnlock()
 
-	eventHub := b.orgEventHubs[orgID]
-	if !eventHub.IsConnected() {
-		if err := eventHub.Connect(); err != nil {
-			panic(fmt.Errorf("Failed eventHub.Connect() [%s]", err))
-		}
-	}
-	return eventHub
-}
+//	eventHub := b.orgEventHubs[orgID]
+//	if !eventHub.IsConnected() {
+//		if err := eventHub.Connect(); err != nil {
+//			panic(fmt.Errorf("Failed eventHub.Connect() [%s]", err))
+//		}
+//	}
+//	return eventHub
+//}
