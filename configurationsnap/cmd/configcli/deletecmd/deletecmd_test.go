@@ -9,7 +9,7 @@ package deletecmd
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/action"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"

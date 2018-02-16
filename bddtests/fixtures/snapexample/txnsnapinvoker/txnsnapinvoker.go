@@ -24,7 +24,6 @@ type SnapTransactionRequest struct {
 	TransientMap        map[string][]byte // optional transient Map
 	EndorserArgs        [][]byte          // optional args for endorsement
 	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
-	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
 }
 
 // New chaincode implementation
@@ -67,7 +66,7 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = args[1:]
-	if snapFunc == "endorseAndCommitTransaction" || snapFunc == "endorseTransaction" {
+	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" {
 		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true)
 	}
 
@@ -92,8 +91,7 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 		ChaincodeID:         chaincodeID,
 		TransientMap:        nil,
 		EndorserArgs:        clientArgs,
-		CCIDsForEndorsement: nil,
-		RegisterTxEvent:     registerTxEvent}
+		CCIDsForEndorsement: nil}
 	snapTxReqB, _ := json.Marshal(snapTxReq)
 
 	var args [][]byte
