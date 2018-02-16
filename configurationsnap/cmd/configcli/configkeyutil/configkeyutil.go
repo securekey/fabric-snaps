@@ -9,7 +9,7 @@ package configkeyutil
 import (
 	"encoding/json"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
+	"github.com/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 )
 
