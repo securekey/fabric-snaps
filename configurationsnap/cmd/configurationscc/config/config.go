@@ -115,12 +115,18 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		RefreshInterval:  refreshInterval,
 		ConfigSnapConfig: customConfig,
 	}
-
+	err = config.initializeLogging()
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+	}
 	return config, nil
 }
 
 // initializeLogging initializes the loggerconfig
 func (c *Config) initializeLogging() error {
+	if c.ConfigSnapConfig == nil {
+		return nil
+	}
 	logLevel := c.ConfigSnapConfig.GetString("configsnap.loglevel")
 
 	if logLevel == "" {

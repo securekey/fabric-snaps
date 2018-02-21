@@ -153,9 +153,9 @@ func (a *updateAction) update() error {
 
 	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{[]byte(configBytes)}); err != nil {
 		fmt.Printf("Error invoking chaincode: %v\n", err)
-	} else {
-		fmt.Println("Configuration successfully updated!")
+		return errors.Wrap(err, "Update command returned with error %v")
 	}
+	fmt.Println("Configuration successfully updated!")
 
 	return nil
 }
