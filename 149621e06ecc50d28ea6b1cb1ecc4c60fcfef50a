@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01e2eb5b_4c81f706",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-02-22T17:08:02Z",
+      "side": 1,
+      "message": "This function should have a TODO to indicate that this is a workaround. Currently there is no way to pass in a set of target peers to the selection provider. An SDK story should be created.",
+      "revId": "149621e06ecc50d28ea6b1cb1ecc4c60fcfef50a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
