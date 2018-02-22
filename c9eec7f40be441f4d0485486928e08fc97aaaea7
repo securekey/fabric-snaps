@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "640ebfa3_38a50882",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-22T18:32:41Z",
+      "side": 1,
+      "message": "remove %v",
+      "range": {
+        "startLine": 156,
+        "startChar": 62,
+        "endLine": 156,
+        "endChar": 64
+      },
+      "revId": "c9eec7f40be441f4d0485486928e08fc97aaaea7",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
