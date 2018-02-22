@@ -158,7 +158,7 @@ func TestParseKey(t *testing.T) {
 
 }
 func TestCreateSnapTxRequest(t *testing.T) {
-	req := createTransactionSnapRequest("ccid", "testchannel", nil, nil, nil, false)
+	req := createTransactionSnapRequest("ccid", "testchannel", nil, nil, nil)
 	if req == nil {
 		t.Fatalf("Request should have been created ")
 	}

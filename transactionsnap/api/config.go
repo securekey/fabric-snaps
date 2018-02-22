@@ -8,7 +8,6 @@ package api
 
 import (
 	"crypto/x509"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -22,16 +21,12 @@ type Config interface {
 	GetTLSRootCert() *x509.Certificate
 	GetTLSCertPath() string
 	GetTLSCert() *x509.Certificate
+	GetTLSCertPem() []byte
 	GetTLSKeyPath() string
 	GetGRPCProtocol() string
 	GetConfigPath(path string) string
 	GetPeerConfig() *viper.Viper
 	GetConfigBytes() []byte
-	GetEndorserSelectionMaxAttempts() int
-	GetEndorserSelectionInterval() time.Duration
-	GetEndorsementMaxAttempts() int
-	GetEndorsementRetryInterval() time.Duration
-	GetCommitTimeout() time.Duration
 	GetCryptoProvider() (string, error)
 }
 

@@ -67,7 +67,7 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = args[1:]
-	if snapFunc == "endorseAndCommitTransaction" || snapFunc == "endorseTransaction" {
+	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" {
 		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true)
 	}
 
