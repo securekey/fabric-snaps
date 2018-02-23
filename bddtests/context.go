@@ -44,6 +44,7 @@ type BDDContext struct {
 	clientConfigFileName string
 	snapsConfigFilePath  string
 	testCCPath           string
+	createdChannels      map[string]bool
 }
 
 // PeerConfig holds the peer configuration and org ID
@@ -79,6 +80,7 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 		peersMspID:           peersMspID,
 		testCCPath:           testCCPath,
 		ordererOrgID:         ordererOrgID,
+		createdChannels:      make(map[string]bool),
 	}
 	return &instance, nil
 }
@@ -276,46 +278,3 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 	b.collectionConfigs[id] = config
 	return config
 }
-
-func (b *BDDContext) newEventHub(orgID, channelID string) sdkApi.EventHub {
-
-	eventHub, err := b.sdk.FabricProvider().CreateEventHub(b.OrgUser(orgID, ADMIN), channelID)
-	if err != nil {
-		panic(fmt.Errorf("GetDefaultImplEventHub failed: %v", err))
-	}
-
-	peersConfig, err := b.clientConfig.PeersConfig(orgID)
-	if err != nil {
-		panic(fmt.Errorf("error reading peer config: %s", err))
-	}
-	if len(peersConfig) == 0 {
-		panic(fmt.Errorf("no peers for org [%s]", orgID))
-	}
-	peerConfig := peersConfig[0]
-	serverHostOverride := ""
-	if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
-		serverHostOverride = str
-	}
-
-	peerCert, err := peerConfig.TLSCACerts.TLSCert()
-	if err != nil {
-		panic(fmt.Errorf("Error reading peer cert from the config: %s", err))
-	}
-
-	eventHub.SetPeerAddr(peerConfig.EventURL, peerCert, serverHostOverride)
-	return eventHub
-}
-
-// EventHubForOrg returns the FabricClient for the given org
-//func (b *BDDContext) EventHubForOrg(orgID string) sdkApi.EventHub {
-//	b.mutex.RLock()
-//	defer b.mutex.RUnlock()
-
-//	eventHub := b.orgEventHubs[orgID]
-//	if !eventHub.IsConnected() {
-//		if err := eventHub.Connect(); err != nil {
-//			panic(fmt.Errorf("Failed eventHub.Connect() [%s]", err))
-//		}
-//	}
-//	return eventHub
-//}

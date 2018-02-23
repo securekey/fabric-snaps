@@ -135,7 +135,7 @@ func (d *CommonSteps) createChannelAndJoinAllPeers(channelID string) error {
 }
 
 func (d *CommonSteps) createChannelAndJoinPeersFromOrg(channelID, orgs string) error {
-	logger.Infof("Creating channel [%s] and joining all peers from orgs [%s]\n", channelID, orgs)
+	logger.Infof("Creating channel [%s] and joining all peers from orgs [%v]\n", channelID, orgs)
 	orgList := strings.Split(orgs, ",")
 	if len(orgList) == 0 {
 		return fmt.Errorf("must specify at least one org ID")
@@ -200,31 +200,34 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		return nil
 	}
 
-	// only the first peer of the first org can create a channel
-	logger.Infof("Creating channel [%s]\n", channelID)
-	txPath := GetChannelTxPath(channelID)
-	if txPath == "" {
-		return fmt.Errorf("channel TX path not found for channel: %s", channelID)
-	}
-	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new channel management client: %s", err)
-	}
+	if d.BDDContext.createdChannels[channelID] == false {
+		// only the first peer of the first org can create a channel
+		logger.Infof("Creating channel [%s]\n", channelID)
+		txPath := GetChannelTxPath(channelID)
+		if txPath == "" {
+			return fmt.Errorf("channel TX path not found for channel: %s", channelID)
+		}
+		// Channel management client is responsible for managing channels (create/update)
+		chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
+		if err != nil {
+			return fmt.Errorf("Failed to create new channel management client: %s", err)
+		}
 
-	// Create and join channel
-	req := chmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfig:   txPath,
-		SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
+		// Create and join channel
+		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
+			ChannelConfig:   txPath,
+			SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
 
-	if err = chMgmtClient.SaveChannel(req); err != nil {
-		return errors.WithMessage(err, "SaveChannel failed")
+		if err = chMgmtClient.SaveChannel(req); err != nil {
+			return errors.WithMessage(err, "SaveChannel failed")
+		}
+
+		// Sleep a while to avoid the SERVICE_UNAVAILABLE error that occurs after a new channel
+		// has been created but is not ready yet when you attempt to join peers to it.
+		logger.Infof("Waiting 30 seconds for orderers to sync ...\n")
+		time.Sleep(time.Second * 30)
+		d.BDDContext.createdChannels[channelID] = true
 	}
-
-	// Sleep a while to avoid the SERVICE_UNAVAILABLE error that occurs after a new channel
-	// has been created but is not ready yet when you attempt to join peers to it.
-	logger.Infof("Waiting 30 seconds for orderers to sync ...\n")
-	time.Sleep(time.Second * 30)
 
 	// Join Channel without error for anchor peers only. ignore JoinChannel error for other peers as AnchorePeer with JoinChannel will add all org's peers
 
