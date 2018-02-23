@@ -9,9 +9,6 @@ package mocks
 import (
 	"golang.org/x/net/context"
 
-	//rwsetutil "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
-	//kvrwset "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
-
 	"fmt"
 	"net"
 
@@ -23,48 +20,22 @@ import (
 
 // MockEndorserServer mock endoreser server to process endorsement proposals
 type MockEndorserServer struct {
-	MockPeer *MockPeer
+	MockPeer     *MockPeer
+	RequestCount int
+	LastRequest  *pb.SignedProposal
 }
 
 // ProcessProposal mock implementation that returns success if error is not set
 // error if it is
 func (m *MockEndorserServer) ProcessProposal(context context.Context,
 	proposal *pb.SignedProposal) (*pb.ProposalResponse, error) {
+	m.RequestCount++
 	tp, err := m.MockPeer.ProcessTransactionProposal(apifabclient.TransactionProposal{})
+	m.LastRequest = proposal
+
 	return tp.ProposalResponse, err
 
 }
-
-//func (m *MockEndorserServer) createProposalResponsePayload() []byte {
-
-//	prp := &pb.ProposalResponsePayload{}
-//	ccAction := &pb.ChaincodeAction{}
-//	txRwSet := &rwsetutil.TxRwSet{}
-
-//	if m.AddkvWrite {
-//		txRwSet.NsRwSets = []*rwsetutil.NsRwSet{
-//			&rwsetutil.NsRwSet{NameSpace: "ns1", KvRwSet: &kvrwset.KVRWSet{
-//				Reads:  []*kvrwset.KVRead{&kvrwset.KVRead{Key: "key1", Version: &kvrwset.Version{BlockNum: 1, TxNum: 1}}},
-//				Writes: []*kvrwset.KVWrite{&kvrwset.KVWrite{Key: "key2", IsDelete: false, Value: []byte("value2")}},
-//			}}}
-//	}
-
-//	txRWSetBytes, err := txRwSet.ToProtoBytes()
-//	if err != nil {
-//		return nil
-//	}
-//	ccAction.Results = txRWSetBytes
-//	ccActionBytes, err := proto.Marshal(ccAction)
-//	if err != nil {
-//		return nil
-//	}
-//	prp.Extension = ccActionBytes
-//	prpBytes, err := proto.Marshal(prp)
-//	if err != nil {
-//		return nil
-//	}
-//	return prpBytes
-//}
 
 //StartEndorserServer starts mock server for unit testing purpose
 func StartEndorserServer(endorserTestURL string) *MockEndorserServer {

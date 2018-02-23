@@ -225,9 +225,14 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 	logger.Debugf("EndorseTransaction with endorseRequest %v", endorseRequest)
 
 	targets := peer.PeersToTxnProcessors(endorseRequest.Targets)
+	if len(endorseRequest.Args) < 1 {
+		return nil, errors.New(errors.GeneralError, "function arg is required")
+	}
 	args := make([][]byte, 0)
-	for _, value := range endorseRequest.Args[1:] {
-		args = append(args, []byte(value))
+	if len(endorseRequest.Args) > 1 {
+		for _, value := range endorseRequest.Args[1:] {
+			args = append(args, []byte(value))
+		}
 	}
 
 	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter,
@@ -250,9 +255,14 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) ([]*fab.TransactionProposalResponse, error) {
 	logger.Debugf("CommitTransaction with endorseRequest %v", endorseRequest)
 	targets := peer.PeersToTxnProcessors(endorseRequest.Targets)
+	if len(endorseRequest.Args) < 1 {
+		return nil, errors.New(errors.GeneralError, "function arg is required")
+	}
 	args := make([][]byte, 0)
-	for _, value := range endorseRequest.Args[1:] {
-		args = append(args, []byte(value))
+	if len(endorseRequest.Args) > 1 {
+		for _, value := range endorseRequest.Args[1:] {
+			args = append(args, []byte(value))
+		}
 	}
 
 	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter,
