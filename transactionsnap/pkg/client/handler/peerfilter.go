@@ -18,14 +18,15 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 //NewPeerFilterHandler returns a handler that filter peers
-func NewPeerFilterHandler(peerFilter api.PeerFilter, next ...chclient.Handler) *PeerFilterHandler {
-	return &PeerFilterHandler{peerFilter: peerFilter, next: getNext(next)}
+func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, next ...chclient.Handler) *PeerFilterHandler {
+	return &PeerFilterHandler{peerFilter: peerFilter, chaincodeIDs: chaincodeIDs, next: getNext(next)}
 }
 
 //PeerFilterHandler for handling peers filter
 type PeerFilterHandler struct {
-	next       chclient.Handler
-	peerFilter api.PeerFilter
+	next         chclient.Handler
+	peerFilter   api.PeerFilter
+	chaincodeIDs []string
 }
 
 //Handle for endorsing transactions
@@ -42,7 +43,11 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 		logger.Debugf("Discovery.GetPeers() return peers:%v", peers)
 		endorsers := peers
 		if clientContext.Selection != nil {
-			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(peers, requestContext.Request.ChaincodeID)
+			if len(p.chaincodeIDs) == 0 {
+				p.chaincodeIDs = make([]string, 1)
+				p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
+			}
+			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(peers, p.chaincodeIDs...)
 			if err != nil {
 				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
 				return

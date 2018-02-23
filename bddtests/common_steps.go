@@ -24,7 +24,6 @@ import (
 	chmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/chmgmtclient"
 	resmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/resmgmtclient"
 	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/chconfig"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/txnhandler"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
@@ -135,7 +134,7 @@ func (d *CommonSteps) createChannelAndJoinAllPeers(channelID string) error {
 }
 
 func (d *CommonSteps) createChannelAndJoinPeersFromOrg(channelID, orgs string) error {
-	logger.Infof("Creating channel [%s] and joining all peers from orgs [%s]\n", channelID, orgs)
+	logger.Infof("Creating channel [%s] and joining all peers from orgs [%v]\n", channelID, orgs)
 	orgList := strings.Split(orgs, ",")
 	if len(orgList) == 0 {
 		return fmt.Errorf("must specify at least one org ID")
@@ -167,64 +166,43 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 
 func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []apiconfig.PeerConfig) error {
 
-	channel, err := d.BDDContext.sdk.FabricProvider().CreateChannelClient(d.BDDContext.OrgUser(orgID, ADMIN), chconfig.NewChannelCfg(channelID))
-	if err != nil {
-		return errors.WithMessage(err, "NewChannel failed")
-	}
-
-	for index, peerConfig := range peersConfig {
+	for _, peerConfig := range peersConfig {
 		serverHostOverride := ""
 		if str, ok := peerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 			serverHostOverride = str
 		}
-		peer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: peerConfig})
-		if err != nil {
-			return errors.WithMessage(err, "NewPeer failed")
-		}
 
 		d.BDDContext.AddPeerConfigToChannel(&PeerConfig{Config: peerConfig, OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
-		err = channel.AddPeer(peer)
+	}
+
+	if d.BDDContext.createdChannels[channelID] == false {
+		// only the first peer of the first org can create a channel
+		logger.Infof("Creating channel [%s]\n", channelID)
+		txPath := GetChannelTxPath(channelID)
+		if txPath == "" {
+			return fmt.Errorf("channel TX path not found for channel: %s", channelID)
+		}
+		// Channel management client is responsible for managing channels (create/update)
+		chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
 		if err != nil {
-			return fmt.Errorf("adding peer failed %v", err)
+			return fmt.Errorf("Failed to create new channel management client: %s", err)
 		}
-		if index == 0 {
-			channel.SetPrimaryPeer(peer)
+
+		// Create and join channel
+		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
+			ChannelConfig:   txPath,
+			SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
+
+		if err = chMgmtClient.SaveChannel(req); err != nil {
+			return errors.WithMessage(err, "SaveChannel failed")
 		}
-	}
 
-	// Check if primary peer has joined channel
-	alreadyJoined, err := HasPrimaryPeerJoinedChannel(d.BDDContext.OrgResourceClient(orgID, ADMIN), d.BDDContext.OrgUser(orgID, ADMIN), channel)
-	if err != nil {
-		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
-	} else if alreadyJoined {
-		return nil
+		// Sleep a while to avoid the SERVICE_UNAVAILABLE error that occurs after a new channel
+		// has been created but is not ready yet when you attempt to join peers to it.
+		logger.Infof("Waiting 30 seconds for orderers to sync ...\n")
+		time.Sleep(time.Second * 30)
+		d.BDDContext.createdChannels[channelID] = true
 	}
-
-	// only the first peer of the first org can create a channel
-	logger.Infof("Creating channel [%s]\n", channelID)
-	txPath := GetChannelTxPath(channelID)
-	if txPath == "" {
-		return fmt.Errorf("channel TX path not found for channel: %s", channelID)
-	}
-	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new channel management client: %s", err)
-	}
-
-	// Create and join channel
-	req := chmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfig:   txPath,
-		SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
-
-	if err = chMgmtClient.SaveChannel(req); err != nil {
-		return errors.WithMessage(err, "SaveChannel failed")
-	}
-
-	// Sleep a while to avoid the SERVICE_UNAVAILABLE error that occurs after a new channel
-	// has been created but is not ready yet when you attempt to join peers to it.
-	logger.Infof("Waiting 30 seconds for orderers to sync ...\n")
-	time.Sleep(time.Second * 30)
 
 	// Join Channel without error for anchor peers only. ignore JoinChannel error for other peers as AnchorePeer with JoinChannel will add all org's peers
 
