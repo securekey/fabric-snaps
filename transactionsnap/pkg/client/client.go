@@ -235,7 +235,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 		}
 	}
 
-	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter,
+	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs,
 		txnhandler.NewEndorsementHandler(
 			txnhandler.NewEndorsementValidationHandler(
 				txnhandler.NewSignatureValidationHandler(),
@@ -265,7 +265,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		}
 	}
 
-	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter,
+	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs,
 		txnhandler.NewEndorsementHandler(
 			txnhandler.NewEndorsementValidationHandler(
 				txnhandler.NewSignatureValidationHandler(
