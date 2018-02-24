@@ -244,7 +244,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args}, chclient.WithProposalProcessor(targets...))
+		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -278,7 +278,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args}, chclient.WithProposalProcessor(targets...))
+		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
