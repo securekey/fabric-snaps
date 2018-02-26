@@ -117,8 +117,11 @@ func processorsAsString(processors ...sdkApi.ProposalProcessor) string {
 
 func peersAsString(peers []sdkApi.Peer) string {
 	str := ""
-	for _, p := range peers {
-		str += p.URL() + " "
+	for i, p := range peers {
+		str += p.Name() + ": " + p.URL()
+		if i < len(peers)-1 {
+			str += ", "
+		}
 	}
 	return str
 }
