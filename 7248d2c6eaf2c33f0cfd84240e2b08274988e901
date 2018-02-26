@@ -22,6 +22,30 @@
       "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fda5cd3_483b39d8",
+        "filename": "bddtests/sdkmembership_steps.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-26T21:34:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4362fe59_f98cead6",
+      "range": {
+        "startLine": 41,
+        "startChar": 23,
+        "endLine": 41,
+        "endChar": 28
+      },
+      "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
