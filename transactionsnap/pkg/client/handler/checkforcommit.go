@@ -77,11 +77,13 @@ func (c *CheckForCommitHandler) Handle(requestContext *chclient.RequestContext, 
 		if nsRWSet.KvRwSet != nil && len(nsRWSet.KvRwSet.Writes) > 0 {
 			logger.Debugf("Found writes to CC [%s] for Tx [%s]. A commit will be required.", nsRWSet.NameSpace, txID)
 			c.next.Handle(requestContext, clientContext)
+			return
 		}
 		for _, collRWSet := range nsRWSet.CollHashedRwSets {
 			if collRWSet.HashedRwSet != nil && len(collRWSet.HashedRwSet.HashedWrites) > 0 {
 				logger.Debugf("Found writes to private data collection [%s] in CC [%s] for Tx [%s]. A commit will be required.", collRWSet.CollectionName, nsRWSet.NameSpace, txID)
 				c.next.Handle(requestContext, clientContext)
+				return
 			}
 		}
 	}

@@ -320,7 +320,6 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 	if err != nil {
 		return fmt.Errorf("Failed to create new channel client: %s", err)
 	}
-	defer chClient.Close()
 
 	_, err = chClient.Execute(
 		chclient.Request{
@@ -408,7 +407,6 @@ func (d *CommonSteps) queryCCWithOpts(systemCC bool, ccID, channelID string, arg
 		logger.Errorf("Failed to create new channel client: %s\n", err)
 		return "", errors.Wrap(err, "Failed to create new channel client")
 	}
-	defer chClient.Close()
 	if systemCC {
 		// Create a system channel client
 		var chService sdkApi.ChannelService
@@ -635,12 +633,6 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 
 	for _, pconfig := range peers {
 		orgID = pconfig.OrgID
-
-		chClient, err := d.BDDContext.OrgClient(orgID, ADMIN).Channel(channelID)
-		if err != nil {
-			return errors.Wrap(err, "Failed to create new channel client")
-		}
-		defer chClient.Close()
 
 		sdkPeer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
 		if err != nil {
