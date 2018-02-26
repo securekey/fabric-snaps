@@ -83,6 +83,24 @@
     },
     {
       "key": {
+        "uuid": "e0527d0c_d5ce5a68",
+        "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-26T21:41:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8f406dff_f7993ea1",
+      "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54310c29_4b4bf60e",
         "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
         "patchSetId": 1
@@ -94,6 +112,24 @@
       "writtenOn": "2018-02-26T21:34:42Z",
       "side": 1,
       "message": "Please remove, including error handling on the next line",
+      "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5ae0d83_05e3979a",
+        "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-26T21:41:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54310c29_4b4bf60e",
       "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
