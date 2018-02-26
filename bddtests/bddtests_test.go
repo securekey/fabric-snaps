@@ -99,7 +99,7 @@ func FeatureContext(s *godog.Suite) {
 	NewCommonSteps(context).RegisterSteps(s)
 	NewEventSnapSteps(context).registerSteps(s)
 	NewConfigurationsSnapSteps(context).registerSteps(s)
-
+	NewSDKMembershipSteps(context).registerSteps(s)
 }
 
 func initBDDConfig() {
