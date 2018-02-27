@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db56b2f2_d346f8b3",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-02-27T19:27:29Z",
+      "side": 1,
+      "message": "Hard-coded timeout?",
+      "range": {
+        "startLine": 282,
+        "startChar": 123,
+        "endLine": 282,
+        "endChar": 124
+      },
+      "revId": "6d2b724d3a0702d715f86ebb8b6fe9ba88361a2b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "547582d4_0a17cbad",
+        "filename": "transactionsnap/pkg/client/handler/peerfilter.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-02-27T19:27:29Z",
+      "side": 1,
+      "message": "We will need exponential backoff here. Can you create a task to do so?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 55
+      },
+      "revId": "6d2b724d3a0702d715f86ebb8b6fe9ba88361a2b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
