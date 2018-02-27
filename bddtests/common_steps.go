@@ -390,6 +390,7 @@ func (d *CommonSteps) QueryCCWithArgs(systemCC bool, ccID, channelID string, arg
 	return d.QueryCCWithOpts(systemCC, ccID, channelID, args, 0, true, 0, transientData, targets...)
 }
 
+// QueryCCWithOpts ...
 func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, args []string, timeout time.Duration, concurrent bool, interval time.Duration, transientData map[string][]byte, targets ...*PeerConfig) (string, error) {
 	if len(targets) == 0 {
 		logger.Errorf("No target specified\n")
