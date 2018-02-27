@@ -387,10 +387,10 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 
 // QueryCCWithArgs ...
 func (d *CommonSteps) QueryCCWithArgs(systemCC bool, ccID, channelID string, args []string, transientData map[string][]byte, targets ...*PeerConfig) (string, error) {
-	return d.queryCCWithOpts(systemCC, ccID, channelID, args, 0, true, 0, transientData, targets...)
+	return d.QueryCCWithOpts(systemCC, ccID, channelID, args, 0, true, 0, transientData, targets...)
 }
 
-func (d *CommonSteps) queryCCWithOpts(systemCC bool, ccID, channelID string, args []string, timeout time.Duration, concurrent bool, interval time.Duration, transientData map[string][]byte, targets ...*PeerConfig) (string, error) {
+func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, args []string, timeout time.Duration, concurrent bool, interval time.Duration, transientData map[string][]byte, targets ...*PeerConfig) (string, error) {
 	if len(targets) == 0 {
 		logger.Errorf("No target specified\n")
 		return "", errors.New("no targets specified")
@@ -750,7 +750,7 @@ func (d *CommonSteps) warmUpCC(ccID, channelID string) error {
 func (d *CommonSteps) warmUpCConOrg(ccID, orgIDs, channelID string) error {
 	logger.Infof("Warming up chaincode [%s] on orgs [%s] and channel [%s]\n", ccID, orgIDs, channelID)
 	for {
-		_, err := d.queryCCWithOpts(false, ccID, channelID, []string{"whatever"}, 5*time.Minute, false, 0, nil, d.OrgPeers(orgIDs, channelID)...)
+		_, err := d.QueryCCWithOpts(false, ccID, channelID, []string{"whatever"}, 5*time.Minute, false, 0, nil, d.OrgPeers(orgIDs, channelID)...)
 		if err != nil && strings.Contains(err.Error(), "premature execution - chaincode") {
 			// Wait until we can successfully invoke the chaincode
 			logger.Infof("Error warming up chaincode [%s]: %s. Retrying in 5 seconds...", ccID, err)
