@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "0cf3be94_b0707f0b",
+        "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-27T15:20:36Z",
+      "side": 1,
+      "message": "will remove..",
+      "parentUuid": "81922f21_34af8f13",
+      "range": {
+        "startLine": 47,
+        "startChar": 2,
+        "endLine": 47,
+        "endChar": 10
+      },
+      "revId": "ad6a5c9e4a9d6f20e394b69f7d85c5f341fa03aa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e92b9d7_9a126949",
         "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
         "patchSetId": 3
@@ -59,6 +83,30 @@
       "writtenOn": "2018-02-27T14:58:49Z",
       "side": 1,
       "message": "This isn\u0027t thread safe. Take a look at fabric-snaps - configmgmtservice refreshcache/getcache.",
+      "range": {
+        "startLine": 80,
+        "startChar": 8,
+        "endLine": 80,
+        "endChar": 27
+      },
+      "revId": "ad6a5c9e4a9d6f20e394b69f7d85c5f341fa03aa",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "142c75dc_a04c4540",
+        "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-02-27T15:20:36Z",
+      "side": 1,
+      "message": "will update..",
+      "parentUuid": "6e92b9d7_9a126949",
       "range": {
         "startLine": 80,
         "startChar": 8,
