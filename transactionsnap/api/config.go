@@ -8,6 +8,7 @@ package api
 
 import (
 	"crypto/x509"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -28,6 +29,8 @@ type Config interface {
 	GetPeerConfig() *viper.Viper
 	GetConfigBytes() []byte
 	GetCryptoProvider() (string, error)
+	GetEndorserSelectionMaxAttempts() int
+	GetEndorserSelectionInterval() time.Duration
 }
 
 // PeerConfig represents the server addresses of a fabric peer

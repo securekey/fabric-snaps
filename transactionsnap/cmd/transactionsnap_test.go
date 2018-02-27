@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -56,8 +57,9 @@ var eventProducer *mockproducer.MockProducer
 
 var txSnapConfig api.Config
 
-var endorserTestURL = "127.0.0.1:7040"
-var broadcastTestURL = "127.0.0.1:7041"
+var testhost = "127.0.0.1"
+var testport = 7040
+var testBroadcastPort = 7041
 var fcClient api.Client
 var channelID = "testChannel"
 var mspID = "Org1MSP"
@@ -71,7 +73,7 @@ type MockProviderFactory struct {
 }
 
 func (m *MockProviderFactory) NewDiscoveryProvider(config apiconfig.Config) (sdkApi.DiscoveryProvider, error) {
-	peer, _ := sdkpeer.New(fcmocks.NewMockConfig(), sdkpeer.WithURL("grpc://"+endorserTestURL))
+	peer, _ := sdkpeer.New(fcmocks.NewMockConfig(), sdkpeer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
 	mdp, _ := fctxnmocks.NewMockDiscoveryProvider(nil, []sdkApi.Peer{peer})
 	return mdp, nil
 }
@@ -529,7 +531,10 @@ func TestMain(m *testing.M) {
 	// TDOD
 	bccspFactory.InitFactories(opts)
 
-	configData, err := ioutil.ReadFile("../pkg/mocks/config/config.yaml")
+	os.Setenv("CORE_PEER_ADDRESS", testhost+":"+strconv.Itoa(testport))
+	defer os.Unsetenv("CORE_PEER_ADDRESS")
+
+	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
@@ -549,19 +554,19 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub, mspID)
 
-	_, err = config.NewConfig("../pkg/mocks/config", channelID)
+	_, err = config.NewConfig("./sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 
-	txsnapservice.PeerConfigPath = sampleconfig.ResolvPeerConfig("../pkg/mocks/config")
+	txsnapservice.PeerConfigPath = sampleconfig.ResolvPeerConfig("./sampleconfig")
 
-	txSnapConfig, err = config.NewConfig("../pkg/mocks/config", channelID)
+	txSnapConfig, err = config.NewConfig("./sampleconfig", channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 
-	mockEndorserServer = mocks.StartEndorserServer(endorserTestURL)
+	mockEndorserServer = mocks.StartEndorserServer(testhost + ":" + strconv.Itoa(testport))
 	mockEndorserServer.MockPeer =
 		&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
 			Payload: getConfigBlockPayload()}
@@ -571,7 +576,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
 
-	mockBroadcastServer = fcmocks.StartMockBroadcastServer(broadcastTestURL)
+	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
 
 	if eventProducer == nil {
 		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())

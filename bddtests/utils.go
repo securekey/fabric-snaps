@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"time"
 
-	api "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -50,16 +49,15 @@ func randomString(strlen int) string {
 // HasPrimaryPeerJoinedChannel checks whether the primary peer of a channel
 // has already joined the channel. It returns true if it has, false otherwise,
 // or an error
-func HasPrimaryPeerJoinedChannel(client api.Resource, orgUser api.IdentityContext, channel api.Channel) (bool, error) {
+func HasPrimaryPeerJoinedChannel(channelID string, client sdkApi.Resource, orgUser sdkApi.IdentityContext, peer sdkApi.Peer) (bool, error) {
 	foundChannel := false
-	primaryPeer := channel.PrimaryPeer()
 
-	response, err := client.QueryChannels(primaryPeer)
+	response, err := client.QueryChannels(peer)
 	if err != nil {
 		return false, fmt.Errorf("Error querying channel for primary peer: %s", err)
 	}
 	for _, responseChannel := range response.Channels {
-		if responseChannel.ChannelId == channel.Name() {
+		if responseChannel.ChannelId == channelID {
 			foundChannel = true
 		}
 	}
@@ -95,7 +93,7 @@ func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32,
 }
 
 // IsChaincodeInstalled Helper function to check if chaincode has been deployed
-func IsChaincodeInstalled(client api.Resource, peer api.Peer, name string) (bool, error) {
+func IsChaincodeInstalled(client sdkApi.Resource, peer sdkApi.Peer, name string) (bool, error) {
 	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(peer)
 	if err != nil {
 		return false, err

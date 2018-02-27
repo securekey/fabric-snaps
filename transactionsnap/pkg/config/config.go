@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -25,9 +26,11 @@ import (
 )
 
 const (
-	configFileName     = "config"
-	peerConfigFileName = "core"
-	cmdRootPrefix      = "core"
+	configFileName              = "config"
+	peerConfigFileName          = "core"
+	cmdRootPrefix               = "core"
+	defaultSelectionMaxAttempts = 1
+	defaultSelectionInterval    = time.Second
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -251,6 +254,27 @@ func (c *Config) GetCryptoProvider() (string, error) {
 		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
 	}
 	return cryptoProvider, nil
+}
+
+// GetEndorserSelectionMaxAttempts returns the maximum number of attempts
+// at retrieving at least one endorsing peer group, while waiting the
+// specified interval between attempts.
+func (c *Config) GetEndorserSelectionMaxAttempts() int {
+	maxAttempts := c.txnSnapConfig.GetInt("txnsnap.selection.maxattempts")
+	if maxAttempts == 0 {
+		return defaultSelectionMaxAttempts
+	}
+	return maxAttempts
+}
+
+// GetEndorserSelectionInterval is the amount of time to wait between
+// attempts at retrieving at least one endorsing peer group.
+func (c *Config) GetEndorserSelectionInterval() time.Duration {
+	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
+	if interval == 0 {
+		return defaultSelectionInterval
+	}
+	return interval
 }
 
 // initializeLogging initializes the logger

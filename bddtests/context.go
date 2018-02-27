@@ -15,6 +15,7 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
@@ -39,6 +40,7 @@ type BDDContext struct {
 	clients              map[string]*fabsdk.ClientContext
 	resourceClients      map[string]sdkApi.Resource
 	users                map[string]sdkApi.IdentityContext
+	orgChannelClients    map[string]chclient.ChannelClient
 	peersMspID           map[string]string
 	clientConfigFilePath string
 	clientConfigFileName string
@@ -74,6 +76,7 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 		resourceClients:      make(map[string]sdkApi.Resource),
 		clients:              make(map[string]*fabsdk.ClientContext),
 		collectionConfigs:    make(map[string]*CollectionConfig),
+		orgChannelClients:    make(map[string]chclient.ChannelClient),
 		clientConfigFilePath: clientConfigFilePath,
 		clientConfigFileName: clientConfigFileName,
 		snapsConfigFilePath:  snapsConfigFilePath,
@@ -126,6 +129,10 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 
 // AfterScenario execute code after bdd scenario
 func (b *BDDContext) AfterScenario(interface{}, error) {
+
+	for _, orgChannelClient := range b.orgChannelClients {
+		orgChannelClient.Close()
+	}
 
 }
 
@@ -181,6 +188,22 @@ func (b *BDDContext) OrgClient(org, userType string) *fabsdk.ClientContext {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	return b.clients[fmt.Sprintf("%s_%s", org, userType)]
+}
+
+// OrgChannelClient returns the org channel client
+func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (chclient.ChannelClient, error) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+	if orgChanClient, ok := b.orgChannelClients[fmt.Sprintf("%s_%s_%s", org, userType, channelID)]; ok {
+		return orgChanClient, nil
+	}
+
+	orgChanClient, err := b.OrgClient(org, userType).Channel(channelID)
+	if err != nil {
+		return nil, err
+	}
+	b.orgChannelClients[fmt.Sprintf("%s_%s_%s", org, userType, channelID)] = orgChanClient
+	return orgChanClient, nil
 }
 
 // OrgResourceClient returns the org resource client

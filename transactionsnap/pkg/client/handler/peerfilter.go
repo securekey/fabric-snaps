@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package handler
 
 import (
+	"time"
+
 	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
@@ -18,8 +20,8 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 //NewPeerFilterHandler returns a handler that filter peers
-func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, next ...chclient.Handler) *PeerFilterHandler {
-	return &PeerFilterHandler{peerFilter: peerFilter, chaincodeIDs: chaincodeIDs, next: getNext(next)}
+func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, config api.Config, next ...chclient.Handler) *PeerFilterHandler {
+	return &PeerFilterHandler{peerFilter: peerFilter, chaincodeIDs: chaincodeIDs, config: config, next: getNext(next)}
 }
 
 //PeerFilterHandler for handling peers filter
@@ -27,6 +29,7 @@ type PeerFilterHandler struct {
 	next         chclient.Handler
 	peerFilter   api.PeerFilter
 	chaincodeIDs []string
+	config       api.Config
 }
 
 //Handle for endorsing transactions
@@ -56,7 +59,20 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 
 		}
 
-		requestContext.Opts.ProposalProcessors = peer.PeersToTxnProcessors(p.filterTargets(endorsers, p.peerFilter))
+		filterPeers := p.filterTargets(endorsers, p.peerFilter)
+		// Select endorsers
+		remainingAttempts := p.config.GetEndorserSelectionMaxAttempts()
+		logger.Infof("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
+		for len(filterPeers) == 0 && remainingAttempts > 0 {
+			filterPeers = p.filterTargets(endorsers, p.peerFilter)
+			if len(filterPeers) == 0 {
+				remainingAttempts--
+				logger.Warnf("No endorsers. [%d] remaining attempts...", remainingAttempts)
+				time.Sleep(p.config.GetEndorserSelectionInterval())
+			}
+		}
+
+		requestContext.Opts.ProposalProcessors = peer.PeersToTxnProcessors(filterPeers)
 	}
 
 	//Delegate to next step if any

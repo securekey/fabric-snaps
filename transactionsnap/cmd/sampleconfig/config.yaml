@@ -8,6 +8,11 @@
 txnsnap:
   loglevel: debug
 
+  # Endorser selection attempts
+  selection:
+    maxattempts: 5
+    interval: 2s
+
 # Configurations for the fabric client
 client:
   organization: peerorg1
@@ -70,7 +75,7 @@ peers:
 
 orderers:
   orderer.example.com:
-    url: grpc://orderer.example.com:7050
+    url: grpc://0.0.0.0:7041
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
