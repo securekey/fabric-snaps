@@ -84,6 +84,52 @@
     },
     {
       "key": {
+        "uuid": "0b02723b_c935c64e",
+        "filename": "membershipsnap/pkg/discovery/sdk/provider/provider.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-02-27T14:58:49Z",
+      "side": 1,
+      "message": "Options should be passed in using the functional \u0027...Opt\u0027 style so that we\u0027re consistent everywhere.",
+      "range": {
+        "startLine": 37,
+        "startChar": 62,
+        "endLine": 37,
+        "endChar": 88
+      },
+      "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73572b2c_5bf22669",
+        "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-02-27T14:58:49Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be a singleton instance.",
+      "range": {
+        "startLine": 38,
+        "startChar": 4,
+        "endLine": 38,
+        "endChar": 12
+      },
+      "revId": "7248d2c6eaf2c33f0cfd84240e2b08274988e901",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f406dff_f7993ea1",
         "filename": "membershipsnap/pkg/discovery/sdk/service/service.go",
         "patchSetId": 1
