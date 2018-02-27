@@ -63,7 +63,7 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 				logger.Debugf("Selection GetEndorsersForChaincode return peers:%v", peers)
 
 			}
-			peers := p.filterTargets(peers, p.peerFilter)
+			peers = p.filterTargets(peers, p.peerFilter)
 			if len(peers) == 0 {
 				remainingAttempts--
 				logger.Warnf("No endorsers. [%d] remaining attempts...", remainingAttempts)
