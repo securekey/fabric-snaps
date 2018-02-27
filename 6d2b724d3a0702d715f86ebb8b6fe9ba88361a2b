@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6cc67dca_a37576a4",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-02-27T19:30:51Z",
+      "side": 1,
+      "message": "will be configurable in new sdk",
+      "parentUuid": "db56b2f2_d346f8b3",
+      "range": {
+        "startLine": 282,
+        "startChar": 123,
+        "endLine": 282,
+        "endChar": 124
+      },
+      "revId": "6d2b724d3a0702d715f86ebb8b6fe9ba88361a2b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "547582d4_0a17cbad",
         "filename": "transactionsnap/pkg/client/handler/peerfilter.go",
         "patchSetId": 1
