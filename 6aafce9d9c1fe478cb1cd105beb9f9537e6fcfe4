@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "309fa9f3_1624a7cc",
+        "filename": "bddtests/features/sdkmembership.feature",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-02-27T15:00:39Z",
+      "side": 1,
+      "message": "I think this should be part of unit test not integration test",
+      "range": {
+        "startLine": 7,
+        "startChar": 1,
+        "endLine": 7,
+        "endChar": 23
+      },
+      "revId": "6aafce9d9c1fe478cb1cd105beb9f9537e6fcfe4",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
