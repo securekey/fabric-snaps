@@ -53,7 +53,7 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 			filterPeers := p.filterTargets(peersFromDiscovery, p.peerFilter)
 			logger.Debugf("filterTargets return peers:%v", filterPeers)
 			endorsers = filterPeers
-			if clientContext.Selection != nil {
+			if clientContext.Selection != nil && len(endorsers) != 0 {
 				if len(p.chaincodeIDs) == 0 {
 					p.chaincodeIDs = make([]string, 1)
 					p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
