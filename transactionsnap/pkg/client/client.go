@@ -9,7 +9,6 @@ package client
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
@@ -245,7 +244,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(30*time.Second))
+		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -279,7 +278,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(30*time.Second))
+		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
