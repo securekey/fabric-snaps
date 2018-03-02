@@ -329,8 +329,8 @@
     "protos/peer",
     "protos/utils"
   ]
-  revision = "0f38dbc4d432fe07e63643966026ec9cfb44c358"
-  version = "v1.1.0-alpha"
+  revision = "8352cb867e1202ba07bc82a7dde08b2873e3a41b"
+  version = "v1.1.0-rc1"
 
 [[projects]]
   name = "github.com/hyperledger/fabric-sdk-go"
@@ -714,6 +714,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6d3bc01a5b45f3fc970b7b19d11422f886977f4ea11b944799a0fa3f3629e0fc"
+  inputs-digest = "a5a66b2f7593b1157ec705549eaaa37ae7b603077a7d5ead7113a3c4478fcddb"
   solver-name = "gps-cdcl"
   solver-version = 1
