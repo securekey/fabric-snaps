@@ -214,8 +214,8 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 
 func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) {
 	snap := newMockTxnSnap(nil)
-	mockEndorserServer.MockPeer = &mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")}
+	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
+		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")})
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -246,8 +246,8 @@ func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) 
 
 func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 	snap := newMockTxnSnap(nil)
-	mockEndorserServer.MockPeer = &mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 500, Error: fmt.Errorf("proposalError")}
+	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
+		MockMSP: "Org1MSP", Status: 500, Error: fmt.Errorf("proposalError")})
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -263,8 +263,8 @@ func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 }
 
 func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
-	mockEndorserServer.MockPeer = &mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true}
+	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
+		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
 	mockBroadcastServer.BroadcastInternalServerError = false
 
 	snap := newMockTxnSnap(nil)
@@ -299,8 +299,8 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 }
 
 func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *testing.T) {
-	mockEndorserServer.MockPeer = &mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true}
+	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
+		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
 	mockBroadcastServer.BroadcastInternalServerError = true
 
 	snap := newMockTxnSnap(nil)
@@ -567,9 +567,8 @@ func TestMain(m *testing.M) {
 	}
 
 	mockEndorserServer = mocks.StartEndorserServer(testhost + ":" + strconv.Itoa(testport))
-	mockEndorserServer.MockPeer =
-		&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
-			Payload: getConfigBlockPayload()}
+	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
+		Payload: getConfigBlockPayload()})
 
 	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig}, &MockProviderFactory{})
 	if err != nil {

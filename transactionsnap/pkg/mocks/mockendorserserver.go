@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
+	"sync"
+
 	"golang.org/x/net/context"
 
 	"fmt"
@@ -20,9 +22,10 @@ import (
 
 // MockEndorserServer mock endoreser server to process endorsement proposals
 type MockEndorserServer struct {
-	MockPeer     *MockPeer
+	mockPeer     *MockPeer
 	RequestCount int
 	LastRequest  *pb.SignedProposal
+	lck          sync.RWMutex
 }
 
 // ProcessProposal mock implementation that returns success if error is not set
@@ -30,7 +33,7 @@ type MockEndorserServer struct {
 func (m *MockEndorserServer) ProcessProposal(context context.Context,
 	proposal *pb.SignedProposal) (*pb.ProposalResponse, error) {
 	m.RequestCount++
-	tp, err := m.MockPeer.ProcessTransactionProposal(apifabclient.TransactionProposal{})
+	tp, err := m.GetMockPeer().ProcessTransactionProposal(apifabclient.TransactionProposal{})
 	m.LastRequest = proposal
 
 	return tp.ProposalResponse, err
@@ -49,4 +52,18 @@ func StartEndorserServer(endorserTestURL string) *MockEndorserServer {
 	fmt.Printf("Test endorser server started\n")
 	go grpcServer.Serve(lis)
 	return endorserServer
+}
+
+// GetMockPeer will return the mock endorser's mock peer in a thread safe way
+func (m *MockEndorserServer) GetMockPeer() *MockPeer {
+	m.lck.RLock()
+	defer m.lck.RUnlock()
+	return m.mockPeer
+}
+
+// SetMockPeer will write the mock endorser's mock peer in a thread safe way
+func (m *MockEndorserServer) SetMockPeer(mPeer *MockPeer) {
+	m.lck.Lock()
+	defer m.lck.Unlock()
+	m.mockPeer = mPeer
 }
