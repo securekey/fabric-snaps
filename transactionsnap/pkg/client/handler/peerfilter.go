@@ -9,9 +9,8 @@ package handler
 import (
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -20,27 +19,27 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 //NewPeerFilterHandler returns a handler that filter peers
-func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, config api.Config, next ...chclient.Handler) *PeerFilterHandler {
+func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, config api.Config, next ...invoke.Handler) *PeerFilterHandler {
 	return &PeerFilterHandler{peerFilter: peerFilter, chaincodeIDs: chaincodeIDs, config: config, next: getNext(next)}
 }
 
 //PeerFilterHandler for handling peers filter
 type PeerFilterHandler struct {
-	next         chclient.Handler
+	next         invoke.Handler
 	peerFilter   api.PeerFilter
 	chaincodeIDs []string
 	config       api.Config
 }
 
 //Handle for endorsing transactions
-func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
+func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 	//Get proposal processor, if not supplied then use discovery service to get available peers as endorser
 	//If selection service available then get endorser peers for this chaincode
-	if len(requestContext.Opts.ProposalProcessors) == 0 {
+	if len(requestContext.Opts.Targets) == 0 {
 		// Select endorsers
 		remainingAttempts := p.config.GetEndorserSelectionMaxAttempts()
 		logger.Infof("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
-		var endorsers []apifabclient.Peer
+		var endorsers []fabApi.Peer
 		for len(endorsers) == 0 && remainingAttempts > 0 {
 			var err error
 			// Use discovery service to figure out proposal processors
@@ -73,7 +72,7 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 			}
 		}
 
-		requestContext.Opts.ProposalProcessors = peer.PeersToTxnProcessors(endorsers)
+		requestContext.Opts.Targets = endorsers
 	}
 
 	//Delegate to next step if any
@@ -83,13 +82,13 @@ func (p *PeerFilterHandler) Handle(requestContext *chclient.RequestContext, clie
 }
 
 // filterTargets is helper method to filter peers
-func (p *PeerFilterHandler) filterTargets(peers []apifabclient.Peer, filter api.PeerFilter) []apifabclient.Peer {
+func (p *PeerFilterHandler) filterTargets(peers []fabApi.Peer, filter api.PeerFilter) []fabApi.Peer {
 
 	if filter == nil {
 		return peers
 	}
 
-	filteredPeers := []apifabclient.Peer{}
+	filteredPeers := []fabApi.Peer{}
 	for _, peer := range peers {
 		if filter.Accept(peer) {
 			filteredPeers = append(filteredPeers, peer)
@@ -100,7 +99,7 @@ func (p *PeerFilterHandler) filterTargets(peers []apifabclient.Peer, filter api.
 	return filteredPeers
 }
 
-func getNext(next []chclient.Handler) chclient.Handler {
+func getNext(next []invoke.Handler) invoke.Handler {
 	if len(next) > 0 {
 		return next[0]
 	}

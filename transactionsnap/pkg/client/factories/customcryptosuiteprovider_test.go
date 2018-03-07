@@ -10,7 +10,7 @@ import (
 	"hash"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 )
@@ -29,7 +29,7 @@ const (
 func TestDefaultCryptoSuiteFactory(t *testing.T) {
 
 	cryptoSuiteFactory := &CustomCorePkg{ProviderName: "SW"}
-	cryptoSuiteProvider, err := cryptoSuiteFactory.NewCryptoSuiteProvider(nil)
+	cryptoSuiteProvider, err := cryptoSuiteFactory.CreateCryptoSuiteProvider(nil)
 
 	if err != nil {
 		t.Fatalf("Not supposed to get error from cryptoSuiteFactory.NewCryptoSuiteProvider")
@@ -52,7 +52,7 @@ func TestGetSuite(t *testing.T) {
 	verifyCryptoSuite(t, samplecryptoSuite)
 }
 
-func verifyCryptoSuite(t *testing.T, samplecryptoSuite apicryptosuite.CryptoSuite) {
+func verifyCryptoSuite(t *testing.T, samplecryptoSuite coreApi.CryptoSuite) {
 	//Test cryptosuite.Sign
 	signedBytes, err := samplecryptoSuite.Sign(GetKey(getMockKey(signingKey)), nil, nil)
 	VerifyEmpty(t, err, "Not supposed to get any error for samplecryptoSuite.GetKey : %s", err)

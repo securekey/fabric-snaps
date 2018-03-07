@@ -8,10 +8,6 @@
 txnsnap:
   loglevel: debug
 
-  # Endorser selection attempts
-  selection:
-    maxattempts: 5
-    interval: 2s
 
   handler:
     timeout: 30s
@@ -22,6 +18,31 @@ client:
 
   logging:
     level: info
+
+# Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      discovery:
+        # Expiry period for discovery service greylist filter
+        # The channel client will greylist peers that are found to be offline
+        # to prevent re-selecting them in subsequent retries.
+        # This interval will define how long a peer is greylisted
+        greylistExpiry: 5s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 10s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 10s
+  global:
+    timeout:
+      query: 45s
+      execute: 60s
+    cache:
+      connectionIdle: 30s
 
   cryptoconfig:
     path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
@@ -50,10 +71,10 @@ client:
 peers:
   peer0.org1.example.com:
     # this URL is used to send endorsement and query requests
-    url: grpcs://peer0.org1.example.com:7051
+    url: grpc://peer0.org1.example.com:7051
 
     # this URL is used to connect the EventHub and registering event listeners
-    eventUrl: grpcs://peer0.org1.example.com:7053
+    eventUrl: grpc://peer0.org1.example.com:7053
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
