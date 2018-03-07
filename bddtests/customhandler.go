@@ -7,33 +7,38 @@ SPDX-License-Identifier: Apache-2.0
 package bddtests
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/context"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/txn"
+
 	"github.com/pkg/errors"
 )
 
 // CustomEndorsementHandler ignores the channel in the ClientContext
 // and instead sends the proposal to the given channel
 type CustomEndorsementHandler struct {
-	channel apifabclient.Channel
-	next    chclient.Handler
+	context contextApi.Client
+	next    invoke.Handler
 }
 
 // Handle handles an endorsement proposal
-func (h *CustomEndorsementHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
+func (h *CustomEndorsementHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 	logger.Info("customEndorsementHandler - Invoking chaincode on system channel")
 
-	if !clientContext.EventHub.IsConnected() {
-		err := clientContext.EventHub.Connect()
-		if err != nil {
-			requestContext.Error = err
-			return
-		}
+	sysTransactor, err := channel.NewTransactor(h.context, chconfig.NewChannelCfg(""))
+	if err != nil {
+		requestContext.Error = err
+		return
 	}
+	// Endorse Tx
+	transactionProposalResponses, proposal, err := createAndSendTransactionProposal(sysTransactor, &requestContext.Request, peer.PeersToTxnProcessors(requestContext.Opts.Targets))
 
-	transactionProposalResponses, txnID, err := createAndSendTransactionProposal(h.channel, &requestContext.Request, requestContext.Opts.ProposalProcessors)
-
-	requestContext.Response.TransactionID = txnID
+	requestContext.Response.Proposal = proposal
+	requestContext.Response.TransactionID = proposal.TxnID
 
 	if err != nil {
 		requestContext.Error = err
@@ -52,32 +57,31 @@ func (h *CustomEndorsementHandler) Handle(requestContext *chclient.RequestContex
 }
 
 // NewCustomEndorsementHandler creates a new instance of CustomEndorsementHandler
-func NewCustomEndorsementHandler(channel apifabclient.Channel, next chclient.Handler) *CustomEndorsementHandler {
+func NewCustomEndorsementHandler(context contextApi.Client, next invoke.Handler) *CustomEndorsementHandler {
 	return &CustomEndorsementHandler{
-		channel: channel,
+		context: context,
 		next:    next,
 	}
 }
 
-func createAndSendTransactionProposal(sender apifabclient.ProposalSender, chrequest *chclient.Request, targets []apifabclient.ProposalProcessor) ([]*apifabclient.TransactionProposalResponse, apifabclient.TransactionID, error) {
-	request := apifabclient.ChaincodeInvokeRequest{
+func createAndSendTransactionProposal(transactor fabApi.Transactor, chrequest *invoke.Request, targets []fabApi.ProposalProcessor) ([]*fabApi.TransactionProposalResponse, *fabApi.TransactionProposal, error) {
+	request := fabApi.ChaincodeInvokeRequest{
 		ChaincodeID:  chrequest.ChaincodeID,
 		Fcn:          chrequest.Fcn,
 		Args:         chrequest.Args,
 		TransientMap: chrequest.TransientMap,
 	}
 
-	//logger.Debugf("sending transaction proposal with ChaincodeID: [%s] Fcn: [%s] Args: [%s]", request.ChaincodeID, request.Fcn, request.Args)
-
-	transactionProposalResponses, txnID, err := sender.SendTransactionProposal(request, targets)
+	txh, err := transactor.CreateTransactionHeader()
 	if err != nil {
-		return nil, txnID, err
+		return nil, nil, errors.WithMessage(err, "creating transaction header failed")
 	}
 
-	for _, v := range transactionProposalResponses {
-		if v.Err != nil {
-			return nil, txnID, errors.WithMessage(v.Err, "SendTransactionProposal failed")
-		}
+	proposal, err := txn.CreateChaincodeInvokeProposal(txh, request)
+	if err != nil {
+		return nil, nil, errors.WithMessage(err, "creating transaction proposal failed")
 	}
-	return transactionProposalResponses, txnID, nil
+
+	transactionProposalResponses, err := transactor.SendTransactionProposal(proposal, targets)
+	return transactionProposalResponses, proposal, err
 }

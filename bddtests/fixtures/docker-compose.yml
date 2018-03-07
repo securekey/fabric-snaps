@@ -64,7 +64,7 @@ services:
       - CORE_PEER_TLS_CLIENTCERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_CLIENTKEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
       - CORE_PEER_BCCSP_PKCS11_LIBRARY=${PKCS11_LIBRARY}
       - CORE_PEER_BCCSP_PKCS11_PIN=${PKCS11_PIN}
       - CORE_PEER_BCCSP_PKCS11_LABEL=${PKCS11_LABEL}

@@ -9,10 +9,9 @@ package service
 import (
 	"fmt"
 
-	sdkapi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/pkg/errors"
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service/channelpeer"
@@ -22,11 +21,11 @@ import (
 // MemSnapService struct
 type MemSnapService struct {
 	channelID    string
-	clientConfig apiconfig.Config
+	clientConfig coreApi.Config
 }
 
 // New return MemSnapService
-func New(channelID string, clientConfig apiconfig.Config) *MemSnapService {
+func New(channelID string, clientConfig coreApi.Config) *MemSnapService {
 	return &MemSnapService{
 		channelID:    channelID,
 		clientConfig: clientConfig,
@@ -34,7 +33,7 @@ func New(channelID string, clientConfig apiconfig.Config) *MemSnapService {
 }
 
 // GetPeers return []sdkapi.Peer
-func (s *MemSnapService) GetPeers() ([]sdkapi.Peer, error) {
+func (s *MemSnapService) GetPeers() ([]fabApi.Peer, error) {
 	memService, err := memservice.Get()
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting membership service")
@@ -52,8 +51,8 @@ func (s *MemSnapService) GetPeers() ([]sdkapi.Peer, error) {
 
 }
 
-func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint) ([]sdkapi.Peer, error) {
-	var peers []sdkapi.Peer
+func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint) ([]fabApi.Peer, error) {
+	var peers []fabApi.Peer
 	for _, endpoint := range endpoints {
 
 		peer, err := peer.New(s.clientConfig, peer.WithURL("grpcs://"+endpoint.GetEndpoint()), peer.WithServerName(""))

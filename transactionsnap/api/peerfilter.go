@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
-import sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+import fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 
 // PeerFilterType is the type name of the Peer Filter
 type PeerFilterType string
@@ -24,7 +24,7 @@ const (
 // those groups that don't pass the filter acceptance test
 type PeerFilter interface {
 	// Accept returns true if the given peer should be included in the set of endorsers
-	Accept(peer sdkApi.Peer) bool
+	Accept(peer fabApi.Peer) bool
 }
 
 // PeerFilterOpts specifies the peer filter type and
