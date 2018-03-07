@@ -7,16 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	"sync"
-
-	"golang.org/x/net/context"
-
 	"fmt"
 	"net"
+	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
@@ -33,7 +30,7 @@ type MockEndorserServer struct {
 func (m *MockEndorserServer) ProcessProposal(context context.Context,
 	proposal *pb.SignedProposal) (*pb.ProposalResponse, error) {
 	m.RequestCount++
-	tp, err := m.GetMockPeer().ProcessTransactionProposal(apifabclient.TransactionProposal{})
+	tp, err := m.GetMockPeer().ProcessTransactionProposal(fabApi.TransactionProposal{})
 	m.LastRequest = proposal
 
 	return tp.ProposalResponse, err
