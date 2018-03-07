@@ -7,13 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 package minblockheight
 
 import (
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	peer "github.com/hyperledger/fabric/core/peer"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/securekey/fabric-snaps/membershipsnap/api"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
-
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -48,7 +47,7 @@ type peerFilter struct {
 
 // Accept returns true if the given peer's block height is
 // at least the height of the local peer.
-func (f *peerFilter) Accept(p sdkApi.Peer) bool {
+func (f *peerFilter) Accept(p fabApi.Peer) bool {
 	chanPeer, ok := p.(api.ChannelPeer)
 	if !ok {
 		// This shouldn't happen since all peers should implement ChannelPeer

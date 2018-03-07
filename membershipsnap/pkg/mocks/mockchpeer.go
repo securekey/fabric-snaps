@@ -8,9 +8,9 @@ package mocks
 import (
 	"fmt"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/securekey/fabric-snaps/membershipsnap/api"
 )
 
@@ -18,7 +18,7 @@ var config = mocks.NewMockConfig()
 
 // MockChannelPeer implements ChannelPeer
 type MockChannelPeer struct {
-	sdkApi.Peer
+	fabApi.Peer
 	channelID    string
 	blockHeights map[string]uint64
 }
@@ -51,7 +51,7 @@ type ChannelHeight struct {
 
 // New returns a new mock ChannelPeer
 func New(name string, mspID string, channelID string, blockHeight uint64, chHeights ...ChannelHeight) api.ChannelPeer {
-	peer, err := sdkpeer.New(config, sdkpeer.WithURL("grpc://"+name+":7051"))
+	peer, err := peer.New(config, peer.WithURL("grpc://"+name+":7051"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

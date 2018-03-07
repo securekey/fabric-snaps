@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/proto"
-	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -51,17 +51,8 @@ type apiConfig struct {
 	api.Config
 }
 
-//QueryChannels to query channels based on peer
-func (txs *TxServiceImpl) QueryChannels(targetPeer sdkApi.Peer) ([]string, error) {
-	channels, err := txs.FcClient.QueryChannels(targetPeer)
-	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Error querying channels on %v: %s", targetPeer, err)
-	}
-	return channels, nil
-}
-
 //ClientConfig to return client config
-func (txs *TxServiceImpl) ClientConfig() sdkConfigApi.Config {
+func (txs *TxServiceImpl) ClientConfig() coreApi.Config {
 	return txs.FcClient.GetConfig()
 }
 
@@ -88,7 +79,7 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 
 }
 
-func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) (*api.EndorseTxRequest, error) {
+func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) (*api.EndorseTxRequest, error) {
 
 	if snapTxRequest == nil {
 		return nil, errors.New(errors.GeneralError, "SnapTxRequest is required")
@@ -132,7 +123,7 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 }
 
 //EndorseTransaction use to endorse the transaction
-func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) ([]*sdkApi.TransactionProposalResponse, error) {
+func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) ([]*fabApi.TransactionProposalResponse, error) {
 	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
 	if err != nil {
 		return nil, err
@@ -146,7 +137,7 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 }
 
 //CommitTransaction use to comit the transaction
-func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []sdkApi.Peer) ([]*sdkApi.TransactionProposalResponse, error) {
+func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) ([]*fabApi.TransactionProposalResponse, error) {
 	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
 	if err != nil {
 		return nil, err
