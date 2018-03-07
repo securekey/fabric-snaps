@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	membershipMocks "github.com/securekey/fabric-snaps/membershipsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 )
@@ -51,8 +51,8 @@ func TestPeerFilter(t *testing.T) {
 	}
 }
 
-func newPeer(name string) apifabclient.Peer {
-	peer, err := sdkpeer.New(mocks.NewMockConfig(), sdkpeer.WithURL("grpc://"+name+":7051"))
+func newPeer(name string) fabApi.Peer {
+	peer, err := peer.New(mocks.NewMockConfig(), peer.WithURL("grpc://"+name+":7051"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

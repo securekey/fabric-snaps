@@ -9,8 +9,8 @@ package handler
 import (
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
@@ -18,31 +18,33 @@ import (
 )
 
 //NewLocalEventCommitHandler returns a handler that commit txn
-func NewLocalEventCommitHandler(registerTxEvent bool, next ...chclient.Handler) *LocalEventCommitHandler {
-	return &LocalEventCommitHandler{registerTxEvent: registerTxEvent, next: getNext(next)}
+func NewLocalEventCommitHandler(registerTxEvent bool, channelID string, next ...invoke.Handler) *LocalEventCommitHandler {
+	return &LocalEventCommitHandler{registerTxEvent: registerTxEvent, channelID: channelID, next: getNext(next)}
 }
 
 //LocalEventCommitHandler for commit txn
 type LocalEventCommitHandler struct {
-	next            chclient.Handler
+	next            invoke.Handler
 	registerTxEvent bool
+	channelID       string
 }
 
 //Handle for endorsing transactions
-func (l *LocalEventCommitHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
-	txnID := requestContext.Response.TransactionID
+func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+	txnID := string(requestContext.Response.TransactionID)
 	var txStatusEventCh <-chan *eventapi.TxStatusEvent
 	if l.registerTxEvent {
-		events := eventservice.Get(clientContext.Channel.Name())
-		reg, eventch, err := events.RegisterTxStatusEvent(txnID.ID)
+		//TODO
+		events := eventservice.Get(l.channelID)
+		reg, eventch, err := events.RegisterTxStatusEvent(txnID)
 		if err != nil {
-			requestContext.Error = errors.Wrapf(err, "unable to register for TxStatus event for TxID [%s] on channel [%s]", txnID, clientContext.Channel.Name())
+			requestContext.Error = errors.Wrapf(err, "unable to register for TxStatus event for TxID [%s] on channel [%s]", txnID, l.channelID)
 			return
 		}
 		defer events.Unregister(reg)
 		txStatusEventCh = eventch
 	}
-	_, err := createAndSendTransaction(clientContext.Channel, requestContext.Response.Responses)
+	_, err := createAndSendTransaction(clientContext.Transactor, requestContext.Response.Proposal, requestContext.Response.Responses)
 	if err != nil {
 		requestContext.Error = errors.Wrap(err, "CreateAndSendTransaction failed")
 		return
@@ -54,7 +56,7 @@ func (l *LocalEventCommitHandler) Handle(requestContext *chclient.RequestContext
 
 			requestContext.Response.TxValidationCode = pb.TxValidationCode(txStatusEvent.TxValidationCode)
 			if requestContext.Response.TxValidationCode != pb.TxValidationCode_VALID {
-				requestContext.Error = errors.Errorf("transaction [%s] did not commit successfully. Code: [%s]", txnID.ID, txStatusEvent.TxValidationCode)
+				requestContext.Error = errors.Errorf("transaction [%s] did not commit successfully. Code: [%s]", txnID, txStatusEvent.TxValidationCode)
 				return
 			}
 		case <-time.After(requestContext.Opts.Timeout):
@@ -68,9 +70,14 @@ func (l *LocalEventCommitHandler) Handle(requestContext *chclient.RequestContext
 	}
 }
 
-func createAndSendTransaction(sender apifabclient.Sender, resps []*apifabclient.TransactionProposalResponse) (*apifabclient.TransactionResponse, error) {
+func createAndSendTransaction(sender fabApi.Sender, proposal *fabApi.TransactionProposal, resps []*fabApi.TransactionProposalResponse) (*fabApi.TransactionResponse, error) {
 
-	tx, err := sender.CreateTransaction(resps)
+	txnRequest := fabApi.TransactionRequest{
+		Proposal:          proposal,
+		ProposalResponses: resps,
+	}
+
+	tx, err := sender.CreateTransaction(txnRequest)
 	if err != nil {
 		return nil, errors.WithMessage(err, "CreateTransaction failed")
 	}
@@ -79,10 +86,6 @@ func createAndSendTransaction(sender apifabclient.Sender, resps []*apifabclient.
 	if err != nil {
 		return nil, errors.WithMessage(err, "SendTransaction failed")
 
-	}
-	if transactionResponse.Err != nil {
-		logger.Debugf("orderer %s failed (%s)", transactionResponse.Orderer, transactionResponse.Err.Error())
-		return nil, errors.Wrap(transactionResponse.Err, "orderer failed")
 	}
 
 	return transactionResponse, nil

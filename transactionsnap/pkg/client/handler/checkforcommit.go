@@ -8,7 +8,7 @@ package handler
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	rwsetutil "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -16,23 +16,23 @@ import (
 )
 
 //NewCheckForCommitHandler returns a handler that check if there is need to commit
-func NewCheckForCommitHandler(rwSetIgnoreNameSpace []string, callback api.EndorsedCallback, next ...chclient.Handler) *CheckForCommitHandler {
+func NewCheckForCommitHandler(rwSetIgnoreNameSpace []string, callback api.EndorsedCallback, next ...invoke.Handler) *CheckForCommitHandler {
 	return &CheckForCommitHandler{rwSetIgnoreNameSpace: rwSetIgnoreNameSpace, callback: callback, next: getNext(next)}
 }
 
 //CheckForCommitHandler for checking need to commit
 type CheckForCommitHandler struct {
-	next                 chclient.Handler
+	next                 invoke.Handler
 	rwSetIgnoreNameSpace []string
 	callback             api.EndorsedCallback
 }
 
 //Handle for endorsing transactions
-func (c *CheckForCommitHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
+func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 
-	txID := requestContext.Response.Responses[0].Proposal.TxnID.ID
+	txID := string(requestContext.Response.TransactionID)
 	if c.callback != nil {
-		if err := c.callback(requestContext.Response.Responses); err != nil {
+		if err := c.callback(requestContext.Response); err != nil {
 			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
 			return
 		}

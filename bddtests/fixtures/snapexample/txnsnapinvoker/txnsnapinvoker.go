@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -71,6 +73,18 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true)
 	}
 
+	if snapFunc == "verifyTransactionProposalSignature" {
+		signedProposal, err := stub.GetSignedProposal()
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Get SignedProposal return error: %v", err))
+		}
+		signedProposalBytes, err := proto.Marshal(signedProposal)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Marshal SignedProposal return error: %v", err))
+		}
+		ccArgs[2] = signedProposalBytes
+	}
+
 	logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
 
 	// Leave channel (last argument) empty since we are calling chaincode(s) on the same channel
@@ -79,6 +93,16 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		errStr := fmt.Sprintf("Failed to invoke chaincode %s. Error: %s", snapName, string(response.Message))
 		logger.Warning(errStr)
 		return shim.Error(errStr)
+	}
+
+	if snapFunc == "endorseTransaction" {
+		var trxResponse *channel.Response
+		err := json.Unmarshal(response.Payload, &trxResponse)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
+		}
+		return shim.Success(trxResponse.Responses[0].ProposalResponse.GetResponse().Payload)
+
 	}
 
 	logger.Infof("Response from %s: %s ", snapName, string(response.Payload))

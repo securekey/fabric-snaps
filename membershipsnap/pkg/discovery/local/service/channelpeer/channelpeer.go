@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 	memberapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
@@ -21,14 +21,14 @@ var logger = logging.NewLogger("membershipsnap/channelpeer")
 
 // ChannelPeer extends Peer and adds channel ID and block height
 type ChannelPeer struct {
-	sdkApi.Peer
+	fabApi.Peer
 	channelID   string
 	blockHeight uint64
 	service     memberapi.Service
 }
 
 // New creates a new ChannelPeer
-func New(peer sdkApi.Peer, channelID string, blockHeight uint64) (*ChannelPeer, error) {
+func New(peer fabApi.Peer, channelID string, blockHeight uint64) (*ChannelPeer, error) {
 	memService, err := membership.Get()
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting membership service")
