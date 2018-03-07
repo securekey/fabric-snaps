@@ -9,10 +9,10 @@ package action
 import (
 	"fmt"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	fabapimocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
@@ -46,7 +46,7 @@ func (a *MockAction) Initialize() error {
 }
 
 // ChannelClient creates a new channel client
-func (a *MockAction) ChannelClient() (chclient.ChannelClient, error) {
+func (a *MockAction) ChannelClient() (*channel.Client, error) {
 	panic("not implemented")
 }
 
@@ -76,9 +76,9 @@ func InitGlobalFlags(flags *pflag.FlagSet) {
 }
 
 // NewMockPeer creates a mock peer
-func NewMockPeer(url string, mspID string) apifabclient.Peer {
-	config := fabapimocks.NewMockConfig()
-	peer, err := sdkpeer.New(config, sdkpeer.WithURL(url))
+func NewMockPeer(url string, mspID string) fabApi.Peer {
+	config := mocks.NewMockConfig()
+	peer, err := peer.New(config, peer.WithURL(url))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

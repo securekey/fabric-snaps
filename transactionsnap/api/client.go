@@ -7,13 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
-	sdkConfigApi "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 )
 
 // EndorsedCallback is a function that is invoked after the endorsement
 // phase of CommitTransaction. (Used in unit tests.)
-type EndorsedCallback func([]*sdkApi.TransactionProposalResponse) error
+type EndorsedCallback func(invoke.Response) error
 
 // EndorseTxRequest contains the parameters for the EndorseTransaction function
 type EndorseTxRequest struct {
@@ -24,7 +26,7 @@ type EndorseTxRequest struct {
 	// TransientData map (optional)
 	TransientData map[string][]byte
 	// Targets for the transaction (optional)
-	Targets []sdkApi.Peer
+	Targets []fabApi.Peer
 	// ChaincodeIDs contains all of the chaincodes that should be included
 	// when evaluating endorsement policy (including the chaincode being invoked).
 	// If empty then only the invoked chaincode is included. (optional)
@@ -41,24 +43,18 @@ type Client interface {
 	// EndorseTransaction request endorsement from the peers on this channel
 	// for a transaction with the given parameters
 	// @param {EndorseTxRequest} request identifies the chaincode to invoke
-	// @returns {[]TransactionProposalResponse} responses from endorsers
+	// @returns {Response} responses from endorsers
 	// @returns {error} error, if any
-	EndorseTransaction(endorseRequest *EndorseTxRequest) ([]*sdkApi.TransactionProposalResponse, error)
+	EndorseTransaction(endorseRequest *EndorseTxRequest) (*channel.Response, error)
 
 	// CommitTransaction request commit from the peers on this channel
 	// for a transaction with the given parameters
 	// @param {EndorseTxRequest} request identifies the chaincode to invoke
 	// @param {registerTxEvent} is bool to register tx event
 	// @param {EndorsedCallback} is a function that is invoked after the endorsement
-	// @returns {[]TransactionProposalResponse} responses from endorsers
+	// @returns {Response} responses from endorsers
 	// @returns {error} error, if any
-	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) ([]*sdkApi.TransactionProposalResponse, error)
-
-	// QueryChannels joined by the given peer
-	// @param {Peer} The peer to query
-	// @returns {[]string} list of channels
-	// @returns {error} error, if any
-	QueryChannels(sdkApi.Peer) ([]string, error)
+	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, error)
 
 	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
 	// @param {[]byte} Txn Proposal
@@ -67,5 +63,5 @@ type Client interface {
 
 	// GetConfig get client config
 	// @returns {Config} config
-	GetConfig() sdkConfigApi.Config
+	GetConfig() coreApi.Config
 }

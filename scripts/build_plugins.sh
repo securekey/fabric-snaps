@@ -35,13 +35,21 @@ echo "Executing move script..."
 cd /opt/gopath/src/github.com/hyperledger/fabric/plugins
 
 echo "Building plugins..."
-go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./httpsnap.so github.com/hyperledger/fabric/plugins/httpsnap/cmd
+echo "Building transaction snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./transactionsnap.so github.com/hyperledger/fabric/plugins/transactionsnap/cmd
+echo "Building http snap..."
+go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./httpsnap.so github.com/hyperledger/fabric/plugins/httpsnap/cmd
+echo "Building membership snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./membershipsnap.so github.com/hyperledger/fabric/plugins/membershipsnap/cmd
+echo "Building event snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventsnap.so github.com/hyperledger/fabric/plugins/eventsnap/cmd
+echo "Building txn snap invoker..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./txnsnapinvoker.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/txnsnapinvoker
+echo "Building configuration snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./configurationscc.so github.com/hyperledger/fabric/plugins/configurationsnap/cmd/configurationscc
+echo "Building eventconsumer snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventconsumersnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/eventconsumersnap
+echo "Building bootstrap snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./bootstrapsnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/bootstrap
 
 

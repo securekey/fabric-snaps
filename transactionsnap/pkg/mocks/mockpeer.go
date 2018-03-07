@@ -15,13 +15,12 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	rwsetutil "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	kvrwset "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
-	"github.com/hyperledger/fabric/bccsp/utils"
-
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric/bccsp/utils"
 )
 
 // MockPeer is a mock fabricsdk.Peer.
@@ -93,7 +92,7 @@ func (p *MockPeer) URL() string {
 }
 
 // ProcessTransactionProposal does not send anything anywhere but returns an empty mock ProposalResponse
-func (p *MockPeer) ProcessTransactionProposal(tp apifabclient.TransactionProposal) (apifabclient.TransactionProposalResult, error) {
+func (p *MockPeer) ProcessTransactionProposal(tp fabApi.TransactionProposal) (*fabApi.TransactionProposalResponse, error) {
 	if p.RWLock != nil {
 		p.RWLock.Lock()
 		defer p.RWLock.Unlock()
@@ -105,7 +104,7 @@ func (p *MockPeer) ProcessTransactionProposal(tp apifabclient.TransactionProposa
 		sID := &msp.SerializedIdentity{Mspid: "Org1MSP", IdBytes: []byte(CertPem)}
 		endorser, err := proto.Marshal(sID)
 		if err != nil {
-			return apifabclient.TransactionProposalResult{}, err
+			return nil, err
 		}
 		p.Endorser = endorser
 	}
@@ -113,19 +112,19 @@ func (p *MockPeer) ProcessTransactionProposal(tp apifabclient.TransactionProposa
 	block, _ := pem.Decode(KeyPem)
 	lowLevelKey, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
-		return apifabclient.TransactionProposalResult{}, err
+		return nil, err
 	}
 	proposalResponsePayload, err := p.createProposalResponsePayload()
 	if err != nil {
-		return apifabclient.TransactionProposalResult{}, err
+		return nil, err
 	}
 	sigma, err := SignECDSA(lowLevelKey, append(proposalResponsePayload, p.Endorser...))
 	if err != nil {
-		return apifabclient.TransactionProposalResult{}, err
+		return nil, err
 	}
-	return apifabclient.TransactionProposalResult{
+
+	return &fabApi.TransactionProposalResponse{
 		Endorser: p.MockURL,
-		Proposal: tp,
 		Status:   p.Status,
 		ProposalResponse: &pb.ProposalResponse{Response: &pb.Response{
 			Message: p.ResponseMessage, Status: p.Status, Payload: p.Payload}, Payload: proposalResponsePayload,

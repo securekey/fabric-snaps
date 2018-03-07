@@ -18,13 +18,11 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	chmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/chmgmtclient"
-	resmgmt "github.com/hyperledger/fabric-sdk-go/api/apitxn/resmgmtclient"
-	packager "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/ccpackager/gopackager"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/txnhandler"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -40,7 +38,7 @@ type CommonSteps struct {
 
 var logger = logging.NewLogger("test-logger")
 
-var trxPR []*sdkApi.TransactionProposalResponse
+var trxResponse *channel.Response
 var queryValue string
 var queryResult string
 
@@ -164,7 +162,7 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 	return nil
 }
 
-func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []apiconfig.PeerConfig) error {
+func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []coreApi.PeerConfig) error {
 
 	for _, peerConfig := range peersConfig {
 		serverHostOverride := ""
@@ -173,25 +171,21 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		}
 		d.BDDContext.AddPeerConfigToChannel(&PeerConfig{Config: peerConfig, OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
 	}
-
-	peer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: peersConfig[0]})
+	peer, err := d.BDDContext.OrgUserContext(orgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: peersConfig[0]})
 	if err != nil {
 		return errors.WithMessage(err, "NewPeer failed")
 	}
-
+	resourceMgmt, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
+	if err != nil {
+		return errors.WithMessage(err, "ResourceMgmt() failed")
+	}
 	// Check if primary peer has joined channel
-	alreadyJoined, err := HasPrimaryPeerJoinedChannel(channelID, d.BDDContext.OrgResourceClient(orgID, ADMIN), d.BDDContext.OrgUser(orgID, ADMIN), peer)
+	alreadyJoined, err := HasPrimaryPeerJoinedChannel(channelID, resourceMgmt, d.BDDContext.OrgUserContext(orgID, ADMIN), peer)
 	if err != nil {
 		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
 	} else if alreadyJoined {
 		logger.Infof("alreadyJoined orgID [%s]\n", orgID)
 		return nil
-	}
-
-	// Channel management client is responsible for managing channels (create/update)
-	chMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ChannelMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new channel management client: %s", err)
 	}
 
 	if d.BDDContext.createdChannels[channelID] == false {
@@ -203,11 +197,11 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		}
 
 		// Create and join channel
-		req := chmgmt.SaveChannelRequest{ChannelID: channelID,
-			ChannelConfig:   txPath,
-			SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
+		req := resmgmt.SaveChannelRequest{ChannelID: channelID,
+			ChannelConfig:     txPath,
+			SigningIdentities: []fabApi.IdentityContext{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
-		if err = chMgmtClient.SaveChannel(req); err != nil {
+		if err = resourceMgmt.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
 
@@ -225,11 +219,11 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		return fmt.Errorf("anchor TX path not found for channel [%s] and org [%s]", channelID, orgID)
 	}
 	// Create channel (or update if it already exists)
-	req := chmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfig:   anchorTxPath,
-		SigningIdentity: d.BDDContext.OrgUser(orgID, ADMIN)}
+	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
+		ChannelConfig:     anchorTxPath,
+		SigningIdentities: []fabApi.IdentityContext{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
-	if err := chMgmtClient.SaveChannel(req); err != nil {
+	if err := resourceMgmt.SaveChannel(req); err != nil {
 		return errors.WithMessage(err, "SaveChannel failed")
 	}
 
@@ -312,14 +306,15 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 
 	//	logger.Infof("Invoking chaincode [%s] with args [%v] on channel [%s]\n", ccID, args, channelID)
 
-	var prosalProcessors []sdkApi.ProposalProcessor
+	var peers []fabApi.Peer
 
 	for _, target := range targets {
-		targetPeer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
+
+		targetPeer, err := d.BDDContext.OrgUserContext(targets[0].OrgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
-		prosalProcessors = append(prosalProcessors, targetPeer)
+		peers = append(peers, targetPeer)
 	}
 
 	chClient, err := d.BDDContext.OrgChannelClient(targets[0].OrgID, USER, channelID)
@@ -328,11 +323,11 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 	}
 
 	_, err = chClient.Execute(
-		chclient.Request{
+		channel.Request{
 			ChaincodeID: ccID,
 			Fcn:         args[0],
 			Args:        GetByteArgs(args[1:]),
-		}, chclient.WithProposalProcessor(prosalProcessors...))
+		}, channel.WithTargets(peers))
 
 	if err != nil {
 		return fmt.Errorf("InvokeChaincode return error: %v", err)
@@ -361,7 +356,7 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 	}
 	argsArray := strings.Split(args, ",")
 	if len(argsArray) > 1 && argsArray[1] == "verifyTransactionProposalSignature" {
-		signedProposalBytes, err := proto.Marshal(trxPR[0].Proposal.SignedProposal)
+		signedProposalBytes, err := proto.Marshal(trxResponse.Proposal)
 		if err != nil {
 			return fmt.Errorf("Marshal SignedProposal return error: %v", err)
 		}
@@ -376,11 +371,11 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 	queryValue = queryResult
 	logger.Debugf("QueryCCWithArgs return value: %s", queryValue)
 	if len(argsArray) > 1 && argsArray[1] == "endorseTransaction" {
-		err := json.Unmarshal([]byte(queryResult), &trxPR)
+		err := json.Unmarshal([]byte(queryResult), &trxResponse)
 		if err != nil {
 			return fmt.Errorf("Unmarshal(%s) to TransactionProposalResponse return error: %v", queryValue, err)
 		}
-		queryValue = string(trxPR[0].ProposalResponse.GetResponse().Payload)
+		queryValue = string(trxResponse.Responses[0].ProposalResponse.GetResponse().Payload)
 	}
 	return nil
 }
@@ -397,16 +392,17 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 		return "", errors.New("no targets specified")
 	}
 
-	var processors []sdkApi.ProposalProcessor
+	var peers []fabApi.Peer
 	var orgID string
 	for _, target := range targets {
 		orgID = target.OrgID
-		targetPeer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
+
+		targetPeer, err := d.BDDContext.OrgUserContext(orgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
 			return "", errors.WithMessage(err, "NewPeer failed")
 		}
 
-		processors = append(processors, targetPeer)
+		peers = append(peers, targetPeer)
 	}
 
 	chClient, err := d.BDDContext.OrgChannelClient(orgID, ADMIN, channelID)
@@ -416,44 +412,45 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 	}
 	if systemCC {
 		// Create a system channel client
-		var chService sdkApi.ChannelService
-		chService, err = d.BDDContext.OrgClient(orgID, ADMIN).ChannelService("")
-		if err != nil {
-			return "", fmt.Errorf("Error creating channel service: %s", err)
-		}
-		var systemChannel sdkApi.Channel
-		systemChannel, err = chService.Channel()
-		if err != nil {
-			return "", fmt.Errorf("Error creating channel service: %s", err)
-		}
+		//		var chService sdkApi.ChannelService
+		//		chService, err = d.BDDContext.OrgClient(orgID, ADMIN).ChannelService("")
+		//		if err != nil {
+		//			return "", fmt.Errorf("Error creating channel service: %s", err)
+		//		}
+		//		var systemChannel sdkApi.Channel
+		//		systemChannel, err = chService.Channel()
+		//		if err != nil {
+		//			return "", fmt.Errorf("Error creating channel service: %s", err)
+		//		}
 
-		systemHandlerChain := txnhandler.NewProposalProcessorHandler(
-			NewCustomEndorsementHandler(
-				systemChannel,
-				txnhandler.NewEndorsementValidationHandler(),
-			))
+		//		systemHandlerChain := txnhandler.NewProposalProcessorHandler(
+		//			NewCustomEndorsementHandler(
+		//				systemChannel,
+		//				txnhandler.NewEndorsementValidationHandler(),
+		//			))
 
-		resp, err := chClient.InvokeHandler(systemHandlerChain, chclient.Request{
-			ChaincodeID:  ccID,
-			Fcn:          args[0],
-			Args:         GetByteArgs(args[1:]),
-			TransientMap: transientData,
-		}, chclient.WithProposalProcessor(processors...), chclient.WithTimeout(timeout))
-		if err != nil {
-			return "", fmt.Errorf("QueryChaincode return error: %v", err)
-		}
-		queryResult = string(resp.Payload)
-		return queryResult, nil
+		//		resp, err := chClient.InvokeHandler(systemHandlerChain, chclient.Request{
+		//			ChaincodeID:  ccID,
+		//			Fcn:          args[0],
+		//			Args:         GetByteArgs(args[1:]),
+		//			TransientMap: transientData,
+		//		}, chclient.WithProposalProcessor(processors...), chclient.WithTimeout(timeout))
+		//		if err != nil {
+		//			return "", fmt.Errorf("QueryChaincode return error: %v", err)
+		//		}
+		//		queryResult = string(resp.Payload)
+		//		return queryResult, nil
+		return "", nil
 	}
 
 	if concurrent {
 
-		resp, err := chClient.Query(chclient.Request{
+		resp, err := chClient.Query(channel.Request{
 			ChaincodeID:  ccID,
 			Fcn:          args[0],
 			Args:         GetByteArgs(args[1:]),
 			TransientMap: transientData,
-		}, chclient.WithProposalProcessor(processors...), chclient.WithTimeout(timeout))
+		}, channel.WithTargets(peers), channel.WithTimeout(timeout))
 		if err != nil {
 			return "", fmt.Errorf("QueryChaincode return error: %v", err)
 		}
@@ -461,13 +458,13 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 
 	} else {
 		var errs []error
-		for _, processor := range processors {
-			resp, err := chClient.Query(chclient.Request{
+		for _, peer := range peers {
+			resp, err := chClient.Query(channel.Request{
 				ChaincodeID:  ccID,
 				Fcn:          args[0],
 				Args:         GetByteArgs(args[1:]),
 				TransientMap: transientData,
-			}, chclient.WithProposalProcessor([]sdkApi.ProposalProcessor{processor}...), chclient.WithTimeout(timeout))
+			}, channel.WithTargets([]fabApi.Peer{peer}), channel.WithTimeout(timeout))
 			if err != nil {
 				errs = append(errs, err)
 			} else {
@@ -546,7 +543,7 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 			return fmt.Errorf("Failed to create new resource management client: %s", err)
 		}
 
-		ccPkg, err := packager.NewCCPackage(ccPath, d.getDeployPath(ccType))
+		ccPkg, err := gopackager.NewCCPackage(ccPath, d.getDeployPath(ccType))
 		if err != nil {
 			return err
 		}
@@ -572,13 +569,13 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 		return fmt.Errorf("error creating endirsement policy: %s", err)
 	}
 
-	var sdkPeers []sdkApi.Peer
+	var sdkPeers []fabApi.Peer
 	var orgID string
 
 	for _, pconfig := range peers {
 		orgID = pconfig.OrgID
 
-		sdkPeer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
+		sdkPeer, err := d.BDDContext.OrgUserContext(orgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: pconfig.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
@@ -637,19 +634,22 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 		return fmt.Errorf("error creating endirsement policy: %s", err)
 	}
 
-	var sdkPeers []sdkApi.Peer
+	var sdkPeers []fabApi.Peer
 	var isInstalled bool
 	var orgID string
 
 	for _, pconfig := range peers {
 		orgID = pconfig.OrgID
 
-		sdkPeer, err := d.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: pconfig.Config})
+		sdkPeer, err := d.BDDContext.OrgUserContext(orgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: pconfig.Config})
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
-
-		isInstalled, err = IsChaincodeInstalled(d.BDDContext.OrgResourceClient(orgID, ADMIN), sdkPeer, ccID)
+		resourceMgmt, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
+		if err != nil {
+			return errors.WithMessage(err, "ResourceMgmt failed")
+		}
+		isInstalled, err = IsChaincodeInstalled(resourceMgmt, sdkPeer, ccID)
 		if err != nil {
 			return fmt.Errorf("Error querying installed chaincodes: %s", err)
 		}
@@ -661,7 +661,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 				return fmt.Errorf("Failed to create new resource management client: %s", err)
 			}
 
-			ccPkg, err := packager.NewCCPackage(ccPath, d.getDeployPath(ccType))
+			ccPkg, err := gopackager.NewCCPackage(ccPath, d.getDeployPath(ccType))
 			if err != nil {
 				return err
 			}
