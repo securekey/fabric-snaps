@@ -14,14 +14,13 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/txnhandler"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
-var lastTxnID sdkApi.TransactionID
+var lastTxnID string
 
 // EventSnapSteps ...
 type EventSnapSteps struct {
@@ -33,33 +32,28 @@ func NewEventSnapSteps(context *BDDContext) *EventSnapSteps {
 	return &EventSnapSteps{BDDContext: context}
 }
 
-func newRegisterTxFilterHandler(channelID string, bddContext *BDDContext, chaincodeID string, next ...chclient.Handler) *registerTxFilterHandler {
+func newRegisterTxFilterHandler(channelID string, bddContext *BDDContext, chaincodeID string, next ...invoke.Handler) *registerTxFilterHandler {
 	return &registerTxFilterHandler{channelID: channelID, bddContext: bddContext, chaincodeID: chaincodeID, next: getNext(next)}
 }
 
 type registerTxFilterHandler struct {
-	next        chclient.Handler
+	next        invoke.Handler
 	channelID   string
 	bddContext  *BDDContext
 	chaincodeID string
 }
 
-func (f *registerTxFilterHandler) Handle(requestContext *chclient.RequestContext, clientContext *chclient.ClientContext) {
-	var txnID sdkApi.TransactionID
-	for _, resp := range requestContext.Response.Responses {
-		txnID = resp.Proposal.TxnID
-		break
-	}
+func (f *registerTxFilterHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 
-	logger.Infof("Registering Tx Status event for Tx ID %s\n", txnID.ID)
+	logger.Infof("Registering Tx Status event for Tx ID %s\n", string(requestContext.Response.TransactionID))
 
-	err := queryEventConsumer(f.bddContext, "registertx", f.channelID, txnID.ID)
+	err := queryEventConsumer(f.bddContext, "registertx", f.channelID, string(requestContext.Response.TransactionID))
 	if err != nil {
 		requestContext.Error = errors.Wrapf(err, "error querying chaincode %s", f.chaincodeID)
 		return
 	}
 
-	logger.Infof("Successfully registered Tx Status event for Tx ID %s\n", txnID.ID)
+	logger.Infof("Successfully registered Tx Status event for Tx ID %s\n", string(requestContext.Response.TransactionID))
 
 	//Delegate to next step if any
 	if f.next != nil {
@@ -67,7 +61,7 @@ func (f *registerTxFilterHandler) Handle(requestContext *chclient.RequestContext
 	}
 }
 
-func getNext(next []chclient.Handler) chclient.Handler {
+func getNext(next []invoke.Handler) invoke.Handler {
 	if len(next) > 0 {
 		return next[0]
 	}
@@ -83,26 +77,26 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 	}
 
 	customExecuteHandler :=
-		txnhandler.NewProposalProcessorHandler(
-			txnhandler.NewEndorsementHandler(
-				txnhandler.NewEndorsementValidationHandler(
+		invoke.NewProposalProcessorHandler(
+			invoke.NewEndorsementHandler(
+				invoke.NewEndorsementValidationHandler(
 					newRegisterTxFilterHandler(channelID, t.BDDContext, ccID,
-						txnhandler.NewSignatureValidationHandler(
-							txnhandler.NewCommitHandler(),
+						invoke.NewSignatureValidationHandler(
+							invoke.NewCommitHandler(),
 						),
 					),
 				),
 			),
 		)
 
-	resp, err := chClient.InvokeHandler(customExecuteHandler, chclient.Request{ChaincodeID: ccID, Fcn: args[0],
-		Args: GetByteArgs(args[1:])}, chclient.WithTimeout(10*time.Second))
+	resp, err := chClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: ccID, Fcn: args[0],
+		Args: GetByteArgs(args[1:])}, channel.WithTimeout(10*time.Second))
 
 	if err != nil {
 		return errors.Wrapf(err, "error invoking chaincode %s", ccID)
 	}
 
-	lastTxnID = resp.TransactionID
+	lastTxnID = string(resp.TransactionID)
 
 	return nil
 }
@@ -119,11 +113,11 @@ func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...s
 	bargs = append(bargs, GetByteArgs(args)...)
 
 	response, err := chClient.Query(
-		chclient.Request{
+		channel.Request{
 			ChaincodeID: "eventconsumersnap",
 			Fcn:         fcn,
 			Args:        bargs,
-		}, chclient.WithTimeout(10*time.Second))
+		}, channel.WithTimeout(10*time.Second))
 	if err != nil {
 		return errors.Wrap(err, "error querying eventconumersnap")
 	}
@@ -255,11 +249,11 @@ func (t *EventSnapSteps) containsTxEvent() error {
 		return err
 	}
 	for _, event := range events {
-		if lastTxnID.ID == event.TxID {
+		if lastTxnID == event.TxID {
 			return nil
 		}
 	}
-	return errors.Errorf("could not find a Tx Status event that matches the last Tx [%s]", lastTxnID.ID)
+	return errors.Errorf("could not find a Tx Status event that matches the last Tx [%s]", lastTxnID)
 }
 
 func getBlockEvents(jsonstr string) ([]*eventapi.BlockEvent, error) {

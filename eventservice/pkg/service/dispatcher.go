@@ -248,7 +248,7 @@ func (ed *Dispatcher) handleUnregisterEvent(e Event) {
 func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 	logger.Debugf("Handling filtered block event: %v\n", event)
 
-	if event.FilteredBlock == nil || event.FilteredBlock.FilteredTx == nil {
+	if event.FilteredBlock == nil || event.FilteredBlock.FilteredTransactions == nil {
 		logger.Errorf("Received invalid filtered block event: %s", event)
 		return
 	}
@@ -271,7 +271,7 @@ func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 		}
 	}
 
-	for _, tx := range event.FilteredBlock.FilteredTx {
+	for _, tx := range event.FilteredBlock.FilteredTransactions {
 		ed.triggerTxStatusEvent(tx)
 
 		// Only send a chaincode event if the transaction has committed
@@ -281,8 +281,8 @@ func (ed *Dispatcher) handleFilteredBlockEvent(event *pb.Event_FilteredBlock) {
 				continue
 			}
 			for _, action := range txActions.ChaincodeActions {
-				if action.CcEvent != nil {
-					ed.triggerCCEvent(action.CcEvent)
+				if action.ChaincodeEvent != nil {
+					ed.triggerCCEvent(action.ChaincodeEvent)
 				}
 			}
 		}

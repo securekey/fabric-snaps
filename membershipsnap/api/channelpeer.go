@@ -7,12 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 )
 
 // ChannelPeer extends Peer and adds channel-specific information
 type ChannelPeer interface {
-	sdkApi.Peer
+	fabApi.Peer
 
 	// ChannelID returns the channel ID
 	ChannelID() string

@@ -17,12 +17,13 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	apiconfig "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	txnmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/errors/status"
-	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
-	fctxnmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/mocks"
+	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -65,9 +66,9 @@ type MockProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
-func (m *MockProviderFactory) NewDiscoveryProvider(config apiconfig.Config) (sdkApi.DiscoveryProvider, error) {
-	peer, _ := sdkpeer.New(fcmocks.NewMockConfig(), sdkpeer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
-	mdp, _ := fctxnmocks.NewMockDiscoveryProvider(nil, []sdkApi.Peer{peer})
+func (m *MockProviderFactory) NewDiscoveryProvider(config coreApi.Config) (fabApi.DiscoveryProvider, error) {
+	peer, _ := peer.New(fcmocks.NewMockConfig(), peer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
+	mdp, _ := txnmocks.NewMockDiscoveryProvider(nil, []fabApi.Peer{peer})
 	return mdp, nil
 }
 
@@ -77,22 +78,22 @@ func TestEndorseTransaction(t *testing.T) {
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
 		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")})
 
-	txnProposalResponse, err := txService.EndorseTransaction(&snapTxReq, nil)
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error endorsing transaction %v", err)
 	}
-	if txnProposalResponse == nil {
+	if response == nil {
 		t.Fatalf("Expected proposal response")
 	}
 
-	if len(txnProposalResponse) == 0 {
+	if len(response.Responses) == 0 {
 		t.Fatalf("Received an empty transaction proposal response")
 	}
-	if txnProposalResponse[0].ProposalResponse.Response.Status != 200 {
+	if response.Responses[0].ProposalResponse.Response.Status != 200 {
 		t.Fatalf("Expected proposal response status: SUCCESS")
 	}
-	if string(txnProposalResponse[0].ProposalResponse.Response.Payload) != "value" {
-		t.Fatalf("Expected proposal response payload: value but got %v", string(txnProposalResponse[0].ProposalResponse.Response.Payload))
+	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
+		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
 	}
 
 }
@@ -133,13 +134,13 @@ func TestCommitTransaction(t *testing.T) {
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
 		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
 
-	txService = newMockTxService(func(responses []*sdkApi.TransactionProposalResponse) error {
+	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
 			time.Sleep(2 * time.Second)
 			eventProducer.ProduceEvent(
 				mockevent.NewFilteredBlockEvent(
 					channelID,
-					mockevent.NewFilteredTx(responses[0].Proposal.TxnID.ID, pb.TxValidationCode_VALID),
+					mockevent.NewFilteredTx(string(response.TransactionID), pb.TxValidationCode_VALID),
 				),
 			)
 		}()
@@ -255,7 +256,7 @@ func getConfigBlockPayload() []byte {
 			MSPNames: []string{
 				"Org1MSP",
 			},
-			OrdererAddress: "orderer.example.com",
+			OrdererAddress: fmt.Sprintf("grpc://%s:%d", testhost, testBroadcastPort),
 			RootCA:         mocks.RootCA,
 		},
 		Index:           0,
