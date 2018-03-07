@@ -11,18 +11,16 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/config"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
-	selection "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/selection/dynamicselection"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/txnhandler"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	protosMSP "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -41,11 +39,10 @@ const (
 type clientImpl struct {
 	sync.RWMutex
 	txnSnapConfig  api.Config
-	clientConfig   apiconfig.Config
-	channelClient  chclient.ChannelClient
-	resourceClient fab.Resource
-	channel        fab.Channel
-	session        apisdk.SessionContext
+	clientConfig   coreApi.Config
+	channelClient  *channel.Client
+	channelService fabApi.ChannelService
+	channelID      string
 }
 
 // DynamicProviderFactory is configured with dynamic discovery provider and dynamic selection provider
@@ -55,18 +52,18 @@ type DynamicProviderFactory struct {
 }
 
 // NewDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) NewDiscoveryProvider(config apiconfig.Config) (fab.DiscoveryProvider, error) {
+func (f *DynamicProviderFactory) NewDiscoveryProvider(config coreApi.Config) (fabApi.DiscoveryProvider, error) {
 	return dynamicDiscovery.New(config), nil
 }
 
 // NewSelectionProvider returns a new implementation of dynamic selection provider
-func (f *DynamicProviderFactory) NewSelectionProvider(config apiconfig.Config) (fab.SelectionProvider, error) {
-	return selection.NewSelectionProvider(config, f.ChannelUsers, nil)
+func (f *DynamicProviderFactory) NewSelectionProvider(config coreApi.Config) (fabApi.SelectionProvider, error) {
+	return selection.New(config, f.ChannelUsers, nil)
 }
 
 // CustomConfig override client config
 type CustomConfig struct {
-	apiconfig.Config
+	coreApi.Config
 	localPeer           *api.PeerConfig
 	localPeerTLSCertPem []byte
 }
@@ -74,12 +71,12 @@ type CustomConfig struct {
 // ChannelPeers returns the channel peers configuration
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
-func (c *CustomConfig) ChannelPeers(name string) ([]apiconfig.ChannelPeer, error) {
-	networkPeer := apiconfig.NetworkPeer{PeerConfig: apiconfig.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port), TLSCACerts: apiconfig.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MspID: string(c.localPeer.MSPid)}
-	peer := apiconfig.ChannelPeer{PeerChannelConfig: apiconfig.PeerChannelConfig{EndorsingPeer: true,
+func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
+	networkPeer := coreApi.NetworkPeer{PeerConfig: coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
+		c.localPeer.Port), TLSCACerts: coreApi.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MspID: string(c.localPeer.MSPid)}
+	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
-	return []apiconfig.ChannelPeer{peer}, nil
+	return []coreApi.ChannelPeer{peer}, nil
 }
 
 var cachedClient map[string]*clientImpl
@@ -158,8 +155,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	sdk, err := fabsdk.New(NewCustomConfigProvider(clientConfig, localPeer, c.txnSnapConfig.GetTLSCertPem()),
-		fabsdk.WithContextPkg(&factories.CredentialManagerProviderFactory{CryptoPath: c.txnSnapConfig.GetMspConfigPath()}),
-		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
+		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider, CryptoPath: c.txnSnapConfig.GetMspConfigPath()}),
 		fabsdk.WithServicePkg(serviceProviderFactory))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
@@ -167,21 +163,6 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 
 	// new client
 	sdkClient := sdk.NewClient(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
-
-	// get user session
-	session, err := sdkClient.Session()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "failed getting admin user session for org")
-	}
-
-	// get resource client
-	resourceClient, err := sdk.FabricProvider().CreateResourceClient(session)
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "NewResourceClient failed")
-	}
-	if resourceClient == nil {
-		return errors.New(errors.GeneralError, "resource client is nil")
-	}
 
 	// Channel client is used to query and execute transactions
 	chClient, err := sdkClient.Channel(channelID)
@@ -192,39 +173,33 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.New(errors.GeneralError, "channel client is nil")
 	}
 
-	// Get channel
+	// Get channel service
 	chService, err := sdkClient.ChannelService(channelID)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "Failed to get channel service")
 	}
-
-	channel, err := chService.Channel()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to get channel from channel service")
-	}
-	if channel == nil {
-		return errors.New(errors.GeneralError, "channel is nil")
+	if chService == nil {
+		return errors.New(errors.GeneralError, "channel service is nil")
 	}
 
-	c.resourceClient = resourceClient
 	c.channelClient = chClient
-	c.channel = channel
+	c.channelService = chService
+	c.channelID = channelID
 	c.clientConfig = clientConfig
-	c.session = session
 	return nil
 }
 
 //NewCustomConfigProvider return custom config provider
-func NewCustomConfigProvider(config apiconfig.Config, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) apiconfig.ConfigProvider {
-	return func() (apiconfig.Config, error) {
+func NewCustomConfigProvider(config coreApi.Config, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) coreApi.ConfigProvider {
+	return func() (coreApi.Config, error) {
 		return &CustomConfig{Config: config, localPeer: localPeer, localPeerTLSCertPem: localPeerTLSCertPem}, nil
 	}
 }
 
-func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([]*fab.TransactionProposalResponse, error) {
+func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %v", endorseRequest)
 
-	targets := peer.PeersToTxnProcessors(endorseRequest.Targets)
+	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, errors.New(errors.GeneralError, "function arg is required")
 	}
@@ -236,25 +211,25 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) ([
 	}
 
 	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs, c.txnSnapConfig,
-		txnhandler.NewEndorsementHandler(
-			txnhandler.NewEndorsementValidationHandler(
-				txnhandler.NewSignatureValidationHandler(),
+		invoke.NewEndorsementHandler(
+			invoke.NewEndorsementValidationHandler(
+				invoke.NewSignatureValidationHandler(),
 			),
 		),
 	)
 
-	response, err := c.channelClient.InvokeHandler(customQueryHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
+	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets), channel.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
 	}
-	return response.Responses, nil
+	return &response, nil
 }
 
-func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) ([]*fab.TransactionProposalResponse, error) {
+func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, error) {
 	logger.Debugf("CommitTransaction with endorseRequest %v", endorseRequest)
-	targets := peer.PeersToTxnProcessors(endorseRequest.Targets)
+	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, errors.New(errors.GeneralError, "function arg is required")
 	}
@@ -266,53 +241,27 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	}
 
 	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs, c.txnSnapConfig,
-		txnhandler.NewEndorsementHandler(
-			txnhandler.NewEndorsementValidationHandler(
-				txnhandler.NewSignatureValidationHandler(
+		invoke.NewEndorsementHandler(
+			invoke.NewEndorsementValidationHandler(
+				invoke.NewSignatureValidationHandler(
 					handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback,
-						handler.NewLocalEventCommitHandler(registerTxEvent),
+						handler.NewLocalEventCommitHandler(registerTxEvent, c.channelID),
 					),
 				),
 			),
 		),
 	)
 
-	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, chclient.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, chclient.WithProposalProcessor(targets...), chclient.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
+	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets), channel.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
 	}
-	return resp.Responses, nil
-}
-
-func (c *clientImpl) QueryChannels(peer fab.Peer) ([]string, error) {
-	responses, err := c.resourceClient.QueryChannels(peer)
-
-	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Error querying channels on peer %+v : %s", peer, err)
-	}
-	channels := []string{}
-
-	for _, response := range responses.GetChannels() {
-		channels = append(channels, response.ChannelId)
-	}
-
-	return channels, nil
+	return &resp, nil
 }
 
 func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
-
-	if c.channel.MSPManager() == nil {
-		return errors.New(errors.GeneralError, "GetMSPManager is nil")
-	}
-	msps, err := c.channel.MSPManager().GetMSPs()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "GetMSPs return error")
-	}
-	if len(msps) == 0 {
-		return errors.New(errors.GeneralError, "MSPManager.GetMSPs is empty")
-	}
 
 	signedProposal := &pb.SignedProposal{}
 	if err := proto.Unmarshal(proposalBytes, signedProposal); err != nil {
@@ -324,23 +273,14 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 		return errors.Wrap(errors.GeneralError, err, "GetCreatorFromSignedProposal return error")
 	}
 
-	serializedIdentity := &protosMSP.SerializedIdentity{}
-	if err := proto.Unmarshal(creatorBytes, serializedIdentity); err != nil {
-		return errors.Wrap(errors.GeneralError, err, "Unmarshal creatorBytes error")
-	}
-
-	msp := msps[serializedIdentity.Mspid]
-	if msp == nil {
-		return errors.Errorf(errors.GeneralError, "MSP %s not found", serializedIdentity.Mspid)
-	}
-
-	creator, err := msp.DeserializeIdentity(creatorBytes)
+	logger.Debugf("checkSignatureFromCreator info: creator is %s", creatorBytes)
+	membership, err := c.channelService.Membership()
 	if err != nil {
-		return errors.Wrap(errors.GeneralError, err, "Failed to deserialize creator identity")
+		return errors.Wrap(errors.GeneralError, err, "Failed to get Membership from channelService")
 	}
-	logger.Debugf("checkSignatureFromCreator info: creator is %s", creator.GetIdentifier())
+
 	// ensure that creator is a valid certificate
-	err = creator.Validate()
+	err = membership.Validate(creatorBytes)
 	if err != nil {
 		return errors.Wrap(errors.GeneralError, err, "The creator certificate is not valid")
 	}
@@ -348,7 +288,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	logger.Debugf("verifyTPSignature info: creator is valid")
 
 	// validate the signature
-	err = creator.Verify(signedProposal.ProposalBytes, signedProposal.Signature)
+	err = membership.Verify(creatorBytes, signedProposal.ProposalBytes, signedProposal.Signature)
 	if err != nil {
 		return errors.Wrap(errors.GeneralError, err, "The creator's signature over the proposal is not valid")
 	}
@@ -358,6 +298,6 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	return nil
 }
 
-func (c *clientImpl) GetConfig() apiconfig.Config {
+func (c *clientImpl) GetConfig() coreApi.Config {
 	return c.clientConfig
 }

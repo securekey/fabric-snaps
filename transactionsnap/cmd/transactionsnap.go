@@ -11,13 +11,11 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
-	"github.com/securekey/fabric-snaps/transactionsnap/api"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -101,7 +99,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 }
 
-func (es *TxnSnap) endorseTransaction(args [][]byte) ([]*sdkApi.TransactionProposalResponse, error) {
+func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {

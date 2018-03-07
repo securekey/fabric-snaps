@@ -14,27 +14,37 @@ bddtest:
 
 client:
 
-  # Global configuration for peer, event service and orderer timeouts
-  peer:
-    timeout:
-      connection: 3s
-      queryResponse: 30s
-      executeTxResponse: 30s
-  eventService:
-    timeout:
-      connection: 3s
-      registrationResponse: 3s
-  orderer:
-    timeout:
-      connection: 3s
-      response: 5s
-
   # Which organization does this application instance belong to? The value must be the name of an org
   # defined under "organizations"
   organization: peerorg1
 
   logging:
     level: info
+
+  # Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      discovery:
+        # Expiry period for discovery service greylist filter
+        # The channel client will greylist peers that are found to be offline
+        # to prevent re-selecting them in subsequent retries.
+        # This interval will define how long a peer is greylisted
+        greylistExpiry: 5s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 10s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 10s
+  global:
+    timeout:
+      query: 45s
+      execute: 60s
+    cache:
+      connectionIdle: 30s
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
@@ -51,22 +61,24 @@ client:
 
    # BCCSP config for the client. Used by GO SDK.
   BCCSP:
-    Security:
-      Default:
-       Provider: "SW"
-      HashAlgorithm: "SHA2"
-      Ephemeral: false
-      Level: 256
-      Pin: ""
-      Label: ""
-      Library: ""
-      KeystorePath: ""
-      Config:
-       {"key":"a"} 
+    security:
+     enabled: true
+     default:
+      provider: "SW"
+     hashAlgorithm: "SHA2"
+     softVerify: true
+     ephemeral: false
+     level: 256
 
   tlsCerts:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
     systemCertPool: false
+
+    client:
+      key:
+        path: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/config/mutual_tls/client/client_sdk_go-key.pem
+      cert:
+        path: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/config/mutual_tls/client/client_sdk_go.pem
 
     # [Optional]. Client key and cert for TLS handshake with peers and orderers
     client:
@@ -115,13 +127,22 @@ channels:
 
 orderers:
   orderer.example.com:
-    url: grpcs://localhost:7050
+    url:  orderer.example.com:7050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
     grpcOptions:
       ssl-target-name-override: orderer.example.com
       grpc-max-send-message-length: 15
+#     These parameters should be set in coordination with the keepalive policy on the server,
+#     as incompatible settings can result in closing of connection.
+#     When duration of the 'keep-alive-time' is set to 0 or less the keep alive client parameters are disabled
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      #will be taken into consideration if address has no protocol defined and secured connection fails
+      allow-insecure: false
 
     tlsCACerts:
       # Certificate location absolute path
@@ -262,14 +283,23 @@ organizations:
 peers:
   peer0.org1.example.com:
     # this URL is used to send endorsement and query requests
-    url: grpcs://localhost:7051
+    url: peer0.org1.example.com:7051
 
     # this URL is used to connect the EventHub and registering event listeners
-    eventUrl: grpcs://localhost:7053
+    eventUrl: peer0.org1.example.com:7053
 
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
       grpc.http2.keepalive_time: 15
+#     These parameters should be set in coordination with the keepalive policy on the server,
+#     as incompatible settings can result in closing of connection.
+#     When duration of the 'keep-alive-time' is set to 0 or less the keep alive client parameters are disabled
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      #will be taken into consideration if address has no protocol defined and secured connection fails
+      allow-insecure: false
 
     tlsCACerts:
       # Certificate location absolute path

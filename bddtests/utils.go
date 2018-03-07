@@ -11,12 +11,12 @@ import (
 	"math/rand"
 	"time"
 
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/viper"
 )
 
@@ -49,7 +49,7 @@ func randomString(strlen int) string {
 // HasPrimaryPeerJoinedChannel checks whether the primary peer of a channel
 // has already joined the channel. It returns true if it has, false otherwise,
 // or an error
-func HasPrimaryPeerJoinedChannel(channelID string, client sdkApi.Resource, orgUser sdkApi.IdentityContext, peer sdkApi.Peer) (bool, error) {
+func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser fabApi.IdentityContext, peer fabApi.Peer) (bool, error) {
 	foundChannel := false
 
 	response, err := client.QueryChannels(peer)
@@ -93,7 +93,7 @@ func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32,
 }
 
 // IsChaincodeInstalled Helper function to check if chaincode has been deployed
-func IsChaincodeInstalled(client sdkApi.Resource, peer sdkApi.Peer, name string) (bool, error) {
+func IsChaincodeInstalled(client *resmgmt.Client, peer fabApi.Peer, name string) (bool, error) {
 	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(peer)
 	if err != nil {
 		return false, err
@@ -107,15 +107,7 @@ func IsChaincodeInstalled(client sdkApi.Resource, peer sdkApi.Peer, name string)
 	return false, nil
 }
 
-func processorsAsString(processors ...sdkApi.ProposalProcessor) string {
-	str := ""
-	for _, p := range processors {
-		str += p.(sdkApi.Peer).URL() + " "
-	}
-	return str
-}
-
-func peersAsString(peers []sdkApi.Peer) string {
+func peersAsString(peers []fabApi.Peer) string {
 	str := ""
 	for i, p := range peers {
 		str += p.Name() + ": " + p.URL()

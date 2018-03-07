@@ -7,25 +7,25 @@ SPDX-License-Identifier: Apache-2.0
 package provider
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkapi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
 )
 
 // Impl implements a DiscoveryProvider that may be
 // used by other snaps localy (in the peer process)
 type Impl struct {
-	clientConfig apiconfig.Config
+	clientConfig coreApi.Config
 }
 
 // New return Impl
-func New(clientConfig apiconfig.Config) *Impl {
+func New(clientConfig coreApi.Config) *Impl {
 	return &Impl{
 		clientConfig: clientConfig,
 	}
 }
 
-// NewDiscoveryService return impl of DiscoveryService
-func (p *Impl) NewDiscoveryService(channelID string) (sdkapi.DiscoveryService, error) {
+// CreateDiscoveryService return impl of DiscoveryService
+func (p *Impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
 	return service.New(channelID, p.clientConfig), nil
 }

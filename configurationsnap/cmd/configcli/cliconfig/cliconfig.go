@@ -11,12 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/securekey/fabric-snaps/util/errors"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/pflag"
 )
 
@@ -140,7 +139,7 @@ func init() {
 
 // CLIConfig overrides certain configuration values with those supplied on the command-line
 type CLIConfig struct {
-	apiconfig.Config
+	coreApi.Config
 	logger *logging.Logger
 }
 
@@ -340,7 +339,7 @@ func InitConfigString(flags *pflag.FlagSet) {
 }
 
 // Timeout returns the timeout (in milliseconds) for various operations
-func (c *CLIConfig) Timeout() time.Duration {
+func (c *CLIConfig) Timeout(conn coreApi.TimeoutType) time.Duration {
 	return time.Duration(opts.timeout) * time.Millisecond
 }
 
@@ -365,7 +364,7 @@ func InitOutputFormat(flags *pflag.FlagSet) {
 }
 
 // IsLoggingEnabledFor indicates whether the logger is enabled for the given logging level
-func (c *CLIConfig) IsLoggingEnabledFor(level apilogging.Level) bool {
+func (c *CLIConfig) IsLoggingEnabledFor(level logging.Level) bool {
 	return logging.IsEnabledFor(loggerName, level)
 }
 

@@ -12,9 +12,9 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/gogo/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -41,12 +41,10 @@ func (u *UnsafeQuerySteps) InvokeCCVerifyResponse(ccID, userArgs, orgIDs, channe
 	}
 	target := targets[0]
 
-	var proposalProcessors []sdkApi.ProposalProcessor
-	targetPeer, err := u.BDDContext.sdk.FabricProvider().CreatePeerFromConfig(&apiconfig.NetworkPeer{PeerConfig: target.Config})
+	targetPeer, err := u.BDDContext.OrgUserContext(targets[0].OrgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: target.Config})
 	if err != nil {
 		return errors.WithMessage(err, "NewPeer failed")
 	}
-	proposalProcessors = append(proposalProcessors, targetPeer)
 
 	chClient, err := u.BDDContext.OrgChannelClient(targets[0].OrgID, USER, channelID)
 	if err != nil {
@@ -54,11 +52,11 @@ func (u *UnsafeQuerySteps) InvokeCCVerifyResponse(ccID, userArgs, orgIDs, channe
 	}
 
 	resp, err := chClient.Execute(
-		chclient.Request{
+		channel.Request{
 			ChaincodeID: ccID,
 			Fcn:         args[0],
 			Args:        GetByteArgs(args[1:]),
-		}, chclient.WithProposalProcessor(proposalProcessors...))
+		}, channel.WithTargets([]fabApi.Peer{targetPeer}))
 	if err != nil {
 		return fmt.Errorf("InvokeChaincode return error: %v", err)
 	}
