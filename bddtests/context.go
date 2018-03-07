@@ -13,10 +13,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
@@ -29,7 +29,7 @@ var USER = "user"
 // BDDContext ...
 type BDDContext struct {
 	composition          *Composition
-	clientConfig         apiconfig.Config
+	clientConfig         coreApi.Config
 	mutex                sync.RWMutex
 	sdk                  *fabsdk.FabricSDK
 	orgs                 []string
@@ -38,9 +38,8 @@ type BDDContext struct {
 	orgsByChannel        map[string][]string
 	collectionConfigs    map[string]*CollectionConfig
 	clients              map[string]*fabsdk.ClientContext
-	resourceClients      map[string]sdkApi.Resource
-	users                map[string]sdkApi.IdentityContext
-	orgChannelClients    map[string]chclient.ChannelClient
+	users                map[string]fabApi.IdentityContext
+	orgChannelClients    map[string]*channel.Client
 	peersMspID           map[string]string
 	clientConfigFilePath string
 	clientConfigFileName string
@@ -52,7 +51,7 @@ type BDDContext struct {
 // PeerConfig holds the peer configuration and org ID
 type PeerConfig struct {
 	OrgID  string
-	Config apiconfig.PeerConfig
+	Config coreApi.PeerConfig
 	MspID  string
 	PeerID string
 }
@@ -71,12 +70,11 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 	instance := BDDContext{
 		orgs:                 orgs,
 		peersByChannel:       make(map[string][]*PeerConfig),
-		users:                make(map[string]sdkApi.IdentityContext),
+		users:                make(map[string]fabApi.IdentityContext),
 		orgsByChannel:        make(map[string][]string),
-		resourceClients:      make(map[string]sdkApi.Resource),
 		clients:              make(map[string]*fabsdk.ClientContext),
 		collectionConfigs:    make(map[string]*CollectionConfig),
-		orgChannelClients:    make(map[string]chclient.ChannelClient),
+		orgChannelClients:    make(map[string]*channel.Client),
 		clientConfigFilePath: clientConfigFilePath,
 		clientConfigFileName: clientConfigFileName,
 		snapsConfigFilePath:  snapsConfigFilePath,
@@ -102,14 +100,10 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get userSession of orgAdminClient: %s", err))
 		}
-		orgAdminResourceClient, err := sdk.FabricProvider().CreateResourceClient(orgAdminSession)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to create new resource client for userSession of orgAdminClient: %s", err))
-		}
+
 		orgAdmin := fmt.Sprintf("%s_%s", org, ADMIN)
 		b.users[orgAdmin] = orgAdminSession
 		b.clients[orgAdmin] = orgAdminClient
-		b.resourceClients[orgAdmin] = orgAdminResourceClient
 
 		b.clientConfig = sdk.Config()
 
@@ -191,7 +185,7 @@ func (b *BDDContext) OrgClient(org, userType string) *fabsdk.ClientContext {
 }
 
 // OrgChannelClient returns the org channel client
-func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (chclient.ChannelClient, error) {
+func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (*channel.Client, error) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	if orgChanClient, ok := b.orgChannelClients[fmt.Sprintf("%s_%s_%s", org, userType, channelID)]; ok {
@@ -206,22 +200,15 @@ func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (chclient
 	return orgChanClient, nil
 }
 
-// OrgResourceClient returns the org resource client
-func (b *BDDContext) OrgResourceClient(org, userType string) sdkApi.Resource {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
-	return b.resourceClients[fmt.Sprintf("%s_%s", org, userType)]
-}
-
 // OrgUser returns the org user
-func (b *BDDContext) OrgUser(org, userType string) sdkApi.IdentityContext {
+func (b *BDDContext) OrgUser(org, userType string) fabApi.IdentityContext {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 	return b.users[fmt.Sprintf("%s_%s", org, userType)]
 }
 
 // ClientConfig returns client config
-func (b *BDDContext) ClientConfig() apiconfig.Config {
+func (b *BDDContext) ClientConfig() coreApi.Config {
 	return b.clientConfig
 }
 

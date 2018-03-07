@@ -19,19 +19,19 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	apiconfig "github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
-	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/mocks"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
-	fctxnmocks "github.com/hyperledger/fabric-sdk-go/pkg/fabric-txn/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	txnmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	pbsdk "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	protosUtils "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/utils"
-	protos_utils "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/utils"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb1 "github.com/hyperledger/fabric/protos/peer"
@@ -72,9 +72,9 @@ type MockProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
-func (m *MockProviderFactory) NewDiscoveryProvider(config apiconfig.Config) (sdkApi.DiscoveryProvider, error) {
-	peer, _ := sdkpeer.New(fcmocks.NewMockConfig(), sdkpeer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
-	mdp, _ := fctxnmocks.NewMockDiscoveryProvider(nil, []sdkApi.Peer{peer})
+func (m *MockProviderFactory) NewDiscoveryProvider(config coreApi.Config) (fabApi.DiscoveryProvider, error) {
+	peer, _ := peer.New(fcmocks.NewMockConfig(), peer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
+	mdp, _ := txnmocks.NewMockDiscoveryProvider(nil, []fabApi.Peer{peer})
 	return mdp, nil
 }
 
@@ -227,19 +227,19 @@ func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) 
 	if len(response.GetPayload()) == 0 {
 		t.Fatalf("Received an empty payload")
 	}
-	var tpResponse []*sdkApi.TransactionProposalResponse
-	err := json.Unmarshal(response.GetPayload(), &tpResponse)
+	var chResponse *channel.Response
+	err := json.Unmarshal(response.GetPayload(), &chResponse)
 	if err != nil {
 		t.Fatalf("Cannot unmarshal transaction proposal response %v", err)
 	}
-	if len(tpResponse) == 0 {
+	if len(chResponse.Responses) == 0 {
 		t.Fatalf("Received an empty transaction proposal response")
 	}
-	if tpResponse[0].ProposalResponse.Response.Status != 200 {
+	if chResponse.Responses[0].ProposalResponse.Response.Status != 200 {
 		t.Fatalf("Expected proposal response status: SUCCESS")
 	}
-	if string(tpResponse[0].ProposalResponse.Response.Payload) != "value" {
-		t.Fatalf("Expected proposal response payload: value but got %v", string(tpResponse[0].ProposalResponse.Response.Payload))
+	if string(chResponse.Responses[0].ProposalResponse.Response.Payload) != "value" {
+		t.Fatalf("Expected proposal response payload: value but got %v", string(chResponse.Responses[0].ProposalResponse.Response.Payload))
 	}
 
 }
@@ -277,13 +277,13 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 		t.Fatalf("Expected response status %d but got %d (%s)", shim.OK, response.Status, response.Message)
 	}
 
-	snap = newMockTxnSnap(func(responses []*sdkApi.TransactionProposalResponse) error {
+	snap = newMockTxnSnap(func(response invoke.Response) error {
 		go func() {
 			time.Sleep(2 * time.Second)
 			eventProducer.ProduceEvent(
 				mockevent.NewFilteredBlockEvent(
 					channelID,
-					mockevent.NewFilteredTx(responses[0].Proposal.TxnID.ID, pb1.TxValidationCode_VALID),
+					mockevent.NewFilteredTx(string(response.TransactionID), pb1.TxValidationCode_VALID),
 				),
 			)
 		}()
@@ -332,17 +332,17 @@ func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *test
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T) {
 	//Replace client with mock client wrapper, which assumes channel is already initialized
-	req := sdkApi.ChaincodeInvokeRequest{
+	req := fabApi.ChaincodeInvokeRequest{
 		ChaincodeID: "ccID",
 		Args:        nil,
 		Fcn:         "fcn",
 	}
-	txnProposal, err := newTransactionProposal("testChannel", req)
+	signedProposal, err := newSignedProposal("testChannel", req)
 	if err != nil {
-		t.Fatalf("Error creating transaction proposal: %s", err)
+		t.Fatalf("Error creating signed proposal: %s", err)
 	}
 
-	signedProposalBytes, err := proto.Marshal(txnProposal.SignedProposal)
+	signedProposalBytes, err := proto.Marshal(signedProposal)
 	if err != nil {
 		t.Fatalf("Error Marshal signedProposal: %v", err)
 	}
@@ -361,18 +361,18 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureSuccess(t *testing.T
 }
 
 func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testing.T) {
-	req := sdkApi.ChaincodeInvokeRequest{
+	req := fabApi.ChaincodeInvokeRequest{
 		ChaincodeID: "ccID",
 		Args:        nil,
 		Fcn:         "fcn",
 	}
-	txnProposal, err := newTransactionProposal("testChannel", req)
+	signedProposal, err := newSignedProposal("testChannel", req)
 	if err != nil {
-		t.Fatalf("Error creating transaction proposal: %s", err)
+		t.Fatalf("Error creating signed proposal: %s", err)
 	}
-	txnProposal.SignedProposal.Signature = []byte("wrongSignature")
+	signedProposal.Signature = []byte("wrongSignature")
 
-	signedProposalBytes, err := proto.Marshal(txnProposal.SignedProposal)
+	signedProposalBytes, err := proto.Marshal(signedProposal)
 	if err != nil {
 		t.Fatalf("Error Marshal signedProposal: %v", err)
 	}
@@ -424,20 +424,13 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	return args
 }
 
-// newTransactionProposal creates a proposal for transaction. This involves assembling the proposal
+// newSignedProposal creates a proposal for transaction. This involves assembling the proposal
 // with the data (chaincodeName, function to call, arguments, transient data, etc.) and signing it using the private key corresponding to the
 // ECert to sign.
-func newTransactionProposal(channelID string, request sdkApi.ChaincodeInvokeRequest) (*sdkApi.TransactionProposal, error) {
+func newSignedProposal(channelID string, request fabApi.ChaincodeInvokeRequest) (*pbsdk.SignedProposal, error) {
 
-	id, err := protos_utils.ComputeProposalTxID([]byte("value"), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	txnID := sdkApi.TransactionID{
-		ID:    id,
-		Nonce: []byte("value"),
-	}
+	txnID := "value"
+	nonce := []byte("value")
 
 	// Add function name to arguments
 	argsArray := make([][]byte, len(request.Args)+1)
@@ -457,7 +450,7 @@ func newTransactionProposal(channelID string, request sdkApi.ChaincodeInvokeRequ
 		return nil, err
 	}
 
-	proposal, _, err := protosUtils.CreateChaincodeProposalWithTxIDNonceAndTransient(txnID.ID, common.HeaderType_ENDORSER_TRANSACTION, channelID, ccis, txnID.Nonce, creator, request.TransientMap)
+	proposal, _, err := protosUtils.CreateChaincodeProposalWithTxIDNonceAndTransient(txnID, common.HeaderType_ENDORSER_TRANSACTION, channelID, ccis, nonce, creator, request.TransientMap)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create chaincode proposal, err %s", err)
 	}
@@ -480,21 +473,15 @@ func newTransactionProposal(channelID string, request sdkApi.ChaincodeInvokeRequ
 	}
 
 	// construct the transaction proposal
-	signedProposal := pbsdk.SignedProposal{ProposalBytes: proposalBytes, Signature: signature}
-	sdkProposal := pbsdk.Proposal{Header: proposal.Header, Payload: proposal.Payload, Extension: proposal.Extension}
-	tp := sdkApi.TransactionProposal{
-		TxnID:          txnID,
-		SignedProposal: &signedProposal,
-		Proposal:       &sdkProposal,
-	}
+	signedProposal := &pbsdk.SignedProposal{ProposalBytes: proposalBytes, Signature: signature}
 
-	return &tp, nil
+	return signedProposal, nil
 }
 
 // SignObjectWithKey will sign the given object with the given key,
 // hashOpts and signerOpts
-func signObjectWithKey(object []byte, key apicryptosuite.Key,
-	hashOpts apicryptosuite.HashOpts, signerOpts apicryptosuite.SignerOpts, cryptoSuite apicryptosuite.CryptoSuite) ([]byte, error) {
+func signObjectWithKey(object []byte, key coreApi.Key,
+	hashOpts coreApi.HashOpts, signerOpts coreApi.SignerOpts, cryptoSuite coreApi.CryptoSuite) ([]byte, error) {
 	digest, err := cryptoSuite.Hash(object, hashOpts)
 	if err != nil {
 		return nil, err
@@ -629,7 +616,7 @@ func getConfigBlockPayload() []byte {
 			MSPNames: []string{
 				"Org1MSP",
 			},
-			OrdererAddress: "orderer.example.com",
+			OrdererAddress: fmt.Sprintf("grpc://%s:%d", testhost, testBroadcastPort),
 			RootCA:         mocks.RootCA,
 		},
 		Index:           0,

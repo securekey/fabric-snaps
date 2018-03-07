@@ -162,8 +162,7 @@
     "ptypes/empty",
     "ptypes/timestamp"
   ]
-  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
-  version = "v1.0.0"
+  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
 
 [[projects]]
   name = "github.com/golang/snappy"
@@ -335,15 +334,6 @@
 [[projects]]
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
-    "api/apiconfig",
-    "api/apicryptosuite",
-    "api/apifabca",
-    "api/apifabclient",
-    "api/apilogging",
-    "api/apitxn/chclient",
-    "api/apitxn/chmgmtclient",
-    "api/apitxn/resmgmtclient",
-    "api/kvstore",
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
@@ -365,54 +355,58 @@
     "internal/github.com/hyperledger/fabric/protos/orderer",
     "internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge",
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
-    "pkg/config",
-    "pkg/config/comm",
-    "pkg/config/cryptoutil",
-    "pkg/config/urlutil",
-    "pkg/cryptosuite",
-    "pkg/cryptosuite/bccsp/sw",
-    "pkg/cryptosuite/bccsp/wrapper",
+    "pkg/client/channel",
+    "pkg/client/channel/invoke",
+    "pkg/client/common/discovery",
+    "pkg/client/common/discovery/greylist",
+    "pkg/client/common/discovery/staticdiscovery",
+    "pkg/client/common/mocks",
+    "pkg/client/common/selection/dynamicselection",
+    "pkg/client/common/selection/dynamicselection/pgresolver",
+    "pkg/client/common/selection/staticselection",
+    "pkg/client/ledger",
+    "pkg/client/resmgmt",
+    "pkg/common/context",
+    "pkg/common/options",
+    "pkg/context",
+    "pkg/context/api/core",
+    "pkg/context/api/fab",
+    "pkg/core/config",
+    "pkg/core/config/comm",
+    "pkg/core/config/cryptoutil",
+    "pkg/core/config/urlutil",
+    "pkg/core/cryptosuite",
+    "pkg/core/cryptosuite/bccsp/sw",
+    "pkg/core/cryptosuite/bccsp/wrapper",
+    "pkg/core/identitymgr",
+    "pkg/errors/multi",
     "pkg/errors/retry",
     "pkg/errors/status",
-    "pkg/fabric-ca-client",
-    "pkg/fabric-client",
-    "pkg/fabric-client/ccpackager/gopackager",
-    "pkg/fabric-client/channel",
-    "pkg/fabric-client/chconfig",
-    "pkg/fabric-client/credentialmgr",
-    "pkg/fabric-client/credentialmgr/persistence",
-    "pkg/fabric-client/events",
-    "pkg/fabric-client/events/consumer",
-    "pkg/fabric-client/identity",
-    "pkg/fabric-client/keyvaluestore",
-    "pkg/fabric-client/mocks",
-    "pkg/fabric-client/orderer",
-    "pkg/fabric-client/peer",
-    "pkg/fabric-client/resource",
-    "pkg/fabric-client/signingmgr",
-    "pkg/fabric-client/txn",
-    "pkg/fabric-txn/chclient",
-    "pkg/fabric-txn/chmgmtclient",
-    "pkg/fabric-txn/discovery",
-    "pkg/fabric-txn/discovery/greylist",
-    "pkg/fabric-txn/discovery/staticdiscovery",
-    "pkg/fabric-txn/mocks",
-    "pkg/fabric-txn/resmgmtclient",
-    "pkg/fabric-txn/selection/dynamicselection",
-    "pkg/fabric-txn/selection/dynamicselection/pgresolver",
-    "pkg/fabric-txn/selection/staticselection",
-    "pkg/fabric-txn/txnhandler",
+    "pkg/fab/ccpackager/gopackager",
+    "pkg/fab/channel",
+    "pkg/fab/channel/membership",
+    "pkg/fab/chconfig",
+    "pkg/fab/comm",
+    "pkg/fab/events",
+    "pkg/fab/events/consumer",
+    "pkg/fab/keyvaluestore",
+    "pkg/fab/mocks",
+    "pkg/fab/orderer",
+    "pkg/fab/peer",
+    "pkg/fab/resource",
+    "pkg/fab/resource/api",
+    "pkg/fab/signingmgr",
+    "pkg/fab/txn",
     "pkg/fabsdk",
     "pkg/fabsdk/api",
-    "pkg/fabsdk/factory/defclient",
     "pkg/fabsdk/factory/defcore",
     "pkg/fabsdk/factory/defsvc",
     "pkg/fabsdk/provider/chpvdr",
     "pkg/fabsdk/provider/fabpvdr",
     "pkg/logging",
-    "pkg/logging/decorator",
+    "pkg/logging/api",
+    "pkg/logging/metadata",
     "pkg/logging/modlog",
-    "pkg/logging/utils",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -426,7 +420,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "031b888f2ff7c9b8cbfe02447373230c0ae9041a"
+  revision = "9606a4c4bd1cc4483ace1e49d2539d37ae08671f"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -624,6 +618,8 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "cryptobyte",
+    "cryptobyte/asn1",
     "ocsp",
     "pkcs12",
     "pkcs12/internal/rc2",
@@ -714,6 +710,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6d3bc01a5b45f3fc970b7b19d11422f886977f4ea11b944799a0fa3f3629e0fc"
+  inputs-digest = "661fb05ae9bbd18a400ba99c05c2b47faffe625fff6b06b67ded6335429391aa"
   solver-name = "gps-cdcl"
   solver-version = 1

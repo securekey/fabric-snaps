@@ -12,26 +12,23 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
-	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"
 	"github.com/securekey/fabric-snaps/util/errors"
-
-	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
-	"github.com/hyperledger/fabric-sdk-go/api/apilogging"
-	sdkpeer "github.com/hyperledger/fabric-sdk-go/pkg/fabric-client/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
 )
 
 // Action defines the common methods for an command action
 type Action interface {
 	Initialize() error
-	ChannelClient() (chclient.ChannelClient, error)
-	Peers() []apifabclient.Peer
-	ProposalProcessors() []apifabclient.ProposalProcessor
+	ChannelClient() (*channel.Client, error)
+	Peers() []fabApi.Peer
 	OrgID() string
 	Query(chaincodeID, fctn string, args [][]byte) ([]byte, error)
 	ExecuteTx(chaincodeID, fctn string, args [][]byte) error
@@ -40,7 +37,7 @@ type Action interface {
 
 // action is the base implementation of the Action interface.
 type action struct {
-	peers       []apifabclient.Peer
+	peers       []fabApi.Peer
 	orgIDByPeer map[string]string
 	sdk         *fabsdk.FabricSDK
 }
@@ -71,7 +68,7 @@ func (a *action) Initialize() error {
 }
 
 // ChannelClient creates a new channel client
-func (a *action) ChannelClient() (chclient.ChannelClient, error) {
+func (a *action) ChannelClient() (*channel.Client, error) {
 	userName := cliconfig.Config().UserName()
 	chClient, err := a.sdk.NewClient(fabsdk.WithUser(userName), fabsdk.WithOrg(a.OrgID())).Channel(cliconfig.Config().ChannelID())
 	if err != nil {
@@ -81,17 +78,8 @@ func (a *action) ChannelClient() (chclient.ChannelClient, error) {
 }
 
 // Peers returns the peers
-func (a *action) Peers() []apifabclient.Peer {
+func (a *action) Peers() []fabApi.Peer {
 	return a.peers
-}
-
-// ProposalProcessors returns the proposal processors
-func (a *action) ProposalProcessors() []apifabclient.ProposalProcessor {
-	targets := make([]apifabclient.ProposalProcessor, len(a.Peers()))
-	for i, p := range a.Peers() {
-		targets[i] = p
-	}
-	return targets
 }
 
 // OrgID returns the organization ID of the first peer in the list of peers
@@ -120,11 +108,11 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
 
-	resp, err := channelClient.Query(chclient.Request{
+	resp, err := channelClient.Query(channel.Request{
 		ChaincodeID: chaincodeID,
 		Fcn:         fctn,
 		Args:        args,
-	}, chclient.WithProposalProcessor(a.ProposalProcessors()...))
+	}, channel.WithTargets(a.peers))
 	if err != nil {
 		return nil, err
 	}
@@ -138,11 +126,11 @@ func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 		return errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
 	}
 	_, err = channelClient.Execute(
-		chclient.Request{
+		channel.Request{
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
 			Args:        args,
-		}, chclient.WithProposalProcessor(a.ProposalProcessors()...))
+		}, channel.WithTargets(a.peers))
 
 	return err
 }
@@ -245,7 +233,7 @@ func (a *action) initTargetPeers() error {
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %v\n", orgID, p.URL)
 
-				endorser, err := sdkpeer.New(cliconfig.Config(), sdkpeer.FromPeerConfig(&apiconfig.NetworkPeer{PeerConfig: p, MspID: mspID}))
+				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: p, MspID: mspID}))
 				if err != nil {
 					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}
@@ -270,17 +258,17 @@ func readFromTerminal(prompt string, responsech chan string) {
 	}
 }
 
-func levelFromName(levelName string) apilogging.Level {
+func levelFromName(levelName string) logging.Level {
 	switch levelName {
 	case "ERROR":
-		return apilogging.ERROR
+		return logging.ERROR
 	case "WARNING":
-		return apilogging.WARNING
+		return logging.WARNING
 	case "INFO":
-		return apilogging.INFO
+		return logging.INFO
 	case "DEBUG":
-		return apilogging.DEBUG
+		return logging.DEBUG
 	default:
-		return apilogging.ERROR
+		return logging.ERROR
 	}
 }

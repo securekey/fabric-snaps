@@ -14,12 +14,18 @@ bddtest:
 
 client:
 
-  # Global configuration for peer, event service and orderer timeouts
+# Global configuration for peer, event service and orderer timeouts
   peer:
     timeout:
       connection: 3s
-      queryResponse: 30s
-      executeTxResponse: 30s
+      queryResponse: 45s
+      executeTxResponse: 60s
+      discovery:
+        # Expiry period for discovery service greylist filter
+        # The channel client will greylist peers that are found to be offline
+        # to prevent re-selecting them in subsequent retries.
+        # This interval will define how long a peer is greylisted
+        greylistExpiry: 5s
   eventService:
     timeout:
       connection: 3s
@@ -28,13 +34,16 @@ client:
     timeout:
       connection: 3s
       response: 5s
+  cache:
+    timeout:
+      connectionIdle: 30s
 
   # Which organization does this application instance belong to? The value must be the name of an org
   # defined under "organizations"
   organization: peerorg1
 
   logging:
-    level: info
+    level: debug
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
@@ -270,6 +279,15 @@ peers:
     grpcOptions:
       ssl-target-name-override: peer0.org1.example.com
       grpc.http2.keepalive_time: 15
+#     These parameters should be set in coordination with the keepalive policy on the server,
+#     as incompatible settings can result in closing of connection.
+#     When duration of the 'keep-alive-time' is set to 0 or less the keep alive client parameters are disabled
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      #will be taken into consideration if address has no protocol defined and secured connection fails
+      allow-insecure: false
 
     tlsCACerts:
       # Certificate location absolute path
