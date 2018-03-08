@@ -19,6 +19,7 @@ import (
 
 	sdkApi "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -84,6 +85,16 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
+
+	case "unsafeGetState":
+		args := stub.GetArgs()
+		logger.Debugf("Function unsafeGetState invoked with args %v", args)
+		resp, err := es.unsafeGetState(args)
+		if err != nil {
+			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+		}
+		return pb.Response{Payload: resp, Status: shim.OK}
+
 	default:
 		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
 	}
@@ -181,6 +192,43 @@ func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) error {
 		return errors.WithMessage(errors.GeneralError, err, "VerifyTxnProposalSignature returned error")
 	}
 	return nil
+}
+
+// unsafeGetState allows the caller to read a given key from the stateDB without
+// producing a read set.
+// Function name: unsafeGetState, Arguments: channelID, ccID, key
+func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
+	if len(args) < 4 {
+		return nil, errors.New(errors.GeneralError,
+			"unsafeGetState requires function and three args: channelID, ccID, key")
+	}
+
+	channelID := string(args[1])
+	ccNamespace := string(args[2])
+	key := string(args[3])
+
+	db, err := dbprovider.GetStateDB(channelID)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "Failed to get State DB")
+	}
+
+	err = db.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	defer logger.Debug("DB handle closed")
+
+	logger.Debug("DB handle opened")
+
+	vv, err := db.GetState(ccNamespace, key)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugf("Query returned %+v for namespace %s and key %s", vv.Value, ccNamespace, key)
+
+	return vv.Value, nil
 }
 
 // getSnapTransactionRequest

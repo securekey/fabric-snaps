@@ -49,6 +49,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
+	"github.com/stretchr/testify/assert"
 )
 
 var mockEndorserServer *mocks.MockEndorserServer
@@ -506,8 +507,29 @@ func signObjectWithKey(object []byte, key apicryptosuite.Key,
 	return signature, nil
 }
 
-func TestMain(m *testing.M) {
+func TestTxnSnapUnsafeGetState(t *testing.T) {
+	var args [][]byte
 
+	snap := New()
+	stub := shim.NewMockStub("transactionsnap", snap)
+
+	args = append(args, []byte("unsafeGetState"))
+	response := stub.MockInvoke("TxID", args)
+	assert.NotNil(t, response)
+	assert.NotEqual(t, int32(200), response.GetStatus())
+	assert.Contains(t, response.GetMessage(), "requires function and three args")
+
+	args = append(args, []byte("channel"))
+	args = append(args, []byte("cc"))
+	args = append(args, []byte("key"))
+	response = stub.MockInvoke("TxID", args)
+	assert.NotNil(t, response)
+	assert.NotEqual(t, int32(200), response.GetStatus())
+	assert.Contains(t, response.GetMessage(), "Failed to get State DB")
+}
+
+func TestMain(m *testing.M) {
+	main()
 	//Setup bccsp factory
 	// note: use of 'pkcs11' tag in the unit test will load the PCKS11 version of the factory opts.
 	// otherwise default SW version will be used.
