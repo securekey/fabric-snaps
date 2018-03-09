@@ -22,6 +22,30 @@
       "revId": "7a21ea458c57a5eb35c30f73388163c212400cc2",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2d42823_ae86501b",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-03-09T18:00:05Z",
+      "side": 1,
+      "message": "This is only the handle. The connection is behind the VersionedDBProvider interface and is cached.\n\nThe peer operates the same way (with only one connection) so I\u0027m guessing there can be concurrent requests over the same connection.",
+      "parentUuid": "753bc1fb_2779c751",
+      "range": {
+        "startLine": 215,
+        "startChar": 7,
+        "endLine": 219,
+        "endChar": 17
+      },
+      "revId": "7a21ea458c57a5eb35c30f73388163c212400cc2",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
