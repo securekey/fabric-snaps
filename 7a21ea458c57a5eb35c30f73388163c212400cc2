@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "753bc1fb_2779c751",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-03-09T15:26:43Z",
+      "side": 1,
+      "message": "I wonder if we need a connection pool for this?",
+      "range": {
+        "startLine": 215,
+        "startChar": 7,
+        "endLine": 219,
+        "endChar": 17
+      },
+      "revId": "7a21ea458c57a5eb35c30f73388163c212400cc2",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
