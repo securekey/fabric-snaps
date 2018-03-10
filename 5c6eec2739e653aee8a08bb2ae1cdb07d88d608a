@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4771ad9a_aad5a260",
+        "filename": "bddtests/context.go",
+        "patchSetId": 9
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-03-10T03:25:00Z",
+      "side": 1,
+      "message": "Do we still need the sdk client?",
+      "range": {
+        "startLine": 102,
+        "startChar": 28,
+        "endLine": 102,
+        "endChar": 37
+      },
+      "revId": "5c6eec2739e653aee8a08bb2ae1cdb07d88d608a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
