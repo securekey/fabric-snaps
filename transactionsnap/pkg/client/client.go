@@ -51,13 +51,13 @@ type DynamicProviderFactory struct {
 	ChannelUsers []selection.ChannelUser
 }
 
-// NewDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) NewDiscoveryProvider(config coreApi.Config) (fabApi.DiscoveryProvider, error) {
+// CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
+func (f *DynamicProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
 	return dynamicDiscovery.New(config), nil
 }
 
-// NewSelectionProvider returns a new implementation of dynamic selection provider
-func (f *DynamicProviderFactory) NewSelectionProvider(config coreApi.Config) (fabApi.SelectionProvider, error) {
+// CreateSelectionProvider returns a new implementation of dynamic selection provider
+func (f *DynamicProviderFactory) CreateSelectionProvider(config coreApi.Config) (fabApi.SelectionProvider, error) {
 	return selection.New(config, f.ChannelUsers, nil)
 }
 

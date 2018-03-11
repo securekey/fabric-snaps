@@ -14,20 +14,10 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
 var logger = shim.NewLogger("TxSnapInvoker")
-
-//SnapTransactionRequest type will be passed as argument to a transaction snap
-//ChannelID and ChaincodeID are mandatory fields
-type SnapTransactionRequest struct {
-	ChannelID           string            // required channel ID
-	ChaincodeID         string            // required chaincode ID
-	TransientMap        map[string][]byte // optional transient Map
-	EndorserArgs        [][]byte          // optional args for endorsement
-	CCIDsForEndorsement []string          // optional ccIDs For endorsement selection
-	RegisterTxEvent     bool              // optional args for register Tx event (default is false)
-}
 
 // New chaincode implementation
 func New() shim.Chaincode {
@@ -70,7 +60,11 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	var ccArgs [][]byte
 	ccArgs = args[1:]
 	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" {
-		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true)
+		peerFilter := &api.PeerFilterOpts{
+			Type: api.MinBlockHeightPeerFilterType,
+			Args: []string{string(args[2])},
+		}
+		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true, peerFilter)
 	}
 
 	if snapFunc == "verifyTransactionProposalSignature" {
@@ -110,14 +104,15 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(response.Payload)
 }
 
-func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs [][]byte, registerTxEvent bool) [][]byte {
+func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {
 
-	snapTxReq := SnapTransactionRequest{ChannelID: chnlID,
+	snapTxReq := api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
 		TransientMap:        nil,
 		EndorserArgs:        clientArgs,
 		CCIDsForEndorsement: nil,
-		RegisterTxEvent:     registerTxEvent}
+		RegisterTxEvent:     registerTxEvent,
+		PeerFilter:          peerFilter}
 	snapTxReqB, _ := json.Marshal(snapTxReq)
 
 	var args [][]byte

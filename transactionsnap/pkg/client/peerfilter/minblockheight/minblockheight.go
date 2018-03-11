@@ -48,12 +48,15 @@ type peerFilter struct {
 // Accept returns true if the given peer's block height is
 // at least the height of the local peer.
 func (f *peerFilter) Accept(p fabApi.Peer) bool {
+	logger.Debugf("minblockheight check if peer of type channel peer")
 	chanPeer, ok := p.(api.ChannelPeer)
 	if !ok {
 		// This shouldn't happen since all peers should implement ChannelPeer
 		logger.Errorf("Peer is not a ChannelPeer")
 		return false
 	}
+
+	logger.Debugf("minblockheight GetBlockchainInfo for channel %s", f.channelID)
 
 	bcInfo, err := f.bcInfoProvider.GetBlockchainInfo(f.channelID)
 
@@ -65,6 +68,8 @@ func (f *peerFilter) Accept(p fabApi.Peer) bool {
 		// in the Gossip Network Member is really the block number (i.e. they subtract 1 also)
 		height = bcInfo.Height - 1
 	}
+
+	logger.Debugf("minblockheight GetBlockHeight for channel %s", f.channelID)
 
 	peerHeight := chanPeer.GetBlockHeight(f.channelID)
 	accepted := peerHeight >= height

@@ -94,7 +94,6 @@ func (p *PeerFilterHandler) filterTargets(peers []fabApi.Peer, filter api.PeerFi
 			filteredPeers = append(filteredPeers, peer)
 		}
 	}
-	logger.Debugf("filterTargets return peers:%v", filteredPeers)
 
 	return filteredPeers
 }
