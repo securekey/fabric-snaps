@@ -13,9 +13,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/identitymgr"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -31,6 +33,14 @@ type CustomIdentityManager struct {
 	certDir        string
 	config         coreApi.Config
 	cryptoProvider coreApi.CryptoSuite
+}
+
+// Internal representation of a Fabric user
+type user struct {
+	mspID                 string
+	name                  string
+	enrollmentCertificate []byte
+	privateKey            coreApi.Key
 }
 
 // NewCustomIdentityManager Constructor for a custom identity manager.
@@ -68,11 +78,7 @@ func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, crypto
 
 	mspConfigPath = filepath.Join(orgConfig.CryptoPath, mspConfigPath)
 
-	identityMgr, err := identitymgr.New(orgName, stateStore, cryptoProvider, config)
-	if err != nil {
-		return nil, err
-	}
-	return &CustomIdentityManager{IdentityManager: identityMgr, orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
+	return &CustomIdentityManager{orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
 }
 
 // GetSigningIdentity will sign the given object with provided key,
@@ -112,6 +118,22 @@ func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*coreApi.Si
 	signingIdentity := &coreApi.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
 
 	return signingIdentity, nil
+}
+
+// GetUser returns a user for the given user name
+func (c *CustomIdentityManager) GetUser(userName string) (coreApi.User, error) {
+	signingIdentity, err := c.GetSigningIdentity(userName)
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to get signing identity")
+	}
+
+	return &user{
+		mspID: signingIdentity.MspID,
+		name:  userName,
+		enrollmentCertificate: signingIdentity.EnrollmentCert,
+		privateKey:            signingIdentity.PrivateKey,
+	}, nil
+
 }
 
 func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, error) {
@@ -198,4 +220,35 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 
 	return certPubK, nil
+}
+
+//MspID return msp id
+func (u *user) MspID() string {
+	return u.mspID
+}
+
+//Name return user name
+func (u *user) Name() string {
+	return u.name
+}
+
+//SerializedIdentity return serialized identity
+func (u *user) SerializedIdentity() ([]byte, error) {
+	serializedIdentity := &pb_msp.SerializedIdentity{Mspid: u.MspID(),
+		IdBytes: u.EnrollmentCertificate()}
+	identity, err := proto.Marshal(serializedIdentity)
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "marshal serializedIdentity failed")
+	}
+	return identity, nil
+}
+
+//PrivateKey return private key
+func (u *user) PrivateKey() coreApi.Key {
+	return u.privateKey
+}
+
+//EnrollmentCertificate return enrollment certificate
+func (u *user) EnrollmentCertificate() []byte {
+	return u.enrollmentCertificate
 }
