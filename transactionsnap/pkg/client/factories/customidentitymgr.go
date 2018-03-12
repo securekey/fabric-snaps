@@ -68,11 +68,7 @@ func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, crypto
 
 	mspConfigPath = filepath.Join(orgConfig.CryptoPath, mspConfigPath)
 
-	identityMgr, err := identitymgr.New(orgName, stateStore, cryptoProvider, config)
-	if err != nil {
-		return nil, err
-	}
-	return &CustomIdentityManager{IdentityManager: identityMgr, orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
+	return &CustomIdentityManager{orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
 }
 
 // GetSigningIdentity will sign the given object with provided key,
