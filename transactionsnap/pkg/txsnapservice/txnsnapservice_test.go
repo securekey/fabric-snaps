@@ -39,6 +39,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
+	"google.golang.org/grpc"
 )
 
 var channelID = "testChannel"
@@ -233,7 +234,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
 
-	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
+	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
 
 	if eventProducer == nil {
 		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())

@@ -51,12 +51,10 @@ type ChannelHeight struct {
 
 // New returns a new mock ChannelPeer
 func New(name string, mspID string, channelID string, blockHeight uint64, chHeights ...ChannelHeight) api.ChannelPeer {
-	peer, err := peer.New(config, peer.WithURL("grpc://"+name+":7051"))
+	peer, err := peer.New(config, peer.WithURL("grpc://"+name+":7051"), peer.WithServerName(name), peer.WithMSPID(mspID))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
-	peer.SetName(name)
-	peer.SetMSPID(mspID)
 
 	blockHeights := make(map[string]uint64)
 	blockHeights[channelID] = blockHeight

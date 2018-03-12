@@ -46,8 +46,10 @@ client:
 
     # [Optional]. Client key and cert for TLS handshake with peers and orderers
     client:
-      keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
-      certpem: |
+      key:
+       path: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+      cert:
+       pem: |
         -----BEGIN CERTIFICATE-----
         MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
         gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv

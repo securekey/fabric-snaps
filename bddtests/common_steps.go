@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
@@ -175,10 +176,8 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	if err != nil {
 		return errors.WithMessage(err, "NewPeer failed")
 	}
-	resourceMgmt, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-	if err != nil {
-		return errors.WithMessage(err, "ResourceMgmt() failed")
-	}
+	resourceMgmt := d.BDDContext.ResMgmtClient(orgID, ADMIN)
+
 	// Check if primary peer has joined channel
 	alreadyJoined, err := HasPrimaryPeerJoinedChannel(channelID, resourceMgmt, d.BDDContext.OrgUserContext(orgID, ADMIN), peer)
 	if err != nil {
@@ -199,7 +198,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		// Create and join channel
 		req := resmgmt.SaveChannelRequest{ChannelID: channelID,
 			ChannelConfig:     txPath,
-			SigningIdentities: []fabApi.IdentityContext{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
+			SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 		if err = resourceMgmt.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
@@ -221,7 +220,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	// Create channel (or update if it already exists)
 	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
 		ChannelConfig:     anchorTxPath,
-		SigningIdentities: []fabApi.IdentityContext{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
+		SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 	if err := resourceMgmt.SaveChannel(req); err != nil {
 		return errors.WithMessage(err, "SaveChannel failed")
@@ -231,10 +230,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 
 	// Join Channel without error for anchor peers only. ignore JoinChannel error for other peers as AnchorePeer with JoinChannel will add all org's peers
 
-	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new resource management client: %s", err)
-	}
+	resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 	if err = resMgmtClient.JoinChannel(channelID); err != nil {
 		return fmt.Errorf("JoinChannel returned error: %v", err)
 	}
@@ -512,10 +508,7 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 
 	for _, orgID := range oIDs {
 
-		resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-		if err != nil {
-			return fmt.Errorf("Failed to create new resource management client: %s", err)
-		}
+		resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 
 		ccPkg, err := gopackager.NewCCPackage(ccPath, d.getDeployPath(ccType))
 		if err != nil {
@@ -577,10 +570,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 		}
 	}
 
-	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new resource management client: %s", err)
-	}
+	resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 
 	logger.Infof("Instantiating chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s] to the following peers: [%s]\n", ccID, ccPath, channelID, args, ccPolicy, collectionNames, peersAsString(sdkPeers))
 
@@ -619,10 +609,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 		if err != nil {
 			return errors.WithMessage(err, "NewPeer failed")
 		}
-		resourceMgmt, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-		if err != nil {
-			return errors.WithMessage(err, "ResourceMgmt failed")
-		}
+		resourceMgmt := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 		isInstalled, err = IsChaincodeInstalled(resourceMgmt, sdkPeer, ccID)
 		if err != nil {
 			return fmt.Errorf("Error querying installed chaincodes: %s", err)
@@ -630,11 +617,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 
 		if !isInstalled {
 
-			resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-			if err != nil {
-				return fmt.Errorf("Failed to create new resource management client: %s", err)
-			}
-
+			resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 			ccPkg, err := gopackager.NewCCPackage(ccPath, d.getDeployPath(ccType))
 			if err != nil {
 				return err
@@ -669,10 +652,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 		}
 	}
 
-	resMgmtClient, err := d.BDDContext.OrgClient(orgID, ADMIN).ResourceMgmt()
-	if err != nil {
-		return fmt.Errorf("Failed to create new resource management client: %s", err)
-	}
+	resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 
 	instantiateRqst := resmgmt.InstantiateCCRequest{Name: ccID, Path: ccPath, Version: "v1", Args: GetByteArgs(argsArray), Policy: chaincodePolicy,
 		CollConfig: collConfig}

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric/bccsp/factory"
 )
@@ -50,8 +51,8 @@ func (c *testConfig) NetworkConfig() (*coreApi.NetworkConfig, error) {
 func initNetworkConfigWithOrgEmbeddedUsers() *coreApi.NetworkConfig {
 	org1KeyPair := map[string]coreApi.TLSKeyPair{
 		txnSnapUser: {
-			Key:  coreApi.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/key", Pem: "some_sampleOrg_Txn-Snap-User_key_content"},
-			Cert: coreApi.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/cert", Pem: "some_sampleOrg_Txn-Snap-User_cert_content"},
+			Key:  endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/key", Pem: "some_sampleOrg_Txn-Snap-User_key_content"},
+			Cert: endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/cert", Pem: "some_sampleOrg_Txn-Snap-User_cert_content"},
 		},
 	}
 

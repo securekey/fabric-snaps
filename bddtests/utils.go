@@ -13,6 +13,7 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -49,7 +50,7 @@ func randomString(strlen int) string {
 // HasPrimaryPeerJoinedChannel checks whether the primary peer of a channel
 // has already joined the channel. It returns true if it has, false otherwise,
 // or an error
-func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser fabApi.IdentityContext, peer fabApi.Peer) (bool, error) {
+func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
 	foundChannel := false
 
 	response, err := client.QueryChannels(peer)
@@ -110,7 +111,7 @@ func IsChaincodeInstalled(client *resmgmt.Client, peer fabApi.Peer, name string)
 func peersAsString(peers []fabApi.Peer) string {
 	str := ""
 	for i, p := range peers {
-		str += p.Name() + ": " + p.URL()
+		str += p.URL()
 		if i < len(peers)-1 {
 			str += ", "
 		}

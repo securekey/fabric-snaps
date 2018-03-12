@@ -78,10 +78,9 @@ func InitGlobalFlags(flags *pflag.FlagSet) {
 // NewMockPeer creates a mock peer
 func NewMockPeer(url string, mspID string) fabApi.Peer {
 	config := mocks.NewMockConfig()
-	peer, err := peer.New(config, peer.WithURL(url))
+	peer, err := peer.New(config, peer.WithURL(url), peer.WithMSPID(mspID))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}
-	peer.SetMSPID(mspID)
 	return peer
 }

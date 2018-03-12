@@ -50,6 +50,7 @@ import (
 	mocks "github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 var mockEndorserServer *mocks.MockEndorserServer
@@ -584,7 +585,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
 
-	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
+	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
 
 	if eventProducer == nil {
 		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())

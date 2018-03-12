@@ -15,8 +15,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/identitymgr"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -26,7 +27,7 @@ var logger = logging.NewLogger("txnsnap")
 
 // CustomIdentityManager is used for retriving user's identity manager
 type CustomIdentityManager struct {
-	*identitymgr.IdentityManager
+	*msp.IdentityManager
 	orgName        string
 	embeddedUsers  map[string]coreApi.TLSKeyPair
 	keyDir         string
@@ -44,7 +45,7 @@ type user struct {
 }
 
 // NewCustomIdentityManager Constructor for a custom identity manager.
-func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, cryptoProvider coreApi.CryptoSuite, config coreApi.Config, mspConfigPath string) (coreApi.IdentityManager, error) {
+func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, cryptoProvider coreApi.CryptoSuite, config coreApi.Config, mspConfigPath string) (mspApi.IdentityManager, error) {
 	if orgName == "" {
 		return nil, errors.New(errors.GeneralError, "orgName is required")
 	}
@@ -82,7 +83,7 @@ func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, crypto
 }
 
 // GetSigningIdentity will sign the given object with provided key,
-func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*coreApi.SigningIdentity, error) {
+func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*mspApi.SigningIdentity, error) {
 	if userName == "" {
 		return nil, errors.New(errors.GeneralError, "username is required")
 	}
@@ -115,13 +116,13 @@ func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*coreApi.Si
 		return nil, errors.New(errors.GeneralError, "failed to get private key, found a public key instead")
 	}
 
-	signingIdentity := &coreApi.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
+	signingIdentity := &mspApi.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
 
 	return signingIdentity, nil
 }
 
 // GetUser returns a user for the given user name
-func (c *CustomIdentityManager) GetUser(userName string) (coreApi.User, error) {
+func (c *CustomIdentityManager) GetUser(userName string) (mspApi.User, error) {
 	signingIdentity, err := c.GetSigningIdentity(userName)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to get signing identity")

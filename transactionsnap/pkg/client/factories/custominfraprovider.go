@@ -16,7 +16,7 @@ type CustomInfraProvider struct {
 	*fabpvdr.InfraProvider
 }
 
-// CreateEventHub will return nil because the txnsnap will use local event service
-func (f *CustomInfraProvider) CreateEventHub(ic fab.IdentityContext, channelID string) (fab.EventHub, error) {
+// CreateEventService will return nil because the txnsnap will use local event service
+func (f *CustomInfraProvider) CreateEventService(ctx fab.ClientContext, chConfig fab.ChannelCfg) (fab.EventService, error) {
 	return nil, nil
 }

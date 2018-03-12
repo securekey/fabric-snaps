@@ -9,9 +9,9 @@ package factories
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/fabpvdr"
-
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -33,7 +33,7 @@ func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.Config) (core.Cryp
 }
 
 // CreateIdentityManager return new identity manager
-func (f *CustomCorePkg) CreateIdentityManager(orgName string, stateStore core.KVStore, cryptoProvider core.CryptoSuite, config core.Config) (core.IdentityManager, error) {
+func (f *CustomCorePkg) CreateIdentityManager(orgName string, stateStore core.KVStore, cryptoProvider core.CryptoSuite, config core.Config) (mspApi.IdentityManager, error) {
 	customIdenMgr, err := NewCustomIdentityManager(orgName, stateStore, cryptoProvider, config, f.CryptoPath)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to create new credential manager")
