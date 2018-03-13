@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package factories
+package msp
 
 import (
 	"crypto/x509"
@@ -45,13 +45,9 @@ type user struct {
 }
 
 // NewCustomIdentityManager Constructor for a custom identity manager.
-func NewCustomIdentityManager(orgName string, stateStore coreApi.KVStore, cryptoProvider coreApi.CryptoSuite, config coreApi.Config, mspConfigPath string) (mspApi.IdentityManager, error) {
+func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite, config coreApi.Config, mspConfigPath string) (mspApi.IdentityManager, error) {
 	if orgName == "" {
 		return nil, errors.New(errors.GeneralError, "orgName is required")
-	}
-
-	if stateStore == nil {
-		return nil, errors.New(errors.GeneralError, "stateStore is required")
 	}
 
 	if cryptoProvider == nil {

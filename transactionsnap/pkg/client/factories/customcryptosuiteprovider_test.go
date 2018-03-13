@@ -8,10 +8,12 @@ package factories
 
 import (
 	"hash"
+	"os"
 	"testing"
 
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
 )
 
@@ -24,6 +26,7 @@ const (
 	getKey           = "-getkey"
 	keyImport        = "-keyimport"
 	keyGen           = "-keygent"
+	keyStorePath     = "../../../cmd/sampleconfig/msp/keystore/"
 )
 
 func TestDefaultCryptoSuiteFactory(t *testing.T) {
@@ -245,4 +248,20 @@ func failTest(t *testing.T, msgAndArgs ...interface{}) {
 	if len(msgAndArgs) > 1 {
 		t.Fatalf(msgAndArgs[0].(string), msgAndArgs[1:]...)
 	}
+}
+
+func TestMain(m *testing.M) {
+
+	opts := &factory.FactoryOpts{
+		ProviderName: "SW",
+		SwOpts: &factory.SwOpts{
+			HashFamily:   "SHA2",
+			SecLevel:     256,
+			Ephemeral:    false,
+			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: keyStorePath},
+		},
+	}
+	factory.InitFactories(opts)
+
+	os.Exit(m.Run())
 }

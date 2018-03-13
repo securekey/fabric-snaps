@@ -26,6 +26,8 @@ import (
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
+	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
+
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -158,8 +160,9 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	sdk, err := fabsdk.New(NewCustomConfigProvider(clientConfig, localPeer, c.txnSnapConfig.GetTLSCertPem()),
-		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider, CryptoPath: c.txnSnapConfig.GetMspConfigPath()}),
-		fabsdk.WithServicePkg(serviceProviderFactory))
+		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
+		fabsdk.WithServicePkg(serviceProviderFactory),
+		fabsdk.WithMSPPkg(&factoriesMsp.CustomMspPkg{CryptoPath: c.txnSnapConfig.GetMspConfigPath()}))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}

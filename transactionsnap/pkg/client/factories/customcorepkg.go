@@ -9,7 +9,6 @@ package factories
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
-	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/fabpvdr"
 	"github.com/hyperledger/fabric/bccsp/factory"
@@ -20,7 +19,6 @@ import (
 type CustomCorePkg struct {
 	defcore.ProviderFactory
 	ProviderName string
-	CryptoPath   string
 }
 
 // CreateCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
@@ -30,15 +28,6 @@ func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.Config) (core.Cryp
 		return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new cryptosuite provider")
 	}
 	return GetSuite(bccspSuite), nil
-}
-
-// CreateIdentityManager return new identity manager
-func (f *CustomCorePkg) CreateIdentityManager(orgName string, stateStore core.KVStore, cryptoProvider core.CryptoSuite, config core.Config) (mspApi.IdentityManager, error) {
-	customIdenMgr, err := NewCustomIdentityManager(orgName, stateStore, cryptoProvider, config, f.CryptoPath)
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to create new credential manager")
-	}
-	return customIdenMgr, nil
 }
 
 // CreateInfraProvider returns a new custom implementation of fabric primitives

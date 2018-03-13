@@ -4,7 +4,7 @@ Copyright SecureKey Technologies Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package factories
+package msp
 
 import (
 	"io/ioutil"
@@ -13,14 +13,16 @@ import (
 	"testing"
 
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 )
 
 const (
-	mspConfigPath              = "../../../cmd/sampleconfig/msp"
-	keyStorePath               = "../../../cmd/sampleconfig/msp/keystore/"
+	mspConfigPath              = "../../../../cmd/sampleconfig/msp"
+	keyStorePath               = "../../../../cmd/sampleconfig/msp/keystore/"
 	invalidMspConfigPath       = "/some/sample/msp/configpath"
 	orgName                    = "sampleOrg"
 	errorMspConfigPathRequired = "failed to create new credential manager: either mspConfigPath or an embedded list of users is required"
@@ -83,13 +85,7 @@ func initNetworkConfig(orgs map[string]coreApi.OrganizationConfig) *coreApi.Netw
 
 func TestCustomIdentityMgr(t *testing.T) {
 	//Positive Scenario
-	customCorePkg := &CustomCorePkg{CryptoPath: mspConfigPath}
-	identityManager, err := customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
-
-	if err != nil {
-		t.Fatalf("Not supposed to get error for getting create identity manager, error: %s", err)
-	}
-
+	identityManager := getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
 		t.Fatalf("Expected valid identity manager")
 	}
@@ -97,51 +93,62 @@ func TestCustomIdentityMgr(t *testing.T) {
 	// temporarily remove the list of embedded users to check for the org's CryptoPath
 	tNetworkConfig = initNetworkConfigWithMSPConfigPath()
 	// test empty embedded user certs and empty mspConfigPath
-	customCorePkg = &CustomCorePkg{}
-	_, err = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
-	if err == nil || err.Error() != errorMspConfigPathRequired {
-		t.Fatalf("Expected error '%s' , but got : %v", errorMspConfigPathRequired, err)
+	identityManager = getIdentityManager(t, "", orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager != nil {
+		t.Fatalf("Expected nil identity manager")
 	}
 
-	// reset customCorePkg with mspConfigPath
-	customCorePkg = &CustomCorePkg{CryptoPath: mspConfigPath}
-	// test happy path with org.CryptPath and no embedded users (tNetWorkConfig assignment above)
-	_, err = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
-	if err != nil {
-		t.Fatalf("Unexpected error '%s'", err)
+	// reset customMspPkg with mspConfigPath
+	identityManager = getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager == nil {
+		t.Fatalf("Expected valid identity manager")
 	}
 
 	// reset config with list of embedded users
 	tNetworkConfig = initNetworkConfigWithOrgEmbeddedUsers()
 
 	// test empty org name
-	_, err = customCorePkg.CreateIdentityManager("", mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
-	if err == nil || err.Error() != errorOrgNameRequired {
-		t.Fatalf("Expected error '%s' , but got : %v", errorOrgNameRequired, err)
+	identityManager = getIdentityManager(t, mspConfigPath, "", &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager != nil {
+		t.Fatalf("Expected nil identity manager")
 	}
+
 	// test empty config
-	_, err = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), nil)
-	if err == nil || err.Error() != errorConfigRequired {
-		t.Fatalf("Expected error '%s' , but got : %v", errorConfigRequired, err)
+	identityManager = getIdentityManager(t, mspConfigPath, orgName, nil, factories.GetSuite(factory.GetDefault()))
+	if identityManager != nil {
+		t.Fatalf("Expected nil identity manager")
 	}
 	// test empty cryptoProvider
-	_, err = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), nil, &testConfig{})
-	if err == nil || err.Error() != errorCryptoSuiteRequired {
-		t.Fatalf("Expected error '%s' , but got : %v", errorCryptoSuiteRequired, err)
+	identityManager = getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, nil)
+	if identityManager != nil {
+		t.Fatalf("Expected nil identity manager")
 	}
 	// test happy path using embedded users without org.CryptoPath (latest tNetWorkConfig assignment above)
-	_, err = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
+	identityManager = getIdentityManager(t, "", orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager == nil {
+		t.Fatalf("Expected vaild identity manager")
+	}
+
+}
+
+func getIdentityManager(t *testing.T, mspConfigPath string, orgName string, config coreApi.Config, cryptoProvider coreApi.CryptoSuite) mspApi.IdentityManager {
+	customMspPkg := &CustomMspPkg{CryptoPath: mspConfigPath}
+	mspProvider, err := customMspPkg.CreateProvider(config, cryptoProvider, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error '%s'", err)
 	}
+	if mspProvider == nil {
+		t.Fatalf("Expected valid msp provider")
+	}
+	identityManager, _ := mspProvider.IdentityManager(orgName)
+	return identityManager
 }
 
 func TestGetSigningIdentity(t *testing.T) {
 
-	customCorePkg := &CustomCorePkg{CryptoPath: mspConfigPath}
-	identityManager, err := customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
-	if err != nil {
-		t.Fatalf("Not supposed to get error for getting create identity manager, error: %s", err)
+	identityManager := getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager == nil {
+		t.Fatalf("Expected vaild identity manager")
 	}
 
 	signingIdentity, err := identityManager.GetSigningIdentity(txnSnapUser)
@@ -159,13 +166,16 @@ func TestGetSigningIdentity(t *testing.T) {
 		t.Fatalf("Invalid signing identity")
 	}
 
-	if !verifyBytes(t, signingIdentity.EnrollmentCert, "../../../cmd/sampleconfig/msp/signcerts/cert.pem") {
+	if !verifyBytes(t, signingIdentity.EnrollmentCert, "../../../../cmd/sampleconfig/msp/signcerts/cert.pem") {
 		t.Fatalf(" signingIdentity.EnrollmentCert cert is invalid")
 	}
 
 	//Negative Case
-	customCorePkg = &CustomCorePkg{CryptoPath: invalidMspConfigPath}
-	identityManager, _ = customCorePkg.CreateIdentityManager(orgName, mocks.NewMockStateStore(), GetSuite(factory.GetDefault()), &testConfig{})
+
+	identityManager = getIdentityManager(t, invalidMspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
+	if identityManager == nil {
+		t.Fatalf("Expected vaild identity manager")
+	}
 	signingIdentity, err = identityManager.GetSigningIdentity(txnSnapUser)
 	if err == nil {
 		t.Fatalf("Supposed to get error for credential manager GetSigningIdentity for invalid msp config path")
