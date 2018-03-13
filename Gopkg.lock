@@ -350,7 +350,6 @@
     "internal/github.com/hyperledger/fabric/common/ledger",
     "internal/github.com/hyperledger/fabric/common/util",
     "internal/github.com/hyperledger/fabric/core/ledger",
-    "internal/github.com/hyperledger/fabric/events/consumer",
     "internal/github.com/hyperledger/fabric/msp",
     "internal/github.com/hyperledger/fabric/protos/orderer",
     "internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge",
@@ -364,21 +363,24 @@
     "pkg/client/common/selection/dynamicselection",
     "pkg/client/common/selection/dynamicselection/pgresolver",
     "pkg/client/common/selection/staticselection",
-    "pkg/client/ledger",
     "pkg/client/resmgmt",
     "pkg/common/context",
+    "pkg/common/futurevalue",
+    "pkg/common/lazycache",
+    "pkg/common/lazyref",
     "pkg/common/options",
     "pkg/context",
     "pkg/context/api/core",
     "pkg/context/api/fab",
+    "pkg/context/api/msp",
     "pkg/core/config",
     "pkg/core/config/comm",
     "pkg/core/config/cryptoutil",
-    "pkg/core/config/urlutil",
+    "pkg/core/config/endpoint",
     "pkg/core/cryptosuite",
     "pkg/core/cryptosuite/bccsp/sw",
     "pkg/core/cryptosuite/bccsp/wrapper",
-    "pkg/core/identitymgr",
+    "pkg/core/mocks",
     "pkg/errors/multi",
     "pkg/errors/retry",
     "pkg/errors/status",
@@ -387,8 +389,21 @@
     "pkg/fab/channel/membership",
     "pkg/fab/chconfig",
     "pkg/fab/comm",
-    "pkg/fab/events",
-    "pkg/fab/events/consumer",
+    "pkg/fab/events/api",
+    "pkg/fab/events/client",
+    "pkg/fab/events/client/dispatcher",
+    "pkg/fab/events/client/lbp",
+    "pkg/fab/events/deliverclient",
+    "pkg/fab/events/deliverclient/connection",
+    "pkg/fab/events/deliverclient/dispatcher",
+    "pkg/fab/events/deliverclient/seek",
+    "pkg/fab/events/endpoint",
+    "pkg/fab/events/eventhubclient",
+    "pkg/fab/events/eventhubclient/connection",
+    "pkg/fab/events/eventhubclient/dispatcher",
+    "pkg/fab/events/service",
+    "pkg/fab/events/service/blockfilter",
+    "pkg/fab/events/service/dispatcher",
     "pkg/fab/keyvaluestore",
     "pkg/fab/mocks",
     "pkg/fab/orderer",
@@ -400,13 +415,17 @@
     "pkg/fabsdk",
     "pkg/fabsdk/api",
     "pkg/fabsdk/factory/defcore",
+    "pkg/fabsdk/factory/defmsp",
     "pkg/fabsdk/factory/defsvc",
     "pkg/fabsdk/provider/chpvdr",
     "pkg/fabsdk/provider/fabpvdr",
+    "pkg/fabsdk/provider/msppvdr",
     "pkg/logging",
     "pkg/logging/api",
     "pkg/logging/metadata",
     "pkg/logging/modlog",
+    "pkg/msp",
+    "pkg/msp/api",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -420,7 +439,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "10ca32691a07cf50557dd73c151180f30915e135"
+  revision = "cc87976ea59ad0e81d26a7a91d7abd52baded498"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -708,6 +727,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bd89cea54dde3b79e01195efd169325158b80fe1da358750970764cda2f8c4f7"
+  inputs-digest = "b1d2763e2b9e9829fe3343cdee1d084e5a9eece6d4acd7838a85fe2001e77413"
   solver-name = "gps-cdcl"
   solver-version = 1

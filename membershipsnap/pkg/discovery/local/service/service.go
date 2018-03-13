@@ -55,11 +55,10 @@ func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint
 	var peers []fabApi.Peer
 	for _, endpoint := range endpoints {
 
-		peer, err := peer.New(s.clientConfig, peer.WithURL("grpcs://"+endpoint.GetEndpoint()), peer.WithServerName(""))
+		peer, err := peer.New(s.clientConfig, peer.WithURL("grpcs://"+endpoint.GetEndpoint()), peer.WithServerName(""), peer.WithMSPID(string(endpoint.GetMSPid())))
 		if err != nil {
 			return nil, fmt.Errorf("Error creating new peer: %s", err)
 		}
-		peer.SetMSPID(string(endpoint.GetMSPid()))
 		channelPeer, err := channelpeer.New(peer, s.channelID, endpoint.LedgerHeight)
 		if err != nil {
 			return nil, err

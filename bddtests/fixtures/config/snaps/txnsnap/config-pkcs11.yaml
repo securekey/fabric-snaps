@@ -23,7 +23,7 @@ client:
   organization: peerorg1
 
   logging:
-    level: info
+    level: debug
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific

@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/context"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
@@ -36,7 +37,7 @@ type BDDContext struct {
 	peersByChannel       map[string][]*PeerConfig
 	orgsByChannel        map[string][]string
 	collectionConfigs    map[string]*CollectionConfig
-	clients              map[string]*fabsdk.ClientContext
+	resmgmtClients       map[string]*resmgmt.Client
 	contexts             map[string]contextApi.Client
 	orgChannelClients    map[string]*channel.Client
 	peersMspID           map[string]string
@@ -45,6 +46,7 @@ type BDDContext struct {
 	snapsConfigFilePath  string
 	testCCPath           string
 	createdChannels      map[string]bool
+	sdk                  *fabsdk.FabricSDK
 }
 
 // PeerConfig holds the peer configuration and org ID
@@ -71,7 +73,7 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 		peersByChannel:       make(map[string][]*PeerConfig),
 		contexts:             make(map[string]contextApi.Client),
 		orgsByChannel:        make(map[string][]string),
-		clients:              make(map[string]*fabsdk.ClientContext),
+		resmgmtClients:       make(map[string]*resmgmt.Client),
 		collectionConfigs:    make(map[string]*CollectionConfig),
 		orgChannelClients:    make(map[string]*channel.Client),
 		clientConfigFilePath: clientConfigFilePath,
@@ -91,33 +93,37 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
+	b.sdk = sdk
 	b.clientConfig = sdk.Config()
 	for _, org := range b.orgs {
 		// load org admin
 		orgAdmin := fmt.Sprintf("%s_%s", org, ADMIN)
-		b.contexts[orgAdmin], err = sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))()
+		adminContextProv := sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+		b.contexts[orgAdmin], err = adminContextProv()
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get admin context: %s", err))
 		}
-		b.clients[orgAdmin] = sdk.NewClient(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))
+		b.resmgmtClients[orgAdmin], err = resmgmt.New(adminContextProv)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get admin resmgmt: %s", err))
+		}
 		// load org user
 		orgUser := fmt.Sprintf("%s_%s", org, USER)
-		b.contexts[orgUser], err = sdk.Context(fabsdk.WithUser("Admin"), fabsdk.WithOrg(org))()
+		userContextProv := sdk.Context(fabsdk.WithUser("User1"), fabsdk.WithOrg(org))
+		b.contexts[orgUser], err = userContextProv()
 		if err != nil {
-			panic(fmt.Sprintf("Failed to get admin context: %s", err))
+			panic(fmt.Sprintf("Failed to get user context: %s", err))
 		}
-		b.clients[orgUser] = sdk.NewClient(fabsdk.WithUser("User1"), fabsdk.WithOrg(org))
-
+		b.resmgmtClients[orgUser], err = resmgmt.New(userContextProv)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get user resmgmt: %s", err))
+		}
 	}
 
 }
 
 // AfterScenario execute code after bdd scenario
 func (b *BDDContext) AfterScenario(interface{}, error) {
-
-	for _, orgChannelClient := range b.orgChannelClients {
-		orgChannelClient.Close()
-	}
 
 }
 
@@ -168,11 +174,11 @@ func (b *BDDContext) CollectionConfig(coll string) *CollectionConfig {
 	return b.collectionConfigs[coll]
 }
 
-// OrgClient returns the org client
-func (b *BDDContext) OrgClient(org, userType string) *fabsdk.ClientContext {
+// ResMgmtClient returns the res mgmt client
+func (b *BDDContext) ResMgmtClient(org, userType string) *resmgmt.Client {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
-	return b.clients[fmt.Sprintf("%s_%s", org, userType)]
+	return b.resmgmtClients[fmt.Sprintf("%s_%s", org, userType)]
 }
 
 // OrgChannelClient returns the org channel client
@@ -182,8 +188,11 @@ func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (*channel
 	if orgChanClient, ok := b.orgChannelClients[fmt.Sprintf("%s_%s_%s", org, userType, channelID)]; ok {
 		return orgChanClient, nil
 	}
-
-	orgChanClient, err := b.OrgClient(org, userType).Channel(channelID)
+	user := "Admin"
+	if userType == USER {
+		user = "User1"
+	}
+	orgChanClient, err := channel.New(b.sdk.ChannelContext(channelID, fabsdk.WithUser(user), fabsdk.WithOrg(org)))
 	if err != nil {
 		return nil, err
 	}

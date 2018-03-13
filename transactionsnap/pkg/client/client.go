@@ -17,6 +17,7 @@ import (
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -72,10 +73,12 @@ type CustomConfig struct {
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
 func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
+
 	networkPeer := coreApi.NetworkPeer{PeerConfig: coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port), TLSCACerts: coreApi.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MspID: string(c.localPeer.MSPid)}
+		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MspID: string(c.localPeer.MSPid)}
 	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
+	logger.Debugf("ChannelPeers return %v", peer)
 	return []coreApi.ChannelPeer{peer}, nil
 }
 
@@ -162,22 +165,22 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// new client
-	sdkClient := sdk.NewClient(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
+	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
 
 	// Channel client is used to query and execute transactions
-	chClient, err := sdkClient.Channel(channelID)
+	chClient, err := channel.New(chContextProv)
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client %v", channelID, err)
 	}
 	if chClient == nil {
 		return errors.New(errors.GeneralError, "channel client is nil")
 	}
-
-	// Get channel service
-	chService, err := sdkClient.ChannelService(channelID)
+	chContext, err := chContextProv()
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to get channel service")
+		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context %v", channelID, err)
 	}
+	// Get channel service
+	chService := chContext.ChannelService()
 	if chService == nil {
 		return errors.New(errors.GeneralError, "channel service is nil")
 	}

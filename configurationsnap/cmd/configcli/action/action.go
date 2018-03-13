@@ -70,7 +70,8 @@ func (a *action) Initialize() error {
 // ChannelClient creates a new channel client
 func (a *action) ChannelClient() (*channel.Client, error) {
 	userName := cliconfig.Config().UserName()
-	chClient, err := a.sdk.NewClient(fabsdk.WithUser(userName), fabsdk.WithOrg(a.OrgID())).Channel(cliconfig.Config().ChannelID())
+
+	chClient, err := channel.New(a.sdk.ChannelContext(cliconfig.Config().ChannelID(), fabsdk.WithUser(userName), fabsdk.WithOrg(a.OrgID())))
 	if err != nil {
 		return nil, errors.Wrapf(errors.GeneralError, err, "failed to create new channel client")
 	}
