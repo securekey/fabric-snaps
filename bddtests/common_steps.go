@@ -197,7 +197,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 
 		// Create and join channel
 		req := resmgmt.SaveChannelRequest{ChannelID: channelID,
-			ChannelConfig:     txPath,
+			ChannelConfigPath: txPath,
 			SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 		if err = resourceMgmt.SaveChannel(req); err != nil {
@@ -219,7 +219,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	}
 	// Create channel (or update if it already exists)
 	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfig:     anchorTxPath,
+		ChannelConfigPath: anchorTxPath,
 		SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 	if err := resourceMgmt.SaveChannel(req); err != nil {
@@ -323,7 +323,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 			ChaincodeID: ccID,
 			Fcn:         args[0],
 			Args:        GetByteArgs(args[1:]),
-		}, channel.WithTargets(peers))
+		}, channel.WithTargets(peers...))
 
 	if err != nil {
 		return fmt.Errorf("InvokeChaincode return error: %v", err)
@@ -405,7 +405,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			Fcn:          args[0],
 			Args:         GetByteArgs(args[1:]),
 			TransientMap: transientData,
-		}, channel.WithTargets(peers), channel.WithTimeout(timeout))
+		}, channel.WithTargets(peers...), channel.WithTimeout(timeout))
 		if err != nil {
 			return "", fmt.Errorf("QueryChaincode return error: %v", err)
 		}
@@ -420,7 +420,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			Fcn:          args[0],
 			Args:         GetByteArgs(args[1:]),
 			TransientMap: transientData,
-		}, channel.WithTargets(peers), channel.WithTimeout(timeout))
+		}, channel.WithTargets(peers...), channel.WithTimeout(timeout))
 		if err != nil {
 			return "", fmt.Errorf("QueryChaincode return error: %v", err)
 		}
@@ -434,7 +434,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 				Fcn:          args[0],
 				Args:         GetByteArgs(args[1:]),
 				TransientMap: transientData,
-			}, channel.WithTargets([]fabApi.Peer{peer}), channel.WithTimeout(timeout))
+			}, channel.WithTargets([]fabApi.Peer{peer}...), channel.WithTimeout(timeout))
 			if err != nil {
 				errs = append(errs, err)
 			} else {

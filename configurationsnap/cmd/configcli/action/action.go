@@ -113,7 +113,7 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 		ChaincodeID: chaincodeID,
 		Fcn:         fctn,
 		Args:        args,
-	}, channel.WithTargets(a.peers))
+	}, channel.WithTargets(a.peers...))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
 			Args:        args,
-		}, channel.WithTargets(a.peers))
+		}, channel.WithTargets(a.peers...))
 
 	return err
 }
