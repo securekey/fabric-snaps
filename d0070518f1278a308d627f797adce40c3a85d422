@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "123609be_fabfa01f",
+        "filename": "bddtests/unsafe_query_steps.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-03-14T22:12:07Z",
+      "side": 1,
+      "message": "you can remove the slice def",
+      "range": {
+        "startLine": 59,
+        "startChar": 27,
+        "endLine": 59,
+        "endChar": 33
+      },
+      "revId": "d0070518f1278a308d627f797adce40c3a85d422",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
