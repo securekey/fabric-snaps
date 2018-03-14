@@ -23,3 +23,7 @@ vendor/
 
 # Exclude http server vendor
 !bddtests/fixtures/httpserver/vendor/
+
+
+.idea/
+

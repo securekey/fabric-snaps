@@ -197,7 +197,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 
 		// Create and join channel
 		req := resmgmt.SaveChannelRequest{ChannelID: channelID,
-			ChannelConfig:     txPath,
+			ChannelConfigPath: txPath,
 			SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 		if err = resourceMgmt.SaveChannel(req); err != nil {
@@ -219,7 +219,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	}
 	// Create channel (or update if it already exists)
 	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
-		ChannelConfig:     anchorTxPath,
+		ChannelConfigPath: anchorTxPath,
 		SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 	if err := resourceMgmt.SaveChannel(req); err != nil {
@@ -323,7 +323,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 			ChaincodeID: ccID,
 			Fcn:         args[0],
 			Args:        GetByteArgs(args[1:]),
-		}, channel.WithTargets(peers))
+		}, channel.WithTargets(peers...))
 
 	if err != nil {
 		return fmt.Errorf("InvokeChaincode return error: %v", err)
@@ -405,7 +405,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			Fcn:          args[0],
 			Args:         GetByteArgs(args[1:]),
 			TransientMap: transientData,
-		}, channel.WithTargets(peers), channel.WithTimeout(timeout))
+		}, channel.WithTargets(peers...), channel.WithTimeout(coreApi.Execute, timeout))
 		if err != nil {
 			return "", fmt.Errorf("QueryChaincode return error: %v", err)
 		}
@@ -420,7 +420,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			Fcn:          args[0],
 			Args:         GetByteArgs(args[1:]),
 			TransientMap: transientData,
-		}, channel.WithTargets(peers), channel.WithTimeout(timeout))
+		}, channel.WithTargets(peers...), channel.WithTimeout(coreApi.Execute, timeout))
 		if err != nil {
 			return "", fmt.Errorf("QueryChaincode return error: %v", err)
 		}
@@ -434,7 +434,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 				Fcn:          args[0],
 				Args:         GetByteArgs(args[1:]),
 				TransientMap: transientData,
-			}, channel.WithTargets([]fabApi.Peer{peer}), channel.WithTimeout(timeout))
+			}, channel.WithTargets([]fabApi.Peer{peer}...), channel.WithTimeout(coreApi.Execute, timeout))
 			if err != nil {
 				errs = append(errs, err)
 			} else {
@@ -583,7 +583,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 			Args:       GetByteArgs(strings.Split(args, ",")),
 			Policy:     chaincodePolicy,
 			CollConfig: collConfig,
-		}, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(5*time.Minute))
+		}, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(coreApi.Execute, 5*time.Minute))
 }
 
 func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string) error {
@@ -657,7 +657,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 	instantiateRqst := resmgmt.InstantiateCCRequest{Name: ccID, Path: ccPath, Version: "v1", Args: GetByteArgs(argsArray), Policy: chaincodePolicy,
 		CollConfig: collConfig}
 
-	return resMgmtClient.InstantiateCC(channelID, instantiateRqst, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(5*time.Minute))
+	return resMgmtClient.InstantiateCC(channelID, instantiateRqst, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(coreApi.Execute, 5*time.Minute))
 }
 
 func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCommon.SignaturePolicyEnvelope, error) {
@@ -669,7 +669,7 @@ func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCom
 	// Default policy is 'signed by any member' for all known orgs
 	var mspIDs []string
 	for _, orgID := range d.BDDContext.OrgsByChannel(channelID) {
-		mspID, err := d.BDDContext.clientConfig.MspID(orgID)
+		mspID, err := d.BDDContext.clientConfig.MSPID(orgID)
 		if err != nil {
 			return nil, errors.Errorf("Unable to get the MSP ID from org ID %s: %s", orgID, err)
 		}

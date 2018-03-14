@@ -40,8 +40,8 @@ type testConfig struct {
 	mocks.MockConfig
 }
 
-// MspID not implemented
-func (c *testConfig) MspID(org string) (string, error) {
+// MSPID not implemented
+func (c *testConfig) MSPID(org string) (string, error) {
 	return mspID, nil
 }
 
@@ -61,7 +61,7 @@ func initNetworkConfigWithOrgEmbeddedUsers() *coreApi.NetworkConfig {
 	orgs := map[string]coreApi.OrganizationConfig{
 		strings.ToLower(orgName): { // simulate viper key name structure using lowercase
 			Users: org1KeyPair, // set Users with embedded certs
-			MspID: mspID,
+			MSPID: mspID,
 		},
 	}
 	return initNetworkConfig(orgs)
@@ -71,7 +71,7 @@ func initNetworkConfigWithMSPConfigPath() *coreApi.NetworkConfig {
 	orgs := map[string]coreApi.OrganizationConfig{
 		strings.ToLower(orgName): { // simulate viper key name structure using lowercase
 			CryptoPath: "../test/org1", // set CryptoPath
-			MspID:      mspID,
+			MSPID:      mspID,
 		},
 	}
 	return initNetworkConfig(orgs)
@@ -161,7 +161,7 @@ func TestGetSigningIdentity(t *testing.T) {
 		t.Fatalf("Expected to get valid signing identity")
 	}
 
-	if signingIdentity.MspID != mspID || signingIdentity.PrivateKey == nil || signingIdentity.EnrollmentCert == nil ||
+	if signingIdentity.MSPID != mspID || signingIdentity.PrivateKey == nil || signingIdentity.EnrollmentCert == nil ||
 		string(signingIdentity.EnrollmentCert) == "" {
 		t.Fatalf("Invalid signing identity")
 	}

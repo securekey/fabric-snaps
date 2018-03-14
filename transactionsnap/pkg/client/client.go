@@ -77,7 +77,7 @@ type CustomConfig struct {
 func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
 
 	networkPeer := coreApi.NetworkPeer{PeerConfig: coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MspID: string(c.localPeer.MSPid)}
+		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MSPID: string(c.localPeer.MSPid)}
 	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
 	logger.Debugf("ChannelPeers return %v", peer)
@@ -140,7 +140,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 	var orgname string
 	for name, org := range nconfig.Organizations {
-		if org.MspID == string(localPeer.MSPid) {
+		if org.MSPID == string(localPeer.MSPid) {
 			orgname = name
 			break
 		}
@@ -155,7 +155,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return err
 	}
 	if serviceProviderFactory == nil {
-		channelUser := selection.ChannelUser{ChannelID: channelID, UserName: txnSnapUser, OrgName: orgname}
+		channelUser := selection.ChannelUser{ChannelID: channelID, Username: txnSnapUser, OrgName: orgname}
 		serviceProviderFactory = &DynamicProviderFactory{ChannelUsers: []selection.ChannelUser{channelUser}}
 	}
 
@@ -225,7 +225,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets), channel.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -259,7 +259,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets), channel.WithTimeout(c.txnSnapConfig.GetHandlerTimeout()))
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
