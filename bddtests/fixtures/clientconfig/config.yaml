@@ -25,6 +25,7 @@ client:
   peer:
     timeout:
       connection: 30s
+      response: 120s
       discovery:
         # Expiry period for discovery service greylist filter
         # The channel client will greylist peers that are found to be offline
@@ -43,6 +44,7 @@ client:
     timeout:
       query: 120s
       execute: 120s
+      resmgmt: 120s
     cache:
       connectionIdle: 30s
 

@@ -113,7 +113,7 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 		ChaincodeID: chaincodeID,
 		Fcn:         fctn,
 		Args:        args,
-	}, channel.WithTargets(a.peers))
+	}, channel.WithTargets(a.peers...))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
 			Args:        args,
-		}, channel.WithTargets(a.peers))
+		}, channel.WithTargets(a.peers...))
 
 	return err
 }
@@ -153,7 +153,7 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 		orgID := a.OrgID()
 		if orgID != "" {
 			var err error
-			mspID, err = cliconfig.Config().MspID(orgID)
+			mspID, err = cliconfig.Config().MSPID(orgID)
 			if err != nil {
 				return nil, err
 			}
@@ -213,7 +213,7 @@ func (a *action) initTargetPeers() error {
 			return errors.Wrapf(errors.GeneralError, err, "error getting peer configs for org [%s]", orgID)
 		}
 
-		mspID, err := cliconfig.Config().MspID(orgID)
+		mspID, err := cliconfig.Config().MSPID(orgID)
 		if err != nil {
 			return errors.Wrapf(errors.GeneralError, err, "error getting MSP ID for org [%s]", orgID)
 		}
@@ -234,7 +234,7 @@ func (a *action) initTargetPeers() error {
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %v\n", orgID, p.URL)
 
-				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: p, MspID: mspID}))
+				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: p, MSPID: mspID}))
 				if err != nil {
 					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}

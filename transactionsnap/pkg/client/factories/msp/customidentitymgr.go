@@ -84,7 +84,7 @@ func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*mspApi.Sig
 		return nil, errors.New(errors.GeneralError, "username is required")
 	}
 
-	mspID, err := c.config.MspID(c.orgName)
+	mspID, err := c.config.MSPID(c.orgName)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "MSP ID config read failed")
 	}
@@ -112,7 +112,7 @@ func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*mspApi.Sig
 		return nil, errors.New(errors.GeneralError, "failed to get private key, found a public key instead")
 	}
 
-	signingIdentity := &mspApi.SigningIdentity{MspID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
+	signingIdentity := &mspApi.SigningIdentity{MSPID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
 
 	return signingIdentity, nil
 }
@@ -125,7 +125,7 @@ func (c *CustomIdentityManager) GetUser(userName string) (mspApi.User, error) {
 	}
 
 	return &user{
-		mspID: signingIdentity.MspID,
+		mspID: signingIdentity.MSPID,
 		name:  userName,
 		enrollmentCertificate: signingIdentity.EnrollmentCert,
 		privateKey:            signingIdentity.PrivateKey,
@@ -219,8 +219,8 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 	return certPubK, nil
 }
 
-//MspID return msp id
-func (u *user) MspID() string {
+//MSPID return msp id
+func (u *user) MSPID() string {
 	return u.mspID
 }
 
@@ -231,7 +231,7 @@ func (u *user) Name() string {
 
 //SerializedIdentity return serialized identity
 func (u *user) SerializedIdentity() ([]byte, error) {
-	serializedIdentity := &pb_msp.SerializedIdentity{Mspid: u.MspID(),
+	serializedIdentity := &pb_msp.SerializedIdentity{Mspid: u.MSPID(),
 		IdBytes: u.EnrollmentCertificate()}
 	identity, err := proto.Marshal(serializedIdentity)
 	if err != nil {

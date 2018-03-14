@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -59,7 +60,7 @@ func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, 
 				requestContext.Error = errors.Errorf("transaction [%s] did not commit successfully. Code: [%s]", txnID, txStatusEvent.TxValidationCode)
 				return
 			}
-		case <-time.After(requestContext.Opts.Timeout):
+		case <-time.After(requestContext.Opts.Timeouts[core.Execute]):
 			requestContext.Error = errors.New("Execute didn't receive block event")
 			return
 		}
