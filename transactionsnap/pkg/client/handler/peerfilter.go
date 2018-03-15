@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/pkg/errors"
@@ -19,51 +21,38 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 //NewPeerFilterHandler returns a handler that filter peers
-func NewPeerFilterHandler(peerFilter api.PeerFilter, chaincodeIDs []string, config api.Config, next ...invoke.Handler) *PeerFilterHandler {
-	return &PeerFilterHandler{peerFilter: peerFilter, chaincodeIDs: chaincodeIDs, config: config, next: getNext(next)}
+func NewPeerFilterHandler(chaincodeIDs []string, config api.Config, next ...invoke.Handler) *PeerFilterHandler {
+	return &PeerFilterHandler{chaincodeIDs: chaincodeIDs, config: config, next: getNext(next)}
 }
 
 //PeerFilterHandler for handling peers filter
 type PeerFilterHandler struct {
 	next         invoke.Handler
-	peerFilter   api.PeerFilter
 	chaincodeIDs []string
 	config       api.Config
 }
 
-//Handle for endorsing transactions
+//Handle selects proposal processors
 func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
-	//Get proposal processor, if not supplied then use discovery service to get available peers as endorser
-	//If selection service available then get endorser peers for this chaincode
+	//Get proposal processor, if not supplied then use selection service to get available peers as endorser
 	if len(requestContext.Opts.Targets) == 0 {
-		// Select endorsers
 		remainingAttempts := p.config.GetEndorserSelectionMaxAttempts()
 		logger.Infof("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
 		var endorsers []fabApi.Peer
 		for len(endorsers) == 0 && remainingAttempts > 0 {
-			var err error
-			// Use discovery service to figure out proposal processors
-			peersFromDiscovery, err := clientContext.Discovery.GetPeers()
-			if err != nil {
-				requestContext.Error = errors.WithMessage(err, "GetPeers failed")
-				return
+			var selectionOpts []options.Opt
+			if requestContext.SelectionFilter != nil {
+				selectionOpts = append(selectionOpts, selectopts.WithPeerFilter(requestContext.SelectionFilter))
 			}
-			logger.Debugf("Discovery.GetPeers() return peers:%v", peersFromDiscovery)
-			filterPeers := p.filterTargets(peersFromDiscovery, p.peerFilter)
-			logger.Debugf("filterTargets return peers:%v", filterPeers)
-			endorsers = filterPeers
-			if clientContext.Selection != nil && len(endorsers) != 0 {
-				if len(p.chaincodeIDs) == 0 {
-					p.chaincodeIDs = make([]string, 1)
-					p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
-				}
-				endorsers, err = clientContext.Selection.GetEndorsersForChaincode(filterPeers, p.chaincodeIDs...)
-				if err != nil {
-					requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
-					return
-				}
-				logger.Debugf("Selection GetEndorsersForChaincode return peers:%v", endorsers)
-
+			if len(p.chaincodeIDs) == 0 {
+				p.chaincodeIDs = make([]string, 1)
+				p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
+			}
+			var err error
+			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(p.chaincodeIDs, selectionOpts...)
+			if err != nil {
+				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
+				return
 			}
 			if len(endorsers) == 0 {
 				remainingAttempts--
@@ -71,7 +60,6 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 				time.Sleep(p.config.GetEndorserSelectionInterval())
 			}
 		}
-
 		requestContext.Opts.Targets = endorsers
 	}
 

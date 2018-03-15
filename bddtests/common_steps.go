@@ -198,7 +198,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		// Create and join channel
 		req := resmgmt.SaveChannelRequest{ChannelID: channelID,
 			ChannelConfigPath: txPath,
-			SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
+			SigningIdentities: []mspApi.SigningIdentity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 		if err = resourceMgmt.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
@@ -220,7 +220,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	// Create channel (or update if it already exists)
 	req := resmgmt.SaveChannelRequest{ChannelID: channelID,
 		ChannelConfigPath: anchorTxPath,
-		SigningIdentities: []mspApi.Identity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
+		SigningIdentities: []mspApi.SigningIdentity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
 	if err := resourceMgmt.SaveChannel(req); err != nil {
 		return errors.WithMessage(err, "SaveChannel failed")

@@ -36,10 +36,10 @@ type CustomIdentityManager struct {
 	cryptoProvider coreApi.CryptoSuite
 }
 
-// Internal representation of a Fabric user
-type user struct {
+// User is representation of a Fabric user
+type User struct {
 	mspID                 string
-	name                  string
+	id                    string
 	enrollmentCertificate []byte
 	privateKey            coreApi.Key
 }
@@ -79,7 +79,16 @@ func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite
 }
 
 // GetSigningIdentity will sign the given object with provided key,
-func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*mspApi.SigningIdentity, error) {
+func (c *CustomIdentityManager) GetSigningIdentity(id string) (mspApi.SigningIdentity, error) {
+	user, err := c.GetUser(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// GetUser returns a user for the given user name
+func (c *CustomIdentityManager) GetUser(userName string) (*User, error) {
 	if userName == "" {
 		return nil, errors.New(errors.GeneralError, "username is required")
 	}
@@ -112,23 +121,11 @@ func (c *CustomIdentityManager) GetSigningIdentity(userName string) (*mspApi.Sig
 		return nil, errors.New(errors.GeneralError, "failed to get private key, found a public key instead")
 	}
 
-	signingIdentity := &mspApi.SigningIdentity{MSPID: mspID, PrivateKey: privateKey, EnrollmentCert: enrollmentCert}
-
-	return signingIdentity, nil
-}
-
-// GetUser returns a user for the given user name
-func (c *CustomIdentityManager) GetUser(userName string) (mspApi.User, error) {
-	signingIdentity, err := c.GetSigningIdentity(userName)
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to get signing identity")
-	}
-
-	return &user{
-		mspID: signingIdentity.MSPID,
-		name:  userName,
-		enrollmentCertificate: signingIdentity.EnrollmentCert,
-		privateKey:            signingIdentity.PrivateKey,
+	return &User{
+		mspID: mspID,
+		id:    userName,
+		enrollmentCertificate: enrollmentCert,
+		privateKey:            privateKey,
 	}, nil
 
 }
@@ -219,19 +216,9 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 	return certPubK, nil
 }
 
-//MSPID return msp id
-func (u *user) MSPID() string {
-	return u.mspID
-}
-
-//Name return user name
-func (u *user) Name() string {
-	return u.name
-}
-
-//SerializedIdentity return serialized identity
-func (u *user) SerializedIdentity() ([]byte, error) {
-	serializedIdentity := &pb_msp.SerializedIdentity{Mspid: u.MSPID(),
+//Serialize return serialized identity
+func (u *User) Serialize() ([]byte, error) {
+	serializedIdentity := &pb_msp.SerializedIdentity{Mspid: u.mspID,
 		IdBytes: u.EnrollmentCertificate()}
 	identity, err := proto.Marshal(serializedIdentity)
 	if err != nil {
@@ -241,11 +228,31 @@ func (u *user) SerializedIdentity() ([]byte, error) {
 }
 
 //PrivateKey return private key
-func (u *user) PrivateKey() coreApi.Key {
+func (u *User) PrivateKey() coreApi.Key {
 	return u.privateKey
 }
 
 //EnrollmentCertificate return enrollment certificate
-func (u *user) EnrollmentCertificate() []byte {
+func (u *User) EnrollmentCertificate() []byte {
 	return u.enrollmentCertificate
+}
+
+// Identifier returns user identifier
+func (u *User) Identifier() *mspApi.IdentityIdentifier {
+	return &mspApi.IdentityIdentifier{MSPID: u.mspID, ID: u.id}
+}
+
+// Verify a signature over some message using this identity as reference
+func (u *User) Verify(msg []byte, sig []byte) error {
+	return errors.New(errors.GeneralError, "not implemented")
+}
+
+// PublicVersion returns the public parts of this identity
+func (u *User) PublicVersion() mspApi.Identity {
+	return u
+}
+
+// Sign the message
+func (u *User) Sign(msg []byte) ([]byte, error) {
+	return nil, errors.New(errors.GeneralError, "not implemented")
 }
