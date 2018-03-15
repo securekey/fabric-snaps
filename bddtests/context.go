@@ -251,6 +251,11 @@ func (b *BDDContext) OrgIDForChannel(channelID string) (string, error) {
 	return orgIDs[rand.Intn(len(orgIDs))], nil
 }
 
+// Sdk return sdk instance
+func (b *BDDContext) Sdk() *fabsdk.FabricSDK {
+	return b.sdk
+}
+
 // AddPeerConfigToChannel adds a peer to a channel
 func (b *BDDContext) AddPeerConfigToChannel(pconfig *PeerConfig, channelID string) {
 	b.mutex.Lock()
