@@ -161,12 +161,12 @@ func TestGetSigningIdentity(t *testing.T) {
 		t.Fatalf("Expected to get valid signing identity")
 	}
 
-	if signingIdentity.MSPID != mspID || signingIdentity.PrivateKey == nil || signingIdentity.EnrollmentCert == nil ||
-		string(signingIdentity.EnrollmentCert) == "" {
+	if signingIdentity.Identifier().MSPID != mspID || signingIdentity.PrivateKey() == nil || signingIdentity.PublicVersion().EnrollmentCertificate() == nil ||
+		string(signingIdentity.PublicVersion().EnrollmentCertificate()) == "" {
 		t.Fatalf("Invalid signing identity")
 	}
 
-	if !verifyBytes(t, signingIdentity.EnrollmentCert, "../../../../cmd/sampleconfig/msp/signcerts/cert.pem") {
+	if !verifyBytes(t, signingIdentity.PublicVersion().EnrollmentCertificate(), "../../../../cmd/sampleconfig/msp/signcerts/cert.pem") {
 		t.Fatalf(" signingIdentity.EnrollmentCert cert is invalid")
 	}
 

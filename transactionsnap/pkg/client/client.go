@@ -216,7 +216,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		}
 	}
 
-	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs, c.txnSnapConfig,
+	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
 		invoke.NewEndorsementHandler(
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(),
@@ -225,7 +225,8 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()))
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
+		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -246,7 +247,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		}
 	}
 
-	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.PeerFilter, endorseRequest.ChaincodeIDs, c.txnSnapConfig,
+	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
 		invoke.NewEndorsementHandler(
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(
@@ -259,7 +260,8 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()))
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
+		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
