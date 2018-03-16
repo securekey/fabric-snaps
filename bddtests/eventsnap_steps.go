@@ -16,7 +16,7 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )

@@ -9,7 +9,7 @@ package localservice
 import (
 	"sync"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/pkg/errors"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )

@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/configmanager/api"

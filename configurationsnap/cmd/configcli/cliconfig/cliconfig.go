@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/pflag"
 )

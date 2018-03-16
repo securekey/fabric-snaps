@@ -11,7 +11,7 @@ import (
 	"net"
 	"sync"
 
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

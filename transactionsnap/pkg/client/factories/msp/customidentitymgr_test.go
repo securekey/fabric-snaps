@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric/bccsp/factory"

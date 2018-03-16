@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package minblockheight
 
 import (
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	peer "github.com/hyperledger/fabric/core/peer"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/securekey/fabric-snaps/membershipsnap/api"

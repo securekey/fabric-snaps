@@ -14,9 +14,9 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"

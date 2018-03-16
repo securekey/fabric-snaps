@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"

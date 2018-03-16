@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package provider
 
 import (
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
 )
 

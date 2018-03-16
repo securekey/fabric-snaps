@@ -9,8 +9,8 @@ package service
 import (
 	"fmt"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/pkg/errors"
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"

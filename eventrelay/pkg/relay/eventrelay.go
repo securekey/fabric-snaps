@@ -14,7 +14,7 @@ import (
 	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
 	"github.com/securekey/fabric-snaps/util/errors"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 

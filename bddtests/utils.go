@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
-	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/msp"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"

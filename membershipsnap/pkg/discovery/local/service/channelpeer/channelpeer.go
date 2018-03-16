@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"strings"
 
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
 	memberapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"

@@ -8,15 +8,15 @@ package bddtests
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/context"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/txn"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/context"
-	"github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
 	"github.com/pkg/errors"
 )
 

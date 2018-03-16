@@ -11,9 +11,9 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )

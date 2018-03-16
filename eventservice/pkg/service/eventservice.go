@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
