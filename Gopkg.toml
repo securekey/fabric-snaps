@@ -40,7 +40,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[constraint]]
   name = "github.com/op/go-logging"
-  version = "1.0.0"
+  branch="master"
 
 [[constraint]]
   name = "github.com/spf13/viper"
@@ -61,14 +61,6 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 ################
 # Downstream overrides to enable testing
 # (https://github.com/golang/dep/blob/master/docs/FAQ.md#how-do-i-constrain-a-transitive-dependencys-version)
-
-# Mainly downstreams that have a direct reference
-[[override]]
-  name = "github.com/op/go-logging"
-  # TODO: source isn't picked up by parent projects - need better solution
-  source = "github.com/troyronda/go-logging"   # TODO: Better home for this fork
-  branch = "datarace"
-  # note: go-logging is mainly a downstream package but is also in tests to ensure the fork is applied
 
 # Temporary downstream overrides due to sirupsen/logrus case sensitivity
 [[override]]
