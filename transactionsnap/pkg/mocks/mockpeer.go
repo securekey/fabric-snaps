@@ -15,7 +15,7 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	rwsetutil "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	kvrwset "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
 	msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"

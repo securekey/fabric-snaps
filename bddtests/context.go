@@ -15,8 +15,8 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/context"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )

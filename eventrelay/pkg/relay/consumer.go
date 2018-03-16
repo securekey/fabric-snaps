@@ -27,7 +27,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/common/util"
 	cutil "github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/comm"

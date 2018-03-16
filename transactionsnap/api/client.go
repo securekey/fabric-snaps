@@ -9,8 +9,8 @@ package api
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 )
 
 // EndorsedCallback is a function that is invoked after the endorsement

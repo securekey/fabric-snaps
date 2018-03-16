@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/util/errors"

@@ -11,7 +11,7 @@ import (
 	"hash"
 	"reflect"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp"
 )
 

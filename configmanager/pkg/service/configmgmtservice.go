@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/stringutils"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/securekey/fabric-snaps/configmanager/api"

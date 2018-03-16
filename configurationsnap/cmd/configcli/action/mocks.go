@@ -10,10 +10,10 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/spf13/pflag"

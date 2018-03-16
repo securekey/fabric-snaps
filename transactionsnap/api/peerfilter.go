@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
-import fabApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/fab"
+import fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 
 // PeerFilterType is the type name of the Peer Filter
 type PeerFilterType string

@@ -365,15 +365,13 @@
     "pkg/client/common/selection/options",
     "pkg/client/common/selection/staticselection",
     "pkg/client/resmgmt",
-    "pkg/common/context",
-    "pkg/common/futurevalue",
-    "pkg/common/lazycache",
-    "pkg/common/lazyref",
+    "pkg/common/logging",
     "pkg/common/options",
+    "pkg/common/providers/context",
+    "pkg/common/providers/core",
+    "pkg/common/providers/fab",
+    "pkg/common/providers/msp",
     "pkg/context",
-    "pkg/context/api/core",
-    "pkg/context/api/fab",
-    "pkg/context/api/msp",
     "pkg/core/config",
     "pkg/core/config/comm",
     "pkg/core/config/cryptoutil",
@@ -381,10 +379,10 @@
     "pkg/core/cryptosuite",
     "pkg/core/cryptosuite/bccsp/sw",
     "pkg/core/cryptosuite/bccsp/wrapper",
+    "pkg/core/logging/api",
+    "pkg/core/logging/metadata",
+    "pkg/core/logging/modlog",
     "pkg/core/mocks",
-    "pkg/errors/multi",
-    "pkg/errors/retry",
-    "pkg/errors/status",
     "pkg/fab/ccpackager/gopackager",
     "pkg/fab/channel",
     "pkg/fab/channel/membership",
@@ -421,13 +419,15 @@
     "pkg/fabsdk/provider/chpvdr",
     "pkg/fabsdk/provider/fabpvdr",
     "pkg/fabsdk/provider/msppvdr",
-    "pkg/logging",
-    "pkg/logging/api",
-    "pkg/logging/metadata",
-    "pkg/logging/modlog",
     "pkg/msp",
     "pkg/msp/api",
     "pkg/msp/mocks",
+    "pkg/util/concurrent/futurevalue",
+    "pkg/util/concurrent/lazycache",
+    "pkg/util/concurrent/lazyref",
+    "pkg/util/errors/multi",
+    "pkg/util/errors/retry",
+    "pkg/util/errors/status",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -441,7 +441,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "7be8d3e6517189ed8582112405d62ae1152376d4"
+  revision = "c8b483b79b856dabdb8d833728dec22404ec61b5"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -729,6 +729,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "70ccb5260b84bd91204c4d046f9e2723e43998aea64f03b917c68d7f7e434ba6"
+  inputs-digest = "5ef5bb1dfcbf282f7a06def2a62555fcb32c1b6f1e7b1f639ae82e7a9d0243bc"
   solver-name = "gps-cdcl"
   solver-version = 1

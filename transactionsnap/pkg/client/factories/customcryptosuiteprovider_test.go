@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/context/api/core"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"

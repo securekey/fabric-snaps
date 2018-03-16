@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package peerfilter
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter/minblockheight"
 	"github.com/securekey/fabric-snaps/util/errors"
