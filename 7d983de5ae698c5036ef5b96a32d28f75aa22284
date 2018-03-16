@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d96c6ab_e4002d4c",
+        "filename": "Gopkg.toml",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-03-16T20:33:23Z",
+      "side": 1,
+      "message": "it\u0027s still referenced (see lock file), so I left the line in Gopkg.toml. Do you think it should be removed anyways?",
+      "range": {
+        "startLine": 43,
+        "startChar": 1,
+        "endLine": 43,
+        "endChar": 17
+      },
+      "revId": "7d983de5ae698c5036ef5b96a32d28f75aa22284",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
