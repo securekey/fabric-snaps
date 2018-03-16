@@ -328,8 +328,8 @@
     "protos/peer",
     "protos/utils"
   ]
-  revision = "8352cb867e1202ba07bc82a7dde08b2873e3a41b"
-  version = "v1.1.0-rc1"
+  revision = "523f644b909d5699fbd992a011e7ed6031e96a9a"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/hyperledger/fabric-sdk-go"
@@ -441,7 +441,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "523348bb7591350d118d3f2e39b07f35a9059df5"
+  revision = "7be8d3e6517189ed8582112405d62ae1152376d4"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -729,6 +729,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d6625bd4f5d65ab063dbc6b21dc293f1b73999c4daf59cff7d721ba5f523220f"
+  inputs-digest = "70ccb5260b84bd91204c4d046f9e2723e43998aea64f03b917c68d7f7e434ba6"
   solver-name = "gps-cdcl"
   solver-version = 1

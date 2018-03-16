@@ -585,7 +585,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
 
-	mockBroadcastServer = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
+	mockBroadcastServer, _ = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
 
 	if eventProducer == nil {
 		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())
