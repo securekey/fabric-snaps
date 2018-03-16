@@ -92,7 +92,7 @@ func (configSnap *ConfigurationSnap) Invoke(stub shim.ChaincodeStubInterface) pb
 
 	functionArgs := args[1:]
 
-	logger.Infof("Invoking function [%s] with args: %s", functionName, functionArgs)
+	logger.Debugf("Invoking function [%s] with args: %s", functionName, functionArgs)
 	return function(stub, functionArgs)
 }
 
