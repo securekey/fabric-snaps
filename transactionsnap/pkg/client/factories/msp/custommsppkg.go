@@ -8,8 +8,9 @@ package msp
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defmsp"
+	defmsp "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defmsp"
 )
 
 // CustomMspPkg is will provide custom msp pkg
@@ -18,7 +19,7 @@ type CustomMspPkg struct {
 	CryptoPath string
 }
 
-// CreateProvider returns a new custom implementation of msp provider
-func (m *CustomMspPkg) CreateProvider(config core.Config, cryptoProvider core.CryptoSuite, userStore mspApi.UserStore) (mspApi.Provider, error) {
+// CreateIdentityManagerProvider returns a new custom implementation of msp provider
+func (m *CustomMspPkg) CreateIdentityManagerProvider(config core.Config, cryptoProvider core.CryptoSuite, userStore mspApi.UserStore) (msp.IdentityManagerProvider, error) {
 	return &CustomMSPProvider{config: config, cryptoProvider: cryptoProvider, cryptoPath: m.CryptoPath}, nil
 }

@@ -133,7 +133,7 @@ func TestCustomIdentityMgr(t *testing.T) {
 
 func getIdentityManager(t *testing.T, mspConfigPath string, orgName string, config coreApi.Config, cryptoProvider coreApi.CryptoSuite) mspApi.IdentityManager {
 	customMspPkg := &CustomMspPkg{CryptoPath: mspConfigPath}
-	mspProvider, err := customMspPkg.CreateProvider(config, cryptoProvider, nil)
+	mspProvider, err := customMspPkg.CreateIdentityManagerProvider(config, cryptoProvider, nil)
 	if err != nil {
 		t.Fatalf("Unexpected error '%s'", err)
 	}
