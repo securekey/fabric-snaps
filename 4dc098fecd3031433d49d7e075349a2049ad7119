@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b189e26_03257455",
+        "filename": "transactionsnap/cmd/sampleconfig/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-03-18T16:25:29Z",
+      "side": 1,
+      "message": "membership refresh period should be added as well https://gerrit.hyperledger.org/r/#/c/19337/4/test/fixtures/config/config_test_no_orderer.yaml",
+      "revId": "4dc098fecd3031433d49d7e075349a2049ad7119",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
