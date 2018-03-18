@@ -245,6 +245,9 @@ func TestMain(m *testing.M) {
 		eventProducer = producer
 	}
 
+	txService := newMockTxService(nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
+	txService.EndorseTransaction(&snapTxReq, nil)
 	os.Exit(m.Run())
 
 }

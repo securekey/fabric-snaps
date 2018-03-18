@@ -17,6 +17,6 @@ type CustomInfraProvider struct {
 }
 
 // CreateEventService will return nil because the txnsnap will use local event service
-func (f *CustomInfraProvider) CreateEventService(ctx fab.ClientContext, chConfig fab.ChannelCfg) (fab.EventService, error) {
+func (f *CustomInfraProvider) CreateEventService(ctx fab.ClientContext, channelID string) (fab.EventService, error) {
 	return nil, nil
 }

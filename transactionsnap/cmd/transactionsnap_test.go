@@ -596,6 +596,12 @@ func TestMain(m *testing.M) {
 		eventProducer = producer
 	}
 
+	snap := newMockTxnSnap(nil)
+	stub1 := shim.NewMockStub("transactionsnap", snap)
+	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
+	//invoke transaction snap
+	stub1.MockInvoke("TxID", args)
+
 	os.Exit(m.Run())
 }
 
