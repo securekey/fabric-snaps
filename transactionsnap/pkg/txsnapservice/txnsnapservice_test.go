@@ -19,21 +19,21 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	txnmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/errors/status"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
-	pb "github.com/hyperledger/fabric/protos/peer"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
-	evservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
-	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
-	"github.com/securekey/fabric-snaps/mocks/event/mockproducer"
+	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -46,7 +46,7 @@ var channelID = "testChannel"
 var mspID = "Org1MSP"
 var mockEndorserServer *mocks.MockEndorserServer
 var mockBroadcastServer *fcmocks.MockBroadcastServer
-var eventProducer *mockproducer.MockProducer
+var eventProducer *servicemocks.MockProducer
 
 var testhost = "127.0.0.1"
 var testport = 7040
@@ -138,11 +138,9 @@ func TestCommitTransaction(t *testing.T) {
 	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
 			time.Sleep(2 * time.Second)
-			eventProducer.ProduceEvent(
-				mockevent.NewFilteredBlockEvent(
-					channelID,
-					mockevent.NewFilteredTx(string(response.TransactionID), pb.TxValidationCode_VALID),
-				),
+			eventProducer.Ledger().NewFilteredBlock(
+				channelID,
+				servicemocks.NewFilteredTx(string(response.TransactionID), pb.TxValidationCode_VALID),
 			)
 		}()
 		return nil
@@ -237,12 +235,12 @@ func TestMain(m *testing.M) {
 	mockBroadcastServer, _ = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
 
 	if eventProducer == nil {
-		eventService, producer, err := evservice.NewServiceWithMockProducer(channelID, []evservice.EventType{evservice.FILTEREDBLOCKEVENT}, evservice.DefaultOpts())
-		localservice.Register(channelID, eventService)
+		eventService, producer, err := eventserviceMocks.NewServiceWithMockProducer([]options.Opt{}, eventserviceMocks.WithFilteredBlockLedger())
 		if err != nil {
-			panic(err.Error())
+			panic(fmt.Sprintf("error creating channel event client: %s", err))
 		}
-		eventProducer = producer
+		localservice.Register(channelID, eventService)eventProducer = producer
+
 	}
 
 	txService := newMockTxService(nil)

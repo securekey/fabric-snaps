@@ -1,7 +1,9 @@
+#
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+
 eventsnap:
 
     eventhub:
@@ -17,9 +19,9 @@ eventsnap:
                 keyfile: tls/client_sdk_go-key.pem
                 certfile: tls/client_sdk_go.pem
 
-    relay:
-        # event relay timeout
-        timeout: 1s
+    # relay:
+    #     # event relay timeout
+    #     timeout: 1s
 
     dispatcher:
         # total number of events that could be buffered without blocking send
@@ -34,3 +36,179 @@ eventsnap:
         # if 0, if buffer full, will block and guarantee the event will be sent out
         # if > 0, if buffer full, blocks till timeout
         timeout: 10ms
+
+# Configurations for the fabric client
+client:
+  organization: peerorg1
+
+  logging:
+    level: info
+
+# Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      discovery:
+        # Expiry period for discovery service greylist filter
+        # The channel client will greylist peers that are found to be offline
+        # to prevent re-selecting them in subsequent retries.
+        # This interval will define how long a peer is greylisted
+        greylistExpiry: 5s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 10s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 10s
+  global:
+    timeout:
+      query: 45s
+      execute: 60s
+    cache:
+      connectionIdle: 30s
+
+  cryptoconfig:
+    path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
+
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # [Optional]. Not used by Go SDK. Others SDKs may use it if using an alternative impl
+    # Could be used if SDK would require an object for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs"
+
+    # [Optional]. Specific to the CryptoSuite implementation used by GO SDK. Software-based implementations
+    # requiring a key store. PKCS#11 based implementations does not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: /tmp/msp
+
+  tlsCerts:
+    # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+    systemCertPool: false
+
+#
+# List of peers to send various requests to, including endorsement, query
+# and event listener registration.
+#
+peers:
+  peer0.org1.example.com:
+    # this URL is used to send endorsement and query requests
+    url: grpc://peer0.org1.example.com:7051
+
+    # this URL is used to connect the EventHub and registering event listeners
+    eventUrl: grpc://peer0.org1.example.com:7053
+
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      grpc.http2.keepalive_time: 15
+
+    tlsCACerts:
+      pem: |
+        -----BEGIN CERTIFICATE-----
+        MIICNDCCAdqgAwIBAgIRAIBOtq8vZiC0+uLSi2MIS4swCgYIKoZIzj0EAwIwZjEL
+        MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+        cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRQwEgYDVQQDEwtleGFtcGxl
+        LmNvbTAeFw0xNzA0MjIxMjAyNTZaFw0yNzA0MjAxMjAyNTZaMGYxCzAJBgNVBAYT
+        AlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2Nv
+        MRQwEgYDVQQKEwtleGFtcGxlLmNvbTEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTAT
+        BgcqhkjOPQIBBggqhkjOPQMBBwNCAARD2rvgyAmhn8hpu82kAjX3QUg2iqCUPEe1
+        Q5CzD5MVv/dK5wrRgkcoMhJLe4HPxYbjV3rodm5Pwi5m3zMGkqNQo2kwZzAOBgNV
+        HQ8BAf8EBAMCAaYwGQYDVR0lBBIwEAYEVR0lAAYIKwYBBQUHAwEwDwYDVR0TAQH/
+        BAUwAwEB/zApBgNVHQ4EIgQg6q3lkIfG2X/PNQ6U83rZ8saSu2bxghSM5YlA3nCt
+        6c4wCgYIKoZIzj0EAwIDSAAwRQIhAL5Lgy7jZ2W74L6i0B23a3JD0W8TSYlTcqXb
+        RMSXlLIoAiB2glBl0wM/ITn5+tnHOnq2wrIGuYIiNbLK5oq2zf+gtA==
+        -----END CERTIFICATE-----
+
+orderers:
+  orderer.example.com:
+    url: grpc://0.0.0.0:7041
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+      grpc-max-send-message-length: 15
+
+    tlsCACerts:
+      # Certificate location absolute path
+#      path: "sampleconfig/tls/orderer-ca-cert.pem"
+      pem: |
+        -----BEGIN CERTIFICATE-----
+        MIICNDCCAdqgAwIBAgIRAIBOtq8vZiC0+uLSi2MIS4swCgYIKoZIzj0EAwIwZjEL
+        MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+        cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRQwEgYDVQQDEwtleGFtcGxl
+        LmNvbTAeFw0xNzA0MjIxMjAyNTZaFw0yNzA0MjAxMjAyNTZaMGYxCzAJBgNVBAYT
+        AlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2Nv
+        MRQwEgYDVQQKEwtleGFtcGxlLmNvbTEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTAT
+        BgcqhkjOPQIBBggqhkjOPQMBBwNCAARD2rvgyAmhn8hpu82kAjX3QUg2iqCUPEe1
+        Q5CzD5MVv/dK5wrRgkcoMhJLe4HPxYbjV3rodm5Pwi5m3zMGkqNQo2kwZzAOBgNV
+        HQ8BAf8EBAMCAaYwGQYDVR0lBBIwEAYEVR0lAAYIKwYBBQUHAwEwDwYDVR0TAQH/
+        BAUwAwEB/zApBgNVHQ4EIgQg6q3lkIfG2X/PNQ6U83rZ8saSu2bxghSM5YlA3nCt
+        6c4wCgYIKoZIzj0EAwIDSAAwRQIhAL5Lgy7jZ2W74L6i0B23a3JD0W8TSYlTcqXb
+        RMSXlLIoAiB2glBl0wM/ITn5+tnHOnq2wrIGuYIiNbLK5oq2zf+gtA==
+        -----END CERTIFICATE-----
+
+
+channels:
+  # name of the channel
+  testChannel:
+    # Required. list of orderers designated by the application to use for transactions on this
+    # channel. This list can be a result of access control ("org1" can only access "ordererA"), or
+    # operational decisions to share loads from applications among the orderers.  The values must
+    # be "names" of orgs defined under "organizations/peers"
+    orderers:
+      - orderer.example.com
+
+    # Required. list of peers from participating orgs
+    peers:
+      peer0.org1.example.com:
+        # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
+        # have the chaincode installed. The app can also use this property to decide which peers
+        # to send the chaincode install request. Default: true
+        endorsingPeer: true
+
+        # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
+        # installed. The app can also use this property to decide which peers to send the
+        # chaincode install request. Default: true
+        chaincodeQuery: true
+
+        # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
+        # queryBlock(), queryTransaction(), etc. Default: true
+        ledgerQuery: true
+
+        # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
+        # produce events but the app typically only needs to connect to one to listen to events.
+        # Default: true
+        eventSource: true
+
+
+#
+# list of participating organizations in this network
+#
+organizations:
+  peerorg1:
+    mspid: Org1MSP
+    users:
+      # If overriding the cert is  not needed (aka using peer's MSP), the below entry can be removed.
+      # Txn-Snap-User must be embedded in the txnsnap config to be overridden. If missing, it will be set to the
+      # peer's MSP cert/key by default. Override this cert if needed and make sure the key is stored in HSM.
+      Txn-Snap-User:
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICKjCCAdGgAwIBAgIQIVQ6HvVnJP1qZ5YKfh50hzAKBggqhkjOPQQDAjBwMQsw
+            CQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy
+            YW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEZMBcGA1UEAxMQb3Jn
+            MS5leGFtcGxlLmNvbTAeFw0xNzA0MjIxMjAyNTZaFw0yNzA0MjAxMjAyNTZaMFsx
+            CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4g
+            RnJhbmNpc2NvMR8wHQYDVQQDDBZBZG1pbkBvcmcxLmV4YW1wbGUuY29tMFkwEwYH
+            KoZIzj0CAQYIKoZIzj0DAQcDQgAEDuNSbFkBNqbdlGfwwXSHKWv4pw2eFOeD+VXC
+            HV4CErBKnUXBiwc/nL766UzXnWnsjUUp3ZOSzCCf56cNkLmv6aNiMGAwDgYDVR0P
+            AQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwKwYD
+            VR0jBCQwIoAgoi2vNWsqq1eS6lPjX2b8zvHX8aorOiuS2/v5akSOomowCgYIKoZI
+            zj0EAwIDRwAwRAIgbEqKoKrFuYQG0ndiX7dT7GKGlF17Skf8DYil9cqbp00CID5T
+            URQPp0/vJ3tldK0z9xjFvsSecj8aqnDvZvGz07/v
+            -----END CERTIFICATE-----

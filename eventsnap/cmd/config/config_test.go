@@ -24,18 +24,6 @@ func TestInvalidConfig(t *testing.T) {
 	}
 }
 
-func TestConfigNoChannel(t *testing.T) {
-	config, err := New("", "../sampleconfig")
-	if err != nil {
-		t.Fatalf("Error creating new config: %s", err)
-	}
-
-	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
-	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
-	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
-	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)
-}
-
 func TestConfig(t *testing.T) {
 	mspID := "Org1MSP"
 	peerID := "peer1"
@@ -48,16 +36,13 @@ func TestConfig(t *testing.T) {
 
 	// Test with no channel config
 	config, err := New("", "../sampleconfig")
-	if err != nil {
-		t.Fatalf("Error creating new config: %s", err)
+	if err == nil {
+		t.Fatalf("Expecting error creating new config with no channel")
 	}
-	if config.ChannelConfigLoaded {
-		t.Fatalf("Expecting that channel config is not loaded")
-	}
-	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
-	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
-	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
-	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)
+	// if config.ChannelConfigLoaded {
+	// 	t.Fatalf("Expecting that channel config is not loaded")
+	// }
+	// checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
 
 	// Test config on channel1
 	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, EventSnapAppName, "../sampleconfig/configch1.yaml"); err != nil {
@@ -70,12 +55,8 @@ func TestConfig(t *testing.T) {
 	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
 	checkUint(t, "EventConsumerBufferSize", config.EventConsumerBufferSize, 100)
 	checkDuration(t, "EventHubRegTimeout", config.EventHubRegTimeout, 1*time.Second)
-	checkDuration(t, "EventRelayTimeout", config.EventRelayTimeout, 1*time.Second)
 	checkUint(t, "EventDispatcherBufferSize", config.EventDispatcherBufferSize, 100)
 	checkDuration(t, "EventConsumerTimeout", config.EventConsumerTimeout, 10*time.Millisecond)
-	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
-	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
-	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)
 
 	// Test config on channel2
 	configStub2 := configmocks.NewMockStub(channelID2)
@@ -89,12 +70,8 @@ func TestConfig(t *testing.T) {
 	checkString(t, "EventHubAddress", config.EventHubAddress, "0.0.0.0:7053")
 	checkUint(t, "EventConsumerBufferSize", config.EventConsumerBufferSize, 200)
 	checkDuration(t, "EventHubRegTimeout", config.EventHubRegTimeout, 2*time.Second)
-	checkDuration(t, "EventRelayTimeout", config.EventRelayTimeout, 2*time.Second)
 	checkUint(t, "EventDispatcherBufferSize", config.EventDispatcherBufferSize, 200)
 	checkDuration(t, "EventConsumerTimeout", config.EventConsumerTimeout, 20*time.Millisecond)
-	checkUint(t, "EventServerBufferSize", config.EventServerBufferSize, 100)
-	checkDuration(t, "EventServerTimeout", config.EventServerTimeout, 10*time.Millisecond)
-	checkDuration(t, "EventServerTimeWindow", config.EventServerTimeWindow, 15*time.Minute)
 
 	// Test config on channel3
 	configStub3 := configmocks.NewMockStub(channelID3)
