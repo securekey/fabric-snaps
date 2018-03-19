@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/securekey/fabric-snaps/eventserver/pkg/channelutil"
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/channelutil"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 )
 
@@ -49,28 +49,28 @@ type eventConsumerSnap struct {
 	functions           funcMap
 	regmutex            sync.RWMutex
 	eventmutex          sync.RWMutex
-	blockRegistrations  map[string]eventapi.Registration
-	fblockRegistrations map[string]eventapi.Registration
-	ccRegistrations     map[string]eventapi.Registration
-	txRegistrations     map[string]eventapi.Registration
-	blockEvents         map[string][]*eventapi.BlockEvent
-	fblockEvents        map[string][]*eventapi.FilteredBlockEvent
-	ccEvents            map[string][]*eventapi.CCEvent
-	txEvents            map[string][]*eventapi.TxStatusEvent
+	blockRegistrations  map[string]fab.Registration
+	fblockRegistrations map[string]fab.Registration
+	ccRegistrations     map[string]fab.Registration
+	txRegistrations     map[string]fab.Registration
+	blockEvents         map[string][]*fab.BlockEvent
+	fblockEvents        map[string][]*fab.FilteredBlockEvent
+	ccEvents            map[string][]*fab.CCEvent
+	txEvents            map[string][]*fab.TxStatusEvent
 }
 
 // New chaincode implementation
 func New() shim.Chaincode {
 	s := &eventConsumerSnap{
 		functions:           make(funcMap),
-		blockRegistrations:  make(map[string]eventapi.Registration),
-		fblockRegistrations: make(map[string]eventapi.Registration),
-		ccRegistrations:     make(map[string]eventapi.Registration),
-		txRegistrations:     make(map[string]eventapi.Registration),
-		blockEvents:         make(map[string][]*eventapi.BlockEvent),
-		fblockEvents:        make(map[string][]*eventapi.FilteredBlockEvent),
-		ccEvents:            make(map[string][]*eventapi.CCEvent),
-		txEvents:            make(map[string][]*eventapi.TxStatusEvent),
+		blockRegistrations:  make(map[string]fab.Registration),
+		fblockRegistrations: make(map[string]fab.Registration),
+		ccRegistrations:     make(map[string]fab.Registration),
+		txRegistrations:     make(map[string]fab.Registration),
+		blockEvents:         make(map[string][]*fab.BlockEvent),
+		fblockEvents:        make(map[string][]*fab.FilteredBlockEvent),
+		ccEvents:            make(map[string][]*fab.CCEvent),
+		txEvents:            make(map[string][]*fab.TxStatusEvent),
 	}
 
 	s.functions[registerBlockFunc] = s.registerBlockEvents

@@ -7,8 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package txsnapservice
 
 import (
-	"encoding/json"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -182,14 +180,4 @@ func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config
 		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
 	}
 	return fcClient, nil
-}
-
-// getSnapTransactionRequest
-func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTransactionRequest, error) {
-	var snapTxRequest api.SnapTransactionRequest
-	err := json.Unmarshal(snapTransactionRequestbBytes, &snapTxRequest)
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "Cannot decode parameters from request to Snap Transaction Request")
-	}
-	return &snapTxRequest, nil
 }

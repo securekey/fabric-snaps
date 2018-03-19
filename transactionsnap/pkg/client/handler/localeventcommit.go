@@ -14,7 +14,6 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 )
 
@@ -33,7 +32,7 @@ type LocalEventCommitHandler struct {
 //Handle for endorsing transactions
 func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 	txnID := string(requestContext.Response.TransactionID)
-	var txStatusEventCh <-chan *eventapi.TxStatusEvent
+	var txStatusEventCh <-chan *fabApi.TxStatusEvent
 	if l.registerTxEvent {
 		//TODO
 		events := eventservice.Get(l.channelID)
