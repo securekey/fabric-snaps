@@ -204,7 +204,7 @@ peer:
     # EventHub related configuration
     events:
         # The address that the Event service will be enabled on the peer
-        address: 0.0.0.0:7053
+        address: 0.0.0.0:7051
 
         # total number of events that could be buffered without blocking send
         buffersize: 100
@@ -300,9 +300,9 @@ peer:
         Hash: SHA2
         Security: 256
         Level: 256
-        Pin: 
-        Label: 
-        Library: 
+        Pin:
+        Label:
+        Library:
         # Location of Key Store
         FileKeyStore:
           # TODO: Ensure this is read with fabric/core/config.GetPath() once ready

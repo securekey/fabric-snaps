@@ -14,7 +14,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
@@ -22,12 +24,12 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/errors/retry"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/localprovider"
 
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
@@ -47,6 +49,7 @@ type clientImpl struct {
 	channelClient  *channel.Client
 	channelService fabApi.ChannelService
 	channelID      string
+	context        contextApi.Client
 }
 
 // DynamicProviderFactory is configured with dynamic discovery provider and dynamic selection provider
@@ -76,7 +79,6 @@ type CustomConfig struct {
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
 func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
-
 	networkPeer := coreApi.NetworkPeer{PeerConfig: coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
 		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MSPID: string(c.localPeer.MSPid)}
 	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
@@ -85,7 +87,16 @@ func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) 
 	return []coreApi.ChannelPeer{peer}, nil
 }
 
+// PeerConfigByURL return local peer
+func (c *CustomConfig) PeerConfigByURL(url string) (*coreApi.PeerConfig, error) {
+	peerconfig := &coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
+		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}
+	logger.Debugf("PeerConfigByURL return %v", peerconfig)
+	return peerconfig, nil
+}
+
 var cachedClient map[string]*clientImpl
+var cachedClientWithLocalDiscovery map[string]*clientImpl
 
 //var client *clientImpl
 var clientMutex sync.RWMutex
@@ -96,6 +107,8 @@ func GetInstance(channelID string, txnSnapConfig api.Config, serviceProviderFact
 	once.Do(func() {
 		logger.Debugf("Client cache was created")
 		cachedClient = make(map[string]*clientImpl)
+		cachedClientWithLocalDiscovery = make(map[string]*clientImpl)
+
 	})
 	if channelID == "" {
 		return nil, errors.New(errors.GeneralError, "Channel is required")
@@ -118,6 +131,42 @@ func GetInstance(channelID string, txnSnapConfig api.Config, serviceProviderFact
 
 	//put client into cache
 	cachedClient[channelID] = c
+	return c, nil
+}
+
+// GetInstanceWithLocalDiscovery returns a singleton instance of the fabric client with local discovery
+func GetInstanceWithLocalDiscovery(channelID string, txnSnapConfig api.Config) (api.Client, error) {
+	once.Do(func() {
+		logger.Debugf("Client cache was created")
+		cachedClient = make(map[string]*clientImpl)
+		cachedClientWithLocalDiscovery = make(map[string]*clientImpl)
+	})
+	if channelID == "" {
+		return nil, errors.New(errors.GeneralError, "Channel is required")
+	}
+
+	clientMutex.RLock()
+	c := cachedClientWithLocalDiscovery[channelID] //client from cache
+	clientMutex.RUnlock()
+	if c != nil {
+		return c, nil
+	}
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
+
+	c = &clientImpl{txnSnapConfig: txnSnapConfig}
+	// Get local peer
+	localPeer, err := c.txnSnapConfig.GetLocalPeer()
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
+	}
+	err = c.initialize(channelID, &localprovider.Factory{LocalPeer: localPeer})
+	if err != nil {
+		return nil, err
+	}
+
+	//put client into cache
+	cachedClientWithLocalDiscovery[channelID] = c
 	return c, nil
 }
 
@@ -168,7 +217,12 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
 
-	// new client
+	context, err := sdk.Context(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Failed to create client context")
+	}
+
+	// new channel context prov
 	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
 
 	// Channel client is used to query and execute transactions
@@ -193,6 +247,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	c.channelService = chService
 	c.channelID = channelID
 	c.clientConfig = clientConfig
+	c.context = context
 	return nil
 }
 
@@ -317,4 +372,8 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	opts := c.txnSnapConfig.RetryOpts()
 	opts.RetryableCodes = retry.ChannelClientRetryableCodes
 	return opts
+}
+
+func (c *clientImpl) GetContext() contextApi.Client {
+	return c.context
 }

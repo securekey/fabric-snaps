@@ -31,7 +31,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "github.com/fsouza/go-dockerclient"
 
 [[constraint]]
-  revision = "406f79d58f04d2b71086f4debf38df23d6d0436b"
+  revision = "5d5b7e2de3a0888ab566dfd981c26fc3c70611f6"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]

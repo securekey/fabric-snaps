@@ -243,7 +243,6 @@
     "common/tools/configtxlator/update",
     "common/util",
     "common/viperutil",
-    "core/aclmgmt",
     "core/aclmgmt/resources",
     "core/chaincode/platforms",
     "core/chaincode/platforms/car",
@@ -292,7 +291,6 @@
     "core/peer",
     "core/policy",
     "core/policy/mocks",
-    "core/testutil",
     "core/transientstore",
     "events/consumer",
     "events/producer",
@@ -317,7 +315,6 @@
     "msp",
     "msp/cache",
     "msp/mgmt",
-    "msp/mgmt/testtools",
     "protos/common",
     "protos/gossip",
     "protos/ledger/queryresult",
@@ -364,7 +361,10 @@
     "pkg/client/common/selection/dynamicselection/pgresolver",
     "pkg/client/common/selection/options",
     "pkg/client/common/selection/staticselection",
+    "pkg/client/common/verifier",
     "pkg/client/resmgmt",
+    "pkg/common/errors/retry",
+    "pkg/common/errors/status",
     "pkg/common/logging",
     "pkg/common/options",
     "pkg/common/providers/context",
@@ -403,6 +403,7 @@
     "pkg/fab/events/service",
     "pkg/fab/events/service/blockfilter",
     "pkg/fab/events/service/dispatcher",
+    "pkg/fab/events/service/mocks",
     "pkg/fab/keyvaluestore",
     "pkg/fab/mocks",
     "pkg/fab/orderer",
@@ -421,13 +422,11 @@
     "pkg/fabsdk/provider/msppvdr",
     "pkg/msp",
     "pkg/msp/api",
-    "pkg/msp/mocks",
+    "pkg/msp/test/mockmsp",
     "pkg/util/concurrent/futurevalue",
     "pkg/util/concurrent/lazycache",
     "pkg/util/concurrent/lazyref",
     "pkg/util/errors/multi",
-    "pkg/util/errors/retry",
-    "pkg/util/errors/status",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -441,7 +440,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "406f79d58f04d2b71086f4debf38df23d6d0436b"
+  revision = "5d5b7e2de3a0888ab566dfd981c26fc3c70611f6"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -728,6 +727,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d9e9ababd7cf90a4aa2d12c9a04d4621e809a6b1bd5c17f3fe9edba77fd0ea1b"
+  inputs-digest = "7830d92a6be1dd7ff65155e16b99bc2b256b93e29894b96ae74733bbd31e0f1a"
   solver-name = "gps-cdcl"
   solver-version = 1
