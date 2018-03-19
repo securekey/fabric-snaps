@@ -55,7 +55,9 @@ client:
       execute: 60s
     cache:
       connectionIdle: 30s
+      eventServiceIdle: 2m
       channelConfig: 60s
+      channelMembership: 30s
 
   cryptoconfig:
     path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd

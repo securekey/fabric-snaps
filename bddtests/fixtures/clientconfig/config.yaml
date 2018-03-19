@@ -47,6 +47,9 @@ client:
       resmgmt: 120s
     cache:
       connectionIdle: 30s
+      eventServiceIdle: 2m
+      channelConfig: 60s
+      channelMembership: 30s
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
