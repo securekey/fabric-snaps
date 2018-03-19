@@ -7,103 +7,83 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"reflect"
 	"sync"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
+
 	"github.com/securekey/fabric-snaps/util/errors"
-	"google.golang.org/grpc"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	sdkconfig "github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/dispatcher"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/core/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	eventrelay "github.com/securekey/fabric-snaps/eventrelay/pkg/relay"
-	eventserverapi "github.com/securekey/fabric-snaps/eventserver/api"
-	eventserver "github.com/securekey/fabric-snaps/eventserver/pkg/server"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
+	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
 
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 	localservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
-	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 )
 
 var logger = logging.NewLogger("eventSnap")
 
 const (
 	channelConfigCheckDuration = 1 * time.Second
+	eventSnapUser              = "Txn-Snap-User"
 )
 
-var chnlServer *eventserver.ChannelServer
 var mutex sync.RWMutex
-
-type configProvider interface {
-	GetConfig(channelID string) (*config.EventSnapConfig, error)
-}
 
 // eventSnap starts the Channel Event Server which allows clients to register
 // for channel events. It also registers a local event service on the peer so that other
 // snaps may register for channel events directly.
 type eventSnap struct {
-	// pserver is only set during unit testing
-	pserver *grpc.Server
-	// eropts is only set during unit testing
-	eropts *eventrelay.Opts
-	// config is only set during unit testing
-	configProvider configProvider
-}
-
-type cfgProvider struct {
+	// peerConfigPath is only set by unit tests
+	peerConfigPath string
 }
 
 // New returns a new Event Snap
 func New() shim.Chaincode {
-	return &eventSnap{configProvider: &cfgProvider{}}
-}
-
-func (cfgprovider *cfgProvider) GetConfig(channelID string) (*config.EventSnapConfig, error) {
-
-	esconfig, err := config.New(channelID, "")
-	if err != nil {
-		logger.Warnf("Error initializing event snap: %s\n", err)
-		return nil, errors.Wrap(errors.GeneralError, err, "error initializing event snap ")
-	}
-	return esconfig, nil
+	return &eventSnap{}
 }
 
 // Init initializes the Event Snap.
 // The Event Server is registered when Init is called without a channel and
 // a new, channel-specific event service is registered each time Init is called with a channel.
 func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Warnf("******** Init Event Snap on channel [%s]\n", stub.GetChannelID())
+	logger.Warnf("******** Init Event Snap on channel [%s]", stub.GetChannelID())
 
 	channelID := stub.GetChannelID()
+	if channelID == "" {
+		return shim.Success(nil)
+	}
 
-	esconfig, err := s.configProvider.GetConfig(channelID)
+	esconfig, err := config.New(channelID, s.peerConfigPath)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	if channelID == "" {
-		// The channel server must be started on the first call to Init with no channel ID,
-		// since it needs to register with the peer server before the peer GRPC server starts
-		// serving requests.
-		if err := s.startChannelServer(esconfig); err != nil {
+	if esconfig.ChannelConfigLoaded {
+		if err := s.startChannelEvents(stub.GetChannelID(), esconfig); err != nil {
 			logger.Error(err.Error())
 			return shim.Error(err.Error())
 		}
 	} else {
-		if esconfig.ChannelConfigLoaded {
-			if err := s.startChannelEvents(stub.GetChannelID(), esconfig); err != nil {
-				logger.Error(err.Error())
-				return shim.Error(err.Error())
-			}
-		} else {
-			// Check the config periodically and start
-			// the event service when the config is available.
-			logger.Warnf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.\n", stub.GetChannelID())
-			go s.delayStartChannelEvents(stub.GetChannelID())
-		}
+		// Check the config periodically and start
+		// the event service when the config is available.
+		logger.Warnf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.", stub.GetChannelID())
+		go s.delayStartChannelEvents(stub.GetChannelID())
 	}
 
 	return shim.Success(nil)
@@ -114,170 +94,149 @@ func (s *eventSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Error("not implemented")
 }
 
-// startChannelServer registers the Channel Event Server endpoint on the peer.
-func (s *eventSnap) startChannelServer(config *config.EventSnapConfig) error {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	if chnlServer != nil {
-		logger.Infof("Channel Event Server already initialized\n")
-		return nil
-	}
-
-	logger.Infof("Initializing Channel Event Server...\n")
-
-	csConfig := &eventserver.ChannelServerConfig{
-		BufferSize: config.EventServerBufferSize,
-		Timeout:    config.EventServerTimeout,
-		TimeWindow: config.EventServerTimeWindow,
-	}
-	chnlServer = eventserver.NewChannelServer(csConfig)
-	eventserverapi.RegisterChannelServer(s.peerServer(), chnlServer)
-	logger.Infof("... done initializing Channel Event Server.\n")
-
-	return nil
-}
-
 // startChannelEvents starts a new event relay and local event service for the given channel,
 // and also starts a new Go routine that relays events to the channel server.
-func (s *eventSnap) startChannelEvents(channelID string, config *config.EventSnapConfig) error {
+func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventSnapConfig) error {
 	existingLocalEventService := localservice.Get(channelID)
 	if existingLocalEventService != nil {
-		logger.Errorf("Event service already initialized for channel [%s]\n", channelID)
-		return errors.Errorf(errors.GeneralError, "Event service already initialized for channel [%s]\n", channelID)
+		logger.Errorf("Event service already initialized for channel [%s]", channelID)
+		return errors.Errorf(errors.GeneralError, "Event service already initialized for channel [%s]", channelID)
 	}
 
-	// Create an event relay which gets events from the event hub
-	eventRelay, err := s.startEventRelay(channelID, config)
+	config, err := sdkconfig.FromRaw(esconfig.Bytes, "yaml")()
 	if err != nil {
-		logger.Errorf("Error starting event relay: %s\n", err)
-		return errors.WithMessage(errors.GeneralError, err, "Error starting event relay")
+		return err
+	}
+
+	// Get org name
+	nconfig, err := config.NetworkConfig()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Failed to get network config")
+	}
+
+	logger.Infof("Network config: %#v", nconfig)
+	var orgname string
+	for name, org := range nconfig.Organizations {
+		if org.MSPID == string(esconfig.MSPID) {
+			orgname = name
+			break
+		}
+	}
+	if orgname == "" {
+		return errors.Errorf(errors.GeneralError, "Failed to get %s from client config", esconfig.MSPID)
+	}
+
+	cert := esconfig.TLSConfig.Certificates[0]
+
+	localPeer, err := peer.New(config, peer.WithURL(esconfig.URL), peer.WithTLSCert(cert.Leaf))
+
+	serviceProviderFactory := &DynamicProviderFactory{peer: localPeer}
+
+	sdk, err := fabsdk.New(
+		fabsdk.WithConfig(config),
+		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: esconfig.CryptoProvider}),
+		fabsdk.WithServicePkg(serviceProviderFactory),
+		fabsdk.WithMSPPkg(&factoriesMsp.CustomMspPkg{CryptoPath: esconfig.MSPConfigPath}))
+	if err != nil {
+		return err
+	}
+
+	context, err := sdk.Context(fabsdk.WithUser(eventSnapUser), fabsdk.WithOrg(orgname))()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Failed to create client context")
 	}
 
 	// Create a new channel event service which gets its events from the event relay
-	service := s.startEventService(eventRelay, config)
+	eventClient, err := s.connectEventClient(context, channelID, esconfig)
+	if err != nil {
+		logger.Errorf("Error connecting event client: %s", err)
+		return errors.WithMessage(errors.GeneralError, err, "Error connecting event client")
+	}
 
 	// Register the local event service for the channel
-	if err := localservice.Register(channelID, service); err != nil {
-		logger.Errorf("Error registering local event service: %s\n", err)
+	if err := localservice.Register(channelID, eventClient); err != nil {
+		logger.Errorf("Error registering local event service: %s", err)
 		return errors.WithMessage(errors.GeneralError, err, "Error registering local event service")
 	}
 
-	// Relay events to the channel event server
-	s.startChannelServerEventRelay(eventRelay, config)
-
 	return nil
 }
+
 func (s *eventSnap) delayStartChannelEvents(channelID string) {
 	for {
 		time.Sleep(channelConfigCheckDuration)
 
-		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...\n", channelID)
-		if config, err := config.New(channelID, ""); err != nil {
-			logger.Warnf("Error reading configuration: %s\n", err)
+		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...", channelID)
+		if config, err := config.New(channelID, s.peerConfigPath); err != nil {
+			logger.Warnf("Error reading configuration: %s", err)
 		} else if config.ChannelConfigLoaded {
 			if err := s.startChannelEvents(channelID, config); err != nil {
-				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!\n", channelID, err.Error())
+				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!", channelID, err.Error())
 			} else {
-				logger.Infof("Channel events successfully started for channel [%s].\n", channelID)
+				logger.Infof("Channel events successfully started for channel [%s].", channelID)
 			}
 			return
 		}
-		logger.Debugf("... EventSnap configuration is not available yet for channel [%s]\n", channelID)
+		logger.Debugf("... EventSnap configuration is not available yet for channel [%s]", channelID)
 	}
 }
 
-// startEventRelay starts an event relay for the given channel. The event relay
-// registers for block and filtered block events with the event hub and relays
-// the events to all registered clients.
-func (s *eventSnap) startEventRelay(channelID string, config *config.EventSnapConfig) (*eventrelay.EventRelay, error) {
-	logger.Infof("Starting event relay for channel [%s]...\n", channelID)
+// startEventService ...
+func (s *eventSnap) connectEventClient(context context.Client, channelID string, config *config.EventSnapConfig) (fab.EventClient, error) {
+	logger.Infof("Starting event service for channel [%s]...", channelID)
 
-	var opts *eventrelay.Opts
-	if s.eropts != nil {
-		opts = s.eropts
-	} else {
-		opts = eventrelay.DefaultOpts()
-		opts.RegTimeout = config.EventHubRegTimeout
-		opts.RelayTimeout = config.EventRelayTimeout
-	}
+	// FIXME: This will go away with the latest SDK
+	chConfig := chconfig.NewChannelCfg(channelID)
 
-	eventRelay, err := eventrelay.New(channelID, config.EventHubAddress, config.TLSConfig, opts)
-	if err != nil {
-		return nil, errors.Wrapf(errors.GeneralError, err, "error creating event relay")
-	}
-
-	eventRelay.Start()
-	logger.Infof("... started event relay for channel [%s]...\n", channelID)
-	return eventRelay, nil
-}
-
-// startEventService registers an Event Service which receives events from the given EventRelay.
-func (s *eventSnap) startEventService(eventRelay *eventrelay.EventRelay, config *config.EventSnapConfig) eventapi.EventService {
-	logger.Infof("Starting event service for channel [%s]...\n", eventRelay.ChannelID())
-
-	opts := eventservice.Opts{
-		EventConsumerBufferSize: config.EventConsumerBufferSize,
-		EventConsumerTimeout:    config.EventConsumerTimeout,
-	}
-	eventTypes := []eventservice.EventType{eventservice.BLOCKEVENT, eventservice.FILTEREDBLOCKEVENT}
-
-	service := eventservice.NewServiceWithDispatcher(
-		eventservice.NewDispatcher(
-			&eventservice.DispatcherOpts{
-				Opts:                 opts,
-				AuthorizedEventTypes: eventTypes,
-			},
-		),
-		&opts, eventTypes,
+	eventClient, err := deliverclient.New(
+		context, chConfig,
+		comm.WithConnectTimeout(config.ResponseTimeout), // FIXME: Should be connect timeout
+		dispatcher.WithEventConsumerBufferSize(config.EventConsumerBufferSize),
+		dispatcher.WithEventConsumerTimeout(config.EventConsumerTimeout),
+		client.WithMaxConnectAttempts(0),                      // Try connecting forever
+		client.WithMaxReconnectAttempts(0),                    // Retry connecting forever
+		client.WithTimeBetweenConnectAttempts(10*time.Second), // TODO: Make configurable
+		client.WithResponseTimeout(config.ResponseTimeout),
+		// deliverclient.WithBlockEvents(), // TODO: Use block events?
 	)
-	service.Start(eventRelay)
-	logger.Infof("... started event service for channel [%s]...\n", eventRelay.ChannelID())
-	return service
-}
-
-// startChannelServerEventRelay starts a Go routine that relays the events
-// from the given eventRelay to the Channel Event Server
-func (s *eventSnap) startChannelServerEventRelay(eventRelay *eventrelay.EventRelay, config *config.EventSnapConfig) {
-	eventch := make(chan interface{}, config.EventServerBufferSize)
-	eventRelay.Register(eventch)
-
-	go func() {
-		logger.Debugf("Listening for events from the event relay.\n")
-		for {
-			event, ok := <-eventch
-			if !ok {
-				logger.Warnf("Event channel closed.\n")
-				return
-			}
-
-			evt, ok := event.(*pb.Event)
-			if ok {
-				go func() {
-					logger.Debugf("Sending event to channel event server: %s.\n", event)
-					if err := channelServer().Send(evt); err != nil {
-						logger.Errorf("Error sending event to channel server: %s\n", err)
-					}
-				}()
-			} else {
-				logger.Warnf("Unsupported event type: %s\n", reflect.TypeOf(event))
-			}
-		}
-	}()
-}
-
-func (s *eventSnap) peerServer() *grpc.Server {
-	if s.pserver != nil {
-		return s.pserver
+	if err != nil {
+		return nil, err
 	}
-	return peer.GetPeerServer().Server()
-}
 
-func channelServer() *eventserver.ChannelServer {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	return chnlServer
+	if err := eventClient.Connect(); err != nil {
+		return nil, err
+	}
+
+	logger.Infof("... started event service for channel [%s]...", chConfig.ID())
+	return eventClient, nil
 }
 
 func main() {
+}
+
+// DynamicProviderFactory is configured with dynamic discovery provider and dynamic selection provider
+type DynamicProviderFactory struct {
+	defsvc.ProviderFactory
+	peer fab.Peer
+}
+
+// CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
+func (f *DynamicProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+	return &localPeerDiscoveryProvider{peer: f.peer}, nil
+}
+
+type localPeerDiscoveryProvider struct {
+	peer fab.Peer
+}
+
+func (p *localPeerDiscoveryProvider) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
+	return &localPeerDiscoveryService{peer: p.peer}, nil
+}
+
+type localPeerDiscoveryService struct {
+	peer fab.Peer
+}
+
+func (s *localPeerDiscoveryService) GetPeers() ([]fab.Peer, error) {
+	return []fab.Peer{s.peer}, nil
 }

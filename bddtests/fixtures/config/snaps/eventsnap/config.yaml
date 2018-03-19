@@ -3,73 +3,200 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 eventsnap:
-    eventhub:
-        # regtimeout is the timeout for registering for events with the Event Hub
-        regtimeout: 3s
+  # response timeout
+  responsetimeout: 3s
 
-        tlsCerts:
-            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
-            systemCertPool: false
+  tlsCerts:
+    # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+    systemCertPool: false
 
-            # [Optional]. Client key and cert for TLS handshake with peers and orderers
-            client:
+    # [Optional]. Client key and cert for TLS handshake with peers and orderers
+    client:
+      # Certificate location absolute path
+      keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+      # the eventsnap config now accepts certpem or certfile, if both are set,
+      # then certpem takes precedence. If both are missing, then tls is disabled
+      #certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+      certpem: |
+        -----BEGIN CERTIFICATE-----
+        MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
+        gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
+        bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
+        aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
+        Fw0xNzEyMDEyMTEzMDBaFw0xODEyMDEyMTEzMDBaMGMxCzAJBgNVBAYTAkNBMRAw
+        DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
+        eGN0bDEMMAoGA1UECxMDTGFiMQ8wDQYDVQQDDAZzZGtfZ28wdjAQBgcqhkjOPQIB
+        BgUrgQQAIgNiAAT6I1CGNrkchIAEmeJGo53XhDsoJwRiohBv2PotEEGuO6rMyaOu
+        pulj2VOj+YtgWw4ZtU49g4Nv6rq1QlKwRYyMwwRJSAZHIUMhYZjcDi7YEOZ3Fs1h
+        xKmIxR+TTR2vf9KjgZAwgY0wDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG
+        AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDwS3xhpAWs81OVWvZt+iUNL
+        z26DMB8GA1UdIwQYMBaAFLRasbknomawJKuQGiyKs/RzTCujMBgGA1UdEQQRMA+C
+        DWZhYnJpY19zZGtfZ28wCgYIKoZIzj0EAwQDgYwAMIGIAkIAk1MxMogtMtNO0rM8
+        gw2rrxqbW67ulwmMQzp6EJbm/28T2pIoYWWyIwpzrquypI7BOuf8is5b7Jcgn9oz
+        7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
+        3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
+        -----END CERTIFICATE-----
 
-                # Certificate location absolute path
-                keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
-                # the eventsnap config now accepts certpem or certfile, if both are set,
-                # then certpem takes precedence. If both are missing, then tls is disabled
-                #certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
-                certpem: |
-                  -----BEGIN CERTIFICATE-----
-                  MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
-                  gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
-                  bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
-                  aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
-                  Fw0xNzEyMDEyMTEzMDBaFw0xODEyMDEyMTEzMDBaMGMxCzAJBgNVBAYTAkNBMRAw
-                  DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
-                  eGN0bDEMMAoGA1UECxMDTGFiMQ8wDQYDVQQDDAZzZGtfZ28wdjAQBgcqhkjOPQIB
-                  BgUrgQQAIgNiAAT6I1CGNrkchIAEmeJGo53XhDsoJwRiohBv2PotEEGuO6rMyaOu
-                  pulj2VOj+YtgWw4ZtU49g4Nv6rq1QlKwRYyMwwRJSAZHIUMhYZjcDi7YEOZ3Fs1h
-                  xKmIxR+TTR2vf9KjgZAwgY0wDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG
-                  AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDwS3xhpAWs81OVWvZt+iUNL
-                  z26DMB8GA1UdIwQYMBaAFLRasbknomawJKuQGiyKs/RzTCujMBgGA1UdEQQRMA+C
-                  DWZhYnJpY19zZGtfZ28wCgYIKoZIzj0EAwQDgYwAMIGIAkIAk1MxMogtMtNO0rM8
-                  gw2rrxqbW67ulwmMQzp6EJbm/28T2pIoYWWyIwpzrquypI7BOuf8is5b7Jcgn9oz
-                  7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
-                  3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
-                  -----END CERTIFICATE-----
+  dispatcher:
+    # total number of events that could be buffered without blocking send
+    buffersize: 100
 
-    relay:
-        # timeout is the timeout when relaying events to the registered event channel.
-        # If < 0, if buffer full, unblocks immediately and does not send.
-        # If 0, if buffer full, will block and guarantee the event will be sent out.
-        # If > 0, if buffer full, blocks util timeout.
-        timeout: 1s
+  consumer:
+    # total number of events that could be buffered without blocking send
+    buffersize: 100
 
-    server:
-        # buffersize is the size of the registered consumer's event channel.
-        buffersize: 100
+    # timeout duration for producer to send an event to the consumer.
+    # if < 0, if buffer full, unblocks immediately and not send
+    # if 0, if buffer full, will block and guarantee the event will be sent out
+    # if > 0, if buffer full, blocks till timeout
+    timeout: 10ms
+        
+client:
 
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
+  # Which organization does this application instance belong to? The value must be the name of an org
+  # defined under "organizations"
+  organization: peerorg1
 
-        # timewindow is the acceptable difference between the peer's current
-        # time and the client's time as specified in a registration event
-        timewindow: 15s
+  logging:
+    level: debug
 
-    dispatcher:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
+  # Some SDKs support pluggable KV stores, the properties under "credentialStore"
+  # are implementation specific
+  credentialStore:
+    # [Optional]. Not used by Go SDK. Others SDKs may use it if using an alternative impl
+    # Could be used if SDK would require an object for properties like url, db name, etc.
+    path: "/tmp/hfc-kvs"
 
-    consumer:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
+    # [Optional]. Specific to the CryptoSuite implementation used by GO SDK. Software-based implementations
+    # requiring a key store. PKCS#11 based implementations does not.
+    cryptoStore:
+      # Specific to the underlying KeyValueStore that backs the crypto key store.
+      path: /tmp/msp
 
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
+
+  tlsCerts:
+    # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
+    systemCertPool: false
+
+    # [Optional]. Client key and cert for TLS handshake with peers and orderers
+    client:
+      key:
+       path: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
+      cert:
+       pem: |
+        -----BEGIN CERTIFICATE-----
+        MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
+        gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
+        bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
+        aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
+        Fw0xNzEyMDEyMTEzMDBaFw0xODEyMDEyMTEzMDBaMGMxCzAJBgNVBAYTAkNBMRAw
+        DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
+        eGN0bDEMMAoGA1UECxMDTGFiMQ8wDQYDVQQDDAZzZGtfZ28wdjAQBgcqhkjOPQIB
+        BgUrgQQAIgNiAAT6I1CGNrkchIAEmeJGo53XhDsoJwRiohBv2PotEEGuO6rMyaOu
+        pulj2VOj+YtgWw4ZtU49g4Nv6rq1QlKwRYyMwwRJSAZHIUMhYZjcDi7YEOZ3Fs1h
+        xKmIxR+TTR2vf9KjgZAwgY0wDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG
+        AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDwS3xhpAWs81OVWvZt+iUNL
+        z26DMB8GA1UdIwQYMBaAFLRasbknomawJKuQGiyKs/RzTCujMBgGA1UdEQQRMA+C
+        DWZhYnJpY19zZGtfZ28wCgYIKoZIzj0EAwQDgYwAMIGIAkIAk1MxMogtMtNO0rM8
+        gw2rrxqbW67ulwmMQzp6EJbm/28T2pIoYWWyIwpzrquypI7BOuf8is5b7Jcgn9oz
+        7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
+        3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
+        -----END CERTIFICATE-----
+      # Certificate location absolute path
+#      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
+
+# Global configuration for peer, event service and orderer timeouts
+  peer:
+    timeout:
+      connection: 3s
+      queryResponse: 30s
+      executeTxResponse: 30s
+  eventService:
+    timeout:
+      connection: 3s
+      registrationResponse: 3s
+  orderer:
+    timeout:
+      connection: 3s
+      response: 5s
+
+orderers:
+  orderer.example.com:
+    url: grpcs://orderer.example.com:7050
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+      grpc-max-send-message-length: 15
+
+    tlsCACerts:
+      # Certificate location absolute path
+      path: /etc/hyperledger/fabric/tls/orderer-ca-cert.pem
+
+#
+# list of participating organizations in this network
+#
+organizations:
+  peerorg1:
+    mspid: Org1MSP
+
+    # Needed to load users crypto keys and certs for this org (absolute path or relative to global crypto path, DEV mode)
+    # for PROD with no cert access through volume mappings, use 'users' and embed user certs/keys directly, do not use 'cryptoPath'
+    # for DEV mode, cryptoPath below works as an alternative
+#    cryptoPath:  fixtures/channel/crypto-config/peerOrganizations/org1.example.com/users/{userName}@org1.example.com/msp
+    users:
+      Admin:
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICGjCCAcCgAwIBAgIRAIQkbh9nsGnLmDalAVlj8sUwCgYIKoZIzj0EAwIwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+            WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWQWRtaW5Ab3JnMS5leGFtcGxlLmNvbTBZ
+            MBMGByqGSM49AgEGCCqGSM49AwEHA0IABH5hECfx0WkNAPK8MDsko+Xk+hl6ePeb
+            Uo6cyvL+Y5lydedMiHYBJXiyzxWW7MFzIcYC/sEKbFfEOSNxX17Ju/yjTTBLMA4G
+            A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+            mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0gAMEUCIQDVf8cL
+            NrfToiPzJpEFPGF+/8CpzOkl91oz+XJsvdgf5wIgI/e8mpvpplUQbU52+LejA36D
+            CsbWERvZPjR/GFEDEvc=
+            -----END CERTIFICATE-----
+      User1:
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICGTCCAcCgAwIBAgIRALR/1GXtEud5GQL2CZykkOkwCgYIKoZIzj0EAwIwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+            WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWVXNlcjFAb3JnMS5leGFtcGxlLmNvbTBZ
+            MBMGByqGSM49AgEGCCqGSM49AwEHA0IABPIVPS+hdftwDg8+02y1aV5pOnCO9tIn
+            f60wZMbrt/5N0J8PFZgylBjEuUTxWRsTMpYPAJi8NlEwoJB+/YSs29ujTTBLMA4G
+            A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+            mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0cAMEQCID+dZ7H5
+            AiaiI2BjxnL3/TetJ8iFJYZyWvK//an13WV/AiARBJd/pI5A7KZgQxJhXmmR8bie
+            XdsmTcdRvJ3TS/6HCA==
+            -----END CERTIFICATE-----
+      # If overriding the cert is  not needed (aka using peer's MSP), the below entry can be removed.
+      # Txn-Snap-User must be embedded in the txnsnap config to be overridden. If missing, it will be set to the
+      # peer's MSP cert/key by default. Override this cert if needed and make sure the key is stored in HSM.
+      Txn-Snap-User:
+        cert:
+          pem: |
+            -----BEGIN CERTIFICATE-----
+            MIICGTCCAcCgAwIBAgIRALR/1GXtEud5GQL2CZykkOkwCgYIKoZIzj0EAwIwczEL
+            MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
+            cmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMTE2Nh
+            Lm9yZzEuZXhhbXBsZS5jb20wHhcNMTcwNzI4MTQyNzIwWhcNMjcwNzI2MTQyNzIw
+            WjBbMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMN
+            U2FuIEZyYW5jaXNjbzEfMB0GA1UEAwwWVXNlcjFAb3JnMS5leGFtcGxlLmNvbTBZ
+            MBMGByqGSM49AgEGCCqGSM49AwEHA0IABPIVPS+hdftwDg8+02y1aV5pOnCO9tIn
+            f60wZMbrt/5N0J8PFZgylBjEuUTxWRsTMpYPAJi8NlEwoJB+/YSs29ujTTBLMA4G
+            A1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMCsGA1UdIwQkMCKAIIeR0TY+iVFf
+            mvoEKwaToscEu43ZXSj5fTVJornjxDUtMAoGCCqGSM49BAMCA0cAMEQCID+dZ7H5
+            AiaiI2BjxnL3/TetJ8iFJYZyWvK//an13WV/AiARBJd/pI5A7KZgQxJhXmmR8bie
+            XdsmTcdRvJ3TS/6HCA==
+            -----END CERTIFICATE-----

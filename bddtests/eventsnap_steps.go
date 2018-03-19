@@ -17,8 +17,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
 var lastTxnID string
@@ -257,8 +257,8 @@ func (t *EventSnapSteps) containsTxEvent() error {
 	return errors.Errorf("could not find a Tx Status event that matches the last Tx [%s]", lastTxnID)
 }
 
-func getBlockEvents(jsonstr string) ([]*eventapi.BlockEvent, error) {
-	var events []*eventapi.BlockEvent
+func getBlockEvents(jsonstr string) ([]*fab.BlockEvent, error) {
+	var events []*fab.BlockEvent
 	if err := json.Unmarshal([]byte(jsonstr), &events); err != nil {
 		return nil, err
 	}
@@ -270,8 +270,8 @@ func getBlockEvents(jsonstr string) ([]*eventapi.BlockEvent, error) {
 	return events, nil
 }
 
-func getFilteredBlockEvents(jsonstr string) ([]*eventapi.FilteredBlockEvent, error) {
-	var events []*eventapi.FilteredBlockEvent
+func getFilteredBlockEvents(jsonstr string) ([]*fab.FilteredBlockEvent, error) {
+	var events []*fab.FilteredBlockEvent
 	if err := json.Unmarshal([]byte(jsonstr), &events); err != nil {
 		return nil, err
 	}
@@ -283,8 +283,8 @@ func getFilteredBlockEvents(jsonstr string) ([]*eventapi.FilteredBlockEvent, err
 	return events, nil
 }
 
-func getCCEvents(jsonstr string) ([]*eventapi.CCEvent, error) {
-	var events []*eventapi.CCEvent
+func getCCEvents(jsonstr string) ([]*fab.CCEvent, error) {
+	var events []*fab.CCEvent
 	if err := json.Unmarshal([]byte(jsonstr), &events); err != nil {
 		return nil, err
 	}
@@ -296,8 +296,8 @@ func getCCEvents(jsonstr string) ([]*eventapi.CCEvent, error) {
 	return events, nil
 }
 
-func getTxEvents(jsonstr string) ([]*eventapi.TxStatusEvent, error) {
-	var events []*eventapi.TxStatusEvent
+func getTxEvents(jsonstr string) ([]*fab.TxStatusEvent, error) {
+	var events []*fab.TxStatusEvent
 	if err := json.Unmarshal([]byte(jsonstr), &events); err != nil {
 		return nil, err
 	}

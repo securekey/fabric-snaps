@@ -9,15 +9,15 @@ package localservice
 import (
 	"testing"
 
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
+	fabmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 )
 
 func TestLocalService(t *testing.T) {
 	channelID1 := "ch1"
 	channelID2 := "ch2"
 
-	service1 := newMockEventService()
-	service2 := newMockEventService()
+	service1 := fabmocks.NewMockEventService()
+	service2 := fabmocks.NewMockEventService()
 
 	if err := Register(channelID1, service1); err != nil {
 		t.Fatalf("error registering local event service for channel %s: %s", channelID1, err)
@@ -41,31 +41,4 @@ func TestLocalService(t *testing.T) {
 	if s := Get("invalidchannel"); s != nil {
 		t.Fatalf("expecting nil service for invalid channel")
 	}
-}
-
-func newMockEventService() *mockService {
-	return &mockService{}
-}
-
-type mockService struct {
-}
-
-func (m *mockService) RegisterFilteredBlockEvent() (eventapi.Registration, <-chan *eventapi.FilteredBlockEvent, error) {
-	panic("not implemented")
-}
-
-func (m *mockService) RegisterChaincodeEvent(ccID, eventFilter string) (eventapi.Registration, <-chan *eventapi.CCEvent, error) {
-	panic("not implemented")
-}
-
-func (m *mockService) RegisterTxStatusEvent(txID string) (eventapi.Registration, <-chan *eventapi.TxStatusEvent, error) {
-	panic("not implemented")
-}
-
-func (m *mockService) Unregister(reg eventapi.Registration) {
-	panic("not implemented")
-}
-
-func (m *mockService) RegisterBlockEvent() (eventapi.Registration, <-chan *eventapi.BlockEvent, error) {
-	panic("not implemented")
 }
