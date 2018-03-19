@@ -89,6 +89,13 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 
 // BeforeScenario execute code before bdd scenario
 func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	if b.sdk != nil {
+		return
+	}
+
 	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath + b.clientConfigFileName))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
@@ -124,7 +131,13 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 
 // AfterScenario execute code after bdd scenario
 func (b *BDDContext) AfterScenario(interface{}, error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
+	if b.sdk != nil {
+		b.sdk.Close()
+		b.sdk = nil
+	}
 }
 
 //FindPKCS11Lib find lib based on configuration
@@ -183,8 +196,8 @@ func (b *BDDContext) ResMgmtClient(org, userType string) *resmgmt.Client {
 
 // OrgChannelClient returns the org channel client
 func (b *BDDContext) OrgChannelClient(org, userType, channelID string) (*channel.Client, error) {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	if orgChanClient, ok := b.orgChannelClients[fmt.Sprintf("%s_%s_%s", org, userType, channelID)]; ok {
 		return orgChanClient, nil
 	}
