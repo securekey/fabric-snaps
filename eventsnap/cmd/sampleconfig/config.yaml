@@ -1,0 +1,26 @@
+#
+# Copyright SecureKey Technologies Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+eventsnap:
+
+    loglevel: debug
+
+    # response timeout
+    responsetimeout: 3s
+
+    dispatcher:
+        # total number of events that could be buffered without blocking send
+        buffersize: 100
+
+    consumer:
+        # total number of events that could be buffered without blocking send
+        buffersize: 100
+
+        # timeout duration for producer to send an event to the consumer.
+        # if < 0, if buffer full, unblocks immediately and not send
+        # if 0, if buffer full, will block and guarantee the event will be sent out
+        # if > 0, if buffer full, blocks till timeout
+        timeout: 10ms

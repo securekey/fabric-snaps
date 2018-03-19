@@ -9,6 +9,7 @@ package api
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 )
@@ -64,4 +65,8 @@ type Client interface {
 	// GetConfig get client config
 	// @returns {Config} config
 	GetConfig() coreApi.Config
+
+	// GetContext get client context
+	// @returns {Client} client
+	GetContext() contextApi.Client
 }

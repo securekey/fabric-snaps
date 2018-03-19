@@ -10,20 +10,20 @@ import (
 	"sync"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
-	eventapi "github.com/securekey/fabric-snaps/eventservice/api"
 )
 
 var logger = logging.NewLogger("eventservice/localservice")
 
-var channelServices map[string]eventapi.EventService
+var channelServices map[string]fab.EventService
 var initonce sync.Once
 var mutex sync.RWMutex
 
 // Register sets the local event service instance on the peer for the given channel.
-func Register(channelID string, service eventapi.EventService) error {
+func Register(channelID string, service fab.EventService) error {
 	initonce.Do(func() {
-		channelServices = make(map[string]eventapi.EventService)
+		channelServices = make(map[string]fab.EventService)
 	})
 
 	mutex.Lock()
@@ -39,7 +39,7 @@ func Register(channelID string, service eventapi.EventService) error {
 }
 
 // Get returns the local event service for the given channel.
-func Get(channelID string) eventapi.EventService {
+func Get(channelID string) fab.EventService {
 	mutex.RLock()
 	defer mutex.RUnlock()
 

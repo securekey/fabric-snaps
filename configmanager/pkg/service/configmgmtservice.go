@@ -127,6 +127,7 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 //GetConfigFromLedger - gets snaps configs from ledger
 func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey api.ConfigKey) ([]byte, error) {
 
+	logger.Infof("Getting key [%#v] on channel [%s]", configKey, channelID)
 	lgr := peer.GetLedger(channelID)
 
 	if lgr != nil {
@@ -147,7 +148,6 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		}
 		return config, nil
 	}
-
 	return nil, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
 }
 

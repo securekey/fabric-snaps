@@ -204,7 +204,7 @@ peer:
     # EventHub related configuration
     events:
         # The address that the Event service will be enabled on the peer
-        address: 0.0.0.0:7053
+        address: 0.0.0.0:7051
 
         # total number of events that could be buffered without blocking send
         buffersize: 100
@@ -509,7 +509,7 @@ chaincode:
 
         # Snaps used in BDD tests
         txnsnapinvoker: enable
-        eventconsumersnap: enable
+        # eventconsumersnap: enable
         bootstrapsnap: enable
 
     # System chaincode plugins: in addition to being imported and compiled
@@ -552,11 +552,11 @@ chaincode:
         path: /opt/extsysccs/txnsnapinvoker.so
         invokableExternal: true
         invokableCC2CC: true
-      - enabled: true
-        name: eventconsumersnap
-        path: /opt/extsysccs/eventconsumersnap.so
-        invokableExternal: true
-        invokableCC2CC: true
+    #   - enabled: true
+    #     name: eventconsumersnap
+    #     path: /opt/extsysccs/eventconsumersnap.so
+    #     invokableExternal: true
+    #     invokableCC2CC: true
       - enabled: true
         name: bootstrapsnap
         path: /opt/extsysccs/bootstrapsnap.so
