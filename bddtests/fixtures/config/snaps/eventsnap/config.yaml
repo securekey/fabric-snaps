@@ -3,73 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 eventsnap:
-    eventhub:
-        # regtimeout is the timeout for registering for events with the Event Hub
-        regtimeout: 3s
+  loglevel: debug
+  # response timeout
+  responsetimeout: 3s
 
-        tlsCerts:
-            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
-            systemCertPool: false
+  dispatcher:
+    # total number of events that could be buffered without blocking send
+    buffersize: 100
 
-            # [Optional]. Client key and cert for TLS handshake with peers and orderers
-            client:
+  consumer:
+    # total number of events that could be buffered without blocking send
+    buffersize: 100
 
-                # Certificate location absolute path
-                keyfile: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
-                # the eventsnap config now accepts certpem or certfile, if both are set,
-                # then certpem takes precedence. If both are missing, then tls is disabled
-                #certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
-                certpem: |
-                  -----BEGIN CERTIFICATE-----
-                  MIIC5TCCAkagAwIBAgIUMYhiY5MS3jEmQ7Fz4X/e1Dx33J0wCgYIKoZIzj0EAwQw
-                  gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
-                  bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
-                  aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
-                  Fw0xNzEyMDEyMTEzMDBaFw0xODEyMDEyMTEzMDBaMGMxCzAJBgNVBAYTAkNBMRAw
-                  DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
-                  eGN0bDEMMAoGA1UECxMDTGFiMQ8wDQYDVQQDDAZzZGtfZ28wdjAQBgcqhkjOPQIB
-                  BgUrgQQAIgNiAAT6I1CGNrkchIAEmeJGo53XhDsoJwRiohBv2PotEEGuO6rMyaOu
-                  pulj2VOj+YtgWw4ZtU49g4Nv6rq1QlKwRYyMwwRJSAZHIUMhYZjcDi7YEOZ3Fs1h
-                  xKmIxR+TTR2vf9KjgZAwgY0wDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsG
-                  AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDwS3xhpAWs81OVWvZt+iUNL
-                  z26DMB8GA1UdIwQYMBaAFLRasbknomawJKuQGiyKs/RzTCujMBgGA1UdEQQRMA+C
-                  DWZhYnJpY19zZGtfZ28wCgYIKoZIzj0EAwQDgYwAMIGIAkIAk1MxMogtMtNO0rM8
-                  gw2rrxqbW67ulwmMQzp6EJbm/28T2pIoYWWyIwpzrquypI7BOuf8is5b7Jcgn9oz
-                  7sdMTggCQgF7/8ZFl+wikAAPbciIL1I+LyCXKwXosdFL6KMT6/myYjsGNeeDeMbg
-                  3YkZ9DhdH1tN4U/h+YulG/CkKOtUATtQxg==
-                  -----END CERTIFICATE-----
-
-    relay:
-        # timeout is the timeout when relaying events to the registered event channel.
-        # If < 0, if buffer full, unblocks immediately and does not send.
-        # If 0, if buffer full, will block and guarantee the event will be sent out.
-        # If > 0, if buffer full, blocks util timeout.
-        timeout: 1s
-
-    server:
-        # buffersize is the size of the registered consumer's event channel.
-        buffersize: 100
-
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
-
-        # timewindow is the acceptable difference between the peer's current
-        # time and the client's time as specified in a registration event
-        timewindow: 15s
-
-    dispatcher:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
-
-    consumer:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
-
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
+    # timeout duration for producer to send an event to the consumer.
+    # if < 0, if buffer full, unblocks immediately and not send
+    # if 0, if buffer full, will block and guarantee the event will be sent out
+    # if > 0, if buffer full, blocks till timeout
+    timeout: 10ms

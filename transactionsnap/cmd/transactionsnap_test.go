@@ -39,7 +39,6 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
-	evservice "github.com/securekey/fabric-snaps/eventservice/pkg/service"
 	"github.com/securekey/fabric-snaps/mocks/event/mockevent"
 	"github.com/securekey/fabric-snaps/mocks/event/mockproducer"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
