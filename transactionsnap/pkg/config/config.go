@@ -18,6 +18,7 @@ import (
 	"time"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/errors/retry"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -285,6 +286,34 @@ func (c *Config) GetHandlerTimeout() time.Duration {
 		return defaultHandlerTimeout
 	}
 	return interval
+}
+
+// RetryOpts transaction snap retry options
+func (c *Config) RetryOpts() retry.Opts {
+	attempts := c.txnSnapConfig.GetInt("txnsnap.retry.attempts")
+	initialBackoff := c.txnSnapConfig.GetDuration("txnsnap.retry.initialbackoff")
+	maxBackoff := c.txnSnapConfig.GetDuration("txnsnap.retry.maxbackoff")
+	factor := c.txnSnapConfig.GetFloat64("txnsnap.retry.backofffactor")
+
+	if attempts == 0 {
+		attempts = retry.DefaultAttempts
+	}
+	if initialBackoff == 0 {
+		initialBackoff = retry.DefaultInitialBackoff
+	}
+	if maxBackoff == 0 {
+		maxBackoff = retry.DefaultMaxBackoff
+	}
+	if factor == 0 {
+		factor = retry.DefaultBackoffFactor
+	}
+
+	return retry.Opts{
+		Attempts:       attempts,
+		InitialBackoff: initialBackoff,
+		MaxBackoff:     maxBackoff,
+		BackoffFactor:  factor,
+	}
 }
 
 // initializeLogging initializes the logger

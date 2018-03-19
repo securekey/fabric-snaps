@@ -8,7 +8,19 @@
 txnsnap:
   loglevel: debug
 
+  # Endorser selection attempts
+  selection:
+    maxattempts: 5
+    interval: 2s
 
+  # Transaction retry options
+  retry:
+    attempts: 5
+    initialbackoff: 500ms
+    maxbackoff: 30s
+    backofffactor: 2
+
+  # Transaction timeout
   handler:
     timeout: 30s
 

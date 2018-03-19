@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/errors/retry"
 	"github.com/spf13/viper"
 )
 
@@ -32,6 +33,7 @@ type Config interface {
 	GetEndorserSelectionMaxAttempts() int
 	GetEndorserSelectionInterval() time.Duration
 	GetHandlerTimeout() time.Duration
+	RetryOpts() retry.Opts
 }
 
 // PeerConfig represents the server addresses of a fabric peer

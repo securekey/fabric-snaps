@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/errors/retry"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -226,7 +227,8 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter))
+		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -261,7 +263,8 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter))
+		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
@@ -308,4 +311,10 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 
 func (c *clientImpl) GetConfig() coreApi.Config {
 	return c.clientConfig
+}
+
+func (c *clientImpl) retryOpts() retry.Opts {
+	opts := c.txnSnapConfig.RetryOpts()
+	opts.RetryableCodes = retry.ChannelClientRetryableCodes
+	return opts
 }
