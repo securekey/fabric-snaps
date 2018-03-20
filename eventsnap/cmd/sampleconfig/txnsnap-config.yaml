@@ -4,38 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-eventsnap:
+# Configurations for txn snap
+txnsnap:
+  loglevel: debug
 
-    eventhub:
-        # registration timeout
-        regtimeout: 1s
+  # Endorser selection attempts
+  selection:
+    maxattempts: 5
+    interval: 2s
 
-        tlsCerts:
-            # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
-            systemCertPool: false
+  # Transaction retry options
+  retry:
+    attempts: 5
+    initialbackoff: 500ms
+    maxbackoff: 30s
+    backofffactor: 2
 
-            # [Optional]. Client key and cert for TLS handshake with peers and orderers
-            client:
-                keyfile: tls/client_sdk_go-key.pem
-                certfile: tls/client_sdk_go.pem
-
-    # relay:
-    #     # event relay timeout
-    #     timeout: 1s
-
-    dispatcher:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
-
-    consumer:
-        # total number of events that could be buffered without blocking send
-        buffersize: 100
-
-        # timeout duration for producer to send an event to the consumer.
-        # if < 0, if buffer full, unblocks immediately and not send
-        # if 0, if buffer full, will block and guarantee the event will be sent out
-        # if > 0, if buffer full, blocks till timeout
-        timeout: 10ms
+  # Transaction timeout
+  handler:
+    timeout: 30s
 
 # Configurations for the fabric client
 client:
@@ -68,6 +55,9 @@ client:
       execute: 60s
     cache:
       connectionIdle: 30s
+      eventServiceIdle: 2m
+      channelConfig: 60s
+      channelMembership: 30s
 
   cryptoconfig:
     path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
@@ -184,6 +174,36 @@ channels:
         # Default: true
         eventSource: true
 
+  # name of the channel
+  testChannel2:
+    # Required. list of orderers designated by the application to use for transactions on this
+    # channel. This list can be a result of access control ("org1" can only access "ordererA"), or
+    # operational decisions to share loads from applications among the orderers.  The values must
+    # be "names" of orgs defined under "organizations/peers"
+    orderers:
+      - orderer.example.com
+
+    # Required. list of peers from participating orgs
+    peers:
+      peer0.org1.example.com:
+        # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
+        # have the chaincode installed. The app can also use this property to decide which peers
+        # to send the chaincode install request. Default: true
+        endorsingPeer: true
+
+        # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
+        # installed. The app can also use this property to decide which peers to send the
+        # chaincode install request. Default: true
+        chaincodeQuery: true
+
+        # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
+        # queryBlock(), queryTransaction(), etc. Default: true
+        ledgerQuery: true
+
+        # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
+        # produce events but the app typically only needs to connect to one to listen to events.
+        # Default: true
+        eventSource: true
 
 #
 # list of participating organizations in this network

@@ -193,12 +193,7 @@ peer:
     # not mutual TLS auth. See comments on chaincodeListenAddress for more info
     tls:
         enabled:  false
-        cert:
-            file: tls/server.crt
-        key:
-            file: tls/server.key
-        rootcert:
-            file: tls/ca.crt
+
 
         # The server name use to verify the hostname returned by TLS handshake
         serverhostoverride:
@@ -222,7 +217,7 @@ peer:
             FileKeyStore:
                 # If "", defaults to 'mspConfigPath'/keystore
                 # TODO: Ensure this is read with fabric/core/config.GetPath() once ready
-                KeyStore:
+                KeyStore: sampleconfig
 
     # Path on the file system where peer will find MSP local configurations
     mspConfigPath: sampleconfig/msp
