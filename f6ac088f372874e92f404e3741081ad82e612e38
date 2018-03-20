@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fab974ff_3fb117dd",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-03-20T14:47:31Z",
+      "side": 1,
+      "message": "This log should either be removed or set to Debugf",
+      "range": {
+        "startLine": 130,
+        "startChar": 8,
+        "endLine": 130,
+        "endChar": 13
+      },
+      "revId": "f6ac088f372874e92f404e3741081ad82e612e38",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
