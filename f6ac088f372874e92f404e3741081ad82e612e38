@@ -22,6 +22,30 @@
       "revId": "f6ac088f372874e92f404e3741081ad82e612e38",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19ff3728_ac66a708",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-03-20T14:58:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fab974ff_3fb117dd",
+      "range": {
+        "startLine": 130,
+        "startChar": 8,
+        "endLine": 130,
+        "endChar": 13
+      },
+      "revId": "f6ac088f372874e92f404e3741081ad82e612e38",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
