@@ -46,6 +46,23 @@
       "revId": "f6ac088f372874e92f404e3741081ad82e612e38",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d7fd9e8_74f10461",
+        "filename": "eventsnap/cmd/eventsnap.go",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-03-20T15:01:05Z",
+      "side": 1,
+      "message": "Connect and re-connect forever?",
+      "revId": "f6ac088f372874e92f404e3741081ad82e612e38",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
