@@ -18,7 +18,7 @@ echo "Copying snaps to subdirectory within fabric..."
 cp -r /opt/gopath/src/github.com/securekey/fabric-snaps/* /opt/gopath/src/github.com/hyperledger/fabric/plugins/
 
 echo "Rewriting import paths..."
-find /opt/gopath/src/github.com/hyperledger/fabric/plugins -type f -name "*.go" -print0 | xargs -0 sed -i "s/github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g"
+find /opt/gopath/src/github.com/hyperledger/fabric/plugins -type f -name "*.go" -print0 | xargs -0 sed -i "s/github.com\/securekey\/fabric-snaps\//github.com\/hyperledger\/fabric\/plugins\//g"
 
 echo "Backing up exceptions (deps excluded from the flattening script)..."
 mkdir -p vendor_backup/temp
