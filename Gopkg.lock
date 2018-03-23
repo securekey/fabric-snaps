@@ -363,6 +363,7 @@
     "pkg/client/common/selection/staticselection",
     "pkg/client/common/verifier",
     "pkg/client/resmgmt",
+    "pkg/common/errors/multi",
     "pkg/common/errors/retry",
     "pkg/common/errors/status",
     "pkg/common/logging",
@@ -426,7 +427,6 @@
     "pkg/util/concurrent/futurevalue",
     "pkg/util/concurrent/lazycache",
     "pkg/util/concurrent/lazyref",
-    "pkg/util/errors/multi",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -440,7 +440,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "v1.0.0-alpha3"
+  revision = "46c6fbba1f919e754bcfd45ff56b35f8b6f40392"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -727,6 +727,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0e56335489b224db4b3883a2a34a03b9f6038feecffebc76348f55304a6d7da4"
+  inputs-digest = "c0298f5e9b486f7cc48dac3bc3e935da9a5629f2f1a38aa847a424f319348d20"
   solver-name = "gps-cdcl"
   solver-version = 1

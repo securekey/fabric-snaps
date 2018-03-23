@@ -24,7 +24,7 @@ type ProducerOpt func(opts *ProducerOpts)
 //WithFilteredBlockLedger ...
 func WithFilteredBlockLedger() ProducerOpt {
 	return func(opts *ProducerOpts) {
-		opts.ledger = servicemocks.NewMockLedger(servicemocks.FilteredBlockEventFactory)
+		opts.ledger = servicemocks.NewMockLedger(servicemocks.FilteredBlockEventFactory, "")
 	}
 }
 
@@ -47,7 +47,7 @@ func NewServiceWithMockProducer(opts []options.Opt, pOpts ...ProducerOpt) (*even
 
 	ledger := popts.ledger
 	if popts.ledger == nil {
-		ledger = servicemocks.NewMockLedger(servicemocks.BlockEventFactory)
+		ledger = servicemocks.NewMockLedger(servicemocks.BlockEventFactory, "")
 	}
 
 	eventProducer := servicemocks.NewMockProducer(ledger)

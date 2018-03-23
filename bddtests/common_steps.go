@@ -200,7 +200,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 			ChannelConfigPath: txPath,
 			SigningIdentities: []mspApi.SigningIdentity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
-		if err = resourceMgmt.SaveChannel(req); err != nil {
+		if _, err = resourceMgmt.SaveChannel(req); err != nil {
 			return errors.WithMessage(err, "SaveChannel failed")
 		}
 
@@ -222,7 +222,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		ChannelConfigPath: anchorTxPath,
 		SigningIdentities: []mspApi.SigningIdentity{d.BDDContext.OrgUserContext(orgID, ADMIN)}}
 
-	if err := resourceMgmt.SaveChannel(req); err != nil {
+	if _, err := resourceMgmt.SaveChannel(req); err != nil {
 		return errors.WithMessage(err, "SaveChannel failed")
 	}
 
@@ -574,7 +574,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 
 	logger.Infof("Instantiating chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s] to the following peers: [%s]\n", ccID, ccPath, channelID, args, ccPolicy, collectionNames, peersAsString(sdkPeers))
 
-	return resMgmtClient.InstantiateCC(
+	_, err = resMgmtClient.InstantiateCC(
 		channelID,
 		resmgmt.InstantiateCCRequest{
 			Name:       ccID,
@@ -584,6 +584,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 			Policy:     chaincodePolicy,
 			CollConfig: collConfig,
 		}, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(coreApi.Execute, 5*time.Minute))
+	return err
 }
 
 func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string) error {
@@ -657,7 +658,8 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 	instantiateRqst := resmgmt.InstantiateCCRequest{Name: ccID, Path: ccPath, Version: "v1", Args: GetByteArgs(argsArray), Policy: chaincodePolicy,
 		CollConfig: collConfig}
 
-	return resMgmtClient.InstantiateCC(channelID, instantiateRqst, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(coreApi.Execute, 5*time.Minute))
+	_, err = resMgmtClient.InstantiateCC(channelID, instantiateRqst, resmgmt.WithTargets(sdkPeers...), resmgmt.WithTimeout(coreApi.Execute, 5*time.Minute))
+	return err
 }
 
 func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCommon.SignaturePolicyEnvelope, error) {
