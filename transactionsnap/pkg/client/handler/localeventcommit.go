@@ -7,9 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -56,7 +58,8 @@ func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, 
 
 			requestContext.Response.TxValidationCode = pb.TxValidationCode(txStatusEvent.TxValidationCode)
 			if requestContext.Response.TxValidationCode != pb.TxValidationCode_VALID {
-				requestContext.Error = errors.Errorf("transaction [%s] did not commit successfully. Code: [%s]", txnID, txStatusEvent.TxValidationCode)
+				requestContext.Error = status.New(status.EventServerStatus, int32(txStatusEvent.TxValidationCode),
+					fmt.Sprintf("transaction [%s] did not commit successfully", txnID), nil)
 				return
 			}
 		case <-time.After(requestContext.Opts.Timeouts[core.Execute]):
