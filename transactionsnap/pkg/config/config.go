@@ -22,12 +22,12 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/util/configcache"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/viper"
 )
 
 const (
-	configFileName              = "config"
 	peerConfigFileName          = "core"
 	cmdRootPrefix               = "core"
 	defaultSelectionMaxAttempts = 1
@@ -37,6 +37,7 @@ const (
 
 var logger = logging.NewLogger("txnsnap")
 var defaultLogLevel = "info"
+var peerConfigCache = configcache.New(peerConfigFileName, cmdRootPrefix, "/etc/hyperledger/fabric")
 
 //Config implements Config interface
 type Config struct {
@@ -47,21 +48,10 @@ type Config struct {
 
 //NewConfig returns config struct
 func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Config, error) {
-	replacer := strings.NewReplacer(".", "_")
-	if peerConfigPath == "" {
-		peerConfigPath = "/etc/hyperledger/fabric"
-	}
-	//peer Config
-	peerConfig := viper.New()
-	peerConfig.AddConfigPath(peerConfigPath)
-	peerConfig.SetConfigName(peerConfigFileName)
-	peerConfig.SetEnvPrefix(cmdRootPrefix)
-	peerConfig.AutomaticEnv()
-	peerConfig.SetEnvKeyReplacer(replacer)
 
-	err := peerConfig.ReadInConfig()
+	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Fatal error reading peer config file")
+		return nil, err
 	}
 	//txSnapConfig
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"),
@@ -85,7 +75,7 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	}
 	txnSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	txnSnapConfig.AutomaticEnv()
-	txnSnapConfig.SetEnvKeyReplacer(replacer)
+	txnSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	c := &Config{peerConfig: peerConfig, txnSnapConfig: txnSnapConfig, txnSnapConfigBytes: dataConfig}
 	err = c.initializeLogging()

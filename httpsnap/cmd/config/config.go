@@ -17,6 +17,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
+	"github.com/securekey/fabric-snaps/util/configcache"
 	"github.com/securekey/fabric-snaps/util/errors"
 
 	"github.com/spf13/viper"
@@ -30,6 +31,7 @@ const (
 
 var logger = logging.NewLogger("httpsnap")
 var defaultLogLevel = "info"
+var peerConfigCache = configcache.New(peerConfigFileName, cmdRootPrefix, "/etc/hyperledger/fabric")
 
 // FilePathSeparator separator defined by os.Separator.
 const FilePathSeparator = string(filepath.Separator)
@@ -43,20 +45,9 @@ type config struct {
 
 // NewConfig return config struct
 func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, error) {
-	replacer := strings.NewReplacer(".", "_")
-	if peerConfigPath == "" {
-		peerConfigPath = "/etc/hyperledger/fabric"
-	}
-	//peer Config
-	peerConfig := viper.New()
-	peerConfig.AddConfigPath(peerConfigPath)
-	peerConfig.SetConfigName(peerConfigFileName)
-	peerConfig.SetEnvPrefix(cmdRootPrefix)
-	peerConfig.AutomaticEnv()
-	peerConfig.SetEnvKeyReplacer(replacer)
-	err := peerConfig.ReadInConfig()
+	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Fatal error reading peer config file")
+		return nil, err
 	}
 	//httpSnapConfig Config
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
@@ -79,7 +70,7 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	}
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
-	httpSnapConfig.SetEnvKeyReplacer(replacer)
+	httpSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
 	err = c.initializeLogging()
 	if err != nil {

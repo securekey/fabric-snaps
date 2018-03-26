@@ -1,0 +1,9 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+peer:
+    id: jdoe
+    networkId: dev
+    listenAddress: 0.0.0.0:7051

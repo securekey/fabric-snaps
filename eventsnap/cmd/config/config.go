@@ -16,8 +16,8 @@ import (
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
+	"github.com/securekey/fabric-snaps/util/configcache"
 	"github.com/securekey/fabric-snaps/util/errors"
-	"github.com/spf13/viper"
 )
 
 var logger = logging.NewLogger("eventsnap")
@@ -30,6 +30,8 @@ const (
 	defaultPeerConfigPath = "/etc/hyperledger/fabric"
 	defaultLogLevel       = "info"
 )
+
+var peerConfigCache = configcache.New(peerConfigName, envPrefix, defaultPeerConfigPath)
 
 // EventSnapConfig contains the configuration for the EventSnap
 type EventSnapConfig struct {
@@ -60,7 +62,7 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 		return nil, errors.New(errors.GeneralError, "channel ID is required")
 	}
 
-	peerConfig, err := newPeerViper(peerConfigPath)
+	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(errors.GeneralError, err, "error reading peer config")
 	}
@@ -112,24 +114,6 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	logger.Debugf("Eventsnap logging initialized. Log level: %s", logLevel)
 
 	return eventSnapConfig, nil
-}
-
-func newPeerViper(peerConfigPath string) (*viper.Viper, error) {
-	if peerConfigPath == "" {
-		peerConfigPath = defaultPeerConfigPath
-	}
-
-	peerViper := viper.New()
-	peerViper.AddConfigPath(peerConfigPath)
-	peerViper.SetConfigName(peerConfigName)
-	peerViper.SetEnvPrefix(envPrefix)
-	peerViper.AutomaticEnv()
-	peerViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := peerViper.ReadInConfig(); err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
-	}
-	return peerViper, nil
 }
 
 // substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
