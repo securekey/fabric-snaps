@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "088899a2_4d1a3d9d",
+        "filename": "membershipsnap/pkg/discovery/local/service/service.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-03-26T21:12:48Z",
+      "side": 1,
+      "message": "I don\u0027t think this is thread safe",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 47,
+        "endChar": 2
+      },
+      "revId": "0cef933ed4fdca7b8164021d60aab11c898ba0b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
