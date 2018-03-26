@@ -11,7 +11,9 @@ import (
 	"net"
 	"sync"
 
+	"github.com/golang/protobuf/proto"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -30,7 +32,25 @@ type MockEndorserServer struct {
 func (m *MockEndorserServer) ProcessProposal(context context.Context,
 	proposal *pb.SignedProposal) (*pb.ProposalResponse, error) {
 	m.RequestCount++
-	tp, err := m.GetMockPeer().ProcessTransactionProposal(fabApi.TransactionProposal{})
+
+	pr := &peer.Proposal{}
+	err := proto.Unmarshal(proposal.GetProposalBytes(), pr)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling proposal: %v", err)
+	}
+	cpp := &peer.ChaincodeProposalPayload{}
+	err = proto.Unmarshal(pr.Payload, cpp)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling proposal: %v", err)
+	}
+
+	cic := &peer.ChaincodeInvocationSpec{}
+	err = proto.Unmarshal(cpp.Input, cic)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling proposal: %v", err)
+	}
+
+	tp, err := m.GetMockPeer().ProcessTransactionProposal(fabApi.TransactionProposal{}, cic.ChaincodeSpec.Input.Args[0])
 	m.LastRequest = proposal
 
 	return tp.ProposalResponse, err

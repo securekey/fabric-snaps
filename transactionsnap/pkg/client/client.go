@@ -281,8 +281,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
@@ -317,8 +316,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
