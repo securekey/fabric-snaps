@@ -14,6 +14,8 @@ import (
 	"encoding/pem"
 	"sync"
 
+	"fmt"
+
 	"github.com/golang/protobuf/proto"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	rwsetutil "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
@@ -31,7 +33,7 @@ type MockPeer struct {
 	MockURL              string
 	MockRoles            []string
 	MockCert             *pem.Block
-	Payload              []byte
+	Payload              map[string][]byte
 	ResponseMessage      string
 	MockMSP              string
 	Status               int32
@@ -92,7 +94,7 @@ func (p *MockPeer) URL() string {
 }
 
 // ProcessTransactionProposal does not send anything anywhere but returns an empty mock ProposalResponse
-func (p *MockPeer) ProcessTransactionProposal(tp fabApi.TransactionProposal) (*fabApi.TransactionProposalResponse, error) {
+func (p *MockPeer) ProcessTransactionProposal(tp fabApi.TransactionProposal, funcName []byte) (*fabApi.TransactionProposalResponse, error) {
 	if p.RWLock != nil {
 		p.RWLock.Lock()
 		defer p.RWLock.Unlock()
@@ -123,11 +125,18 @@ func (p *MockPeer) ProcessTransactionProposal(tp fabApi.TransactionProposal) (*f
 		return nil, err
 	}
 
+	payload, ok := p.Payload[string(funcName)]
+	if !ok {
+		payload, ok = p.Payload[string("default")]
+		if !ok {
+			fmt.Printf("payload for func(%s) not found\n", funcName)
+		}
+	}
 	return &fabApi.TransactionProposalResponse{
 		Endorser: p.MockURL,
 		Status:   p.Status,
 		ProposalResponse: &pb.ProposalResponse{Response: &pb.Response{
-			Message: p.ResponseMessage, Status: p.Status, Payload: p.Payload}, Payload: proposalResponsePayload,
+			Message: p.ResponseMessage, Status: p.Status, Payload: payload}, Payload: proposalResponsePayload,
 			Endorsement: &pb.Endorsement{Endorser: p.Endorser, Signature: sigma}},
 	}, p.Error
 

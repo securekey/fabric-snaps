@@ -32,7 +32,6 @@ type Config interface {
 	GetCryptoProvider() (string, error)
 	GetEndorserSelectionMaxAttempts() int
 	GetEndorserSelectionInterval() time.Duration
-	GetHandlerTimeout() time.Duration
 	RetryOpts() retry.Opts
 }
 
