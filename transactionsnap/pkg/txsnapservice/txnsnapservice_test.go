@@ -12,20 +12,16 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	txnmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
@@ -34,6 +30,9 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -56,7 +55,6 @@ var fcClient api.Client
 
 const (
 	org1 = "Org1MSP"
-	org2 = "Org2MSP"
 )
 
 type sampleConfig struct {
@@ -68,16 +66,22 @@ type MockProviderFactory struct {
 }
 
 func (m *MockProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
-	peer, _ := peer.New(fcmocks.NewMockConfig(), peer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
-	mdp, _ := txnmocks.NewMockDiscoveryProvider(nil, []fabApi.Peer{peer})
-	return mdp, nil
+	return &impl{clientConfig: config}, nil
+}
+
+type impl struct {
+	clientConfig coreApi.Config
+}
+
+// CreateDiscoveryService return impl of DiscoveryService
+func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
+	memService := membership.NewServiceWithMocks([]byte(org1), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
+	return service.New(channelID, p.clientConfig, memService), nil
 }
 
 func TestEndorseTransaction(t *testing.T) {
 	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
 	txService := newMockTxService(nil)
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")})
 
 	response, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -99,32 +103,11 @@ func TestEndorseTransaction(t *testing.T) {
 
 }
 
-func TestEndorseTransactionWithPeerFilter(t *testing.T) {
-	peerFilterOpts := &api.PeerFilterOpts{
-		Type: api.MinBlockHeightPeerFilterType,
-		Args: []string{channelID},
-	}
-
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, peerFilterOpts)
-	txService := newMockTxService(nil)
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")})
-	_, err := txService.EndorseTransaction(&snapTxReq, nil)
-	if err == nil {
-		t.Fatalf("Error endorsing transaction %v", err)
-	}
-	if !strings.Contains(err.Error(), status.NoPeersFound.String()) {
-		t.Fatalf("Wrong error message")
-	}
-
-}
-
 func TestCommitTransaction(t *testing.T) {
 	// commit with kvwrite false
 	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil)
 	txService := newMockTxService(nil)
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: false})
+	mockEndorserServer.GetMockPeer().KVWrite = false
 
 	_, err := txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
@@ -132,8 +115,7 @@ func TestCommitTransaction(t *testing.T) {
 	}
 
 	// commit with kvwrite true
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
+	mockEndorserServer.GetMockPeer().KVWrite = true
 
 	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
@@ -194,7 +176,7 @@ func TestMain(m *testing.M) {
 	// TDOD
 	bccspFactory.InitFactories(opts)
 
-	os.Setenv("CORE_PEER_ADDRESS", testhost+":"+strconv.Itoa(testport))
+	os.Setenv("CORE_PEER_ADDRESS", "peer1:5100")
 	defer os.Unsetenv("CORE_PEER_ADDRESS")
 
 	configData, err := ioutil.ReadFile("../../cmd/sampleconfig/config.yaml")
@@ -224,8 +206,11 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
 	mockEndorserServer = mocks.StartEndorserServer(testhost + ":" + strconv.Itoa(testport))
+	payloadMap := make(map[string][]byte, 2)
+	payloadMap["GetConfigBlock"] = getConfigBlockPayload()
+	payloadMap["default"] = []byte("value")
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
-		Payload: getConfigBlockPayload()})
+		Payload: payloadMap})
 
 	fcClient, err = client.GetInstance(channelID, &sampleConfig{txSnapConfig}, &MockProviderFactory{})
 	if err != nil {
@@ -244,9 +229,6 @@ func TestMain(m *testing.M) {
 
 	}
 
-	txService := newMockTxService(nil)
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
-	txService.EndorseTransaction(&snapTxReq, nil)
 	os.Exit(m.Run())
 
 }
@@ -281,12 +263,11 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 	endorserArgs[2] = []byte("a")
 	endorserArgs[3] = []byte("b")
 	endorserArgs[4] = []byte("1")
-	ccIDsForEndorsement := []string{chaincodeID, "additionalccid"}
 	snapTxReq := api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
 		TransientMap:        transientMap,
 		EndorserArgs:        endorserArgs,
-		CCIDsForEndorsement: ccIDsForEndorsement,
+		CCIDsForEndorsement: nil,
 		RegisterTxEvent:     registerTxEvent,
 		PeerFilter:          peerFilter,
 	}
@@ -312,5 +293,4 @@ func uplaodConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	}
 	err := configManager.Save(config)
 	return err
-
 }

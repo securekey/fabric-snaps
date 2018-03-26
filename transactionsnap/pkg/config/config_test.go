@@ -194,7 +194,7 @@ func TestGetLocalPeer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetLocalPeer() return error %v", err)
 	}
-	if localPeer.Host != "grpc://peer" {
+	if localPeer.Host != "peer" {
 		t.Fatalf("Expected localPeer.Host value %s but got %s",
 			"peer", localPeer.Host)
 	}
@@ -202,7 +202,7 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatalf("Expected localPeer.Port value %d but got %d",
 			5050, localPeer.Port)
 	}
-	if localPeer.EventHost != "grpc://peer" {
+	if localPeer.EventHost != "peer" {
 		t.Fatalf("Expected localPeer.EventHost value %s but got %s",
 			"event", localPeer.Host)
 	}
@@ -221,13 +221,6 @@ func TestGetConfigPath(t *testing.T) {
 	if c.GetConfigPath("/") != "/" {
 		t.Fatalf(`Expected GetConfigPath("/") value %s but got %s`,
 			"/", "/")
-	}
-}
-
-func TestGetGRPCProtocol(t *testing.T) {
-	value := c.GetGRPCProtocol()
-	if (value == "grpcs://") != txnSnapConfig.GetBool("txnsnap.grpc.tls.enabled") {
-		t.Fatalf("Expected GetGRPCProtocol() return value 'grpc://' but got %v", value)
 	}
 }
 

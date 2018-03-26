@@ -29,9 +29,8 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/localprovider"
-
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/localprovider"
 	utils "github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -79,20 +78,17 @@ type CustomConfig struct {
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
 func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
-	networkPeer := coreApi.NetworkPeer{PeerConfig: coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}, MSPID: string(c.localPeer.MSPid)}
+	peerConfig, err := c.PeerConfigByURL(fmt.Sprintf("%s:%d", c.localPeer.Host,
+		c.localPeer.Port))
+	if err != nil {
+		return nil, fmt.Errorf("error get peer config by url: %v", err)
+	}
+	networkPeer := coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(c.localPeer.MSPid)}
+	networkPeer.TLSCACerts = endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}
 	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
 	logger.Debugf("ChannelPeers return %v", peer)
 	return []coreApi.ChannelPeer{peer}, nil
-}
-
-// PeerConfigByURL return local peer
-func (c *CustomConfig) PeerConfigByURL(url string) (*coreApi.PeerConfig, error) {
-	peerconfig := &coreApi.PeerConfig{URL: fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port), TLSCACerts: endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}}
-	logger.Debugf("PeerConfigByURL return %v", peerconfig)
-	return peerconfig, nil
 }
 
 var cachedClient map[string]*clientImpl
@@ -281,8 +277,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
@@ -317,8 +312,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	)
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...),
-		channel.WithTimeout(coreApi.Execute, c.txnSnapConfig.GetHandlerTimeout()), channel.WithTargetFilter(endorseRequest.PeerFilter),
+		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()))
 
 	if err != nil {
