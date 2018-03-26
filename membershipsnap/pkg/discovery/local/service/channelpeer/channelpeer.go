@@ -28,10 +28,13 @@ type ChannelPeer struct {
 }
 
 // New creates a new ChannelPeer
-func New(peer fabApi.Peer, channelID string, blockHeight uint64) (*ChannelPeer, error) {
-	memService, err := membership.Get()
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting membership service")
+func New(peer fabApi.Peer, channelID string, blockHeight uint64, memService memberapi.Service) (*ChannelPeer, error) {
+	if memService == nil {
+		var err error
+		memService, err = membership.Get()
+		if err != nil {
+			return nil, errors.Wrap(err, "error getting membership service")
+		}
 	}
 	return &ChannelPeer{
 		Peer:        peer,
