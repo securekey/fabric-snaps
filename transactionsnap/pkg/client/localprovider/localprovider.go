@@ -50,10 +50,14 @@ type localDiscoveryService struct {
 
 // GetPeers return []sdkapi.Peer
 func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
-	peer, err := peer.New(s.clientConfig, peer.WithURL(fmt.Sprintf("%s:%d", s.localPeer.Host,
-		s.localPeer.Port)), peer.WithServerName(""), peer.WithMSPID(string(s.localPeer.MSPid)))
+	peerConfig, err := s.clientConfig.PeerConfigByURL(fmt.Sprintf("%s:%d", s.localPeer.Host,
+		s.localPeer.Port))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error get peer config by url: %v", err)
+	}
+	peer, err := peer.New(s.clientConfig, peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(s.localPeer.MSPid)}))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new peer: %v", err)
 	}
 	logger.Debugf("return local peer(%v) from GetPeers DiscoveryService", peer)
 	return []fabApi.Peer{peer}, nil

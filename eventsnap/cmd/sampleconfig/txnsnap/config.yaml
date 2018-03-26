@@ -10,19 +10,15 @@ txnsnap:
 
   # Endorser selection attempts
   selection:
-    maxattempts: 5
+    maxattempts: 1
     interval: 2s
 
   # Transaction retry options
   retry:
-    attempts: 5
+    attempts: 1
     initialbackoff: 500ms
     maxbackoff: 30s
     backofffactor: 2
-
-  # Transaction timeout
-  handler:
-    timeout: 30s
 
 # Configurations for the fabric client
 client:
@@ -51,13 +47,13 @@ client:
       response: 10s
   global:
     timeout:
-      query: 45s
-      execute: 60s
+      query: 5s
+      execute: 5s
     cache:
-      connectionIdle: 30s
-      eventServiceIdle: 2m
-      channelConfig: 60s
-      channelMembership: 30s
+      connectionIdle: 10s
+      eventServiceIdle: 10s
+      channelConfig: 10s
+      channelMembership: 10s
 
   cryptoconfig:
     path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
@@ -79,38 +75,6 @@ client:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false
     systemCertPool: false
 
-#
-# List of peers to send various requests to, including endorsement, query
-# and event listener registration.
-#
-peers:
-  peer0.org1.example.com:
-    # this URL is used to send endorsement and query requests
-    url: grpc://peer0.org1.example.com:7051
-
-    # this URL is used to connect the EventHub and registering event listeners
-    eventUrl: grpc://peer0.org1.example.com:7053
-
-    grpcOptions:
-      ssl-target-name-override: peer0.org1.example.com
-      grpc.http2.keepalive_time: 15
-
-    tlsCACerts:
-      pem: |
-        -----BEGIN CERTIFICATE-----
-        MIICNDCCAdqgAwIBAgIRAIBOtq8vZiC0+uLSi2MIS4swCgYIKoZIzj0EAwIwZjEL
-        MAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBG
-        cmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRQwEgYDVQQDEwtleGFtcGxl
-        LmNvbTAeFw0xNzA0MjIxMjAyNTZaFw0yNzA0MjAxMjAyNTZaMGYxCzAJBgNVBAYT
-        AlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2Nv
-        MRQwEgYDVQQKEwtleGFtcGxlLmNvbTEUMBIGA1UEAxMLZXhhbXBsZS5jb20wWTAT
-        BgcqhkjOPQIBBggqhkjOPQMBBwNCAARD2rvgyAmhn8hpu82kAjX3QUg2iqCUPEe1
-        Q5CzD5MVv/dK5wrRgkcoMhJLe4HPxYbjV3rodm5Pwi5m3zMGkqNQo2kwZzAOBgNV
-        HQ8BAf8EBAMCAaYwGQYDVR0lBBIwEAYEVR0lAAYIKwYBBQUHAwEwDwYDVR0TAQH/
-        BAUwAwEB/zApBgNVHQ4EIgQg6q3lkIfG2X/PNQ6U83rZ8saSu2bxghSM5YlA3nCt
-        6c4wCgYIKoZIzj0EAwIDSAAwRQIhAL5Lgy7jZ2W74L6i0B23a3JD0W8TSYlTcqXb
-        RMSXlLIoAiB2glBl0wM/ITn5+tnHOnq2wrIGuYIiNbLK5oq2zf+gtA==
-        -----END CERTIFICATE-----
 
 orderers:
   orderer.example.com:
@@ -174,36 +138,24 @@ channels:
         # Default: true
         eventSource: true
 
-  # name of the channel
-  testChannel2:
-    # Required. list of orderers designated by the application to use for transactions on this
-    # channel. This list can be a result of access control ("org1" can only access "ordererA"), or
-    # operational decisions to share loads from applications among the orderers.  The values must
-    # be "names" of orgs defined under "organizations/peers"
-    orderers:
-      - orderer.example.com
 
-    # Required. list of peers from participating orgs
-    peers:
-      peer0.org1.example.com:
-        # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
-        # have the chaincode installed. The app can also use this property to decide which peers
-        # to send the chaincode install request. Default: true
-        endorsingPeer: true
 
-        # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
-        # installed. The app can also use this property to decide which peers to send the
-        # chaincode install request. Default: true
-        chaincodeQuery: true
-
-        # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
-        # queryBlock(), queryTransaction(), etc. Default: true
-        ledgerQuery: true
-
-        # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
-        # produce events but the app typically only needs to connect to one to listen to events.
-        # Default: true
-        eventSource: true
+#
+# List of peers to send various requests to, including endorsement, query
+# and event listener registration.
+#
+peers:
+  default.peer:
+    grpcOptions:
+      # These parameters should be set in coordination with the keepalive policy on the server,
+      # as incompatible settings can result in closing of connection.
+      # When duration of the 'keep-alive-time' is set to 0 or less the keep alive client parameters are disabled
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      # allow-insecure will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
+      allow-insecure: false
 
 #
 # list of participating organizations in this network
@@ -232,3 +184,11 @@ organizations:
             zj0EAwIDRwAwRAIgbEqKoKrFuYQG0ndiX7dT7GKGlF17Skf8DYil9cqbp00CID5T
             URQPp0/vJ3tldK0z9xjFvsSecj8aqnDvZvGz07/v
             -----END CERTIFICATE-----
+
+entityMatchers:
+  peer:
+    - pattern: (\w+)
+      urlSubstitutionExp: grpc://127.0.0.1:7040
+      eventUrlSubstitutionExp: grpc://127.0.0.1:7051
+      sslTargetOverrideUrlSubstitutionExp: peer0.org1.example.com
+      mappedHost: default.peer

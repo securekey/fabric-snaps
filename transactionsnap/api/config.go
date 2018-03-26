@@ -25,14 +25,12 @@ type Config interface {
 	GetTLSCert() *x509.Certificate
 	GetTLSCertPem() []byte
 	GetTLSKeyPath() string
-	GetGRPCProtocol() string
 	GetConfigPath(path string) string
 	GetPeerConfig() *viper.Viper
 	GetConfigBytes() []byte
 	GetCryptoProvider() (string, error)
 	GetEndorserSelectionMaxAttempts() int
 	GetEndorserSelectionInterval() time.Duration
-	GetHandlerTimeout() time.Duration
 	RetryOpts() retry.Opts
 }
 

@@ -21,13 +21,11 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	txnmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
@@ -41,6 +39,9 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -74,9 +75,17 @@ type MockProviderFactory struct {
 }
 
 func (m *MockProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
-	peer, _ := peer.New(fcmocks.NewMockConfig(), peer.WithURL("grpc://"+testhost+":"+strconv.Itoa(testport)))
-	mdp, _ := txnmocks.NewMockDiscoveryProvider(nil, []fabApi.Peer{peer})
-	return mdp, nil
+	return &impl{clientConfig: config}, nil
+}
+
+type impl struct {
+	clientConfig coreApi.Config
+}
+
+// CreateDiscoveryService return impl of DiscoveryService
+func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
+	memService := membership.NewServiceWithMocks([]byte("Org1MSP"), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
+	return service.New(channelID, p.clientConfig, memService), nil
 }
 
 func TestTransactionSnapInit(t *testing.T) {
@@ -215,8 +224,6 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 
 func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) {
 	snap := newMockTxnSnap(nil)
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value")})
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -245,10 +252,16 @@ func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) 
 
 }
 
+func resetMockPeer() {
+	mockEndorserServer.GetMockPeer().Status = 200
+	mockEndorserServer.GetMockPeer().Error = nil
+}
+
 func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 	snap := newMockTxnSnap(nil)
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 500, Error: fmt.Errorf("proposalError")})
+	mockEndorserServer.GetMockPeer().Status = 500
+	mockEndorserServer.GetMockPeer().Error = fmt.Errorf("proposalError")
+	defer resetMockPeer()
 	stub := shim.NewMockStub("transactionsnap", snap)
 	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
 	//invoke transaction snap
@@ -264,8 +277,7 @@ func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 }
 
 func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
+	mockEndorserServer.GetMockPeer().KVWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = false
 
 	snap := newMockTxnSnap(nil)
@@ -298,8 +310,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 }
 
 func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *testing.T) {
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil,
-		MockMSP: "Org1MSP", Status: 200, Payload: []byte("value"), KVWrite: true})
+	mockEndorserServer.GetMockPeer().KVWrite = true
 	mockBroadcastServer.BroadcastInternalServerError = true
 
 	snap := newMockTxnSnap(nil)
@@ -538,7 +549,7 @@ func TestMain(m *testing.M) {
 	// TDOD
 	bccspFactory.InitFactories(opts)
 
-	os.Setenv("CORE_PEER_ADDRESS", testhost+":"+strconv.Itoa(testport))
+	os.Setenv("CORE_PEER_ADDRESS", "peer1:5100")
 	defer os.Unsetenv("CORE_PEER_ADDRESS")
 
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
@@ -574,8 +585,11 @@ func TestMain(m *testing.M) {
 	}
 
 	mockEndorserServer = mocks.StartEndorserServer(testhost + ":" + strconv.Itoa(testport))
+	payloadMap := make(map[string][]byte, 2)
+	payloadMap["GetConfigBlock"] = getConfigBlockPayload()
+	payloadMap["default"] = []byte("value")
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
-		Payload: getConfigBlockPayload()})
+		Payload: payloadMap})
 
 	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig}, &MockProviderFactory{})
 	if err != nil {
@@ -593,12 +607,6 @@ func TestMain(m *testing.M) {
 		eventProducer = producer
 
 	}
-
-	snap := newMockTxnSnap(nil)
-	stub1 := shim.NewMockStub("transactionsnap", snap)
-	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
-	//invoke transaction snap
-	stub1.MockInvoke("TxID", args)
 
 	os.Exit(m.Run())
 }

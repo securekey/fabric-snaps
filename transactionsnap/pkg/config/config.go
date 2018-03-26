@@ -32,7 +32,6 @@ const (
 	cmdRootPrefix               = "core"
 	defaultSelectionMaxAttempts = 1
 	defaultSelectionInterval    = time.Second
-	defaultHandlerTimeout       = 30 * time.Second
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -105,14 +104,14 @@ func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
 		return nil, errors.New(errors.GeneralError, "Peer event address not found in config")
 	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
-	peer.Host = c.GetGRPCProtocol() + splitPeerAddress[0]
+	peer.Host = splitPeerAddress[0]
 	peer.Port, err = strconv.Atoi(splitPeerAddress[1])
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
 	}
 	splitEventAddress := strings.Split(eventAddress, ":")
 	// Event host should be set to the peer host as that is the advertised address
-	peer.EventHost = c.GetGRPCProtocol() + splitPeerAddress[0]
+	peer.EventHost = splitPeerAddress[0]
 	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
@@ -208,14 +207,6 @@ func (c *Config) GetTLSKeyPath() string {
 	return c.GetConfigPath(c.peerConfig.GetString("peer.tls.key.file"))
 }
 
-// GetGRPCProtocol to get grpc protocol
-func (c *Config) GetGRPCProtocol() string {
-	if c.peerConfig.GetBool("peer.tls.enabled") {
-		return "grpcs://"
-	}
-	return "grpc://"
-}
-
 // GetConfigPath returns the absolute value of the given path that is
 // relative to the config file
 // For example, if the config file is at /etc/hyperledger/config.yaml,
@@ -265,15 +256,6 @@ func (c *Config) GetEndorserSelectionInterval() time.Duration {
 	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
 	if interval == 0 {
 		return defaultSelectionInterval
-	}
-	return interval
-}
-
-// GetHandlerTimeout is the amount of time to wait for sdk handler
-func (c *Config) GetHandlerTimeout() time.Duration {
-	interval := c.txnSnapConfig.GetDuration("txnsnap.handler.timeout")
-	if interval == 0 {
-		return defaultHandlerTimeout
 	}
 	return interval
 }

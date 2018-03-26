@@ -12,9 +12,20 @@ import (
 
 	"os"
 
+	"fmt"
+
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	discoveryService "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
+	txnConfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 )
 
@@ -24,6 +35,28 @@ const (
 	mspID          = "Org1MSP"
 	peerID         = "peer1"
 )
+
+type sampleConfig struct {
+	api.Config
+}
+
+type MockProviderFactory struct {
+	defsvc.ProviderFactory
+}
+
+func (m *MockProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+	return &impl{clientConfig: config}, nil
+}
+
+type impl struct {
+	clientConfig coreApi.Config
+}
+
+// CreateDiscoveryService return impl of DiscoveryService
+func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
+	memService := membership.NewServiceWithMocks([]byte("Org1MSP"), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
+	return discoveryService.New(channelID, p.clientConfig, memService), nil
+}
 
 func TestInvalidConfig(t *testing.T) {
 	_, err := New("", "./invalid")
@@ -47,9 +80,18 @@ func TestConfig(t *testing.T) {
 	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, EventSnapAppName, "../sampleconfig/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
-	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, TxnSnapAppName, "../sampleconfig/txnsnap-config.yaml"); err != nil {
+	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, TxnSnapAppName, "../sampleconfig/txnsnap/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
+	txSnapConfig, err := txnConfig.NewConfig("../sampleconfig/txnsnap/", channelID)
+	if err != nil {
+		panic(fmt.Sprintf("Error initializing config: %s", err))
+	}
+	_, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig}, &MockProviderFactory{})
+	if err != nil {
+		panic(fmt.Sprintf("Client GetInstance return error %v", err))
+	}
+
 	config, err = New(channelID, "../sampleconfig")
 	if err != nil {
 		t.Fatalf("Error creating new config: %s", err)

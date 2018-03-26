@@ -43,12 +43,3 @@ func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, er
 
 	return signatureHeader.Creator, nil
 }
-
-//GetByteArgs utility which converts string args array to byte args array
-func GetByteArgs(argsArray []string) [][]byte {
-	txArgs := make([][]byte, len(argsArray))
-	for i, val := range argsArray {
-		txArgs[i] = []byte(val)
-	}
-	return txArgs
-}

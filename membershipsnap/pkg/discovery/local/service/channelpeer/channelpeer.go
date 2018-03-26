@@ -12,9 +12,7 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/pkg/errors"
 	memberapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 )
 
 var logger = logging.NewLogger("membershipsnap/channelpeer")
@@ -28,10 +26,9 @@ type ChannelPeer struct {
 }
 
 // New creates a new ChannelPeer
-func New(peer fabApi.Peer, channelID string, blockHeight uint64) (*ChannelPeer, error) {
-	memService, err := membership.Get()
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting membership service")
+func New(peer fabApi.Peer, channelID string, blockHeight uint64, memService memberapi.Service) (*ChannelPeer, error) {
+	if memService == nil {
+		panic("membership service is nil")
 	}
 	return &ChannelPeer{
 		Peer:        peer,
