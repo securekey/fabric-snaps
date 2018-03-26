@@ -12,9 +12,6 @@ txnsnap:
     maxattempts: 5
     interval: 2s
 
-  handler:
-    timeout: 30s
-
 # Configurations for the fabric client
 client:
 

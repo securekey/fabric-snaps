@@ -8,11 +8,9 @@ package handler
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
@@ -62,7 +60,7 @@ func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, 
 					fmt.Sprintf("transaction [%s] did not commit successfully", txnID), nil)
 				return
 			}
-		case <-time.After(requestContext.Opts.Timeouts[core.Execute]):
+		case <-requestContext.Ctx.Done():
 			requestContext.Error = errors.New("Execute didn't receive block event")
 			return
 		}

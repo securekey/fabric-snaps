@@ -32,7 +32,6 @@ const (
 	cmdRootPrefix               = "core"
 	defaultSelectionMaxAttempts = 1
 	defaultSelectionInterval    = time.Second
-	defaultHandlerTimeout       = 30 * time.Second
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -265,15 +264,6 @@ func (c *Config) GetEndorserSelectionInterval() time.Duration {
 	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
 	if interval == 0 {
 		return defaultSelectionInterval
-	}
-	return interval
-}
-
-// GetHandlerTimeout is the amount of time to wait for sdk handler
-func (c *Config) GetHandlerTimeout() time.Duration {
-	interval := c.txnSnapConfig.GetDuration("txnsnap.handler.timeout")
-	if interval == 0 {
-		return defaultHandlerTimeout
 	}
 	return interval
 }

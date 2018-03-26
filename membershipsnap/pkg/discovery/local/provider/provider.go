@@ -27,5 +27,5 @@ func New(clientConfig coreApi.Config) *Impl {
 
 // CreateDiscoveryService return impl of DiscoveryService
 func (p *Impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
-	return service.New(channelID, p.clientConfig), nil
+	return service.New(channelID, p.clientConfig, nil), nil
 }
