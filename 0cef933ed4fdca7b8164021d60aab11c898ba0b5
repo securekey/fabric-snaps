@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "01745916_abe381f7",
+        "filename": "membershipsnap/pkg/discovery/local/provider/provider.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-03-27T13:41:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9784b375_a28bc3fe",
+      "range": {
+        "startLine": 30,
+        "startChar": 47,
+        "endLine": 30,
+        "endChar": 50
+      },
+      "revId": "0cef933ed4fdca7b8164021d60aab11c898ba0b5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "088899a2_4d1a3d9d",
         "filename": "membershipsnap/pkg/discovery/local/service/service.go",
         "patchSetId": 2
