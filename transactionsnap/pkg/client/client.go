@@ -156,7 +156,7 @@ func GetInstanceWithLocalDiscovery(channelID string, txnSnapConfig api.Config) (
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
-	err = c.initialize(channelID, &localprovider.Factory{LocalPeer: localPeer})
+	err = c.initialize(channelID, &localprovider.Factory{LocalPeer: localPeer, LocalPeerTLSCertPem: txnSnapConfig.GetTLSCertPem()})
 	if err != nil {
 		return nil, err
 	}
