@@ -18,6 +18,7 @@ import (
 	"time"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric/bccsp"
@@ -535,15 +536,19 @@ func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
 }
 
 func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
-	peerConfig, err := txService.Config.GetLocalPeer()
+	localPeer, err := txService.Config.GetLocalPeer()
 	if err != nil {
 		logger.Debugf("Cannot get local peer: %v", err)
 	}
-	s := []string{peerConfig.Host, strconv.Itoa(peerConfig.Port)}
-	peerURL := strings.Join(s, ":")
 
-	targetPeer, err := peer.New(txService.ClientConfig(), peer.WithURL(peerURL),
-		peer.WithTLSCert(txService.Config.GetTLSRootCert()), peer.WithServerName(""))
+	peerConfig, err := txService.ClientConfig().PeerConfigByURL(fmt.Sprintf("%s:%d", localPeer.Host,
+		localPeer.Port))
+	if err != nil {
+		logger.Debugf("error get peer config by url: %v", err)
+	}
+
+	targetPeer, err := peer.New(txService.ClientConfig(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(localPeer.MSPid)}),
+		peer.WithTLSCert(txService.Config.GetTLSRootCert()))
 	if err != nil {
 		logger.Debugf("Error creating target peer: %v", err)
 	}
