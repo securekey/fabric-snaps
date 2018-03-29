@@ -356,7 +356,6 @@
     "pkg/client/common/discovery",
     "pkg/client/common/discovery/greylist",
     "pkg/client/common/discovery/staticdiscovery",
-    "pkg/client/common/mocks",
     "pkg/client/common/selection/dynamicselection",
     "pkg/client/common/selection/dynamicselection/pgresolver",
     "pkg/client/common/selection/options",
@@ -727,6 +726,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "22dbb6dd64b01efce8293a13968b45a83cc6ce592577891fef00405bf3074357"
+  inputs-digest = "4d19440b206cca717bb822e59ea2f497bd9fdcde73ed4894e8074e06de92f986"
   solver-name = "gps-cdcl"
   solver-version = 1
