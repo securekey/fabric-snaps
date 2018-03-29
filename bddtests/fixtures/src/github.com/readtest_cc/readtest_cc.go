@@ -93,6 +93,12 @@ func (t *ReadTest) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Infof("Response from %s for key1 : %s ", TransactionSnap, string(resp1.Payload))
 	logger.Infof("Response from %s for key2 : %s ", TransactionSnap, string(resp2.Payload))
 
+	logger.Info("Querying k5")
+	resp3 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte("k5")}, "")
+	if resp3.GetStatus() != 200 {
+		return shim.Error("Query on k5 failed: " + resp2.GetMessage())
+	}
+
 	v3 := strings.Join([]string{string(resp1.Payload), string(resp2.Payload)}, "")
 	err := stub.PutState(key3, []byte(v3))
 	if err != nil {
