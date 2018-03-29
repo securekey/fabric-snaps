@@ -224,6 +224,11 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
 		return nil, err
 	}
 
+	if vv == nil {
+		logger.Debugf("Query returned nil for namespace %s and key %s", ccNamespace, key)
+		return nil, nil
+	}
+
 	logger.Debugf("Query returned %+v for namespace %s and key %s", vv.Value, ccNamespace, key)
 
 	return vv.Value, nil

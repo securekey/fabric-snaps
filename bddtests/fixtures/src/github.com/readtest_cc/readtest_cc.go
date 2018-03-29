@@ -82,12 +82,16 @@ func (t *ReadTest) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// The unsafeGetState on the transaction snap can be invoked with or without a channel.
 	resp1 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key1)}, channelID)
 	resp2 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key2)}, "")
+	resp3 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte("invalidKey")}, "")
 
 	if resp1.GetStatus() != 200 {
 		return shim.Error("Query on key1 failed: " + resp1.GetMessage())
 	}
 	if resp2.GetStatus() != 200 {
 		return shim.Error("Query on key2 failed: " + resp2.GetMessage())
+	}
+	if resp3.GetStatus() != 200 {
+		return shim.Error("Query on invalid key failed: " + resp2.GetMessage())
 	}
 
 	logger.Infof("Response from %s for key1 : %s ", TransactionSnap, string(resp1.Payload))
