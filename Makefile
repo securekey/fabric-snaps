@@ -117,6 +117,7 @@ populate-vendor:
 ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
 		@echo "Populating vendor ..."
 		@dep ensure -vendor-only
+		@scripts/prune_licenses.sh
 endif
 
 
