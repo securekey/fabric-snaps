@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
@@ -52,7 +53,10 @@ func randomString(strlen int) string {
 // or an error
 func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
 	foundChannel := false
-	response, err := client.QueryChannels(resmgmt.WithTargets(peer))
+	response, err := client.QueryChannels(
+		resmgmt.WithTargets(peer),
+		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+	)
 	if err != nil {
 		return false, fmt.Errorf("Error querying channel for primary peer: %s", err)
 	}
@@ -94,7 +98,10 @@ func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32,
 
 // IsChaincodeInstalled Helper function to check if chaincode has been deployed
 func IsChaincodeInstalled(client *resmgmt.Client, peer fabApi.Peer, name string) (bool, error) {
-	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(resmgmt.WithTargets(peer))
+	chaincodeQueryResponse, err := client.QueryInstalledChaincodes(
+		resmgmt.WithTargets(peer),
+		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+	)
 	if err != nil {
 		return false, err
 	}

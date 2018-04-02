@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package factories
 
 import (
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/fabpvdr"
 )
@@ -17,6 +18,6 @@ type CustomInfraProvider struct {
 }
 
 // CreateEventService will return nil because the txnsnap will use local event service
-func (f *CustomInfraProvider) CreateEventService(ctx fab.ClientContext, channelID string) (fab.EventService, error) {
+func (f *CustomInfraProvider) CreateEventService(ctx fab.ClientContext, channelID string, opts ...options.Opt) (fab.EventService, error) {
 	return nil, nil
 }

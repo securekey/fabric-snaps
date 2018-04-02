@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
@@ -46,19 +47,19 @@ func (c *testConfig) MSPID(org string) (string, error) {
 }
 
 // NetworkConfig creates a test network config with some orgs for testing
-func (c *testConfig) NetworkConfig() (*coreApi.NetworkConfig, error) {
+func (c *testConfig) NetworkConfig() (*fabApi.NetworkConfig, error) {
 	return tNetworkConfig, nil
 }
 
-func initNetworkConfigWithOrgEmbeddedUsers() *coreApi.NetworkConfig {
-	org1KeyPair := map[string]coreApi.TLSKeyPair{
+func initNetworkConfigWithOrgEmbeddedUsers() *fabApi.NetworkConfig {
+	org1KeyPair := map[string]endpoint.TLSKeyPair{
 		txnSnapUser: {
 			Key:  endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/key", Pem: "some_sampleOrg_Txn-Snap-User_key_content"},
 			Cert: endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/cert", Pem: "some_sampleOrg_Txn-Snap-User_cert_content"},
 		},
 	}
 
-	orgs := map[string]coreApi.OrganizationConfig{
+	orgs := map[string]fabApi.OrganizationConfig{
 		strings.ToLower(orgName): { // simulate viper key name structure using lowercase
 			Users: org1KeyPair, // set Users with embedded certs
 			MSPID: mspID,
@@ -67,8 +68,8 @@ func initNetworkConfigWithOrgEmbeddedUsers() *coreApi.NetworkConfig {
 	return initNetworkConfig(orgs)
 }
 
-func initNetworkConfigWithMSPConfigPath() *coreApi.NetworkConfig {
-	orgs := map[string]coreApi.OrganizationConfig{
+func initNetworkConfigWithMSPConfigPath() *fabApi.NetworkConfig {
+	orgs := map[string]fabApi.OrganizationConfig{
 		strings.ToLower(orgName): { // simulate viper key name structure using lowercase
 			CryptoPath: "../test/org1", // set CryptoPath
 			MSPID:      mspID,
@@ -77,8 +78,8 @@ func initNetworkConfigWithMSPConfigPath() *coreApi.NetworkConfig {
 	return initNetworkConfig(orgs)
 }
 
-func initNetworkConfig(orgs map[string]coreApi.OrganizationConfig) *coreApi.NetworkConfig {
-	network := &coreApi.NetworkConfig{Organizations: orgs}
+func initNetworkConfig(orgs map[string]fabApi.OrganizationConfig) *fabApi.NetworkConfig {
+	network := &fabApi.NetworkConfig{Organizations: orgs}
 
 	return network
 }
@@ -131,7 +132,7 @@ func TestCustomIdentityMgr(t *testing.T) {
 
 }
 
-func getIdentityManager(t *testing.T, mspConfigPath string, orgName string, config coreApi.Config, cryptoProvider coreApi.CryptoSuite) mspApi.IdentityManager {
+func getIdentityManager(t *testing.T, mspConfigPath string, orgName string, config fabApi.EndpointConfig, cryptoProvider coreApi.CryptoSuite) mspApi.IdentityManager {
 	customMspPkg := &CustomMspPkg{CryptoPath: mspConfigPath}
 	mspProvider, err := customMspPkg.CreateIdentityManagerProvider(config, cryptoProvider, nil)
 	if err != nil {

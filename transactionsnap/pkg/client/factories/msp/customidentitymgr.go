@@ -16,7 +16,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
@@ -29,10 +31,10 @@ var logger = logging.NewLogger("txnsnap")
 type CustomIdentityManager struct {
 	*msp.IdentityManager
 	orgName        string
-	embeddedUsers  map[string]coreApi.TLSKeyPair
+	embeddedUsers  map[string]endpoint.TLSKeyPair
 	keyDir         string
 	certDir        string
-	config         coreApi.Config
+	config         fabApi.EndpointConfig
 	cryptoProvider coreApi.CryptoSuite
 }
 
@@ -45,7 +47,7 @@ type User struct {
 }
 
 // NewCustomIdentityManager Constructor for a custom identity manager.
-func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite, config coreApi.Config, mspConfigPath string) (mspApi.IdentityManager, error) {
+func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite, config fabApi.EndpointConfig, mspConfigPath string) (mspApi.IdentityManager, error) {
 	if orgName == "" {
 		return nil, errors.New(errors.GeneralError, "orgName is required")
 	}

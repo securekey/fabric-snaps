@@ -13,7 +13,6 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/gogo/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
@@ -41,7 +40,7 @@ func (u *UnsafeQuerySteps) InvokeCCVerifyResponse(ccID, userArgs, orgIDs, channe
 	}
 	target := targets[0]
 
-	targetPeer, err := u.BDDContext.OrgUserContext(targets[0].OrgID, ADMIN).InfraProvider().CreatePeerFromConfig(&coreApi.NetworkPeer{PeerConfig: target.Config})
+	targetPeer, err := u.BDDContext.OrgUserContext(targets[0].OrgID, ADMIN).InfraProvider().CreatePeerFromConfig(&fabApi.NetworkPeer{PeerConfig: target.Config})
 	if err != nil {
 		return errors.WithMessage(err, "NewPeer failed")
 	}

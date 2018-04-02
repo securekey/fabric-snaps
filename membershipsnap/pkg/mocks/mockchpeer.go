@@ -14,7 +14,7 @@ import (
 	"github.com/securekey/fabric-snaps/membershipsnap/api"
 )
 
-var config = mocks.NewMockConfig()
+var config = mocks.NewMockEndpointConfig()
 
 // MockChannelPeer implements ChannelPeer
 type MockChannelPeer struct {

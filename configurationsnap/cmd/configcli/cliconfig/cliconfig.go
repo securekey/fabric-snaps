@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -139,7 +139,7 @@ func init() {
 
 // CLIConfig overrides certain configuration values with those supplied on the command-line
 type CLIConfig struct {
-	coreApi.Config
+	fabApi.EndpointConfig
 	logger *logging.Logger
 }
 
@@ -153,13 +153,17 @@ func InitConfig() error {
 		return errors.New(errors.GeneralError, "no client config file specified")
 	}
 
-	cnfg := config.FromFile(opts.clientConfigFile)
-	config, err := cnfg()
+	provider := config.FromFile(opts.clientConfigFile)
+	cnfg, err := provider()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "error loading the configs")
 	}
-	instance.Config = config
 
+	_, endpointConfig, _, err := config.FromBackend(cnfg)()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
+	}
+	instance.EndpointConfig = endpointConfig
 	return nil
 }
 
@@ -339,7 +343,7 @@ func InitConfigString(flags *pflag.FlagSet) {
 }
 
 // Timeout returns the timeout (in milliseconds) for various operations
-func (c *CLIConfig) Timeout(conn coreApi.TimeoutType) time.Duration {
+func (c *CLIConfig) Timeout(conn fabApi.TimeoutType) time.Duration {
 	return time.Duration(opts.timeout) * time.Millisecond
 }
 

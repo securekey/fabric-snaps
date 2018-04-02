@@ -16,8 +16,8 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
 )
 
@@ -91,7 +91,7 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 		)
 
 	resp, err := chClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: ccID, Fcn: args[0],
-		Args: GetByteArgs(args[1:])}, channel.WithTimeout(coreApi.Execute, 10*time.Second))
+		Args: GetByteArgs(args[1:])}, channel.WithTimeout(fabApi.Execute, 10*time.Second))
 
 	if err != nil {
 		return errors.Wrapf(err, "error invoking chaincode %s", ccID)
@@ -118,7 +118,7 @@ func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...s
 			ChaincodeID: "eventconsumersnap",
 			Fcn:         fcn,
 			Args:        bargs,
-		}, channel.WithTimeout(coreApi.Execute, 10*time.Second))
+		}, channel.WithTimeout(fabApi.Execute, 10*time.Second))
 	if err != nil {
 		return errors.Wrap(err, "error querying eventconumersnap")
 	}

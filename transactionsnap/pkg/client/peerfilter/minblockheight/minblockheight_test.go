@@ -52,7 +52,7 @@ func TestPeerFilter(t *testing.T) {
 }
 
 func newPeer(name string) fabApi.Peer {
-	peer, err := peer.New(mocks.NewMockConfig(), peer.WithURL("grpc://"+name+":7051"))
+	peer, err := peer.New(mocks.NewMockEndpointConfig(), peer.WithURL("grpc://"+name+":7051"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create peer: %v)", err))
 	}

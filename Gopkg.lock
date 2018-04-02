@@ -426,6 +426,7 @@
     "pkg/util/concurrent/futurevalue",
     "pkg/util/concurrent/lazycache",
     "pkg/util/concurrent/lazyref",
+    "pkg/util/pathvar",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -439,7 +440,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "b02be7abea8009308331468414008ab429c3431c"
+  revision = "740085464a149d23d2b9bac03c495fa992ef6fe2"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -726,6 +727,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4d19440b206cca717bb822e59ea2f497bd9fdcde73ed4894e8074e06de92f986"
+  inputs-digest = "32f77945d820131c66c783732a54696ade16bd28d4c4d1b84b3f622745d9154c"
   solver-name = "gps-cdcl"
   solver-version = 1
