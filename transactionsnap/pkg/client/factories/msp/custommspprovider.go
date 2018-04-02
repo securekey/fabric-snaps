@@ -7,7 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package msp
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/msppvdr"
 )
@@ -15,8 +16,8 @@ import (
 // CustomMSPProvider  will provide custom msp provider
 type CustomMSPProvider struct {
 	msppvdr.MSPProvider
-	config         core.Config
-	cryptoProvider core.CryptoSuite
+	config         fabApi.EndpointConfig
+	cryptoProvider coreApi.CryptoSuite
 	cryptoPath     string
 }
 

@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 
@@ -17,7 +18,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
@@ -44,7 +45,7 @@ const (
 type clientImpl struct {
 	sync.RWMutex
 	txnSnapConfig  api.Config
-	clientConfig   coreApi.Config
+	clientConfig   fabApi.EndpointConfig
 	channelClient  *channel.Client
 	channelService fabApi.ChannelService
 	channelID      string
@@ -58,18 +59,18 @@ type DynamicProviderFactory struct {
 }
 
 // CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
 	return dynamicDiscovery.New(config), nil
 }
 
 // CreateSelectionProvider returns a new implementation of dynamic selection provider
-func (f *DynamicProviderFactory) CreateSelectionProvider(config coreApi.Config) (fabApi.SelectionProvider, error) {
+func (f *DynamicProviderFactory) CreateSelectionProvider(config fabApi.EndpointConfig) (fabApi.SelectionProvider, error) {
 	return selection.New(config, f.ChannelUsers)
 }
 
 // CustomConfig override client config
 type CustomConfig struct {
-	coreApi.Config
+	fabApi.EndpointConfig
 	localPeer           *api.PeerConfig
 	localPeerTLSCertPem []byte
 }
@@ -77,18 +78,18 @@ type CustomConfig struct {
 // ChannelPeers returns the channel peers configuration
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
-func (c *CustomConfig) ChannelPeers(name string) ([]coreApi.ChannelPeer, error) {
+func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, error) {
 	peerConfig, err := c.PeerConfigByURL(fmt.Sprintf("%s:%d", c.localPeer.Host,
 		c.localPeer.Port))
 	if err != nil {
 		return nil, fmt.Errorf("error get peer config by url: %v", err)
 	}
-	networkPeer := coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(c.localPeer.MSPid)}
+	networkPeer := fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(c.localPeer.MSPid)}
 	networkPeer.TLSCACerts = endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}
-	peer := coreApi.ChannelPeer{PeerChannelConfig: coreApi.PeerChannelConfig{EndorsingPeer: true,
+	peer := fabApi.ChannelPeer{PeerChannelConfig: fabApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
 	logger.Debugf("ChannelPeers return %v", peer)
-	return []coreApi.ChannelPeer{peer}, nil
+	return []fabApi.ChannelPeer{peer}, nil
 }
 
 var cachedClient map[string]*clientImpl
@@ -174,13 +175,26 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// Get client config
-	clientConfig, err := config.FromRaw(c.txnSnapConfig.GetConfigBytes(), "yaml")()
+	configProvider := func() (core.ConfigBackend, error) {
+		// Make sure the buffer is created each time it is called, otherwise
+		// there will be no data left in the buffer the second time it's called
+		return config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")()
+	}
+
+	config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")
+
+	configBackend, err := configProvider()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "get client config return error")
 	}
 
+	_, endpointConfig, _, err := config.FromBackend(configBackend)()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
+	}
+
 	// Get org name
-	nconfig, err := clientConfig.NetworkConfig()
+	nconfig, err := endpointConfig.NetworkConfig()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "Failed to get network config")
 	}
@@ -205,7 +219,10 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		serviceProviderFactory = &DynamicProviderFactory{ChannelUsers: []selection.ChannelUser{channelUser}}
 	}
 
-	sdk, err := fabsdk.New(NewCustomConfigProvider(clientConfig, localPeer, c.txnSnapConfig.GetTLSCertPem()),
+	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, c.txnSnapConfig.GetTLSCertPem())
+
+	sdk, err := fabsdk.New(configProvider,
+		fabsdk.WithConfigEndpoint(customEndpointConfig),
 		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
 		fabsdk.WithServicePkg(serviceProviderFactory),
 		fabsdk.WithMSPPkg(&factoriesMsp.CustomMspPkg{CryptoPath: c.txnSnapConfig.GetMspConfigPath()}))
@@ -242,16 +259,14 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	c.channelClient = chClient
 	c.channelService = chService
 	c.channelID = channelID
-	c.clientConfig = clientConfig
+	c.clientConfig = customEndpointConfig
 	c.context = context
 	return nil
 }
 
-//NewCustomConfigProvider return custom config provider
-func NewCustomConfigProvider(config coreApi.Config, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) coreApi.ConfigProvider {
-	return func() (coreApi.Config, error) {
-		return &CustomConfig{Config: config, localPeer: localPeer, localPeerTLSCertPem: localPeerTLSCertPem}, nil
-	}
+//NewCustomConfig return custom endpoint config
+func NewCustomConfig(config fabApi.EndpointConfig, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) fabApi.EndpointConfig {
+	return &CustomConfig{EndpointConfig: config, localPeer: localPeer, localPeerTLSCertPem: localPeerTLSCertPem}
 }
 
 func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, error) {
@@ -358,7 +373,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	return nil
 }
 
-func (c *clientImpl) GetConfig() coreApi.Config {
+func (c *clientImpl) GetConfig() fabApi.EndpointConfig {
 	return c.clientConfig
 }
 

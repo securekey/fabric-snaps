@@ -18,7 +18,6 @@ import (
 	"time"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric/bccsp"
@@ -547,7 +546,7 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 		logger.Debugf("error get peer config by url: %v", err)
 	}
 
-	targetPeer, err := peer.New(txService.ClientConfig(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(localPeer.MSPid)}),
+	targetPeer, err := peer.New(txService.ClientConfig(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(localPeer.MSPid)}),
 		peer.WithTLSCert(txService.Config.GetTLSRootCert()))
 	if err != nil {
 		logger.Debugf("Error creating target peer: %v", err)

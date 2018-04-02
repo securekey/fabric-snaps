@@ -14,8 +14,8 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -182,7 +182,9 @@ func (a *action) initSDK() error {
 		return errors.New(errors.GeneralError, "user must be specified")
 	}
 
-	sdk, err := fabsdk.New(fabsdk.WithConfig(cliconfig.Config()))
+	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ConfigFile()),
+		fabsdk.WithConfigEndpoint(cliconfig.Config()),
+	)
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Error initializing SDK: %s", err)
 	}
@@ -234,7 +236,7 @@ func (a *action) initTargetPeers() error {
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %v\n", orgID, p.URL)
 
-				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: p, MSPID: mspID}))
+				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: mspID}))
 				if err != nil {
 					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}

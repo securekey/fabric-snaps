@@ -15,7 +15,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/txn"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/pkg/errors"
 )
@@ -31,7 +30,7 @@ type CustomEndorsementHandler struct {
 func (h *CustomEndorsementHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 	logger.Info("customEndorsementHandler - Invoking chaincode on system channel")
 
-	grpcContext, cancel := context.NewRequest(h.context, context.WithTimeoutType(core.PeerResponse))
+	grpcContext, cancel := context.NewRequest(h.context, context.WithTimeoutType(fabApi.PeerResponse))
 	defer cancel()
 	sysTransactor, err := channel.NewTransactor(grpcContext, chconfig.NewChannelCfg(""))
 	if err != nil {

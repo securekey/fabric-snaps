@@ -16,7 +16,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
@@ -30,7 +30,7 @@ var USER = "user"
 // BDDContext ...
 type BDDContext struct {
 	composition          *Composition
-	clientConfig         coreApi.Config
+	clientConfig         fabApi.EndpointConfig
 	mutex                sync.RWMutex
 	orgs                 []string
 	ordererOrgID         string
@@ -52,7 +52,7 @@ type BDDContext struct {
 // PeerConfig holds the peer configuration and org ID
 type PeerConfig struct {
 	OrgID  string
-	Config coreApi.PeerConfig
+	Config fabApi.PeerConfig
 	MspID  string
 	PeerID string
 }
@@ -101,7 +101,12 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
 	b.sdk = sdk
-	b.clientConfig = sdk.Config()
+
+	_, endpointConfig, _, err := sdk.Config()()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get config: %s", err))
+	}
+	b.clientConfig = endpointConfig
 	for _, org := range b.orgs {
 		// load org admin
 		orgAdmin := fmt.Sprintf("%s_%s", org, ADMIN)
@@ -229,7 +234,7 @@ func (b *BDDContext) OrgUserContext(org, userType string) contextApi.Client {
 }
 
 // ClientConfig returns client config
-func (b *BDDContext) ClientConfig() coreApi.Config {
+func (b *BDDContext) ClientConfig() fabApi.EndpointConfig {
 	return b.clientConfig
 }
 
@@ -257,6 +262,22 @@ func (b *BDDContext) PeerConfigForChannel(channelID string) *PeerConfig {
 		return nil
 	}
 	return pconfigs[rand.Intn(len(pconfigs))]
+}
+
+// PeerConfigForURL returns the peer config for the given URL or nil if not found
+func (b *BDDContext) PeerConfigForURL(url string) *PeerConfig {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	for _, pconfigs := range b.peersByChannel {
+		for _, pconfig := range pconfigs {
+			if pconfig.Config.URL == url {
+				return pconfig
+			}
+		}
+	}
+	logger.Warnf("Peer config not found for URL [%s]", url)
+	return nil
 }
 
 // OrgIDForChannel returns a single org ID for the given channel or an error if

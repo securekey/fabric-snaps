@@ -74,12 +74,12 @@ type MockProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
-func (m *MockProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
 	return &impl{clientConfig: config}, nil
 }
 
 type impl struct {
-	clientConfig coreApi.Config
+	clientConfig fabApi.EndpointConfig
 }
 
 // CreateDiscoveryService return impl of DiscoveryService

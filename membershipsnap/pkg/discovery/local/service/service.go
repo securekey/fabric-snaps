@@ -9,7 +9,6 @@ package service
 import (
 	"fmt"
 
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/pkg/errors"
@@ -20,20 +19,20 @@ import (
 
 // MemSnapService struct
 type MemSnapService struct {
-	channelID    string
-	clientConfig coreApi.Config
-	service      memserviceapi.Service
+	channelID      string
+	endpointConfig fabApi.EndpointConfig
+	service        memserviceapi.Service
 }
 
 // New return MemSnapService
-func New(channelID string, clientConfig coreApi.Config, service memserviceapi.Service) *MemSnapService {
+func New(channelID string, endpointConfig fabApi.EndpointConfig, service memserviceapi.Service) *MemSnapService {
 	if service == nil {
 		panic("membership service is nil")
 	}
 	return &MemSnapService{
-		channelID:    channelID,
-		clientConfig: clientConfig,
-		service:      service,
+		channelID:      channelID,
+		endpointConfig: endpointConfig,
+		service:        service,
 	}
 }
 
@@ -56,11 +55,11 @@ func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint
 	var peers []fabApi.Peer
 	for _, endpoint := range endpoints {
 
-		peerConfig, err := s.clientConfig.PeerConfigByURL(endpoint.GetEndpoint())
+		peerConfig, err := s.endpointConfig.PeerConfigByURL(endpoint.GetEndpoint())
 		if err != nil {
 			return nil, fmt.Errorf("error get peer config by url: %v", err)
 		}
-		peer, err := peer.New(s.clientConfig, peer.FromPeerConfig(&coreApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(endpoint.GetMSPid())}))
+		peer, err := peer.New(s.endpointConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(endpoint.GetMSPid())}))
 		if err != nil {
 			return nil, fmt.Errorf("error creating new peer: %v", err)
 		}

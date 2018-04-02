@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -51,7 +50,7 @@ type apiConfig struct {
 }
 
 //ClientConfig to return client config
-func (txs *TxServiceImpl) ClientConfig() coreApi.Config {
+func (txs *TxServiceImpl) ClientConfig() fabApi.EndpointConfig {
 	return txs.FcClient.GetConfig()
 }
 

@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -54,12 +53,12 @@ type MockProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
-func (m *MockProviderFactory) CreateDiscoveryProvider(config coreApi.Config, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
 	return &impl{clientConfig: config}, nil
 }
 
 type impl struct {
-	clientConfig coreApi.Config
+	clientConfig fabApi.EndpointConfig
 }
 
 // CreateDiscoveryService return impl of DiscoveryService

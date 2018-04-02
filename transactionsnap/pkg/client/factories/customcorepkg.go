@@ -22,7 +22,7 @@ type CustomCorePkg struct {
 }
 
 // CreateCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
-func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.Config) (core.CryptoSuite, error) {
+func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.CryptoSuiteConfig) (core.CryptoSuite, error) {
 	bccspSuite, err := factory.GetBCCSP(f.ProviderName)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new cryptosuite provider")
@@ -31,6 +31,6 @@ func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.Config) (core.Cryp
 }
 
 // CreateInfraProvider returns a new custom implementation of fabric primitives
-func (f *CustomCorePkg) CreateInfraProvider(config core.Config) (fab.InfraProvider, error) {
+func (f *CustomCorePkg) CreateInfraProvider(config fab.EndpointConfig) (fab.InfraProvider, error) {
 	return &CustomInfraProvider{InfraProvider: fabpvdr.New(config)}, nil
 }
