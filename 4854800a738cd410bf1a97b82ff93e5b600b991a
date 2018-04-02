@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17cdbbe6_bb2e62a5",
+        "filename": "bddtests/features/eventSnap.feature",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-04-02T22:45:02Z",
+      "side": 1,
+      "message": "Delete this comment now that this is resolved?",
+      "range": {
+        "startLine": 59,
+        "startChar": 6,
+        "endLine": 59,
+        "endChar": 77
+      },
+      "revId": "4854800a738cd410bf1a97b82ff93e5b600b991a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
