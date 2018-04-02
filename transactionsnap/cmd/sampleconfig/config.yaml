@@ -192,3 +192,13 @@ entityMatchers:
       eventUrlSubstitutionExp: grpc://127.0.0.1:7041
       sslTargetOverrideUrlSubstitutionExp: peer0.org1.example.com
       mappedHost: default.peer
+#    - pattern: grpc.*://(\w.+):(\d+)
+#      urlSubstitutionExp: $1:$2
+#      eventUrlSubstitutionExp: $1:$2
+#      sslTargetOverrideUrlSubstitutionExp: $1
+#      mappedHost: default.peer
+#    - pattern: (\w.+):(\d+)
+#      urlSubstitutionExp: grpcs://$1:$2
+#      eventUrlSubstitutionExp: grpcs://$1:$2
+#      sslTargetOverrideUrlSubstitutionExp: $1
+#      mappedHost: default.peer

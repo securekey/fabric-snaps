@@ -199,6 +199,11 @@ organizations:
 
 entityMatchers:
   peer:
+    - pattern: grpc.*://(\w.+):(\d+)
+      urlSubstitutionExp: $1:$2
+      eventUrlSubstitutionExp: $1:$2
+      sslTargetOverrideUrlSubstitutionExp: $1
+      mappedHost: default.peer
     - pattern: (\w.+):(\d+)
       urlSubstitutionExp: grpcs://$1:$2
       eventUrlSubstitutionExp: grpcs://$1:$2
