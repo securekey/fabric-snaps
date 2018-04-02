@@ -57,7 +57,7 @@ Feature:  Event Snap
     And we wait 2 seconds
     Then client C1 queries for filtered block events on channel "mychannel"
       # Test case need to be fixed: https://jira.securekey.com/browse/DEV-5035
-      # And client C1 receives a response containing 2 filtered block events
+      And client C1 receives a response containing 2 filtered block events
     And client C1 unregisters for filtered block events on channel "mychannel"
 
   @eventsnapfour

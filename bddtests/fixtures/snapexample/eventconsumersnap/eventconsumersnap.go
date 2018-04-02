@@ -7,14 +7,17 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sync"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/channelutil"
+	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/common"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 )
 
@@ -322,7 +325,7 @@ func (s *eventConsumerSnap) getFilteredBlockEvents(stub shim.ChaincodeStubInterf
 	s.eventmutex.RLock()
 	defer s.eventmutex.RUnlock()
 
-	bytes, err := json.Marshal(s.fblockEvents[channelID])
+	bytes, err := protoToJSON(s.fblockEvents[channelID])
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Error marshalling filtered block events: %s", err))
 	}
@@ -601,4 +604,34 @@ func getTxRegKey(channelID, txID string) string {
 }
 
 func main() {
+}
+
+// protoToJSON is a simple shortcut wrapper around the proto JSON marshaler
+func protoToJSON(msg []*fab.FilteredBlockEvent) ([]byte, error) {
+	// step 1, marshall each FilteredBlock in the FilteredBlockEvent
+	// array and set them to the Payload of ByteFilteredBlockEvent
+	var marshalledFbe []*common.ByteFilteredBlockEvent
+	m := jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: true,
+		Indent:       "  ",
+		OrigName:     true,
+	}
+
+	for _, fbe := range msg {
+		var b bytes.Buffer
+		err := m.Marshal(&b, fbe.FilteredBlock)
+		if err != nil {
+			return nil, err
+		}
+
+		marshalledFbe = append(marshalledFbe, &common.ByteFilteredBlockEvent{Payload: b.Bytes(), SourceURL: fbe.SourceURL})
+	}
+
+	// step 2, marshall the full array
+	bytes, err := json.Marshal(marshalledFbe)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
