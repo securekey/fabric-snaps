@@ -56,8 +56,7 @@ Feature:  Event Snap
     And client invokes chaincode "eventconsumersnap" with args "put,key2,value2,event2" on all peers in the "peerorg1" org on the "mychannel" channel
     And we wait 2 seconds
     Then client C1 queries for filtered block events on channel "mychannel"
-      # Test case need to be fixed: https://jira.securekey.com/browse/DEV-5035
-      # And client C1 receives a response containing 2 filtered block events
+      And client C1 receives a response containing 2 filtered block events
     And client C1 unregisters for filtered block events on channel "mychannel"
 
   @eventsnapfour

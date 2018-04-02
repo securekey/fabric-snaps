@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package bddtests
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -14,11 +15,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/common"
 )
 
 var lastTxnID string
@@ -271,14 +275,29 @@ func getBlockEvents(jsonstr string) ([]*fab.BlockEvent, error) {
 }
 
 func getFilteredBlockEvents(jsonstr string) ([]*fab.FilteredBlockEvent, error) {
+	var bytesEvents []*common.ByteFilteredBlockEvent
 	var events []*fab.FilteredBlockEvent
-	if err := json.Unmarshal([]byte(jsonstr), &events); err != nil {
+	if err := json.Unmarshal([]byte(jsonstr), &bytesEvents); err != nil {
 		return nil, err
 	}
-	for _, event := range events {
-		if event.FilteredBlock == nil {
-			return nil, errors.New("invalid filtered block event")
+
+	m := jsonpb.Unmarshaler{
+		AllowUnknownFields: true,
+	}
+	for _, event := range bytesEvents {
+		if event.Payload == nil {
+			return nil, errors.New("invalid filtered block event: empty block event")
 		}
+
+		// jsonpb's Unmarshal call below requires a non nil FilteredBlock instance
+		ufbe := &fab.FilteredBlockEvent{SourceURL: event.SourceURL, FilteredBlock: &pb.FilteredBlock{}}
+
+		err := m.Unmarshal(bytes.NewReader(event.Payload), ufbe.FilteredBlock)
+		if err != nil {
+			return nil, errors.Errorf("invalid filtered block event: unmarshal error: %s", err)
+		}
+
+		events = append(events, ufbe)
 	}
 	return events, nil
 }
