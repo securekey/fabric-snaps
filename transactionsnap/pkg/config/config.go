@@ -306,6 +306,11 @@ func (c *Config) RetryOpts() retry.Opts {
 	}
 }
 
+// RetryOnCCError configuration for chaincode error retry
+func (c *Config) RetryOnCCError() bool {
+	return c.txnSnapConfig.GetBool("txnsnap.retry.ccerror")
+}
+
 // initializeLogging initializes the logger
 func (c *Config) initializeLogging() error {
 	logLevel := c.txnSnapConfig.GetString("txnsnap.loglevel")

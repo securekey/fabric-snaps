@@ -114,7 +114,7 @@ func TestEndorseTransactionWithPeerFilter(t *testing.T) {
 		t.Fatalf("Error endorsing transaction %v", err)
 	}
 	if !strings.Contains(err.Error(), status.NoPeersFound.String()) {
-		t.Fatalf("Wrong error message")
+		t.Fatalf("Wrong error message. Got %s", err.Error())
 	}
 
 }
@@ -196,6 +196,9 @@ func TestMain(m *testing.M) {
 
 	os.Setenv("CORE_PEER_ADDRESS", testhost+":"+strconv.Itoa(testport))
 	defer os.Unsetenv("CORE_PEER_ADDRESS")
+
+	os.Setenv("CORE_TXNSNAP_RETRY_ATTEMPTS", "1")
+	defer os.Unsetenv("CORE_TXNSNAP_RETRY_ATTEMPTS")
 
 	configData, err := ioutil.ReadFile("../../cmd/sampleconfig/config.yaml")
 	if err != nil {
