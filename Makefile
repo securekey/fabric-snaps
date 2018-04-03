@@ -17,7 +17,7 @@
 
 # Release Parameters
 BASE_VERSION = 0.1.13
-IS_RELEASE = true
+IS_RELEASE = false
 
 ifneq ($(IS_RELEASE),true)
 EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short=7 HEAD)
