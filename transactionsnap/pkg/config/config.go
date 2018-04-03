@@ -84,6 +84,14 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	return c, nil
 }
 
+// NewMockConfig setup mock configuration for testing
+func NewMockConfig(txnSnapConfig, peerConfig *viper.Viper) transactionsnapApi.Config {
+	return &Config{
+		peerConfig:    peerConfig,
+		txnSnapConfig: txnSnapConfig,
+	}
+}
+
 //GetConfigBytes returns config bytes
 func (c *Config) GetConfigBytes() []byte {
 	return c.txnSnapConfigBytes
@@ -286,6 +294,11 @@ func (c *Config) RetryOpts() retry.Opts {
 		MaxBackoff:     maxBackoff,
 		BackoffFactor:  factor,
 	}
+}
+
+// RetryOnCCError configuration for chaincode error retry
+func (c *Config) RetryOnCCError() bool {
+	return c.txnSnapConfig.GetBool("txnsnap.retry.ccerror")
 }
 
 // initializeLogging initializes the logger
