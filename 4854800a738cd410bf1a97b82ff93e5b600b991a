@@ -22,6 +22,30 @@
       "revId": "4854800a738cd410bf1a97b82ff93e5b600b991a",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1de6325d_a61434c5",
+        "filename": "bddtests/features/eventSnap.feature",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-04-03T15:22:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17cdbbe6_bb2e62a5",
+      "range": {
+        "startLine": 59,
+        "startChar": 6,
+        "endLine": 59,
+        "endChar": 77
+      },
+      "revId": "4854800a738cd410bf1a97b82ff93e5b600b991a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
