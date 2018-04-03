@@ -19,6 +19,8 @@ txnsnap:
     initialbackoff: 500ms
     maxbackoff: 30s
     backofffactor: 2
+    # Option to retry on application errors
+    ccerror: true
 
   # Transaction timeout
   handler:

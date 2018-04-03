@@ -15,6 +15,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
@@ -370,10 +371,28 @@ func (c *clientImpl) GetConfig() coreApi.Config {
 
 func (c *clientImpl) retryOpts() retry.Opts {
 	opts := c.txnSnapConfig.RetryOpts()
-	opts.RetryableCodes = retry.ChannelClientRetryableCodes
+	opts.RetryableCodes = make(map[status.Group][]status.Code)
+	for key, value := range retry.ChannelClientRetryableCodes {
+		opts.RetryableCodes[key] = value
+	}
+	if c.txnSnapConfig.RetryOnCCError() {
+		addRetryCode(opts.RetryableCodes, status.ClientStatus, status.ChaincodeError)
+	}
+	// TODO: Bosco, Divyank to investigate whether this should be handled with selection attempts
+	addRetryCode(opts.RetryableCodes, status.ClientStatus, status.NoPeersFound)
+
 	return opts
 }
 
 func (c *clientImpl) GetContext() contextApi.Client {
 	return c.context
+}
+
+// addRetryCode adds the given group and code to the given map
+func addRetryCode(codes map[status.Group][]status.Code, group status.Group, code status.Code) {
+	g, exists := codes[group]
+	if !exists {
+		g = []status.Code{}
+	}
+	codes[group] = append(g, code)
 }
