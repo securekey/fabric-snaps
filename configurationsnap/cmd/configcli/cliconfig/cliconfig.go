@@ -13,6 +13,7 @@ import (
 
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -159,7 +160,7 @@ func InitConfig() error {
 		return errors.WithMessage(errors.GeneralError, err, "error loading the configs")
 	}
 
-	_, endpointConfig, _, err := config.FromBackend(cnfg)()
+	endpointConfig, err := fab.ConfigFromBackend(cnfg)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}

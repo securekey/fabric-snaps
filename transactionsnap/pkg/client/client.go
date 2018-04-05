@@ -22,6 +22,7 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -59,7 +60,7 @@ type DynamicProviderFactory struct {
 }
 
 // CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
 	return dynamicDiscovery.New(config), nil
 }
 
@@ -188,7 +189,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "get client config return error")
 	}
 
-	_, endpointConfig, _, err := config.FromBackend(configBackend)()
+	endpointConfig, err := fab.ConfigFromBackend(configBackend)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}
