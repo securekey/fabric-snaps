@@ -22,6 +22,7 @@ import (
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 var txnSnapConfig *viper.Viper
@@ -291,4 +292,24 @@ func TestGetCryptoProvider(t *testing.T) {
 	if swCryptoProvider != "SW" {
 		t.Fatalf(" GetCryptoProvider expected to return 'SW' but got '%s'", swCryptoProvider)
 	}
+}
+
+func TestCCErrorRetryableCodes(t *testing.T) {
+	os.Setenv("CORE_TXNSNAP_RETRY_CCERRORCODES", "500 501 502  ")
+	codes, err := c.CCErrorRetryableCodes()
+	assert.NoError(t, err)
+	assert.Len(t, codes, 3)
+	assert.Equal(t, int32(500), codes[0])
+	assert.Equal(t, int32(501), codes[1])
+	assert.Equal(t, int32(502), codes[2])
+
+	os.Setenv("CORE_TXNSNAP_RETRY_CCERRORCODES", "500 501 string")
+	codes, err = c.CCErrorRetryableCodes()
+	assert.Error(t, err)
+	assert.Len(t, codes, 0)
+
+	os.Setenv("CORE_TXNSNAP_RETRY_CCERRORCODES", " ")
+	codes, err = c.CCErrorRetryableCodes()
+	assert.NoError(t, err)
+	assert.Len(t, codes, 0)
 }

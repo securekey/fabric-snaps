@@ -19,8 +19,9 @@ txnsnap:
     initialbackoff: 500ms
     maxbackoff: 30s
     backofffactor: 2
-    # Option to retry on application errors
-    ccerror: true
+    # Option to retry on specific chaincode error codes
+    # This is a list of space separated status code integers
+    ccErrorCodes: 500 501 502
 
 # Configurations for the fabric client
 client:
