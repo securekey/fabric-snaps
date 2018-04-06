@@ -27,7 +27,7 @@ type Factory struct {
 }
 
 // CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (l *Factory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (l *Factory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
 	logger.Debug("create local Provider Impl")
 	return &impl{config, l.LocalPeer, l.LocalPeerTLSCertPem}, nil
 }

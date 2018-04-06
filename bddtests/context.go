@@ -18,6 +18,7 @@ import (
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
@@ -102,7 +103,12 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 	}
 	b.sdk = sdk
 
-	_, endpointConfig, _, err := sdk.Config()()
+	configBackend, err := sdk.Config()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get config: %s", err))
+	}
+
+	endpointConfig, err := fab.ConfigFromBackend(configBackend)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to get config: %s", err))
 	}

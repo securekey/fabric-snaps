@@ -16,12 +16,14 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -59,7 +61,7 @@ type DynamicProviderFactory struct {
 }
 
 // CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
 	return dynamicDiscovery.New(config), nil
 }
 
@@ -188,7 +190,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "get client config return error")
 	}
 
-	_, endpointConfig, _, err := config.FromBackend(configBackend)()
+	endpointConfig, err := fab.ConfigFromBackend(configBackend)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}
@@ -379,10 +381,32 @@ func (c *clientImpl) GetConfig() fabApi.EndpointConfig {
 
 func (c *clientImpl) retryOpts() retry.Opts {
 	opts := c.txnSnapConfig.RetryOpts()
-	opts.RetryableCodes = retry.ChannelClientRetryableCodes
+	opts.RetryableCodes = make(map[status.Group][]status.Code)
+	for key, value := range retry.ChannelClientRetryableCodes {
+		opts.RetryableCodes[key] = value
+	}
+	ccCodes, err := c.txnSnapConfig.CCErrorRetryableCodes()
+	if err != nil {
+		logger.Warnf("Could not parse CC error retry args: %s", err.Error())
+	}
+	for _, code := range ccCodes {
+		addRetryCode(opts.RetryableCodes, status.ChaincodeStatus, status.Code(code))
+	}
+
+	addRetryCode(opts.RetryableCodes, status.ClientStatus, status.NoPeersFound)
+
 	return opts
 }
 
 func (c *clientImpl) GetContext() contextApi.Client {
 	return c.context
+}
+
+// addRetryCode adds the given group and code to the given map
+func addRetryCode(codes map[status.Group][]status.Code, group status.Group, code status.Code) {
+	g, exists := codes[group]
+	if !exists {
+		g = []status.Code{}
+	}
+	codes[group] = append(g, code)
 }

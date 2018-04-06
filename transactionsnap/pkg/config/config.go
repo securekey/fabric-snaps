@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"go/build"
 	"io/ioutil"
 	"path/filepath"
@@ -286,6 +287,22 @@ func (c *Config) RetryOpts() retry.Opts {
 		MaxBackoff:     maxBackoff,
 		BackoffFactor:  factor,
 	}
+}
+
+// CCErrorRetryableCodes configuration for chaincode errors to retry
+func (c *Config) CCErrorRetryableCodes() ([]int32, error) {
+	var codes []int32
+
+	codeStrings := c.txnSnapConfig.GetStringSlice("txnsnap.retry.ccErrorCodes")
+	for _, codeString := range codeStrings {
+		code, err := strconv.Atoi(codeString)
+		if err != nil {
+			return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("could not parse cc error retry codes %s", codeStrings))
+		}
+		codes = append(codes, int32(code))
+	}
+
+	return codes, nil
 }
 
 // initializeLogging initializes the logger

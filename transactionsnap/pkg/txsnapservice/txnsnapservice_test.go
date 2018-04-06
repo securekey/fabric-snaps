@@ -64,7 +64,7 @@ type MockProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
-func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig, fabPvdr fabApi.InfraProvider) (fabApi.DiscoveryProvider, error) {
+func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
 	return &impl{clientConfig: config}, nil
 }
 
@@ -177,6 +177,9 @@ func TestMain(m *testing.M) {
 
 	os.Setenv("CORE_PEER_ADDRESS", "peer1:5100")
 	defer os.Unsetenv("CORE_PEER_ADDRESS")
+
+	os.Setenv("CORE_TXNSNAP_RETRY_ATTEMPTS", "1")
+	defer os.Unsetenv("CORE_TXNSNAP_RETRY_ATTEMPTS")
 
 	configData, err := ioutil.ReadFile("../../cmd/sampleconfig/config.yaml")
 	if err != nil {

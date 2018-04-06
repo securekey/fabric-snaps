@@ -378,6 +378,7 @@
     "pkg/core/config/comm",
     "pkg/core/config/cryptoutil",
     "pkg/core/config/endpoint",
+    "pkg/core/config/lookup",
     "pkg/core/cryptosuite",
     "pkg/core/cryptosuite/bccsp/sw",
     "pkg/core/cryptosuite/bccsp/wrapper",
@@ -385,6 +386,7 @@
     "pkg/core/logging/metadata",
     "pkg/core/logging/modlog",
     "pkg/core/mocks",
+    "pkg/fab",
     "pkg/fab/ccpackager/gopackager",
     "pkg/fab/channel",
     "pkg/fab/channel/membership",
@@ -442,7 +444,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "740085464a149d23d2b9bac03c495fa992ef6fe2"
+  revision = "e1684a6f6a0b91d9ff4b8f9a320cf6eaeb1feca4"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -729,6 +731,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f0f72a3bd8ae75e32e3b43ee16083cbbf614cecc889a04d953d942f7630f0759"
+  inputs-digest = "2735137be148b222b05c4555aa557ec1b7d242f1ab2d07021d28f0e0db7b27af"
   solver-name = "gps-cdcl"
   solver-version = 1
