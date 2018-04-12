@@ -28,7 +28,6 @@ import (
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
-	txnConfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 )
@@ -110,19 +109,7 @@ func TestEventSnap(t *testing.T) {
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
 		Payload: payloadMap})
 
-	channels := []string{channelID1, channelID2}
-	for _, channel := range channels {
-
-		txSnapConfig, err := txnConfig.NewConfig("./sampleconfig/txnsnap/", channel)
-		if err != nil {
-			panic(fmt.Sprintf("Error initializing config: %s", err))
-		}
-		_, err = client.GetInstance(channel, &sampleConfig{txSnapConfig}, &MockProviderFactory{})
-		if err != nil {
-			panic(fmt.Sprintf("Client GetInstance return error %v", err))
-		}
-	}
-
+	client.ServiceProviderFactory = &MockProviderFactory{}
 	// Happy Path
 	stub.ChannelID = channelID1
 	if resp := stub.MockInit("txid2", nil); resp.Status != shim.OK {
