@@ -86,7 +86,8 @@ func TestConfig(t *testing.T) {
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	_, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig}, &MockProviderFactory{})
+	client.ServiceProviderFactory = &MockProviderFactory{}
+	_, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}

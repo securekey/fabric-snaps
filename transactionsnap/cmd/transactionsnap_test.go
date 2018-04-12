@@ -590,8 +590,8 @@ func TestMain(m *testing.M) {
 	payloadMap["default"] = []byte("value")
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
 		Payload: payloadMap})
-
-	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig}, &MockProviderFactory{})
+	client.ServiceProviderFactory = &MockProviderFactory{}
+	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %v", err))
 	}
