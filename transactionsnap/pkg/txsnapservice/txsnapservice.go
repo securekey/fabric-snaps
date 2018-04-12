@@ -66,7 +66,7 @@ func newTxService(channelID string) (*TxServiceImpl, error) {
 		return nil, errors.New(errors.GeneralError, "config from ledger is nil")
 	}
 
-	fcClient, err := txnSnapClient.GetInstance(channelID, &apiConfig{config}, nil)
+	fcClient, err := txnSnapClient.GetInstance(channelID, &apiConfig{config})
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
 	}
@@ -174,7 +174,7 @@ func newClientService() api.ClientService {
 
 // GetFabricClient return fabric client
 func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, error) {
-	fcClient, err := txnSnapClient.GetInstance(channelID, config, nil)
+	fcClient, err := txnSnapClient.GetInstance(channelID, config)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot initialize client")
 	}

@@ -9,8 +9,6 @@ package client
 import (
 	"bytes"
 	"fmt"
-	"sync"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
@@ -18,6 +16,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"sync"
+
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -27,6 +27,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -34,8 +35,10 @@ import (
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/localprovider"
-	utils "github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"strings"
+	"time"
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -94,79 +97,57 @@ func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, error) {
 	return []fabApi.ChannelPeer{peer}, nil
 }
 
-var cachedClient map[string]*clientImpl
-var cachedClientWithLocalDiscovery map[string]*clientImpl
-
-//var client *clientImpl
-var clientMutex sync.RWMutex
 var once sync.Once
 
+//ServiceProviderFactory use to pass service provider factory(mock for unit test)
+var ServiceProviderFactory apisdk.ServiceProviderFactory
+var cache *lazycache.Cache
+var cacheRefreshDuration = 100 * time.Second
+
 // GetInstance returns a singleton instance of the fabric client
-func GetInstance(channelID string, txnSnapConfig api.Config, serviceProviderFactory apisdk.ServiceProviderFactory) (api.Client, error) {
+func GetInstance(channelID string, txnSnapConfig api.Config) (api.Client, error) {
 	once.Do(func() {
-		logger.Debugf("Client cache was created")
-		cachedClient = make(map[string]*clientImpl)
-		cachedClientWithLocalDiscovery = make(map[string]*clientImpl)
-
+		cache = NewRefCache(cacheRefreshDuration)
+		logger.Debugf("Cache was intialized")
 	})
-	if channelID == "" {
-		return nil, errors.New(errors.GeneralError, "Channel is required")
-	}
-
-	clientMutex.RLock()
-	c := cachedClient[channelID] //client from cache
-	clientMutex.RUnlock()
-	if c != nil {
-		return c, nil
-	}
-	clientMutex.Lock()
-	defer clientMutex.Unlock()
-
-	c = &clientImpl{txnSnapConfig: txnSnapConfig}
-	err := c.initialize(channelID, serviceProviderFactory)
+	cckey, err := NewCacheKey(channelID, txnSnapConfig, ServiceProviderFactory)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Got error for new cache key")
 	}
 
-	//put client into cache
-	cachedClient[channelID] = c
-	return c, nil
+	clConfig, err := cache.Get(cckey)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "Got error while getting item from cache")
+	}
+
+	return clConfig.(*Ref).clientConfig, nil
 }
 
 // GetInstanceWithLocalDiscovery returns a singleton instance of the fabric client with local discovery
 func GetInstanceWithLocalDiscovery(channelID string, txnSnapConfig api.Config) (api.Client, error) {
 	once.Do(func() {
-		logger.Debugf("Client cache was created")
-		cachedClient = make(map[string]*clientImpl)
-		cachedClientWithLocalDiscovery = make(map[string]*clientImpl)
+		cache = NewRefCache(cacheRefreshDuration)
+		logger.Debugf("Cache was intialized")
 	})
-	if channelID == "" {
-		return nil, errors.New(errors.GeneralError, "Channel is required")
-	}
-
-	clientMutex.RLock()
-	c := cachedClientWithLocalDiscovery[channelID] //client from cache
-	clientMutex.RUnlock()
-	if c != nil {
-		return c, nil
-	}
-	clientMutex.Lock()
-	defer clientMutex.Unlock()
-
-	c = &clientImpl{txnSnapConfig: txnSnapConfig}
-	// Get local peer
-	localPeer, err := c.txnSnapConfig.GetLocalPeer()
+	localPeer, err := txnSnapConfig.GetLocalPeer()
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
-	err = c.initialize(channelID, &localprovider.Factory{LocalPeer: localPeer, LocalPeerTLSCertPem: txnSnapConfig.GetTLSCertPem()})
+	ServiceProviderFactory = &localprovider.Factory{LocalPeer: localPeer, LocalPeerTLSCertPem: txnSnapConfig.GetTLSCertPem()}
+	//instead of aving two instances of cache just use diffrent set of keys
+	cacheKey := strings.Join([]string{"lp", channelID}, "_")
+	cckey, err := NewCacheKey(cacheKey, txnSnapConfig, ServiceProviderFactory)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.GeneralError, err, "Got error for new cache key")
 	}
 
-	//put client into cache
-	cachedClientWithLocalDiscovery[channelID] = c
-	return c, nil
+	clConfig, err := cache.Get(cckey)
+	if err != nil {
+		return nil, errors.WithMessage(errors.GeneralError, err, "Got error while getting item from cache")
+	}
+
+	return clConfig.(*Ref).clientConfig, nil
+
 }
 
 func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.ServiceProviderFactory) error {
@@ -216,6 +197,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	if err != nil {
 		return err
 	}
+
 	if serviceProviderFactory == nil {
 		channelUser := selection.ChannelUser{ChannelID: channelID, Username: txnSnapUser, OrgName: orgname}
 		serviceProviderFactory = &DynamicProviderFactory{ChannelUsers: []selection.ChannelUser{channelUser}}
