@@ -140,11 +140,10 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 		}
 
 		peerEndpoints = append(peerEndpoints, &memserviceapi.PeerEndpoint{
-			Endpoint:         member.Endpoint,
-			InternalEndpoint: member.InternalEndpoint,
-			MSPid:            []byte(s.mspProvider.GetMSPID(member.PKIid)),
-			LedgerHeight:     ledgerHeight,
-			LeftChannel:      leftChannel,
+			Endpoint:     member.PreferredEndpoint(),
+			MSPid:        []byte(s.mspProvider.GetMSPID(member.PKIid)),
+			LedgerHeight: ledgerHeight,
+			LeftChannel:  leftChannel,
 		})
 	}
 
@@ -164,11 +163,10 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 		}
 
 		self := &memserviceapi.PeerEndpoint{
-			Endpoint:         s.localPeerAddress,
-			InternalEndpoint: s.localPeerAddress,
-			MSPid:            s.localMSPID,
-			LedgerHeight:     ledgerHeight,
-			LeftChannel:      false,
+			Endpoint:     s.localPeerAddress,
+			MSPid:        s.localMSPID,
+			LedgerHeight: ledgerHeight,
+			LeftChannel:  false,
 		}
 
 		peerEndpoints = append(peerEndpoints, self)

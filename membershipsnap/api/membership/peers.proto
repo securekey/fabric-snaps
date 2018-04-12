@@ -10,13 +10,12 @@ option go_package = "github.com/securekey/fabric-snaps/membershipsnap/api/member
 
 package api;
 
-// PeerEndpoint contains the internal and external endpoint of a peer
+// PeerEndpoint contains the preferred endpoint of a peer
 message PeerEndpoint {
 	string Endpoint = 1;
-	string InternalEndpoint = 2;
-    bytes MSPid = 3;
-    uint64 ledger_height = 4;
-    bool left_channel = 5;
+    bytes MSPid = 2;
+    uint64 ledger_height = 3;
+    bool left_channel = 4;
 }
 
 // PeerEndpoints contains a list of peer endpoints

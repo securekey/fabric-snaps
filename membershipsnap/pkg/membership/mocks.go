@@ -172,11 +172,10 @@ func newMockIdentity() []byte {
 }
 
 // NewNetworkMember creates a new NetworkMember instance
-func NewNetworkMember(pkiID gcommon.PKIidType, endpoint, internalEndpoint string, ledgerHeight uint64) discovery.NetworkMember {
+func NewNetworkMember(pkiID gcommon.PKIidType, endpoint string, ledgerHeight uint64) discovery.NetworkMember {
 	return discovery.NetworkMember{
-		PKIid:            pkiID,
-		Endpoint:         endpoint,
-		InternalEndpoint: internalEndpoint,
+		PKIid:    pkiID,
+		Endpoint: endpoint,
 		Properties: &gossip.Properties{
 			LedgerHeight: ledgerHeight,
 		},
