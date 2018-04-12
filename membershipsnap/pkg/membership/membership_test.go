@@ -135,7 +135,8 @@ func checkEndpoints(expected []*memserviceapi.PeerEndpoint, actual []*memservice
 
 func validate(actual []*memserviceapi.PeerEndpoint, expected *memserviceapi.PeerEndpoint) error {
 	for _, endpoint := range actual {
-		if endpoint.Endpoint == expected.Endpoint && endpoint.InternalEndpoint == expected.InternalEndpoint {
+		// membership now uses InternalEndpoint preference for Endpoin as well.
+		if endpoint.Endpoint == expected.InternalEndpoint && endpoint.InternalEndpoint == expected.InternalEndpoint {
 			if !bytes.Equal(endpoint.MSPid, expected.MSPid) {
 				return fmt.Errorf("the MSP ID [%s] of the endpoint does not match the expected MSP ID [%s]", endpoint.MSPid, expected.MSPid)
 			}

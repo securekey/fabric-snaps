@@ -139,9 +139,11 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 			logger.Warnf("Ledger height for channel [%s] on peer [%s] is 0.\n", channelID, member.Endpoint)
 		}
 
+		url := member.PreferredEndpoint()
+
 		peerEndpoints = append(peerEndpoints, &memserviceapi.PeerEndpoint{
-			Endpoint:         member.Endpoint,
-			InternalEndpoint: member.InternalEndpoint,
+			Endpoint:         url,
+			InternalEndpoint: url,
 			MSPid:            []byte(s.mspProvider.GetMSPID(member.PKIid)),
 			LedgerHeight:     ledgerHeight,
 			LeftChannel:      leftChannel,
