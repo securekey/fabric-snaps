@@ -29,10 +29,11 @@ import (
 )
 
 const (
-	peerConfigFileName          = "core"
-	cmdRootPrefix               = "core"
-	defaultSelectionMaxAttempts = 1
-	defaultSelectionInterval    = time.Second
+	peerConfigFileName                = "core"
+	cmdRootPrefix                     = "core"
+	defaultSelectionMaxAttempts       = 1
+	defaultSelectionInterval          = time.Second
+	defaultClientCacheRefreshInterval = 60 * time.Second
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -257,6 +258,15 @@ func (c *Config) GetEndorserSelectionInterval() time.Duration {
 	interval := c.txnSnapConfig.GetDuration("txnsnap.selection.interval")
 	if interval == 0 {
 		return defaultSelectionInterval
+	}
+	return interval
+}
+
+// GetClientCacheRefreshInterval the client cache refresh interval
+func (c *Config) GetClientCacheRefreshInterval() time.Duration {
+	interval := c.txnSnapConfig.GetDuration("txnsnap.cache.refreshInterval")
+	if interval == 0 {
+		return defaultClientCacheRefreshInterval
 	}
 	return interval
 }

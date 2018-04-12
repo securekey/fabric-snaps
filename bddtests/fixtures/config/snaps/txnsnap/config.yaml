@@ -7,6 +7,9 @@
 txnsnap:
   loglevel: debug
 
+  cache:
+    refreshInterval: 50s
+
   # Endorser selection attempts
   selection:
     maxattempts: 5

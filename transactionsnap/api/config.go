@@ -33,6 +33,7 @@ type Config interface {
 	GetEndorserSelectionInterval() time.Duration
 	RetryOpts() retry.Opts
 	CCErrorRetryableCodes() ([]int32, error)
+	GetClientCacheRefreshInterval() time.Duration
 }
 
 // PeerConfig represents the server addresses of a fabric peer
