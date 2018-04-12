@@ -9,6 +9,7 @@ package service
 import (
 	"fmt"
 
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/pkg/errors"
@@ -16,6 +17,8 @@ import (
 	protosPeer "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service/channelpeer"
 )
+
+var logger = logging.NewLogger("local-discovery-service")
 
 // MemSnapService struct
 type MemSnapService struct {
@@ -54,8 +57,15 @@ func (s *MemSnapService) GetPeers() ([]fabApi.Peer, error) {
 func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint) ([]fabApi.Peer, error) {
 	var peers []fabApi.Peer
 	for _, endpoint := range endpoints {
-
-		peerConfig, err := s.endpointConfig.PeerConfigByURL(endpoint.GetEndpoint())
+		url := endpoint.GetInternalEndpoint()
+		if url == "" {
+			url = endpoint.GetEndpoint()
+			if url == "" {
+				logger.Warnf("Endpoint for %s has missing url, skipping it in GetPeers()..", endpoint.GetMSPid())
+				continue
+			}
+		}
+		peerConfig, err := s.endpointConfig.PeerConfigByURL(url)
 		if err != nil {
 			return nil, fmt.Errorf("error get peer config by url: %v", err)
 		}
