@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7b44de4_657779fa",
+        "filename": "membershipsnap/pkg/discovery/local/service/service.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-04-13T15:37:40Z",
+      "side": 1,
+      "message": "Should these two url assignments be switched?",
+      "range": {
+        "startLine": 60,
+        "startChar": 2,
+        "endLine": 62,
+        "endChar": 39
+      },
+      "revId": "39d019b696aef8b2dbf32b932e0eb6f4df1d26ca",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
