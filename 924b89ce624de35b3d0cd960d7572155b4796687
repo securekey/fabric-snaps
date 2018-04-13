@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "721b552d_0df99cf8",
+        "filename": "transactionsnap/pkg/client/cache.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-04-13T18:00:33Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work - there is no real channel called \"lp...\" This is why I added a String() func to return a new cache key but still using the real channel name",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 11
+      },
+      "revId": "924b89ce624de35b3d0cd960d7572155b4796687",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
