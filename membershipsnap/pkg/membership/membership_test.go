@@ -27,10 +27,6 @@ var (
 	address2 = "host2:1000"
 	address3 = "host3:1000"
 
-	internalAddress1 = "internalhost1:1000"
-	internalAddress2 = "internalhost2:1000"
-	internalAddress3 = "internalhost3:1000"
-
 	blockHeight1 = uint64(1000)
 	blockHeight2 = uint64(1100)
 	blockHeight3 = uint64(1200)
@@ -45,7 +41,7 @@ func TestGetAllPeers(t *testing.T) {
 
 	endpoints := memService.GetAllPeers()
 	expected := []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1, 0),
+		newEndpoint(localAddress, msp1, 0),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -57,19 +53,19 @@ func TestGetAllPeers(t *testing.T) {
 		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
 		NewMSPNetworkMembers(
 			msp2,
-			NewNetworkMember(pkiID2, address2, internalAddress2, 0),
+			NewNetworkMember(pkiID2, address2, 0),
 		),
 		NewMSPNetworkMembers(
 			msp3,
-			NewNetworkMember(pkiID3, address3, internalAddress3, 0),
+			NewNetworkMember(pkiID3, address3, 0),
 		),
 	)
 
 	endpoints = memService.GetAllPeers()
 	expected = []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1, 0),
-		newEndpoint(address2, internalAddress2, msp2, 0),
-		newEndpoint(address3, internalAddress3, msp3, 0),
+		newEndpoint(localAddress, msp1, 0),
+		newEndpoint(address2, msp2, 0),
+		newEndpoint(address3, msp3, 0),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -88,11 +84,11 @@ func TestGetPeersOfChannel(t *testing.T) {
 		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
 		NewMSPNetworkMembers(
 			msp2,
-			NewNetworkMember(pkiID2, address2, internalAddress2, blockHeight2),
+			NewNetworkMember(pkiID2, address2, blockHeight2),
 		),
 		NewMSPNetworkMembers(
 			msp3,
-			NewNetworkMember(pkiID3, address3, internalAddress3, blockHeight3),
+			NewNetworkMember(pkiID3, address3, blockHeight3),
 		),
 	)
 
@@ -107,9 +103,9 @@ func TestGetPeersOfChannel(t *testing.T) {
 	}
 
 	expected := []*memserviceapi.PeerEndpoint{
-		newEndpoint(localAddress, localAddress, msp1, localBlockHeight),
-		newEndpoint(address2, internalAddress2, msp2, blockHeight2),
-		newEndpoint(address3, internalAddress3, msp3, blockHeight3),
+		newEndpoint(localAddress, msp1, localBlockHeight),
+		newEndpoint(address2, msp2, blockHeight2),
+		newEndpoint(address3, msp3, blockHeight3),
 	}
 
 	if err := checkEndpoints(expected, endpoints); err != nil {
@@ -135,10 +131,7 @@ func checkEndpoints(expected []*memserviceapi.PeerEndpoint, actual []*memservice
 
 func validate(actual []*memserviceapi.PeerEndpoint, expected *memserviceapi.PeerEndpoint) error {
 	for _, endpoint := range actual {
-		if endpoint.Endpoint == expected.Endpoint && endpoint.InternalEndpoint == expected.InternalEndpoint {
-			if !bytes.Equal(endpoint.MSPid, expected.MSPid) {
-				return fmt.Errorf("the MSP ID [%s] of the endpoint does not match the expected MSP ID [%s]", endpoint.MSPid, expected.MSPid)
-			}
+		if endpoint.Endpoint == expected.Endpoint && bytes.Equal(endpoint.MSPid, expected.MSPid) {
 			if endpoint.LedgerHeight != expected.LedgerHeight {
 				return fmt.Errorf("the ledger height [%d] of the endpoint does not match the expected ledger height [%d]", endpoint.LedgerHeight, expected.LedgerHeight)
 			}
@@ -148,11 +141,10 @@ func validate(actual []*memserviceapi.PeerEndpoint, expected *memserviceapi.Peer
 	return fmt.Errorf("endpoint %s not found in list of endpoints", expected)
 }
 
-func newEndpoint(endpoint string, internalEndpoint string, mspID []byte, ledgerHeight uint64) *memserviceapi.PeerEndpoint {
+func newEndpoint(endpoint string, mspID []byte, ledgerHeight uint64) *memserviceapi.PeerEndpoint {
 	return &memserviceapi.PeerEndpoint{
-		Endpoint:         endpoint,
-		InternalEndpoint: internalEndpoint,
-		MSPid:            mspID,
-		LedgerHeight:     ledgerHeight,
+		Endpoint:     endpoint,
+		MSPid:        mspID,
+		LedgerHeight: ledgerHeight,
 	}
 }
