@@ -511,6 +511,7 @@ chaincode:
         txnsnapinvoker: enable
         eventconsumersnap: enable
         bootstrapsnap: enable
+        acltestsnap: enable
 
     # System chaincode plugins: in addition to being imported and compiled
     # into fabric through core/chaincode/importsysccs.go, system chaincodes
@@ -562,6 +563,11 @@ chaincode:
         path: /opt/extsysccs/bootstrapsnap.so
         invokableExternal: false
         invokableCC2CC: false
+      - enabled: true
+        name: acltestsnap
+        path: /opt/extsysccs/acltestsnap.so
+        invokableExternal: true
+        invokableCC2CC: true
     # Logging section for the chaincode container
     logging:
       # Default level for all loggers within the chaincode container
