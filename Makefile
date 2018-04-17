@@ -76,6 +76,13 @@ channel-artifacts:
 		securekey/fabric-tools:$(ARCH)-$(FABRIC_NEXT_IMAGE_TAG) \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
+channel-artifacts-latest:
+	@echo "Generating test channel .tx files"
+	@docker run -i \
+		-v $(abspath .):/opt/gopath/src/$(PACKAGE_NAME) \
+		hyperledger/fabric-tools:$(ARCH)-1.1.0 \
+		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
+
 depend:
 	@scripts/dependencies.sh
 

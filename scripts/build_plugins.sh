@@ -16,7 +16,8 @@ echo "Cloning fabric..."
 cd /opt/gopath/src/github.com/hyperledger
 git clone https://github.com/securekey/fabric-next.git
 cd fabric-next/scripts
-git checkout $FABRIC_NEXT_VERSION
+#git checkout $FABRIC_NEXT_VERSION
+git fetch https://gerrit.securekey.com/fabric-next refs/changes/83/7983/1 && git checkout FETCH_HEAD
 ./fabric_cherry_picks.sh >/dev/null
 cd /opt/gopath/src/github.com/hyperledger/fabric
 
@@ -51,6 +52,8 @@ echo "Building eventconsumer snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventconsumersnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/eventconsumersnap
 echo "Building bootstrap snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./bootstrapsnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/bootstrap
+echo "Building acltest snap..."
+go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./acltestsnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/acltestsnap
 
 
 cp httpsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
@@ -61,3 +64,4 @@ cp txnsnapinvoker.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
 cp configurationscc.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp eventconsumersnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
 cp bootstrapsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
+cp acltestsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/

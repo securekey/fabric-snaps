@@ -21,7 +21,7 @@ services:
 
   orderer.example.com:
     container_name: orderer.example.com
-    image: ${FABRIC_NEXT_NS}/${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
+    image: hyperledger/${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}-1.1.0
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -46,7 +46,7 @@ services:
         - ./config/mutual_tls/ca:/etc/hyperledger/mutual_tls/orderer
   peer0.org1.example.com:
     container_name: peer0.org1.example.com
-    image: ${FABRIC_NEXT_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
+    image: ${FABRIC_NEXT_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-1.1.0-0.0.10-snapshot-cc5a52e
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.org1.example.com
@@ -100,6 +100,7 @@ services:
         - ../../build/snaps/eventsnap.so:/opt/extsysccs/eventsnap.so
         - ../../build/test/eventconsumersnap.so:/opt/extsysccs/eventconsumersnap.so
         - ../../build/test/bootstrapsnap.so:/opt/extsysccs/bootstrapsnap.so
+        - ../../build/test/acltestsnap.so:/opt/extsysccs/acltestsnap.so
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
