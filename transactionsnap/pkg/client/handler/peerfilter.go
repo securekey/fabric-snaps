@@ -37,7 +37,7 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 	//Get proposal processor, if not supplied then use selection service to get available peers as endorser
 	if len(requestContext.Opts.Targets) == 0 {
 		remainingAttempts := p.config.GetEndorserSelectionMaxAttempts()
-		logger.Infof("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
+		logger.Debugf("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
 		var endorsers []fabApi.Peer
 		for len(endorsers) == 0 && remainingAttempts > 0 {
 			var selectionOpts []options.Opt
