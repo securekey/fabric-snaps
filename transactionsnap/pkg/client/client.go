@@ -85,7 +85,7 @@ type CustomConfig struct {
 // TODO this is a workaround.
 // Currently there is no way to pass in a set of target peers to the selection provider.
 func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, error) {
-	peerConfig, err := c.PeerConfigByURL(fmt.Sprintf("%s:%d", c.localPeer.Host,
+	peerConfig, err := c.PeerConfig(fmt.Sprintf("%s:%d", c.localPeer.Host,
 		c.localPeer.Port))
 	if err != nil {
 		return nil, fmt.Errorf("error get peer config by url: %v", err)
@@ -148,7 +148,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// Get client config
-	configProvider := func() (core.ConfigBackend, error) {
+	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
 		// there will be no data left in the buffer the second time it's called
 		return config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")()
@@ -156,12 +156,12 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 
 	config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")
 
-	configBackend, err := configProvider()
+	configBackends, err := configProvider()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "get client config return error")
 	}
 
-	endpointConfig, err := fab.ConfigFromBackend(configBackend)
+	endpointConfig, err := fab.ConfigFromBackend(configBackends...)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}

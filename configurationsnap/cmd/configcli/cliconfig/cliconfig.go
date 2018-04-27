@@ -160,7 +160,7 @@ func InitConfig() error {
 		return errors.WithMessage(errors.GeneralError, err, "error loading the configs")
 	}
 
-	endpointConfig, err := fab.ConfigFromBackend(cnfg)
+	endpointConfig, err := fab.ConfigFromBackend(cnfg...)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}

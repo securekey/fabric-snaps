@@ -53,7 +53,7 @@ type localDiscoveryService struct {
 
 // GetPeers return []sdkapi.Peer
 func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
-	peerConfig, err := s.clientConfig.PeerConfigByURL(fmt.Sprintf("%s:%d", s.localPeer.Host,
+	peerConfig, err := s.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", s.localPeer.Host,
 		s.localPeer.Port))
 	if err != nil {
 		return nil, fmt.Errorf("error get peer config by url: %v", err)

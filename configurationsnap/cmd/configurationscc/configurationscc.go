@@ -540,7 +540,7 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 		logger.Debugf("Cannot get local peer: %v", err)
 	}
 
-	peerConfig, err := txService.ClientConfig().PeerConfigByURL(fmt.Sprintf("%s:%d", localPeer.Host,
+	peerConfig, err := txService.ClientConfig().PeerConfig(fmt.Sprintf("%s:%d", localPeer.Host,
 		localPeer.Port))
 	if err != nil {
 		logger.Debugf("error get peer config by url: %v", err)

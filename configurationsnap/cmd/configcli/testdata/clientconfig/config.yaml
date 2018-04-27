@@ -30,22 +30,22 @@ peers:
     url: grpcs://peer0.org1.example.com:7051
     eventUrl: grpcs://peer0.org1.example.com:7053
     tlsCACerts:
-      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
 
   peer1.org1.example.com:
     url: grpcs://peer1.org1.example.com:7051
     eventUrl: grpcs://peer1.org1.example.com:7053
     tlsCACerts:
-      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org1.example.com-cert.pem
 
   peer0.org2.example.com:
     url: grpcs://peer0.org2.example.com:7051
     eventUrl: grpcs://peer0.org2.example.com:7053
     tlsCACerts:
-      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem
 
   peer1.org2.example.com:
     url: grpcs://peer1.org2.example.com:7051
     eventUrl: grpcs://peer1.org2.example.com:7053
     tlsCACerts:
-      path: $GOPATH/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/testdata/crypto-config/tlsca.org2.example.com-cert.pem

@@ -28,6 +28,7 @@ import (
 	"crypto/ecdsa"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
@@ -40,6 +41,10 @@ var logger = logging.NewLogger("httpsnap")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
+
+// TODO: HTTP service is reconstructed per-request. These should be inside
+// the HTTPServiceImpl struct once that is cached correctly or made a singleton
+var certPoolCache = NewCertPoolCache()
 
 //HTTPServiceImpl used to create transaction service
 type HTTPServiceImpl struct {
@@ -351,24 +356,20 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
 
-	// Load CA certs
-	caCertPool := x509.NewCertPool()
-	if systemCertPoolEnabled {
-		var err error
-		if caCertPool, err = x509.SystemCertPool(); err != nil {
-			return nil, errors.Wrap(errors.GeneralError, err, "Failed SystemCertPool")
-		}
-		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
+	cp, err := certPoolCache.Get(NewCertPoolCacheKey(systemCertPoolEnabled))
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
 	}
-
-	for _, cert := range caCerts {
-		caCertPool.AppendCertsFromPEM([]byte(cert))
+	certPool := cp.(commtls.CertPool)
+	pool, err := certPool.Get(decodeCerts(caCerts)...)
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
 	}
 
 	// Setup HTTPS client
 	return &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
+		RootCAs:      pool,
 	}, nil
 }
 
@@ -378,25 +379,20 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
-
-	// Load CA certs
-	caCertPool := x509.NewCertPool()
-	if systemCertPoolEnabled {
-		var err error
-		if caCertPool, err = x509.SystemCertPool(); err != nil {
-			return nil, errors.Wrap(errors.GeneralError, err, "Failed SystemCertPool")
-		}
-		logger.Debugf("Loaded system cert pool of size: %d", len(caCertPool.Subjects()))
+	cp, err := certPoolCache.Get(NewCertPoolCacheKey(systemCertPoolEnabled))
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
 	}
-
-	for _, cert := range caCerts {
-		caCertPool.AppendCertsFromPEM([]byte(cert))
+	certPool := cp.(commtls.CertPool)
+	pool, err := certPool.Get(decodeCerts(caCerts)...)
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
 	}
 
 	// Setup HTTPS client
 	return &tls.Config{
 		Certificates: []tls.Certificate{tlscert},
-		RootCAs:      caCertPool,
+		RootCAs:      pool,
 	}, nil
 }
 

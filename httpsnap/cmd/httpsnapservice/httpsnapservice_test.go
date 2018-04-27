@@ -142,10 +142,12 @@ func TestPost(t *testing.T) {
 
 	// Failed path: invalid ca
 	value := os.Getenv("CORE_TLS_CACERTS")
+	certPoolCache = NewCertPoolCache()
 	os.Setenv("CORE_TLS_CACERTS", "cert1,cert2")
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "certificate signed by unknown authority")
 	os.Setenv("CORE_TLS_CACERTS", value)
+	certPoolCache = NewCertPoolCache()
 
 	// Failed path: invalid client key or cert
 	value = os.Getenv("CORE_TLS_CLIENTCERT")
@@ -178,7 +180,7 @@ func verifyFailure(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 	}
 	_, err = httpService.Invoke(httpServiceInvokeRequest)
 	if err == nil {
-		t.Fatalf("Invoke should have failed")
+		t.Fatalf("Invoke should have failed with err %s", expected)
 	}
 	if !strings.Contains(string(err.Error()), expected) {
 		t.Fatalf("Expecting error response to contain %s, got %s", expected, string(err.Error()))

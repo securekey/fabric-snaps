@@ -120,7 +120,7 @@ orderers:
 
     tlsCACerts:
       # Certificate location absolute path
-#      path: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
+#      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
       pem: |
         -----BEGIN CERTIFICATE-----
         MIICNjCCAdygAwIBAgIRAILSPmMB3BzoLIQGsFxwZr8wCgYIKoZIzj0EAwIwbDEL
@@ -226,7 +226,7 @@ organizations:
 
       users:
         Admin:
-          key: 
+          key:
             pem: |
               -----BEGIN PRIVATE KEY-----
               MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgF0K9SLI1Ug5HaZQ3
@@ -234,7 +234,7 @@ organizations:
               UY/CLyCVNz+UAW32Ki00KWWlGnClXMEaiOicVSm+bUakog4m8Zk6EZQd
               -----END PRIVATE KEY-----
 
-          cert: 
+          cert:
             pem: |
               -----BEGIN CERTIFICATE-----
               MIICCjCCAbGgAwIBAgIRAP6rTgrL8PUGUhDZBlTbttkwCgYIKoZIzj0EAwIwaTEL
@@ -277,7 +277,7 @@ peers:
 
     tlsCACerts:
       # Certificate location absolute path
-      path: $GOPATH/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/bddtests/fixtures/channel/crypto-config/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
 entityMatchers:
 
   orderer:
