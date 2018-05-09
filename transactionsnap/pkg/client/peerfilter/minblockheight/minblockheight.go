@@ -29,9 +29,20 @@ func newWithOpts(args []string, bcInfoProvider blockchainInfoProvider) (*peerFil
 	if len(args) == 0 {
 		return nil, errors.New(errors.GeneralError, "expecting channel ID arg")
 	}
+
+	bcInfo, err := bcInfoProvider.GetBlockchainInfo(args[0])
+	var height uint64
+	if err != nil {
+		return nil, errors.Errorf(errors.GeneralError, "Error getting ledger height for channel [%s] on local peer: %s.\n", args[0], err)
+	} else {
+		// Need to subtract 1 from the block height since the block height (LedgerHeight) that's included
+		// in the Gossip Network Member is really the block number (i.e. they subtract 1 also)
+		height = bcInfo.Height - 1
+	}
+
 	return &peerFilter{
-		channelID:      args[0],
-		bcInfoProvider: bcInfoProvider,
+		channelID: args[0],
+		height:    height,
 	}, nil
 }
 
@@ -41,8 +52,8 @@ type blockchainInfoProvider interface {
 }
 
 type peerFilter struct {
-	channelID      string
-	bcInfoProvider blockchainInfoProvider
+	channelID string
+	height    uint64
 }
 
 // Accept returns true if the given peer's block height is
@@ -58,25 +69,14 @@ func (f *peerFilter) Accept(p fabApi.Peer) bool {
 
 	logger.Debugf("minblockheight GetBlockchainInfo for channel %s", f.channelID)
 
-	bcInfo, err := f.bcInfoProvider.GetBlockchainInfo(f.channelID)
-
-	var height uint64
-	if err != nil {
-		logger.Errorf("Error getting ledger height for channel [%s] on local peer: %s.\n", f.channelID, err)
-	} else {
-		// Need to subtract 1 from the block height since the block height (LedgerHeight) that's included
-		// in the Gossip Network Member is really the block number (i.e. they subtract 1 also)
-		height = bcInfo.Height - 1
-	}
-
 	logger.Debugf("minblockheight GetBlockHeight for channel %s", f.channelID)
 
 	peerHeight := chanPeer.GetBlockHeight(f.channelID)
-	accepted := peerHeight >= height
+	accepted := peerHeight >= f.height
 	if !accepted {
-		logger.Debugf("Peer [%s] will NOT be accepted since its block height for channel [%s] is %d which is less than or equal to that of the local peer: %d.\n", chanPeer.URL(), f.channelID, peerHeight, height)
+		logger.Debugf("Peer [%s] will NOT be accepted since its block height for channel [%s] is %d which is less than or equal to that of the local peer: %d.\n", chanPeer.URL(), f.channelID, peerHeight, f.height)
 	} else {
-		logger.Debugf("Peer [%s] will be accepted since its block height for channel [%s] is %d which is greater than or equal to that of the local peer: %d.\n", chanPeer.URL(), f.channelID, peerHeight, height)
+		logger.Debugf("Peer [%s] will be accepted since its block height for channel [%s] is %d which is greater than or equal to that of the local peer: %d.\n", chanPeer.URL(), f.channelID, peerHeight, f.height)
 	}
 
 	return accepted
