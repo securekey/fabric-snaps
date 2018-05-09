@@ -24,7 +24,7 @@ const (
 )
 
 func TestPeerFilter(t *testing.T) {
-	f, err := New([]string{})
+	_, err := New([]string{})
 	if err == nil {
 		t.Fatalf("Expecting error when no channel ID provided but got none")
 	}
@@ -32,7 +32,7 @@ func TestPeerFilter(t *testing.T) {
 	channelID := "testchannel"
 	localBlockHeight := blockHeight2
 
-	f, err = newWithOpts([]string{channelID}, mockbcinfo.NewProvider(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))))
+	f, err := newWithOpts([]string{channelID}, mockbcinfo.NewProvider(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))))
 	if err != nil {
 		t.Fatalf("Got error when creating peer filter")
 	}
