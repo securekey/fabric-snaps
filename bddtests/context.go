@@ -138,6 +138,7 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		}
 	}
 
+	b.initContext()
 }
 
 // AfterScenario execute code after bdd scenario
@@ -309,6 +310,11 @@ func (b *BDDContext) AddPeerConfigToChannel(pconfig *PeerConfig, channelID strin
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
+	b.addPeerConfigToChannel(pconfig, channelID)
+}
+
+// addPeerConfigToChannel adds a peer to a channel
+func (b *BDDContext) addPeerConfigToChannel(pconfig *PeerConfig, channelID string) {
 	pconfigs := b.peersByChannel[channelID]
 	for _, pc := range pconfigs {
 		if pc.OrgID == pconfig.OrgID && pc.Config.URL == pconfig.Config.URL {
@@ -342,4 +348,23 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 	}
 	b.collectionConfigs[id] = config
 	return config
+}
+
+func (b *BDDContext) initContext() {
+	networkConfig, _ := b.ClientConfig().NetworkConfig()
+	for channelID := range networkConfig.Channels {
+		peers, err := b.ClientConfig().ChannelPeers(channelID)
+		if err != nil {
+			continue
+		}
+
+		for _, peer := range peers {
+			serverHostOverride := ""
+			if str, ok := peer.PeerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
+				serverHostOverride = str
+			}
+			b.addPeerConfigToChannel(&PeerConfig{Config: peer.PeerConfig, OrgID: strings.ToLower(peer.MSPID),
+				MspID: b.peersMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
+		}
+	}
 }
