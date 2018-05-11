@@ -109,6 +109,8 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.Wrap(errors.GeneralError, err, "Invalid URL")
 	}
 
+	// Security controls should be added by the chaincode that calls the HTTP snap
+
 	// Scheme has to be https
 	if uri.Scheme != "https" {
 		return nil, errors.Errorf(errors.GeneralError, "Unsupported scheme: %s", uri.Scheme)
