@@ -271,7 +271,7 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 		var argsArray []string
 		argsArray = append(argsArray, "save")
 		argsArray = append(argsArray, string(configBytes))
-		err = d.InvokeCCWithArgs("configurationsnap", channelID, []*PeerConfig{peerConfig}, argsArray, nil)
+		_, err = d.InvokeCCWithArgs("configurationsnap", channelID, []*PeerConfig{peerConfig}, argsArray, nil)
 
 		if err != nil {
 			return fmt.Errorf("invokeChaincode return error: %v", err)
@@ -283,17 +283,16 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 
 // InvokeCConOrg invoke cc on org
 func (d *CommonSteps) InvokeCConOrg(ccID, args, orgIDs, channelID string) error {
-	err := d.InvokeCCWithArgs(ccID, channelID, d.OrgPeers(orgIDs, channelID), strings.Split(args, ","), nil)
-	if err != nil {
+	if _, err := d.InvokeCCWithArgs(ccID, channelID, d.OrgPeers(orgIDs, channelID), strings.Split(args, ","), nil); err != nil {
 		return fmt.Errorf("InvokeCCWithArgs return error: %v", err)
 	}
 	return nil
 }
 
 // InvokeCCWithArgs ...
-func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte) error {
+func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte) (channel.Response, error) {
 	if len(targets) == 0 {
-		return fmt.Errorf("no target peer specified")
+		return channel.Response{}, fmt.Errorf("no target peer specified")
 	}
 
 	//	logger.Infof("Invoking chaincode [%s] with args [%v] on channel [%s]\n", ccID, args, channelID)
@@ -304,20 +303,20 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 
 		targetPeer, err := d.BDDContext.OrgUserContext(targets[0].OrgID, ADMIN).InfraProvider().CreatePeerFromConfig(&fabApi.NetworkPeer{PeerConfig: target.Config})
 		if err != nil {
-			return errors.WithMessage(err, "NewPeer failed")
+			return channel.Response{}, errors.WithMessage(err, "NewPeer failed")
 		}
 		peers = append(peers, targetPeer)
 	}
 
 	chClient, err := d.BDDContext.OrgChannelClient(targets[0].OrgID, USER, channelID)
 	if err != nil {
-		return fmt.Errorf("Failed to create new channel client: %s", err)
+		return channel.Response{}, fmt.Errorf("Failed to create new channel client: %s", err)
 	}
 
 	retryOpts := retry.DefaultOpts
 	retryOpts.RetryableCodes = retry.ChannelClientRetryableCodes
 
-	_, err = chClient.Execute(
+	response, err := chClient.Execute(
 		channel.Request{
 			ChaincodeID: ccID,
 			Fcn:         args[0],
@@ -328,9 +327,9 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 	)
 
 	if err != nil {
-		return fmt.Errorf("InvokeChaincode return error: %v", err)
+		return channel.Response{}, fmt.Errorf("InvokeChaincode return error: %v", err)
 	}
-	return err
+	return response, nil
 }
 
 func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
