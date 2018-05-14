@@ -203,6 +203,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
+	defer sdk.Close()
 
 	context, err := sdk.Context(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))()
 	if err != nil {
