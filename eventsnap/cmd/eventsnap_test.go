@@ -9,9 +9,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -23,25 +22,25 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/eventsnap/cmd/mocks"
 	discoveryService "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
+	transactionsnapMocks "github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 )
 
 const (
-	TxnSnapAppName       = "txnsnap"
-	channelID1           = "testchannel"
-	channelID2           = "testChannel2"
-	mspID                = "Org1MSP"
-	peerID               = "peer1"
-	eventSvcExistsErrMsg = "Event service already initialized for channel"
-	testhost             = "127.0.0.1"
-	testport             = 7040
-	testBroadcastPort    = 7041
+	TxnSnapAppName    = "txnsnap"
+	channelID1        = "testchannel"
+	channelID2        = "testChannel2"
+	mspID             = "Org1MSP"
+	peerID            = "peer1"
+	testhost          = "127.0.0.1"
+	testport          = 7040
+	testBroadcastPort = 7041
 )
 
 type sampleConfig struct {
@@ -67,7 +66,7 @@ func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService
 }
 
 func TestEventSnap(t *testing.T) {
-
+	delayStartChannelEventsDuration = 0 * time.Second
 	configStub1 := configmocks.NewMockStub(channelID1)
 	configStub1.ChannelID = channelID1
 	service.Initialize(configStub1, mspID)
@@ -95,19 +94,12 @@ func TestEventSnap(t *testing.T) {
 
 	stub := shim.NewMockStub("eventsnap", eventsnap)
 
-	// Start mock event hub
-	eventServer, err := fcmocks.StartMockEventServer("127.0.0.1:7051")
+	// Start mock deliver server
+	deliverServer, err := mocks.StartMockDeliverServer("127.0.0.1:7040")
 	if err != nil {
 		t.Fatalf("Failed to start mock event hub: %v", err)
 	}
-	defer eventServer.Stop()
-
-	mockEndorserServer := mocks.StartEndorserServer(testhost + ":" + strconv.Itoa(testport))
-	payloadMap := make(map[string][]byte, 2)
-	payloadMap["GetConfigBlock"] = getConfigBlockPayload()
-	payloadMap["default"] = []byte("value")
-	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
-		Payload: payloadMap})
+	defer deliverServer.Stop()
 
 	client.ServiceProviderFactory = &MockProviderFactory{}
 	// Happy Path
@@ -116,21 +108,12 @@ func TestEventSnap(t *testing.T) {
 		t.Fatalf("Error in init: %s", resp.GetMessage())
 	}
 
-	// Initialize again with same channel
-	if resp := stub.MockInit("txid3", nil); resp.Status == shim.OK || !strings.Contains(resp.GetMessage(), eventSvcExistsErrMsg) {
-		t.Fatalf("Expected '%s', but got '%s'", eventSvcExistsErrMsg, resp.GetMessage())
-	}
-
 	// Another channel
 	stub.ChannelID = channelID2
 	if resp := stub.MockInit("txid4", nil); resp.Status != shim.OK {
 		t.Fatalf("Error in init: %s", resp.GetMessage())
 	}
-
-	// Init again on same channel
-	if resp := stub.MockInit("txid5", nil); resp.Status == shim.OK || !strings.Contains(resp.GetMessage(), eventSvcExistsErrMsg) {
-		t.Fatalf("Expected '%s', but got '%s'", eventSvcExistsErrMsg, resp.GetMessage())
-	}
+	time.Sleep(2 * time.Second)
 
 	eventService1 := localservice.Get(channelID1)
 	if eventService1 == nil {
@@ -215,7 +198,7 @@ func getConfigBlockPayload() []byte {
 				"Org1MSP",
 			},
 			OrdererAddress: fmt.Sprintf("grpc://%s:%d", testhost, testBroadcastPort),
-			RootCA:         mocks.RootCA,
+			RootCA:         transactionsnapMocks.RootCA,
 		},
 		Index:           0,
 		LastConfigIndex: 0,

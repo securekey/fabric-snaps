@@ -28,6 +28,7 @@ import (
 )
 
 var logger = logging.NewLogger("eventsnap")
+var delayStartChannelEventsDuration = 5 * time.Second
 
 const (
 	channelConfigCheckDuration = 1 * time.Second
@@ -59,22 +60,9 @@ func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Success(nil)
 	}
 
-	esconfig, err := config.New(channelID, s.peerConfigPath)
-	if err != nil {
-		logger.Warn(err.Error())
-	}
-
-	if esconfig != nil {
-		if err := s.startChannelEvents(stub.GetChannelID(), esconfig); err != nil {
-			logger.Error(err.Error())
-			return shim.Error(err.Error())
-		}
-	} else {
-		// Check the config periodically and start
-		// the event service when the config is available.
-		logger.Warnf("EventSnap configuration is unavailable for channel [%s]. The event service will be started when configuration is available.", stub.GetChannelID())
-		go s.delayStartChannelEvents(stub.GetChannelID())
-	}
+	// Check the config periodically and start
+	logger.Warnf("The event service will be started when configuration is available.", stub.GetChannelID())
+	go s.delayStartChannelEvents(stub.GetChannelID())
 
 	return shim.Success(nil)
 }
@@ -120,6 +108,8 @@ func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventS
 }
 
 func (s *eventSnap) delayStartChannelEvents(channelID string) {
+	// wait for 5 seconds for delivery client to start
+	time.Sleep(delayStartChannelEventsDuration)
 	for {
 		time.Sleep(channelConfigCheckDuration)
 		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...", channelID)
@@ -155,6 +145,7 @@ func (s *eventSnap) connectEventClient(context context.Client, channelID string,
 		client.WithResponseTimeout(config.ResponseTimeout),
 		// deliverclient.WithBlockEvents(), // TODO: Use block events?
 	)
+
 	if err != nil {
 		return nil, err
 	}
