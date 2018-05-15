@@ -335,6 +335,7 @@
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
+    "internal/github.com/hyperledger/fabric-ca/lib/streamer",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
     "internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge",
     "internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge",
@@ -415,7 +416,6 @@
     "pkg/fab/orderer",
     "pkg/fab/peer",
     "pkg/fab/resource",
-    "pkg/fab/resource/api",
     "pkg/fab/signingmgr",
     "pkg/fab/txn",
     "pkg/fabsdk",
@@ -446,7 +446,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "0c8195c19fbb1e23a1f326e093f62bdd7a819781"
+  revision = "dd2868aacb76a483a4940ce4573dbf5fce121619"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -733,6 +733,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "90317a9e460b032652e4a0e1613971d0abc5a2e4f54397ad771a24b9c69e03ba"
+  inputs-digest = "d2a39d1c83ad9ba42ed8c1f0d1ee6842db64402431170d42c75785be6d754ec8"
   solver-name = "gps-cdcl"
   solver-version = 1
