@@ -61,9 +61,9 @@ type Client interface {
 	// @returns {error} error, if any
 	VerifyTxnProposalSignature([]byte) error
 
-	// GetConfig get client config
-	// @returns {Config} config
-	GetConfig() fabApi.EndpointConfig
+	// GetTargetPeer gets fab api peer for given peer config
+	// @returns {fabApi.Peer} fab api peer
+	GetTargetPeer(peerCfg *PeerConfig) (fabApi.Peer, error)
 
 	// GetContext get client context
 	// @returns {Client} client

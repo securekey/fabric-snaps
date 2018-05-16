@@ -14,9 +14,10 @@ import (
 )
 
 // NewMockConfig setup mock configuration for testing
-func NewMockConfig(txnSnapConfig, peerConfig *viper.Viper) api.Config {
+func NewMockConfig(txnSnapConfig, peerConfig *viper.Viper, configBytes []byte) api.Config {
 	return &Config{
-		peerConfig:    peerConfig,
-		txnSnapConfig: txnSnapConfig,
+		peerConfig:         peerConfig,
+		txnSnapConfig:      txnSnapConfig,
+		txnSnapConfigBytes: configBytes,
 	}
 }

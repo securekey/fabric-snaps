@@ -49,9 +49,9 @@ type apiConfig struct {
 	api.Config
 }
 
-//ClientConfig to return client config
-func (txs *TxServiceImpl) ClientConfig() fabApi.EndpointConfig {
-	return txs.FcClient.GetConfig()
+//GetTargetPeer to returns target peer for given peer config
+func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig) (fabApi.Peer, error) {
+	return txs.FcClient.GetTargetPeer(peerCfg)
 }
 
 //New creates new transaction snap service

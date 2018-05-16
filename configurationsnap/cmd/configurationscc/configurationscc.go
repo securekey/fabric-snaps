@@ -19,7 +19,6 @@ import (
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
@@ -540,17 +539,11 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 		logger.Debugf("Cannot get local peer: %v", err)
 	}
 
-	peerConfig, err := txService.ClientConfig().PeerConfig(fmt.Sprintf("%s:%d", localPeer.Host,
-		localPeer.Port))
-	if err != nil {
-		logger.Debugf("error get peer config by url: %v", err)
-	}
-
-	targetPeer, err := peer.New(txService.ClientConfig(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(localPeer.MSPid)}),
-		peer.WithTLSCert(txService.Config.GetTLSRootCert()))
+	targetPeer, err := txService.GetTargetPeer(localPeer)
 	if err != nil {
 		logger.Debugf("Error creating target peer: %v", err)
 	}
+
 	args := [][]byte{[]byte("refresh")}
 	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil)
 	txService.EndorseTransaction(txSnapReq, []fabApi.Peer{targetPeer})

@@ -93,8 +93,11 @@ func newRefCache(refresh time.Duration) *lazycache.Cache {
 }
 
 func newInitializer(channelID string, txnSnapConfig api.Config, serviceProviderFactory apisdk.ServiceProviderFactory) lazyref.Initializer {
+	var client *clientImpl
 	return func() (interface{}, error) {
-		client := &clientImpl{txnSnapConfig: txnSnapConfig}
+		if client == nil {
+			client = &clientImpl{txnSnapConfig: txnSnapConfig}
+		}
 		err := client.initialize(channelID, serviceProviderFactory)
 		if err != nil {
 			return nil, err
