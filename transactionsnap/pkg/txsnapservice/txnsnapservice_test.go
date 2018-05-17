@@ -172,7 +172,7 @@ func TestMain(m *testing.M) {
 			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "../../cmd/sampleconfig/msp/keystore"},
 		},
 	}
-	// TDOD
+	// TODO
 	bccspFactory.InitFactories(opts)
 
 	os.Setenv("CORE_PEER_ADDRESS", "peer1:5100")

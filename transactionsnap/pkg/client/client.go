@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
-	"bytes"
 	"fmt"
 	"sync"
 
@@ -21,12 +20,17 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 
+	"crypto/sha256"
+	"encoding/base64"
+	"sync/atomic"
+
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -50,12 +54,14 @@ const (
 
 type clientImpl struct {
 	sync.RWMutex
-	txnSnapConfig  api.Config
-	clientConfig   fabApi.EndpointConfig
-	channelClient  *channel.Client
-	channelService fabApi.ChannelService
-	channelID      string
-	context        contextApi.Client
+	txnSnapConfig api.Config
+	clientConfig  fabApi.EndpointConfig
+	channelClient *channel.Client
+	channelID     string
+	context       contextApi.Channel
+	mutex         sync.RWMutex
+	configHash    atomic.Value
+	sdk           *fabsdk.FabricSDK
 }
 
 // DynamicProviderFactory is configured with dynamic discovery provider and dynamic selection provider
@@ -140,21 +146,35 @@ func getInstance(key CacheKey) (api.Client, error) {
 	return client.(api.Client), nil
 }
 
+// GeneratePin returns pin of an x509 certificate
+func (c *clientImpl) generateHash(bytes []byte) string {
+	digest := sha256.Sum256(bytes)
+	return base64.StdEncoding.EncodeToString(digest[:])
+}
+
 func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.ServiceProviderFactory) error {
-	// Get local peer
-	localPeer, err := c.txnSnapConfig.GetLocalPeer()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
+
+	currentCfgHash := c.generateHash(c.txnSnapConfig.GetConfigBytes())
+
+	//compare config hash
+	if c.configHash.Load() == currentCfgHash {
+		return nil
+	}
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	//close existing sdk instance if any
+	if c.sdk != nil {
+		c.sdk.Close()
 	}
 
 	// Get client config
 	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
 		// there will be no data left in the buffer the second time it's called
-		return config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")()
+		return config.FromRaw(c.txnSnapConfig.GetConfigBytes(), "yaml")()
 	}
-
-	config.FromReader(bytes.NewBuffer(c.txnSnapConfig.GetConfigBytes()), "yaml")
 
 	configBackends, err := configProvider()
 	if err != nil {
@@ -171,6 +191,14 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "Failed to get network config")
 	}
+
+	// Get local peer
+	localPeer, err := c.txnSnapConfig.GetLocalPeer()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
+	}
+
+	//lookup for orgname
 	var orgname string
 	for name, org := range nconfig.Organizations {
 		if org.MSPID == string(localPeer.MSPid) {
@@ -195,7 +223,8 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 
 	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, c.txnSnapConfig.GetTLSCertPem())
 
-	sdk, err := fabsdk.New(configProvider,
+	//create sdk
+	c.sdk, err = fabsdk.New(configProvider,
 		fabsdk.WithConfigEndpoint(customEndpointConfig),
 		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
 		fabsdk.WithServicePkg(serviceProviderFactory),
@@ -204,13 +233,8 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
 
-	context, err := sdk.Context(fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to create client context")
-	}
-
 	// new channel context prov
-	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
+	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
 
 	// Channel client is used to query and execute transactions
 	chClient, err := channel.New(chContextProv)
@@ -220,21 +244,18 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	if chClient == nil {
 		return errors.New(errors.GeneralError, "channel client is nil")
 	}
+
 	chContext, err := chContextProv()
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context %v", channelID, err)
 	}
-	// Get channel service
-	chService := chContext.ChannelService()
-	if chService == nil {
-		return errors.New(errors.GeneralError, "channel service is nil")
-	}
 
 	c.channelClient = chClient
-	c.channelService = chService
 	c.channelID = channelID
 	c.clientConfig = customEndpointConfig
-	c.context = context
+	c.context = chContext
+	c.configHash.Store(currentCfgHash)
+
 	return nil
 }
 
@@ -264,6 +285,9 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 			),
 		),
 	)
+
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
@@ -300,6 +324,9 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		),
 	)
 
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()))
@@ -323,7 +350,11 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	}
 
 	logger.Debugf("checkSignatureFromCreator info: creator is %s", creatorBytes)
-	membership, err := c.channelService.Membership()
+
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	membership, err := c.context.ChannelService().Membership()
 	if err != nil {
 		return errors.Wrap(errors.GeneralError, err, "Failed to get Membership from channelService")
 	}
@@ -347,8 +378,24 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	return nil
 }
 
-func (c *clientImpl) GetConfig() fabApi.EndpointConfig {
-	return c.clientConfig
+func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig) (fabApi.Peer, error) {
+
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	peerConfig, err := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
+		peerCfg.Port))
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed to get peer config by url")
+	}
+
+	targetPeer, err := peer.New(c.clientConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(peerCfg.MSPid)}),
+		peer.WithTLSCert(c.txnSnapConfig.GetTLSRootCert()))
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "Failed create peer by peer config")
+	}
+
+	return targetPeer, nil
 }
 
 func (c *clientImpl) retryOpts() retry.Opts {
@@ -370,7 +417,14 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	return opts
 }
 
+//GetContext returns SDK context object of given client
+//For thread safety, care should be taken while using returned value since it can be updated if there are any
+// txnsnap config updates and lazyref cache refresh kicks in.
 func (c *clientImpl) GetContext() contextApi.Client {
+
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
 	return c.context
 }
 
