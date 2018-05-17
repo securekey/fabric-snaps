@@ -22,6 +22,30 @@
       "revId": "bbfc21c233c4c7c7c425d11a4c2bba66128aa059",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72f432e5_f1a54fc8",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-05-17T15:00:20Z",
+      "side": 1,
+      "message": "Fixed. GetContext returns client context. \nSo used lock instead.\n\nWe may need to synchronize membership too here I think.",
+      "parentUuid": "b852cb6d_f2f2508f",
+      "range": {
+        "startLine": 353,
+        "startChar": 22,
+        "endLine": 353,
+        "endChar": 29
+      },
+      "revId": "bbfc21c233c4c7c7c425d11a4c2bba66128aa059",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
