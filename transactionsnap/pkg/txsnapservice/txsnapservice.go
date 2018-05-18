@@ -11,6 +11,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -50,8 +51,8 @@ type apiConfig struct {
 }
 
 //GetTargetPeer to returns target peer for given peer config
-func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig) (fabApi.Peer, error) {
-	return txs.FcClient.GetTargetPeer(peerCfg)
+func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option) (fabApi.Peer, error) {
+	return txs.FcClient.GetTargetPeer(peerCfg, opts...)
 }
 
 //New creates new transaction snap service
