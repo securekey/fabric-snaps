@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/configmanager/api"
@@ -26,8 +26,6 @@ var callerIdentity string
 const (
 	// indexOrg is the name of the index to retrieve configurations per org
 	indexMspID = "cfgmgmt-mspid"
-	// configData is the name of the data collection for config maanger
-	configData = "config-mngmt"
 )
 
 // indexes contains a list of indexes that should be added for configurations
@@ -176,7 +174,7 @@ func (cmngr *configManagerImpl) getConfig(configKey api.ConfigKey) ([]byte, erro
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "GetState failed")
 	}
-	if config == nil && err == nil {
+	if config == nil && len(config) == 0 {
 		logger.Debugf("Nothing there for key %s", key)
 	}
 	return config, nil
@@ -254,11 +252,13 @@ func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	mspID := parsedConfig.MspID
 	for _, config := range parsedConfig.Peers {
 		for _, appConfig := range config.App {
-			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName)
-			if err != nil {
-				return nil, err
+			for _, verConfig := range appConfig.Versions {
+				key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, verConfig.Version)
+				if err != nil {
+					return nil, err
+				}
+				configMap[key] = []byte(verConfig.Config)
 			}
-			configMap[key] = []byte(appConfig.Config)
 		}
 	}
 	return configMap, nil
