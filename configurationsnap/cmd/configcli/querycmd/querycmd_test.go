@@ -17,7 +17,7 @@ import (
 
 const (
 	clientConfigPath = "../testdata/clientconfig/config.yaml"
-	configKV         = `[{"Key":{"MspID":"Org1MSP","PeerID":"peer0.org1.example.com","AppName":"myapp"},"Value":"ZW1iZWRkZWQgY29uZmln"}]`
+	configKV         = `[{"Key":{"MspID":"Org1MSP","PeerID":"peer0.org1.example.com","AppName":"myapp","Version":"1"},"Value":"ZW1iZWRkZWQgY29uZmln"}]`
 )
 
 func TestInvalidClientConfig(t *testing.T) {
@@ -40,15 +40,15 @@ func TestValidConfigKey(t *testing.T) {
 
 func TestValidConfigKeyOptions(t *testing.T) {
 	// Uses Org1MSP
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
 	// Display in raw format
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--format", "raw")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1", "--format", "raw")
 	// Uses default org
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerid", "peer0.org1.example.com", "--appname", "myapp")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
 	// Uses org2
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--orgid", "org2", "--peerid", "peer0.org1.example.com", "--appname", "myapp")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--orgid", "org2", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
 	// Uses peer URL grpcs://peer0.org1.example.com:7053
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerurl", "grpcs://peer0.org1.example.com:7051", "--peerid", "peer0.org1.example.com", "--appname", "myapp")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerurl", "grpcs://peer0.org1.example.com:7051", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
 }
 
 func execute(t *testing.T, expectError bool, response []byte, args ...string) {

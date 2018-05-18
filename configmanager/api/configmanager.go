@@ -12,11 +12,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-// ConfigKey contain org,peer,appname
+// VERSION of config data
+const VERSION = "1"
+
+// ConfigKey contain org,peer,appname,version
 type ConfigKey struct {
 	MspID   string
 	PeerID  string
 	AppName string
+	Version string
 }
 
 //ConfigKV represents key value struct for managing configurations
@@ -25,10 +29,16 @@ type ConfigKV struct {
 	Value []byte
 }
 
-//AppConfig identifier has application name and config
-type AppConfig struct {
-	AppName string
+//VersionConfig identifier has application name and config
+type VersionConfig struct {
+	Version string
 	Config  string
+}
+
+//AppConfig identifier has application name and collection of version configurations
+type AppConfig struct {
+	AppName  string
+	Versions []VersionConfig
 }
 
 //PeerConfig identifier has peer identifier and collection of application configurations
@@ -122,7 +132,23 @@ func (ac AppConfig) IsValid() error {
 	if ac.AppName == "" {
 		return errors.New("AppName cannot be empty")
 	}
-	if len(ac.Config) == 0 {
+	if len(ac.Versions) == 0 {
+		return errors.New("Collection of versions is required")
+	}
+	for _, version := range ac.Versions {
+		if err := version.IsValid(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//IsValid versionConfig
+func (vc VersionConfig) IsValid() error {
+	if vc.Version == "" {
+		return errors.New("Version cannot be empty")
+	}
+	if len(vc.Config) == 0 {
 		return errors.New("AppConfig is not set (empty payload)")
 	}
 	return nil

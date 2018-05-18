@@ -165,6 +165,7 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 		MspID:   mspID,
 		PeerID:  cliconfig.Config().PeerID(),
 		AppName: cliconfig.Config().AppName(),
+		Version: cliconfig.Config().ConfigVer(),
 	}, nil
 }
 
@@ -182,7 +183,7 @@ func (a *action) initSDK() error {
 		return errors.New(errors.GeneralError, "user must be specified")
 	}
 
-	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ConfigFile()),
+	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ClientConfigFile()),
 		fabsdk.WithConfigEndpoint(cliconfig.Config()),
 	)
 	if err != nil {

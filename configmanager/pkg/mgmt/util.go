@@ -19,9 +19,9 @@ const (
 	KeyDivider = "!"
 )
 
-//CreateConfigKey creates key using mspID, peerID and appName
-func CreateConfigKey(mspID string, peerID string, appName string) (api.ConfigKey, error) {
-	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName}
+//CreateConfigKey creates key using mspID, peerID, appName and version
+func CreateConfigKey(mspID, peerID, appName, version string) (api.ConfigKey, error) {
+	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, Version: version}
 	if err := ValidateConfigKey(configKey); err != nil {
 		return configKey, err
 	}
@@ -39,6 +39,9 @@ func ValidateConfigKey(configKey api.ConfigKey) error {
 	if len(configKey.AppName) == 0 {
 		return errors.New(errors.GeneralError, "Cannot create config key using empty AppName")
 	}
+	if len(configKey.Version) == 0 {
+		return errors.New(errors.GeneralError, "Cannot create config key using empty Version")
+	}
 	return nil
 }
 
@@ -47,7 +50,7 @@ func ConfigKeyToString(configKey api.ConfigKey) (string, error) {
 	if err := ValidateConfigKey(configKey); err != nil {
 		return "", errors.WithMessage(errors.GeneralError, err, "Config Key is not valid")
 	}
-	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName}, KeyDivider), nil
+	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName, configKey.Version}, KeyDivider), nil
 }
 
 //StringToConfigKey converts string to ConfigKey{}
@@ -60,5 +63,6 @@ func StringToConfigKey(key string) (api.ConfigKey, error) {
 	ck.MspID = keyParts[0]
 	ck.PeerID = keyParts[1]
 	ck.AppName = keyParts[2]
+	ck.Version = keyParts[3]
 	return ck, nil
 }

@@ -35,6 +35,7 @@ func newConfigCLICmd() *cobra.Command {
 	cliconfig.InitChannelID(flags)
 	cliconfig.InitUserName(flags)
 	cliconfig.InitUserPassword(flags)
+	cliconfig.InitTimeout(flags)
 	cliconfig.InitOrgID(flags)
 	cliconfig.InitMspID(flags)
 
