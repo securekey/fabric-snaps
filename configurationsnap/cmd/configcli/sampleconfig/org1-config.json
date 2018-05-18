@@ -1,29 +1,33 @@
 {
-  "MspID":"Org1MSP",
-  "Peers":[
+  "MspID": "Org1MSP",
+  "Peers": [
     {
-      "PeerID":"peer0.org1.example.com",
-      "App":[
+      "PeerID": "peer0.org1.example.com",
+      "App": [
         {
-          "AppName":"app1",
-          "Config":"file://./org1-peer0-app1-config.yaml"
+          "AppName": "app1",
+          "Version": "1",
+          "Config": "file://./org1-peer0-app1-config.yaml"
         },
         {
-          "AppName":"app2",
-          "Config":"file://./org1-peer0-app2-config.json"
+          "AppName": "app2",
+          "Version": "1",
+          "Config": "file://./org1-peer0-app2-config.json"
         }
       ]
     },
     {
-      "PeerID":"peer1.org1.example.com",
-      "App":[
+      "PeerID": "peer1.org1.example.com",
+      "App": [
         {
-          "AppName":"app1",
-          "Config":"file://./org1-peer1-app1-config.yaml"
+          "AppName": "app1",
+          "Version": "1",
+          "Config": "file://./org1-peer1-app1-config.yaml"
         },
         {
-          "AppName":"app2",
-          "Config":"file://./org1-peer1-app2-config.json"
+          "AppName": "app2",
+          "Version": "1",
+          "Config": "file://./org1-peer1-app2-config.json"
         }
       ]
     }

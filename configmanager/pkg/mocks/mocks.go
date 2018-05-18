@@ -28,8 +28,9 @@ func NewMockStub(channelID string) *mockstub.MockStub {
 
 // SaveConfig saves the config data to the configuration snap using the given stub
 // and caches the data in the configuration service
-func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName string, configData []byte) error {
-	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{api.PeerConfig{PeerID: peerID, App: []api.AppConfig{api.AppConfig{AppName: appName, Config: string(configData)}}}}}
+func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName, ver string, configData []byte) error {
+	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{api.PeerConfig{PeerID: peerID, App: []api.AppConfig{api.AppConfig{AppName: appName,
+		Version: ver, Config: string(configData)}}}}}
 	configBytes, err := json.Marshal(config)
 	if err != nil {
 		return errors.Wrap(err, "error marshalling config")
@@ -43,10 +44,10 @@ func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName string, configDa
 
 // SaveConfigFromFile reads the config data from the given file and saves it to the configuration snap
 // using the given stub and caches the data in the configuration service
-func SaveConfigFromFile(stub *mockstub.MockStub, mspID, peerID, appName, configFile string) error {
+func SaveConfigFromFile(stub *mockstub.MockStub, mspID, peerID, appName, ver, configFile string) error {
 	configData, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return errors.Wrap(err, "error reading config file")
 	}
-	return SaveConfig(stub, mspID, peerID, appName, configData)
+	return SaveConfig(stub, mspID, peerID, appName, ver, configData)
 }

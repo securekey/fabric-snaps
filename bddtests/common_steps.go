@@ -255,7 +255,7 @@ func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
 			if err != nil {
 				return fmt.Errorf("file error: %v", err)
 			}
-			pConfig.App = append(pConfig.App, configmanagerApi.AppConfig{AppName: snap, Config: string(configData)})
+			pConfig.App = append(pConfig.App, configmanagerApi.AppConfig{AppName: snap, Version: configmanagerApi.VERSION, Config: string(configData)})
 		}
 
 		config := configmanagerApi.ConfigMessage{

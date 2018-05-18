@@ -559,7 +559,7 @@ func TestMain(m *testing.M) {
 	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "txnsnap", Config: string(configData)}}}}}
+				configmanagerApi.AppConfig{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 	stub := getMockStub()
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {

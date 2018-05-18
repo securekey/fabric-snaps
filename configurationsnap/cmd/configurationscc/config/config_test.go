@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
+				configmanagerApi.AppConfig{AppName: "configurationsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {

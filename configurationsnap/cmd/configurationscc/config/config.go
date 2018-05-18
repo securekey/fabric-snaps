@@ -29,7 +29,6 @@ const (
 	peerConfigName        = "core"
 	envPrefix             = "core"
 	defaultPeerConfigPath = "/etc/hyperledger/fabric"
-	customConfigName      = "config"
 )
 
 //Config contains the configuration for the config snap

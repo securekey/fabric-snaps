@@ -32,7 +32,7 @@ func TestInvalidConfigString(t *testing.T) {
 }
 
 func TestValidConfigString(t *testing.T) {
-	configString := `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Config":"embedded config"}]}]}`
+	configString := `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}]}`
 	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--config", configString, "--noprompt")
 }
 

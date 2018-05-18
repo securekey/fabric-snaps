@@ -15,8 +15,10 @@ import (
 	"os"
 	"testing"
 
-	bccsp "github.com/hyperledger/fabric/bccsp"
-	factory "github.com/hyperledger/fabric/bccsp/factory"
+	"strings"
+
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -28,14 +30,8 @@ import (
 )
 
 const (
-	orgMsp   = "Org1MSP"
-	validMsg = `{"MspID":"Org1MSP","Peers":
-		[{"PeerID":    
-				"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
-	validMsgMultiplePeersAndApps = `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Config":"configstringgoeshere"},{"AppName":"appNameB","Config":"config for appNametwo"},{"AppName":"appNameC","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Config":"BLTwo"}]}]}`
-	invalidJSONMsg               = `{"MspID":"Org1MSP","Peers":this willnot fly
-		[{"PeerID":    
-				"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
+	validMsgMultiplePeersAndApps = `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Version":"$v","Config":"configstringgoeshere"},{"AppName":"appNameB","Version":"$v","Config":"config for appNametwo"},{"AppName":"appNameC","Version":"$v","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Version":"1","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Version":"$v","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Version":"$v","Config":"BLTwo"}]}]}`
+	invalidJSONMsg               = `{"MspID":"Org1MSP","Peers":this willnot fly[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
 )
 
 func TestInit(t *testing.T) {
@@ -252,11 +248,11 @@ func TestGet(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 
 	stub := getMockStub("testChannel")
-	uplaodConfigToHL(t, stub, []byte(validMsgMultiplePeersAndApps))
+	uplaodConfigToHL(t, stub, []byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 	//get configuration - pass config key that has only MspID field set
 	//implicitly designed criteria by MspID
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -272,7 +268,7 @@ func TestGet(t *testing.T) {
 		t.Fatalf("Expected six records, but got  %d", len(*expected))
 	}
 	//config key is explicit - expect to get only one record back
-	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.one.one.example.com", AppName: "appNameB"}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.one.one.example.com", AppName: "appNameB", Version: api.VERSION}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -294,10 +290,10 @@ func TestDelete(t *testing.T) {
 	stub := getMockStub("testChannel")
 
 	configManager := mgmt.NewConfigManager(stub)
-	err := configManager.Save([]byte(validMsgMultiplePeersAndApps))
+	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 
 	funcName := []byte("delete")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName"}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", Version: api.VERSION}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -307,7 +303,7 @@ func TestDelete(t *testing.T) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 
-	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: ""}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -317,7 +313,7 @@ func TestDelete(t *testing.T) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 
-	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: ""}
+	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", Version: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -372,10 +368,10 @@ func TestGetKey(t *testing.T) {
 func TestGetConfigUsingInvalidKey(t *testing.T) {
 	stub := getMockStub("testChannel")
 	configManager := mgmt.NewConfigManager(stub)
-	err := configManager.Save([]byte(validMsgMultiplePeersAndApps))
+	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", Version: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -409,12 +405,12 @@ func TestGetConfigUsingInvalidKey(t *testing.T) {
 func TestSaveErrors(t *testing.T) {
 	stub := getMockStub("testChannel")
 
-	_, err := invoke(stub, getBytes("save", []string{validMsgMultiplePeersAndApps}))
+	_, err := invoke(stub, getBytes("save", []string{strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)}))
 	if err != nil {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 
-	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "b", AppName: "b"}
+	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "b", AppName: "b", Version: api.VERSION}
 	configKeyStr, err := mgmt.ConfigKeyToString(configKey)
 	if err == nil {
 		t.Fatalf("expected error: Cannot create config key using empty MspId")
@@ -424,7 +420,7 @@ func TestSaveErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error: Cannot create config key using empty MspId  %v", err)
 	}
-	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName"}
+	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName", Version: api.VERSION}
 	//pass key string instead of configkey struct
 	configKeyStr, err = mgmt.ConfigKeyToString(configKey)
 	if err != nil {
@@ -800,20 +796,6 @@ func getBytes(function string, args []string) [][]byte {
 	return bytes
 }
 
-func saveConfigsForTesting(t *testing.T) ([]byte, *mockstub.MockStub) {
-
-	stub := getMockStub("testChannel")
-	stub.ChannelID = "testChannel"
-	stub.SetMspID("Org1MSP")
-	funcName := []byte("save")
-	payload := []byte(validMsgMultiplePeersAndApps)
-	response, err := invoke(stub, [][]byte{funcName, payload})
-	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
-	}
-	return response, stub
-}
-
 func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message []byte) error {
 	configManager := mgmt.NewConfigManager(stub)
 	err := configManager.Save(message)
@@ -829,7 +811,7 @@ func TestMain(m *testing.M) {
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "configurationsnap", Config: string(configData)}}}}}
+				configmanagerApi.AppConfig{AppName: "configurationsnap", Version: api.VERSION, Config: string(configData)}}}}}
 
 	stub := getMockStub("testChannel")
 

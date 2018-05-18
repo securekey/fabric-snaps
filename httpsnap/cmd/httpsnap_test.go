@@ -223,7 +223,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
-	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: string(configData)}}}}}
+	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe",
+		App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 	stub := newConfigMockStub(channelID, mspID)
 	configBytes, err := json.Marshal(config)
 	if err != nil {
@@ -239,7 +240,8 @@ func TestMain(m *testing.M) {
 	//configdata for second channel for which peer TLS config is enabled
 	configDataStr := string(configData)
 	configDataStr = strings.Replace(configDataStr, "allowPeerConfig: false", "allowPeerConfig: true", -1)
-	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: configDataStr}}}}}
+	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe",
+		App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Version: configmanagerApi.VERSION, Config: string(configDataStr)}}}}}
 	configBytes2, err := json.Marshal(config2)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))

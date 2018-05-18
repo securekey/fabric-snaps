@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/configmanager/api"
@@ -26,8 +26,6 @@ var callerIdentity string
 const (
 	// indexOrg is the name of the index to retrieve configurations per org
 	indexMspID = "cfgmgmt-mspid"
-	// configData is the name of the data collection for config maanger
-	configData = "config-mngmt"
 )
 
 // indexes contains a list of indexes that should be added for configurations
@@ -176,7 +174,7 @@ func (cmngr *configManagerImpl) getConfig(configKey api.ConfigKey) ([]byte, erro
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "GetState failed")
 	}
-	if config == nil && err == nil {
+	if config == nil && len(config) == 0 {
 		logger.Debugf("Nothing there for key %s", key)
 	}
 	return config, nil
@@ -239,10 +237,8 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 //ParseConfigMessage unmarshals supplied config message and returns
 //map[compositekey]configurationbytes to the caller
 func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
-
 	configMap := make(map[api.ConfigKey][]byte)
 	var parsedConfig api.ConfigMessage
-
 	if err := json.Unmarshal(configData, &parsedConfig); err != nil {
 		return nil, errors.Errorf(errors.GeneralError, "Cannot unmarshal config message %v %v", string(configData[:]), err)
 	}
@@ -250,11 +246,10 @@ func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	if err := parsedConfig.IsValid(); err != nil {
 		return nil, err
 	}
-
 	mspID := parsedConfig.MspID
 	for _, config := range parsedConfig.Peers {
 		for _, appConfig := range config.App {
-			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName)
+			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version)
 			if err != nil {
 				return nil, err
 			}

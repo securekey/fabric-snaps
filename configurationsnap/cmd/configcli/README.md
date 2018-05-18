@@ -16,24 +16,31 @@ The update command allows a client to update the configuration of one or more ap
 
 The format of the configuration is as follows:
 
+{
+  "MspID": "msp.one",
+  "Peers": [
     {
-        "MspID":"msp.one",
-        "Peers":[{
-            "PeerID":"peer1",
-            "App":[{
-                "AppName":"app1",
-                "Config":"config for app1"
-            },
-            {
-                "AppName":"app2",
-                "Config":"file://path_to_config.yaml"
-            }]
+      "PeerID": "peer1",
+      "App": [
+        {
+          "AppName": "app1",
+          "Version": "1",
+          "Config": "config for app1"
+
         },
         {
-            "PeerID":"peer2",
-            . . .
-        }]
-    }
+          "AppName": "app2",
+          "Version": "1",
+          "Config": "file://path_to_config.yaml"
+        }
+      ]
+    },
+    {
+      "PeerID":"peer2",
+      . . .
+	}
+  ]
+}
 
 The configuration may be embedded direcly in the "Config" element or the Config element may reference a file containing the configuration. 
 
@@ -84,7 +91,7 @@ Send the update to a single peer:
 
 Send an update using a configuration string specified in the command-line:
 
-    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Config":"embedded config"}]}]}'
+    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}]}'
 
 ### query
 

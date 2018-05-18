@@ -1,12 +1,13 @@
 {
-  "MspID":"Org1MSP",
-  "Peers":[
+  "MspID": "Org1MSP",
+  "Peers": [
     {
-      "PeerID":"peer0.org1.example.com",
-      "App":[
+      "PeerID": "peer0.org1.example.com",
+      "App": [
         {
-          "AppName":"app3",
-          "Config":"file://./org1-peer0-app3-config.yaml"
+          "AppName": "app3",
+          "Version": "1",
+          "Config": "file://./org1-peer0-app3-config.yaml"
         }
       ]
     }

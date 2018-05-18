@@ -28,20 +28,23 @@ or a configuration file may be specified (using the --configfile option).
 The format of the configuration is as follows:
 
 {
-  "MspID":"msp.one",
-  "Peers":[
+  "MspID": "msp.one",
+  "Peers": [
     {
-      "PeerID":"peer1",
-      "App":[
-	    {
-          "AppName":"app1",
-          "Config":"config for app1"
+      "PeerID": "peer1",
+      "App": [
+        {
+          "AppName": "app1",
+          "Version": "1",
+          "Config": "config for app1"
+           
         },
         {
-          "AppName":"app2",
-		  "Config":"file://path_to_config.yaml"
-	    }
-	  ]
+          "AppName": "app2",
+          "Version": "1",
+          "Config": "file://path_to_config.yaml"
+        }
+      ]
     },
     {
       "PeerID":"peer2",
@@ -61,7 +64,7 @@ const examples = `
     $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --configfile ./sampleconfig/org1-config.json
 
 - Send an update using a configuration string specified in the command-line:
-    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Config":"embedded config"}]}]}'
+    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}]}'
 `
 
 // Cmd returns the Update command
@@ -84,7 +87,7 @@ func newCmd(baseAction action.Action) *cobra.Command {
 			if err != nil {
 				return errors.Wrapf(err, "Error while initializing updateAction")
 			}
-			if cliconfig.Config().ConfigString() == "" && cliconfig.Config().ConfigFile() == "" {
+			if cliconfig.Config().ConfigString() == "" && cliconfig.Config().ClientConfigFile() == "" {
 				return errors.New("Please provide a configuration string or a path to a configuration file")
 			}
 			if len(action.Peers()) == 0 {
@@ -114,6 +117,7 @@ func newUpdateAction(baseAction action.Action) (*updateAction, error) {
 }
 
 func (a *updateAction) update() error {
+
 	var configString string
 	var configFilePath string
 	if cliconfig.Config().ConfigString() != "" {
@@ -169,20 +173,16 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 	if err != nil {
 		return nil, errors.Errorf("Invalid configuration: %v", err)
 	}
-
 	newConfigMsg := &mgmtapi.ConfigMessage{
 		MspID: configMsg.MspID,
 	}
-
 	cliconfig.Config().Logger().Debugf("Config message: %s\n", configMsg)
-
 	for _, peerConfig := range configMsg.Peers {
 		newPeerConfig := mgmtapi.PeerConfig{
 			PeerID: peerConfig.PeerID,
 		}
 		for _, appConfig := range peerConfig.App {
 			newAppConfig := &appConfig
-
 			// Substitute all of the file refs with the actual contents of the file
 			fileRef := appConfig.Config[0:7]
 			if fileRef == "file://" {
@@ -199,7 +199,6 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 	}
 	return newConfigMsg, nil
 }
-
 func readFile(filePath string) (string, error) {
 	cliconfig.Config().Logger().Debugf("Reading file [%s]\n", filePath)
 
