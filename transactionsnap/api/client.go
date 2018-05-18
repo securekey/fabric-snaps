@@ -11,6 +11,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 )
 
 // EndorsedCallback is a function that is invoked after the endorsement
@@ -61,9 +62,9 @@ type Client interface {
 	// @returns {error} error, if any
 	VerifyTxnProposalSignature([]byte) error
 
-	// GetTargetPeer gets fab api peer for given peer config
+	// GetTargetPeer gets fab api peer for given peer config or opts
 	// @returns {fabApi.Peer} fab api peer
-	GetTargetPeer(peerCfg *PeerConfig) (fabApi.Peer, error)
+	GetTargetPeer(peerCfg *PeerConfig, opts ...peer.Option) (fabApi.Peer, error)
 
 	// GetContext get client context
 	// @returns {Client} client

@@ -378,19 +378,23 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	return nil
 }
 
-func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig) (fabApi.Peer, error) {
+func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option) (fabApi.Peer, error) {
 
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
-	peerConfig, err := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
-		peerCfg.Port))
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "Failed to get peer config by url")
+	//TODO argument 'peerCfg' should come as opts instead of nil check
+	if peerCfg != nil {
+		peerConfig, err := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
+			peerCfg.Port))
+		if err != nil {
+			return nil, errors.Wrap(errors.GeneralError, err, "Failed to get peer config by url")
+		}
+		opts = append(opts, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(peerCfg.MSPid)}),
+			peer.WithTLSCert(c.txnSnapConfig.GetTLSRootCert()))
 	}
 
-	targetPeer, err := peer.New(c.clientConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(peerCfg.MSPid)}),
-		peer.WithTLSCert(c.txnSnapConfig.GetTLSRootCert()))
+	targetPeer, err := peer.New(c.clientConfig, opts...)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed create peer by peer config")
 	}
