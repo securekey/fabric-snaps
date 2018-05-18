@@ -18,6 +18,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	configmanagerapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
@@ -75,16 +76,16 @@ func TestEventSnap(t *testing.T) {
 	configStub2.ChannelID = channelID2
 	service.Initialize(configStub2, mspID)
 
-	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, "./sampleconfig/config.yaml"); err != nil {
+	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, config.EventSnapAppName, configmanagerapi.VERSION, "./sampleconfig/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
-	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, "./sampleconfig/config.yaml"); err != nil {
+	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, config.EventSnapAppName, configmanagerapi.VERSION, "./sampleconfig/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
-	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, TxnSnapAppName, "./sampleconfig/txnsnap/config.yaml"); err != nil {
+	if err := configmocks.SaveConfigFromFile(configStub1, mspID, peerID, TxnSnapAppName, configmanagerapi.VERSION, "./sampleconfig/txnsnap/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
-	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, TxnSnapAppName, "./sampleconfig/txnsnap/config.yaml"); err != nil {
+	if err := configmocks.SaveConfigFromFile(configStub2, mspID, peerID, TxnSnapAppName, configmanagerapi.VERSION, "./sampleconfig/txnsnap/config.yaml"); err != nil {
 		t.Fatalf("Error saving config: %s", err)
 	}
 
