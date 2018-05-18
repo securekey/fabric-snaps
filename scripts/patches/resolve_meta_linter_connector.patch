@@ -1,0 +1,15 @@
+diff --git a/pkg/fab/comm/connector.go b/pkg/fab/comm/connector.go
+index 9055a6d9..d01b69a7 100644
+--- a/pkg/fab/comm/connector.go
++++ b/pkg/fab/comm/connector.go
+@@ -130,7 +130,9 @@ func (cc *CachingConnector) ReleaseConn(conn *grpc.ClientConn) {
+ 
+ 		if conn.GetState() != connectivity.Shutdown {
+ 			logger.Warn("Connection is not shutdown, trying to close ...")
+-			conn.Close()
++			if err := conn.Close(); err != nil {
++				logger.Warnf("conn close failed err %v", err)
++			}
+ 		}
+ 		return
+ 	}

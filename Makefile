@@ -16,7 +16,7 @@
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # Release Parameters
-BASE_VERSION = 0.1.14
+BASE_VERSION = 0.1.15
 IS_RELEASE = true
 
 ifneq ($(IS_RELEASE),true)
@@ -117,6 +117,7 @@ populate-vendor:
 ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
 		@echo "Populating vendor ..."
 		@dep ensure -vendor-only
+		@./scripts/patch-vendor.sh
 endif
 
 
