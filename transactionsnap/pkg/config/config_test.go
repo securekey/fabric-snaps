@@ -234,7 +234,8 @@ func TestMain(m *testing.M) {
 	config := &configmanagerApi.ConfigMessage{MspID: mspID,
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "txnsnap", Config: configStr}}}}}
+				configmanagerApi.AppConfig{AppName: "txnsnap", Versions: []configmanagerApi.VersionConfig{
+					configmanagerApi.VersionConfig{Version: configmanagerApi.VERSION, Config: string(configStr)}}}}}}}
 	stub := getMockStub()
 	configBytes, err := json.Marshal(config)
 	if err != nil {

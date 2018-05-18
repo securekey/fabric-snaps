@@ -20,23 +20,23 @@ import (
 const (
 	mspID = "msp.one"
 	//number of records to be inserted in hyperledger for valid configuration test
-	numOfRecords = 6
-	//config contentCannot save state Configuration must be provided
-	testConfigValue = "configstringgoeshere"
+	numOfRecords = 8
 	//valid messages contain one MSP, one or more peers each having one or more apps
 	//for testing valid messages were configured with one msp: two peers each having three apps
-	validMsg          = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"config for test app name on peer zero"},{"AppName":"appNameOne","Config":"config for appNameOne"},{"AppName":"appNameTwo","Config":"mnopq"}]},{"PeerID":"peer.one.example.com","App":[{"AppName":"appNameOneOnPeerOne","Config":"config for appNameOneOnPeerOne goes here"},{"AppName":"appNameOneOne","Config":"config for appNameOneOne goes here"},{"AppName":"appNameTwo","Config":"BLOne"}]}]}`
-	validMsgOne       = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Config":"configstringgoeshere"},{"AppName":"appNameTwo","Config":"config for appNametwo"},{"AppName":"appNameTwo","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameTwoOnPeerOne","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameOneTwo","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameTwo","Config":"BLTwo"}]}]}`
-	validMsgForMspTwo = `{"MspID":"msp.two","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameP","Config":"msptwoconfigforfirstpeer"},{"AppName":"appNameThree","Config":"config for appNameThree"},{"AppName":"appNameTwo","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameThreeOnPeerOne","Config":"config for appNameThreeOnPeerOne goes here"},{"AppName":"appNameOneThree","Config":"config for appNameOneOnThree goes here"},{"AppName":"appNameTwo","Config":"BLThree"}]}]}`
+	validMsg          = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Versions":[{"Version":"1","Config":"config for test app name on peer zero v1"},{"Version":"2","Config":"config for test app name on peer zero v2"}]},{"AppName":"appNameOne","Versions":[{"Version":"1","Config":"config for appNameOne v1"},{"Version":"2","Config":"config for appNameOne v2"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"mnopq"}]}]},{"PeerID":"peer.one.example.com","App":[{"AppName":"appNameOneOnPeerOne","Versions":[{"Version":"1","Config":"config for appNameOneOnPeerOne goes here"}]},{"AppName":"appNameOneOne","Versions":[{"Version":"1","Config":"config for appNameOneOne goes here"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"BLOne"}]}]}]}`
+	validMsgOne       = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Versions":[{"Version":"1","Config":"configstringgoeshere"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"config for appNametwo"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"mnopq"}]}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameTwoOnPeerOne","Versions":[{"Version":"1","Config":"config for appNameTwoOnPeerOne goes here"}]},{"AppName":"appNameOneTwo","Versions":[{"Version":"1","Config":"config for appNameOneTwo goes here"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"BLTwo"}]}]}]}`
+	validMsgForMspTwo = `{"MspID":"msp.two","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameP","Versions":[{"Version":"1","Config":"msptwoconfigforfirstpeer"}]},{"AppName":"appNameThree","Versions":[{"Version":"1","Config":"config for appNameThree"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"mnopq"}]}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameThreeOnPeerOne","Versions":[{"Version":"1","Config":"config for appNameThreeOnPeerOne goes here"}]},{"AppName":"appNameOneThree","Versions":[{"Version":"1","Config":"config for appNameOneOnThree goes here"}]},{"AppName":"appNameTwo","Versions":[{"Version":"1","Config":"BLThree"}]}]}]}`
 	//misconfigured messages
-	nonsenseMsg     = `{"MspID":"asd"}`
+	noPeersMsg      = `{"MspID":"asd"}`
+	noPeerIDMsg     = `{"MspID":"asd","Peers":[{"App":[{"AppName":"aaa"}]}]}`
+	emptyPeerIDMsg  = `{"MspID":"asd","Peers":[{"PeerID":"","App":[{"AppName":"app","Versions":[{"Version":"1","Config":"data"}]}]}]}`
 	noAppMsg        = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com"}]}`
-	noConfigMsg     = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testApp"}]}]}`
-	noAppIDMsg      = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"Config":"Qkw="}]}]}`
-	emptyAppNameMsg = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":""}]}]}`
-	noPeerIDMsg     = `{"MspID":"","Peers":[{"App":[{"AppName":"aaa"}]}]}`
-	emptyPeerIDMsg  = `{"MspID":"asd","Peers":[{"PeerID":"","App":[{"AppName":"name","Config":"Qkw="}]}]}`
-	emptyPeersMsg   = `{"MspID":"asd","Peers":[]}`
+	noAppIDMsg      = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"Versions":[{"Version":"1","Config":"data"}]}]}]}`
+	emptyAppNameMsg = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"","Versions":[{"Version":"1","Config":"data"}]}]}]}`
+	noVersionsMsg   = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testApp"}]}]}`
+	noVersionMsg    = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"Versions":[{"Config":"data"}]}]}]}`
+	emptyVersionMsg = `{"MspID":"asd","Peers":[{"PeerID":"peer1","App":[{"AppName":"app","Versions":[{"Version":"","Config":"data"}]}]}]}`
+	noConfigMsg     = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"appname","Versions":[{"Version":"1"}]}]}]}`
 )
 
 func TestValidConfiguration(t *testing.T) {
@@ -47,19 +47,19 @@ func TestValidConfiguration(t *testing.T) {
 		t.Fatalf("Error: %s", err)
 	}
 	//verify that key exists in map
-	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
 	_, present := keyConfigMap[key]
-	if present == false {
+	if !present {
 		t.Fatalf("Key : %s should be in the map", key)
 	}
 
 	//verify that key does not exists in map
-	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName")
+	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName", "1")
 	_, present = keyConfigMap[key]
-	if present == true {
+	if present {
 		t.Fatalf("Key : %s should NOT be in map", key)
 	}
 
@@ -71,10 +71,9 @@ func TestValidConfiguration(t *testing.T) {
 
 func TestInvalidConfigurations(t *testing.T) {
 	//loop through list of misconfigured configuration message
-	invalidMessages := []string{nonsenseMsg, noAppMsg,
-		noConfigMsg, noAppIDMsg,
-		emptyAppNameMsg, noPeerIDMsg,
-		emptyPeerIDMsg, emptyPeersMsg}
+	invalidMessages := []string{noPeersMsg, noPeerIDMsg,
+		noAppMsg, noAppIDMsg,
+		noVersionsMsg, noVersionMsg, noConfigMsg, emptyAppNameMsg, emptyPeerIDMsg, emptyVersionMsg}
 
 	for _, message := range invalidMessages {
 		b := []byte(message)
@@ -99,6 +98,7 @@ func TestGetConfigForKey(t *testing.T) {
 	key.MspID = "ssss"
 	key.PeerID = "peerID"
 	key.AppName = ""
+	key.Version = ""
 
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
@@ -147,7 +147,7 @@ func TestGetConfigurations(t *testing.T) {
 
 }
 
-func TestPutStateFailed(t *testing.T) {
+func TestPutStateSuccess(t *testing.T) {
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("id")
 	configManager := NewConfigManager(stub)
@@ -174,6 +174,7 @@ func TestGetFieldsForIndex(t *testing.T) {
 	key.MspID = "ssss"
 	key.PeerID = "peerID"
 	key.AppName = "appname"
+	key.Version = "1"
 	_, err = getFieldsForIndex("index", key)
 	if err == nil {
 		t.Fatalf("Error 'unknown index' expected")
@@ -186,6 +187,7 @@ func TestAddIndexes(t *testing.T) {
 	key.MspID = "msp"
 	key.PeerID = "peer"
 	key.AppName = "appname"
+	key.Version = "1"
 	configManagerImpl := configManagerImpl{}
 
 	if err := configManagerImpl.addIndex("", key); err == nil {
@@ -215,7 +217,7 @@ func TestAddIndexes(t *testing.T) {
 	indexes = [...]string{indexMspID}
 	key = api.ConfigKey{}
 	if err := configManagerImpl.addIndexes(key); err == nil {
-		t.Fatalf("Expected error:'error adding index []: Index is empty")
+		t.Fatalf("Expected error:'Cannot create empty config key")
 	}
 
 }
@@ -245,13 +247,39 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
+	// get two Versions
+	key, _ := CreateConfigKey("msp.one", "peer.zero.example.com", "testAppName", "1")
+	configMessages, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Cannot query for configs %v", err)
+	}
+	if len(configMessages) != 1 {
+		t.Fatalf("Expect exactly one config for key %v", key)
+	}
+	configMsg := "config for test app name on peer zero v1"
+	if string(configMessages[0].Value) != configMsg {
+		t.Fatalf("Expect config (%v) but got (%v)", configMsg, string(configMessages[0].Value))
+	}
+	key.Version = "2"
+	configMessages, err = configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Cannot query for configs %v", err)
+	}
+	if len(configMessages) != 1 {
+		t.Fatalf("Expect exactly one config for key %v", key)
+	}
+	configMsg = "config for test app name on peer zero v2"
+	if string(configMessages[0].Value) != configMsg {
+		t.Fatalf("Expect config (%v) but got (%v)", configMsg, string(configMessages[0].Value))
+	}
+
 	//store another  config messages for msp.one
 	configManager, err = uploadTestMessagesToHL(validMsgOne)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
-	configMessages, err := configManager.Get(key)
+	key, _ = CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1")
+	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
@@ -261,7 +289,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ = CreateConfigKey("msp.two", "peer.zero.example.com", "appNameTwo")
+	key, _ = CreateConfigKey("msp.two", "peer.zero.example.com", "appNameTwo", "1")
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -271,7 +299,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	}
 
 	//look for another key
-	key, _ = CreateConfigKey("msp.two", "peer.one.example.com", "appNameP")
+	key, _ = CreateConfigKey("msp.two", "peer.one.example.com", "appNameP", "1")
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -299,13 +327,13 @@ func TestGetForValidConfigsOnPartialValidKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ := CreateConfigKey("msp.one", "", "")
+	key, _ := CreateConfigKey("msp.one", "", "", "")
 	configMessages, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
 	fmt.Printf("%d\n", len(configMessages))
-	if len(configMessages) != 6 {
+	if len(configMessages) != 8 {
 		t.Fatalf("Expected 6 configs. Got %d", len(configMessages))
 	}
 
@@ -318,7 +346,7 @@ func TestGetForValidConfigsOnInvalidPartialKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ := CreateConfigKey("", "aaaa", "")
+	key, _ := CreateConfigKey("", "aaaa", "", "")
 	_, err = configManager.Get(key)
 	if err == nil {
 		t.Fatalf("Expected error: ' Error Invalid config key { aaaa }. MspID is required. ")
@@ -376,7 +404,7 @@ func TestSaveInvalidConfig(t *testing.T) {
 
 func TestSaveConfigs(t *testing.T) {
 	configs := make(map[api.ConfigKey][]byte)
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1")
 	//value := []byte("adsf")
 	//nil value is accepted
 	configs[key] = nil
@@ -399,12 +427,11 @@ func TestGetWithValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
 	}
-	fmt.Printf("++++++%v\n", config[0])
 	if len(config) == 0 {
 		t.Fatalf("Cannot get config content for key %s", key)
 	}
@@ -429,7 +456,7 @@ func TestGetWithNonExistingKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName", "1")
 	_, err = configManager.Get(key)
 	if err == nil {
 		t.Fatalf("Expected 'Caller identity is not same as peer's MSPId'")
@@ -451,7 +478,7 @@ func TestDeleteWithValidKey(t *testing.T) {
 		t.Fatalf("Cannot save state ")
 	}
 
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "testAppName")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "testAppName", "1")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Error %v ", err)
@@ -488,12 +515,12 @@ func TestDeleteByMspID(t *testing.T) {
 		t.Fatalf("Cannot save state ")
 	}
 
-	key, _ := CreateConfigKey(mspID, "", "")
+	key, _ := CreateConfigKey(mspID, "", "", "1")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Error %v ", err)
 	}
-	if len(config) != 6 {
+	if len(config) != 8 {
 		t.Fatalf("Six messages should be uploaded for msp %v ", key)
 	}
 	if err := configManager.Delete(key); err != nil {
@@ -508,7 +535,7 @@ func TestDeleteWithNonExistingKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName")
+	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName", "1")
 	if err := configManager.Delete(key); err == nil {
 		t.Fatalf("Expected 'Caller identity is not same as peer's MSPId'")
 	}

@@ -175,7 +175,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
-	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: string(configData)}}}}}
+	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe",
+		App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Versions: []configmanagerApi.VersionConfig{
+			configmanagerApi.VersionConfig{Version: configmanagerApi.VERSION, Config: string(configData)}}}}}}}
 	stub := getMockStub(channelID)
 	configBytes, err := json.Marshal(config)
 	if err != nil {
@@ -193,7 +195,9 @@ func TestMain(m *testing.M) {
 	configDataStr = strings.Replace(configDataStr, "allowPeerConfig: false", "allowPeerConfig: true", -1)
 	configDataStr = strings.Replace(configDataStr, "caCerts:", "caCerts-invalid:", -1)
 	configDataStr = strings.Replace(configDataStr, "clientCert:", "clientCert-invalid:", -1)
-	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe", App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Config: configDataStr}}}}}
+	config2 := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe",
+		App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Versions: []configmanagerApi.VersionConfig{
+			configmanagerApi.VersionConfig{Version: configmanagerApi.VERSION, Config: string(configDataStr)}}}}}}}
 	configBytes2, err := json.Marshal(config2)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot Marshal %s\n", err))

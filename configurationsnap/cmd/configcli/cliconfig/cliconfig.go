@@ -58,14 +58,13 @@ const (
 	defaultPeerURL     = ""
 
 	configKeyFlag        = "configkey"
-	configKeyDescription = "The config key in JSON format. Example: {\"MspID\":\"Org1MSP\",\"PeerID\":\"peer0.org1.example.com\",\"AppName\":\"app1\"}"
+	configKeyDescription = "The config key in JSON format. Example: {\"MspID\":\"Org1MSP\",\"PeerID\":\"peer0.org1.example.com\",\"AppName\":\"app1\",\"Version\":\"1\"}"
 
 	configFlag        = "config"
-	configDescription = "The config update string in JSON format. Example: {\"MspID\":\"Org1MSP\",\"Peers\":[{\"PeerID\":\"peer0.org1.example.com\",\"App\":[{\"AppName\":\"myapp\",\"Config\":\"some config\"}]}]}"
+	configDescription = "The config update string in JSON format. Example: {\"MspID\":\"Org1MSP\",\"Peers\":[{\"PeerID\":\"peer0.org1.example.com\",\"App\":[{\"AppName\":\"myapp\",\"Versions\":[{\"Version\":\"1\",\"Config\":\"some config\"}]}]}]}"
 
 	configFileFlag        = "configfile"
 	configFileDescription = "The path to the config file"
-	defaultConfigFile     = ""
 
 	timeoutFlag        = "timeout"
 	timeoutDescription = "The timeout (in milliseconds) for the operation"
@@ -84,6 +83,9 @@ const (
 
 	appNameFlag        = "appname"
 	appNameDescription = "The name of the application to query for"
+
+	configVerFlag        = "configver"
+	configVerDescription = "The config version"
 
 	noPromptFlag        = "noprompt"
 	noPromptDescription = "If specified then update and delete operations will not prompt for confirmation"
@@ -122,6 +124,7 @@ type options struct {
 	mspID            string
 	peerID           string
 	appName          string
+	configVer        string
 	noPrompt         bool
 	keyType          string
 	ephemeralFlag    string
@@ -186,6 +189,11 @@ func (c *CLIConfig) LoggingLevel() string {
 // InitLoggingLevel initializes the logging level from the provided arguments
 func InitLoggingLevel(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.loggingLevel, loggingLevelFlag, defaultLoggingLevel, loggingLevelDescription)
+}
+
+// ClientConfigFile returns the org config file
+func (c *CLIConfig) ClientConfigFile() string {
+	return opts.clientConfigFile
 }
 
 // InitClientConfigFile initializes the config file path from the provided arguments
@@ -271,6 +279,16 @@ func (c *CLIConfig) AppName() string {
 // InitAppName initializes the application name from the provided arguments
 func InitAppName(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.appName, appNameFlag, "", appNameDescription)
+}
+
+// ConfigVer returns an config ver (used in the config query command)
+func (c *CLIConfig) ConfigVer() string {
+	return opts.configVer
+}
+
+// InitConfigVer initializes the config ver from the provided arguments
+func InitConfigVer(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.configVer, configVerFlag, "", configVerDescription)
 }
 
 // KeyType returns an KeyType name (used in the config generteCSR command)

@@ -38,8 +38,8 @@ func TestValidConfigKey(t *testing.T) {
 }
 
 func TestValidConfigKeyOptions(t *testing.T) {
-	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--noprompt")
-	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--noprompt")
+	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1", "--noprompt")
+	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1", "--noprompt")
 }
 
 func execute(t *testing.T, expectError bool, args ...string) {
