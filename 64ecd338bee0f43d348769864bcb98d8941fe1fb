@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8310ae1_86ab332d",
+        "filename": "configmanager/pkg/mgmt/configmanager_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000036
+      },
+      "writtenOn": "2018-05-20T22:22:13Z",
+      "side": 1,
+      "message": "Inconsistent comment with method name... put state should fail or succeed?",
+      "revId": "64ecd338bee0f43d348769864bcb98d8941fe1fb",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
