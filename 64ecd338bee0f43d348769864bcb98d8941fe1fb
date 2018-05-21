@@ -16,6 +16,24 @@
       "revId": "64ecd338bee0f43d348769864bcb98d8941fe1fb",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6966d932_06c25288",
+        "filename": "configmanager/pkg/mgmt/configmanager_test.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-05-21T01:49:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8310ae1_86ab332d",
+      "revId": "64ecd338bee0f43d348769864bcb98d8941fe1fb",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
