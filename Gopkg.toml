@@ -19,131 +19,100 @@
 # [[override]]
 #  name = "github.com/x/y"
 #  version = "2.4.0"
-
 ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
-
 [[constraint]]
   name = "github.com/DATA-DOG/godog"
   version = "0.7.4"
-
 [[constraint]]
   branch = "master"
   name = "github.com/fsouza/go-dockerclient"
-
 [[constraint]]
   revision = "f3fee0ed285492fae97bdbf6938c0c7ffb148954"
   name = "github.com/hyperledger/fabric-sdk-go"
-
 [[constraint]]
   version = "=v1.1.0"
   name = "github.com/hyperledger/fabric"
-
 [[constraint]]
   name = "github.com/op/go-logging"
   branch="master"
-
 [[constraint]]
   name = "github.com/spf13/viper"
   branch="master"
-
 [[constraint]]
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
-
 [[override]]
   name = "google.golang.org/grpc"
   revision = "b3ddf786825de56a4178401b7e174ee332173b66"
-
 [[override]]
   name = "github.com/golang/protobuf"
   revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
-
 ################
 # Downstream overrides to enable testing
 # (https://github.com/golang/dep/blob/master/docs/FAQ.md#how-do-i-constrain-a-transitive-dependencys-version)
-
 # Temporary downstream overrides due to sirupsen/logrus case sensitivity
 [[override]]
   name = "github.com/docker/docker"
   source = "github.com/moby/moby"
   branch = "master"
   #revision = "bad654b00c954e31007c5004629e236c06ca4046"
-
 [[override]]
   name = "github.com/opencontainers/runc"
   branch = "master"
   #revision = "8033a839758ab9a4ed4fb590d1bb005a1c5a164e"
-
 [[override]]
   name = "github.com/Knetic/govaluate"
 	revision = "3cc7c7de92e74a87c657e957e003600723db32f6"
-
 [[override]]
   name = "github.com/Shopify/sarama"
   revision = "6a8d89d71d22bbdc14b6cb52778889a710be19a7"
-
 [[override]]
   name = "github.com/davecgh/go-spew"
   revision = "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
-
 [[override]]
   name = "github.com/eapache/go-resiliency"
   revision = "b86b1ec0dd4209a588dc1285cdd471e73525c0b3"
-
 [[override]]
   name = "github.com/eapache/go-xerial-snappy"
   revision = "bb955e01b9346ac19dc29eb16586c90ded99a98c"
-
 [[override]]
   name = "github.com/eapache/queue"
   revision = "44cc805cf13205b55f69e14bcb69867d1ae92f98"
-
 [[override]]
   name = "github.com/golang/groupcache"
   revision = "b710c8433bd175204919eb38776e944233235d03"
-
 [[override]]
   name = "github.com/golang/snappy"
   revision = "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
-
 [[override]]
   name = "github.com/pierrec/lz4"
   revision = "90290f74b1b4d9c097f0a3b3c7eba2ef3875c699"
-
 [[override]]
   name = "github.com/pierrec/xxHash"
   revision = "5a004441f897722c627870a981d02b29924215fa"
-
 [[override]]
   name = "github.com/pmezard/go-difflib"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-
 [[override]]
   name = "github.com/rcrowley/go-metrics"
   revision = "ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8"
-
 [[override]]
   name = "github.com/stretchr/testify"
   revision = "d77da356e56a7428ad25149ca77381849a6a5232"
-
 [[override]]
   name = "github.com/syndtr/goleveldb"
   revision = "6b4daa5362b502898ddf367c5c11deb9e7a5c727"
-
 [[override]]
   name = "github.com/cloudflare/cfssl"
   revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"
-
 [[override]]
   name = "github.com/milagro-crypto/amcl"
   branch = "dep"
   source = "github.com/troyronda/amcl"
-
 [[prune.project]]
   name = "github.com/docker/docker"
   non-go = true
   unused-packages = true
-
 #  name = "github.com/milagro-crypto/amcl"
 #  branch = "master"
 #  revision = "281d0829b307c911bb2f14f2fedc414a257cb8c8"

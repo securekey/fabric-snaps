@@ -612,7 +612,7 @@ func protoToJSON(msg []*fab.FilteredBlockEvent) ([]byte, error) {
 	// array and set them to the Payload of ByteFilteredBlockEvent
 	var marshalledFbe []*common.ByteFilteredBlockEvent
 	m := jsonpb.Marshaler{
-		EnumsAsInts:  false,
+		EnumsAsInts:  true,
 		EmitDefaults: true,
 		Indent:       "  ",
 		OrigName:     true,
