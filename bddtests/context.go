@@ -48,6 +48,7 @@ type BDDContext struct {
 	testCCPath           string
 	createdChannels      map[string]bool
 	sdk                  *fabsdk.FabricSDK
+	configCLI            *ConfigCLI
 }
 
 // PeerConfig holds the peer configuration and org ID
@@ -69,6 +70,7 @@ type CollectionConfig struct {
 // NewBDDContext create new BDDContext
 func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath string, clientConfigFileName string,
 	snapsConfigFilePath string, peersMspID map[string]string, testCCPath string) (*BDDContext, error) {
+	configCli := NewConfigCLI(clientConfigFilePath+clientConfigFileName, "User1")
 	instance := BDDContext{
 		orgs:                 orgs,
 		peersByChannel:       make(map[string][]*PeerConfig),
@@ -84,6 +86,7 @@ func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath stri
 		peersMspID:           peersMspID,
 		testCCPath:           testCCPath,
 		ordererOrgID:         ordererOrgID,
+		configCLI:            configCli,
 	}
 	return &instance, nil
 }

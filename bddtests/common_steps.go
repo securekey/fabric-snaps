@@ -9,7 +9,6 @@ package bddtests
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -30,7 +29,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/pkg/errors"
-	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -231,53 +229,6 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 		return fmt.Errorf("JoinChannel returned error: %v", err)
 	}
 
-	return nil
-}
-
-func (d *CommonSteps) loadConfig(channelID string, snaps string) error {
-	logger.Infof("Loading snap config for channel [%s]...\n", channelID)
-
-	snapsArray := strings.Split(snaps, ",")
-	peersConfig := d.BDDContext.PeersByChannel(channelID)
-	if len(peersConfig) == 0 {
-		return fmt.Errorf("no peers are joined to channel [%s]", channelID)
-	}
-
-	for _, peerConfig := range peersConfig {
-		logger.Infof("Loading config for peer [%s] on channel [%s]..\n", peerConfig.PeerID, channelID)
-
-		pConfig := &configmanagerApi.PeerConfig{
-			PeerID: peerConfig.PeerID,
-		}
-
-		for _, snap := range snapsArray {
-			configData, err := ioutil.ReadFile(fmt.Sprintf(d.BDDContext.snapsConfigFilePath+"%s/config.yaml", snap))
-			if err != nil {
-				return fmt.Errorf("file error: %v", err)
-			}
-			pConfig.App = append(pConfig.App, configmanagerApi.AppConfig{AppName: snap, Version: configmanagerApi.VERSION, Config: string(configData)})
-		}
-
-		config := configmanagerApi.ConfigMessage{
-			MspID: peerConfig.MspID,
-			Peers: []configmanagerApi.PeerConfig{*pConfig},
-		}
-
-		configBytes, err := json.Marshal(config)
-		if err != nil {
-			return fmt.Errorf("cannot Marshal %s", err)
-		}
-
-		var argsArray []string
-		argsArray = append(argsArray, "save")
-		argsArray = append(argsArray, string(configBytes))
-		_, err = d.InvokeCCWithArgs("configurationsnap", channelID, []*PeerConfig{peerConfig}, argsArray, nil)
-
-		if err != nil {
-			return fmt.Errorf("invokeChaincode return error: %v", err)
-		}
-
-	}
 	return nil
 }
 
@@ -748,7 +699,6 @@ func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
 
 	s.Step(`^the channel "([^"]*)" is created and all peers have joined$`, d.createChannelAndJoinAllPeers)
 	s.Step(`^the channel "([^"]*)" is created and all peers from org "([^"]*)" have joined$`, d.createChannelAndJoinPeersFromOrg)
-	s.Step(`^client invokes configuration snap on channel "([^"]*)" to load "([^"]*)" configuration on all peers$`, d.loadConfig)
 	s.Step(`^we wait (\d+) seconds$`, d.wait)
 	s.Step(`^client queries chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.queryCConOrg)
 	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel$`, d.querySystemCC)
