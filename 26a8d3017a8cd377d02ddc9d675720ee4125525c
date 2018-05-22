@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7db4bef1_b3a69aae",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-05-22T12:43:50Z",
+      "side": 1,
+      "message": "Can this be simplified by just adding a version to the existing AppConfig and not defining a new VersionConfig struct?",
+      "revId": "26a8d3017a8cd377d02ddc9d675720ee4125525c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
