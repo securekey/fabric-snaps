@@ -164,7 +164,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
+  revision = "3a3da3a4e26776cc22a79ef46d5d58477532dede"
 
 [[projects]]
   name = "github.com/golang/snappy"
@@ -733,6 +733,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "92d05c7bc2962b04196b126b441f49922734697f17df4f93baa2fc02f1de0af3"
+  inputs-digest = "3d07b08bf0e9d76af71f223906d9e407d24c806a1f96aca5b4d26e55ef95c4c6"
   solver-name = "gps-cdcl"
   solver-version = 1

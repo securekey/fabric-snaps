@@ -56,7 +56,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[override]]
   name = "github.com/golang/protobuf"
-  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
+  revision = "3a3da3a4e26776cc22a79ef46d5d58477532dede"
 
 ################
 # Downstream overrides to enable testing

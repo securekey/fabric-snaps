@@ -1,0 +1,30 @@
+{
+  "MspID": "Org1MSP",
+  "Peers": [
+    {
+      "PeerID": "peer0.org1.example.com",
+      "App": [
+        {
+          "AppName": "eventsnap",
+          "Version": "1",
+          "Config": "file://./eventsnap/config.yaml"
+        },
+        {
+          "AppName": "txnsnap",
+          "Version": "1",
+          "Config": "file://./txnsnap/config.yaml"
+        },
+        {
+          "AppName": "configurationsnap",
+          "Version": "1",
+          "Config": "file://./configurationsnap/config.yaml"
+        },
+        {
+          "AppName": "httpsnap",
+          "Version": "1",
+          "Config": "file://./httpsnap/config.yaml"
+        }
+      ]
+    }
+  ]
+}
