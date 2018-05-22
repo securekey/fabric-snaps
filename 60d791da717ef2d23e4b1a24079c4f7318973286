@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc677426_235611e0",
+        "filename": "configurationsnap/cmd/configcli/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-05-22T15:11:28Z",
+      "side": 1,
+      "message": "Can you add example for version 2?",
+      "revId": "60d791da717ef2d23e4b1a24079c4f7318973286",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
