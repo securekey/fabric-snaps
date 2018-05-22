@@ -40,6 +40,12 @@ The format of the configuration is as follows:
            
         },
         {
+          "AppName": "app1",
+          "Version": "2",
+          "Config": "config for app1 v2"
+           
+        },
+        {
           "AppName": "app2",
           "Version": "1",
           "Config": "file://path_to_config.yaml"

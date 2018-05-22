@@ -103,11 +103,14 @@ unit-test: depend populate
 pkcs11-unit-test: depend populate
 	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit
 
-integration-test: clean depend populate snaps
+integration-test: clean depend populate snaps cliconfig
 	@scripts/integration.sh
 
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
+
+cliconfig:
+	@go build -o ./build/configcli ./configurationsnap/cmd/configcli
 
 all: clean checks snaps unit-test pkcs11-unit-test integration-test http-server
 

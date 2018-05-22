@@ -9,7 +9,8 @@ Feature:  Event Snap
   @eventsnapone
   Scenario: Register with Local Event Service for Chaincode Events
     Given the channel "mychannel" is created and all peers have joined
-    And client invokes configuration snap on channel "mychannel" to load "eventsnap,txnsnap,configurationsnap" configuration on all peers
+    And we wait 5 seconds
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" on the "mychannel" channel
     And we wait 15 seconds
 
       # First clean up from any previous tests
@@ -28,7 +29,8 @@ Feature:  Event Snap
   @eventsnaptwo
   Scenario: Register with Local Event Service for Tx Status Events
     Given the channel "mychannel" is created and all peers have joined
-    And client invokes configuration snap on channel "mychannel" to load "eventsnap,txnsnap,configurationsnap" configuration on all peers
+    And we wait 5 seconds
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" on the "mychannel" channel
     And we wait 15 seconds
 
       # First clean up from any previous tests
@@ -43,7 +45,8 @@ Feature:  Event Snap
   @eventsnapthree
   Scenario: Register with Local Event Service for Filtered Block Events
     Given the channel "mychannel" is created and all peers have joined
-    And client invokes configuration snap on channel "mychannel" to load "eventsnap,txnsnap,configurationsnap" configuration on all peers
+    And we wait 5 seconds
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" on the "mychannel" channel
     And we wait 15 seconds
 
       # First clean up from any previous tests
@@ -62,7 +65,8 @@ Feature:  Event Snap
   @eventsnapfour
   Scenario: Register with Local Event Service for Block Events
     Given the channel "mychannel" is created and all peers have joined
-    And client invokes configuration snap on channel "mychannel" to load "eventsnap,txnsnap,configurationsnap" configuration on all peers
+    And we wait 5 seconds
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" on the "mychannel" channel
     And we wait 15 seconds
 
 
