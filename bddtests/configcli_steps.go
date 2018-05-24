@@ -64,7 +64,8 @@ func (c *ConfigCLISteps) notContainsInQueryResult(value string) error {
 	return nil
 }
 
-func (c *ConfigCLISteps) registerSteps(s *godog.Suite) {
+// RegisterSteps register steps
+func (c *ConfigCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(c.BDDContext.BeforeScenario)
 	s.AfterScenario(c.BDDContext.AfterScenario)
 	s.Step(`^client update config "([^"]*)" with mspid "([^"]*)" on the "([^"]*)" channel$`, c.updateConfig)

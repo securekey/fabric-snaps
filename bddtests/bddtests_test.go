@@ -100,7 +100,7 @@ func FeatureContext(s *godog.Suite) {
 	NewEventSnapSteps(context).registerSteps(s)
 	NewConfigurationsSnapSteps(context).registerSteps(s)
 	NewUnsafeQuerySteps(context).registerSteps(s)
-	NewConfigCLISteps(context).registerSteps(s)
+	NewConfigCLISteps(context).RegisterSteps(s)
 }
 
 func initBDDConfig() {
