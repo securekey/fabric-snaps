@@ -21,7 +21,7 @@ type ConfigCLI struct {
 
 // NewConfigCLI returns a new NewConfigCLI
 func NewConfigCLI(binaryPath, clientconfig, user string) *ConfigCLI {
-	return &ConfigCLI{binaryPath, clientconfig, user}
+	return &ConfigCLI{clientconfig, user, binaryPath}
 }
 
 // ExecUpdate executes config-cli update with the given args and returns a response
