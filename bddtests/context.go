@@ -69,8 +69,8 @@ type CollectionConfig struct {
 
 // NewBDDContext create new BDDContext
 func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath string, clientConfigFileName string,
-	snapsConfigFilePath string, peersMspID map[string]string, testCCPath string) (*BDDContext, error) {
-	configCli := NewConfigCLI(clientConfigFilePath+clientConfigFileName, "User1")
+	snapsConfigFilePath string, peersMspID map[string]string, testCCPath string, cliPath string) (*BDDContext, error) {
+	configCli := NewConfigCLI(cliPath, clientConfigFilePath+clientConfigFileName, "User1")
 	instance := BDDContext{
 		orgs:                 orgs,
 		peersByChannel:       make(map[string][]*PeerConfig),

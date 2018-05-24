@@ -16,11 +16,12 @@ import (
 type ConfigCLI struct {
 	clientconfig string
 	user         string
+	binaryPath   string
 }
 
 // NewConfigCLI returns a new NewConfigCLI
-func NewConfigCLI(clientconfig, user string) *ConfigCLI {
-	return &ConfigCLI{clientconfig, user}
+func NewConfigCLI(binaryPath, clientconfig, user string) *ConfigCLI {
+	return &ConfigCLI{binaryPath, clientconfig, user}
 }
 
 // ExecUpdate executes config-cli update with the given args and returns a response
@@ -28,7 +29,7 @@ func (cli *ConfigCLI) ExecUpdate(channelID, mspID, org, configFile string) (stri
 	cmdArgs := []string{"update", "--clientconfig", cli.clientconfig, "--cid", channelID, "--mspid", mspID,
 		"--user", cli.user, "--configfile", configFile, "--noprompt", "--orgid", org}
 
-	cmd := exec.Command("../build/configcli", cmdArgs...)
+	cmd := exec.Command(cli.binaryPath, cmdArgs...)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out

@@ -89,7 +89,7 @@ func FeatureContext(s *godog.Suite) {
 	peersMspID := make(map[string]string)
 	peersMspID["peer0.org1.example.com"] = "Org1MSP"
 	context, err := NewBDDContext([]string{"peerorg1"}, "orderer.example.com", "./fixtures/clientconfig/",
-		"config.yaml", "./fixtures/config/snaps/", peersMspID, "./fixtures")
+		"config.yaml", "./fixtures/config/snaps/", peersMspID, "./fixtures", "../build/configcli")
 	if err != nil {
 		panic(fmt.Sprintf("ERROR return from NewBDDContext: %v" + err.Error()))
 	}
