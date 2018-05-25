@@ -33,10 +33,10 @@ func ValidateConfigKey(configKey api.ConfigKey) error {
 	if len(configKey.MspID) == 0 {
 		return errors.New(errors.GeneralError, "Cannot create config key using empty MspId")
 	}
-	if len(configKey.PeerID) == 0 {
-		return errors.New(errors.GeneralError, "Cannot create config key using empty PeerID")
+	if len(configKey.PeerID) == 0 && len(configKey.AppName) == 0 {
+		return errors.New(errors.GeneralError, "Cannot create config key using empty PeerID aand an empty App list")
 	}
-	if len(configKey.AppName) == 0 {
+	if len(configKey.PeerID) > 0 && len(configKey.AppName) == 0 {
 		return errors.New(errors.GeneralError, "Cannot create config key using empty AppName")
 	}
 	if len(configKey.Version) == 0 {

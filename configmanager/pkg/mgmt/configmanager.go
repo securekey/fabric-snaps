@@ -256,6 +256,14 @@ func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 			configMap[key] = []byte(appConfig.Config)
 		}
 	}
+
+	for _, app := range parsedConfig.Apps {
+		key, err := CreateConfigKey(mspID, "", app.AppName, app.Version)
+		if err != nil {
+			return nil, err
+		}
+		configMap[key] = []byte(app.Config)
+	}
 	return configMap, nil
 }
 
