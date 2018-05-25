@@ -36,6 +36,11 @@ func TestValidConfigString(t *testing.T) {
 	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--config", configString, "--noprompt")
 }
 
+func TestValidConfigWithAppsNoPeerConfig(t *testing.T) {
+	configString := `{"MspID":"Org1MSP", "Apps": [{"AppName": "publickey", "Version": "1", "Config": "{type:a, key:b}" }]}`
+	execute(t, false, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--config", configString, "--noprompt")
+}
+
 func TestInvalidConfigFile(t *testing.T) {
 	execute(t, true, "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--configfile", "invalid-config.json", "--noprompt")
 }

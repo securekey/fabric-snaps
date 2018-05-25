@@ -181,6 +181,7 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 	}
 	newConfigMsg := &mgmtapi.ConfigMessage{
 		MspID: configMsg.MspID,
+		Apps:  configMsg.Apps,
 	}
 	cliconfig.Config().Logger().Debugf("Config message: %s\n", configMsg)
 	for _, peerConfig := range configMsg.Peers {
