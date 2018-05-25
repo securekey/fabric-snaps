@@ -1,0 +1,15 @@
+{
+  "MspID": "Org1MSP",
+  "Apps": [
+    {
+      "AppName": "app1",
+      "Version": "1",
+      "Config": "{config goes here}"
+    },
+    {
+      "AppName": "app2",
+      "Version": "1",
+      "Config": "{ a }"
+    }
+  ]
+}

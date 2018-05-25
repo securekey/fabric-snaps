@@ -46,6 +46,7 @@ type PeerConfig struct {
 type ConfigMessage struct {
 	MspID string
 	Peers []PeerConfig
+	Apps  []AppConfig
 }
 
 // ConfigClient is used to publish messages
@@ -92,15 +93,21 @@ func (cm ConfigMessage) IsValid() error {
 	if cm.MspID == "" {
 		return errors.New("MSPID cannot be empty")
 	}
-	if len(cm.Peers) == 0 {
-		return errors.New("Collection of peers is required")
+
+	if len(cm.Peers) == 0 && len(cm.Apps) == 0 {
+		return errors.New("Either peers or apps should be set")
 	}
 
-	for _, config := range cm.Peers {
-		if err := config.IsValid(); err != nil {
-			return err
+	if len(cm.Peers) > 0 {
+		for _, config := range cm.Peers {
+			if err := config.IsValid(); err != nil {
+				return err
+			}
 		}
+
+		//	return errors.New("Collection of peers is required")
 	}
+
 	return nil
 }
 

@@ -15,6 +15,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
+	"strings"
 )
 
 const (
@@ -26,6 +27,8 @@ const (
 	validMsg          = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"config for test app name on peer zero v1"},{"AppName":"testAppName","Version":"2","Config":"config for test app name on peer zero v2"},{"AppName":"appNameOne","Version":"1","Config":"config for appNameOne v1"},{"AppName":"appNameOne","Version":"2","Config":"config for appNameOne v2"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.one.example.com","App":[{"AppName":"appNameOneOnPeerOne","Version":"1","Config":"config for appNameOneOnPeerOne goes here"},{"AppName":"appNameOneOne","Version":"1","Config":"config for appNameOneOne goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLOne"}]}]}`
 	validMsgOne       = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Version":"1","Config":"configstringgoeshere"},{"AppName":"appNameTwo","Version":"1","Config":"config for appNametwo"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameTwoOnPeerOne","Version":"1","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameOneTwo","Version":"1","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLTwo"}]}]}`
 	validMsgForMspTwo = `{"MspID":"msp.two","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameP","Version":"1","Config":"msptwoconfigforfirstpeer"},{"AppName":"appNameThree","Version":"1","Config":"config for appNameThree"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameThreeOnPeerOne","Version":"1","Config":"config for appNameThreeOnPeerOne goes here"},{"AppName":"appNameOneThree","Version":"1","Config":"config for appNameOneOnThree goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLThree"}]}]}`
+	noPeerWithApp     = `{"MspID":"msp.one", "Apps": [{"AppName": "publickey", "Version": "1", "Config": "{type:a, key:b}" }]}`
+
 	//misconfigured messages
 	noPeersMsg      = `{"MspID":"asd"}`
 	noPeerIDMsg     = `{"MspID":"asd","Peers":[{"App":[{"AppName":"aaa"}]}]}`
@@ -37,6 +40,29 @@ const (
 	emptyVersionMsg = `{"MspID":"asd","Peers":[{"PeerID":"peer1","App":[{"AppName":"app","Version":"","Config":"data"}]}]}`
 	noConfigMsg     = `{"MspID":"asd","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"appname","Version":"1"}]}]}`
 )
+
+func TestConfigWithPublicKeyApp(t *testing.T) {
+	b := []byte(noPeerWithApp)
+	keyConfigMap, err := parseConfigMessage(b)
+
+	if err != nil {
+		t.Fatalf("Error: %s", err)
+	}
+
+	//verify that key exists in map
+	key, err := CreateConfigKey(mspID, "", "publickey", "1")
+	if err != nil {
+		t.Fatalf("Cannot create key %v", err)
+	}
+	config, present := keyConfigMap[key]
+	if !present {
+		t.Fatalf("Key : %s should be in the map", key)
+	}
+	if strings.Compare(string(config), "{type:a, key:b}") != 0 {
+		t.Fatalf("Expected `{type:a, key:b}` in config field, but got %s", string(config))
+	}
+
+}
 
 func TestValidConfiguration(t *testing.T) {
 	b := []byte(validMsg)

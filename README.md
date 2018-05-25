@@ -19,7 +19,7 @@ $ make integration-test
 ```
 
 ##### Configure
-Each snap relies on the Configuration Snap to read configuration from the ledger. The configuration for each application(or snap) is done on a per-MSP basis.
+Each snap relies on the Configuration Snap to read configuration from the ledger. The configuration for each application(or snap) is done either on a per-MSP basis or MSP-App basis.
 A ConfigCLI tool is provided to update, delete or query these application configurations. Please refer to the [docs](configurationsnap/cmd/configcli/README.md) for sample usage of this tool.
 
 Each snap contains contains a sample configuration directory. For example, `transactionsnap/cmd/sampleconfig`. This directory will contain default a `yaml` configuration file and other configurations that the application may need.
@@ -46,6 +46,27 @@ Here is a sample configuration JSON that may be provided to the CLI tool to conf
   ]
 }
 ```
+Here is a sample of configuration JSON that may be provided to the CLI tool to configure the snaps for peer-less config:
+```
+{
+  "MspID": "Org1MSP",
+  "Apps": [
+    {
+      "AppName": "app1",
+      "Version": "1",
+      "Config": "{config goes here}"
+    },
+    {
+      "AppName": "app2",
+      "Version": "1",
+      "Config": "{and config for app2 goes here}"
+    }
+  ]
+}
+```
+
+
+
 
 ##### Build
 The snaps present in this project currently depend on a custom version of fabric located at https://github.com/securekey/fabric-next
