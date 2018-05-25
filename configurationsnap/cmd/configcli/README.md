@@ -99,6 +99,9 @@ Send an update using a configuration string specified in the command-line:
 
     $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}]}'
 
+Send an update using a configuration for peer-less config string specified in the command-line:
+    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP", "Apps":[{AppName": "app1", "Version":"1", "Config": "{config goes here}"}]}'
+
 ### query
 
 Query a single peer for configuration of a particular application:

@@ -25,7 +25,7 @@ The update command allows a client to update the configuration of one or more ap
 Configuration can be specified direcly on the command-line as a JSON string (using the --config option)
 or a configuration file may be specified (using the --configfile option).
 
-The format of the configuration is as follows:
+The format of the configuration for config with peer is as follows:
 
 {
   "MspID": "msp.one",
@@ -37,7 +37,6 @@ The format of the configuration is as follows:
           "AppName": "app1",
           "Version": "1",
           "Config": "config for app1"
-           
         },
         {
           "AppName": "app1",
@@ -59,7 +58,19 @@ The format of the configuration is as follows:
   ]
 }
 
+The format of the configuration for peer-less config is listed below:
+{
+  "MspID": "Org1MSP",
+  "Apps": [
+    {
+      "AppName": "app1",
+      "Version": "1",
+      "Config": "{config goes here}"
+    }.....
+  ]
+}
 The configuration may be embedded direcly in the "Config" element or the Config element may reference a file containing the configuration.
+
 `
 
 const examples = `
@@ -71,6 +82,10 @@ const examples = `
 
 - Send an update using a configuration string specified in the command-line:
     $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Peers":[{"PeerID":"peer0.org1.example.com","App":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}]}'
+
+- Send an update using a peer-less configuration string specified in the command-line:
+    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Apps":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}'
+
 `
 
 // Cmd returns the Update command
@@ -181,6 +196,7 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 	}
 	newConfigMsg := &mgmtapi.ConfigMessage{
 		MspID: configMsg.MspID,
+		Apps:  configMsg.Apps,
 	}
 	cliconfig.Config().Logger().Debugf("Config message: %s\n", configMsg)
 	for _, peerConfig := range configMsg.Peers {
