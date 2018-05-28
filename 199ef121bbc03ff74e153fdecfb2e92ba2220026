@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4dba2ef_c0672f03",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-05-28T13:32:15Z",
+      "side": 1,
+      "message": "we need to update the readme file",
+      "revId": "199ef121bbc03ff74e153fdecfb2e92ba2220026",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
