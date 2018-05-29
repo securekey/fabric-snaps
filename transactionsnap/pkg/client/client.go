@@ -42,7 +42,7 @@ import (
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/localprovider"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/utils"
+	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -344,7 +344,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 		return errors.Wrap(errors.GeneralError, err, "Unmarshal clientProposalBytes error")
 	}
 
-	creatorBytes, err := utils.GetCreatorFromSignedProposal(signedProposal)
+	creatorBytes, err := util.GetCreatorFromSignedProposal(signedProposal)
 	if err != nil {
 		return errors.Wrap(errors.GeneralError, err, "GetCreatorFromSignedProposal return error")
 	}
