@@ -20,8 +20,8 @@ const (
 )
 
 //CreateConfigKey creates key using mspID, peerID, appName and version
-func CreateConfigKey(mspID, peerID, appName, version string) (api.ConfigKey, error) {
-	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, Version: version}
+func CreateConfigKey(mspID, peerID, appName, version, componentName string) (api.ConfigKey, error) {
+	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, Version: version, ComponentName: componentName}
 	if err := ValidateConfigKey(configKey); err != nil {
 		return configKey, err
 	}

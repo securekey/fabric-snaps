@@ -86,6 +86,9 @@ const examples = `
 - Send an update using a peer-less configuration string specified in the command-line:
     $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"Org1MSP","Apps":[{"AppName":"myapp","Version":"1","Config":"embedded config"}]}'
 
+- Send an update using a peer-less configuration string specified in the command-line:
+    $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"general", "Apps": [{"AppName": "publickey", "Version": "1", "Components": [{"Name":"sk-td","Config":"{abc}"}] }]}'
+
 `
 
 // Cmd returns the Update command

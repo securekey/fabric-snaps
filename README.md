@@ -67,6 +67,29 @@ Here is a sample of configuration JSON that may be provided to the CLI tool to c
   ]
 }
 ```
+Here is a sample of configuration JSON that may be provided to the CLI tool to configure the snaps for peer-less config and apps with components:
+```
+{
+  "MspID": "General",
+  "Apps": [
+    {
+      "AppName": "auditpolicies",
+      "Version": "1",
+      "Components": [
+        {
+          "Name": "sk-td",
+          "Config": "{type}"
+        },
+        {
+          "Name": "sk-bmo",
+          "Config": "{type}"
+        }
+      ]
+    }
+  ]
+
+
+```
 
 
 
