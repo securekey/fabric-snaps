@@ -57,7 +57,7 @@ func (u *UnsafeQuerySteps) InvokeCCVerifyResponse(ccID, userArgs, orgIDs, channe
 			Args:        GetByteArgs(args[1:]),
 		}, channel.WithTargets([]fabApi.Peer{targetPeer}...))
 	if err != nil {
-		return fmt.Errorf("InvokeChaincode return error: %v", err)
+		return fmt.Errorf("InvokeChaincode return error: %s", err)
 	}
 
 	if string(resp.Payload) != expectedResponse {

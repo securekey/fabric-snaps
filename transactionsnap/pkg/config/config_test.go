@@ -83,7 +83,7 @@ func TestGetTLSRootCert(t *testing.T) {
 	// now call GetTLSRootCert()
 	cert := c.GetTLSRootCert()
 	if cert == nil {
-		t.Fatalf("Expected to get non nil tls root cert")
+		t.Fatal("Expected to get non nil tls root cert")
 	}
 
 	// get the real certificate object from rawCert and compare it with 'cert' variable
@@ -127,7 +127,7 @@ func TestGetTLSCert(t *testing.T) {
 	cert := c.GetTLSCert()
 
 	if cert == nil {
-		t.Fatalf("Expected to get non nil tls cert")
+		t.Fatal("Expected to get non nil tls cert")
 	}
 
 	// get the real certificate object from rawCert and compare it with 'cert' variable
@@ -171,7 +171,7 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatal("GetLocalPeer() didn't return error")
 	}
 	if !strings.Contains(err.Error(), `parsing "Address": invalid syntax`) {
-		t.Fatalf("GetLocalPeer() didn't return expected error msg. got: %s", err.Error())
+		t.Fatalf("GetLocalPeer() didn't return expected error msg. got: %s", err)
 	}
 	c.GetPeerConfig().Set("peer.address", "peer:5050")
 	_, err = c.GetLocalPeer()
@@ -193,7 +193,7 @@ func TestGetLocalPeer(t *testing.T) {
 	c.GetPeerConfig().Set("peer.localMspId", "mspID")
 	localPeer, err := c.GetLocalPeer()
 	if err != nil {
-		t.Fatalf("GetLocalPeer() return error %v", err)
+		t.Fatalf("GetLocalPeer() return error %s", err)
 	}
 	if localPeer.Host != "peer" {
 		t.Fatalf("Expected localPeer.Host value %s but got %s",
@@ -228,7 +228,7 @@ func TestGetConfigPath(t *testing.T) {
 func TestMain(m *testing.M) {
 	configData, err := ioutil.ReadFile("../../cmd/sampleconfig/config.yaml")
 	if err != nil {
-		panic(fmt.Sprintf("File error: %v\n", err))
+		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	configStr := string(configData[:])
 	config := &configmanagerApi.ConfigMessage{MspID: mspID,

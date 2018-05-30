@@ -26,7 +26,7 @@ const (
 func TestPeerFilter(t *testing.T) {
 	_, err := New([]string{})
 	if err == nil {
-		t.Fatalf("Expecting error when no channel ID provided but got none")
+		t.Fatal("Expecting error when no channel ID provided but got none")
 	}
 
 	channelID := "testchannel"
@@ -34,11 +34,11 @@ func TestPeerFilter(t *testing.T) {
 
 	f, err := newWithOpts([]string{channelID}, mockbcinfo.NewProvider(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))))
 	if err != nil {
-		t.Fatalf("Got error when creating peer filter")
+		t.Fatal("Got error when creating peer filter")
 	}
 
 	if f.Accept(newPeer("p0")) {
-		t.Fatalf("Expecting that peer will NOT be accepted since the given peer is not a ChannelPeer so it doesn't contain the block height")
+		t.Fatal("Expecting that peer will NOT be accepted since the given peer is not a ChannelPeer so it doesn't contain the block height")
 	}
 	if f.Accept(membershipMocks.New("p1", "Org1MSP", channelID, blockHeight1)) {
 		t.Fatalf("Expecting that peer will NOT be accepted since its block height [%d] is less than the block height of the local peer [%d]", blockHeight1, localBlockHeight)
@@ -54,7 +54,7 @@ func TestPeerFilter(t *testing.T) {
 func newPeer(name string) fabApi.Peer {
 	peer, err := peer.New(mocks.NewMockEndpointConfig(), peer.WithURL("grpc://"+name+":7051"))
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create peer: %v)", err))
+		panic(fmt.Sprintf("Failed to create peer: %s)", err))
 	}
 	return peer
 }

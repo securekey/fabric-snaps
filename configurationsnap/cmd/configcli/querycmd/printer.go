@@ -54,15 +54,17 @@ const (
 // Print prints the given config bytes, which is a marshalled JSON array of ConfigKV
 func Print(configBytes []byte) {
 	if AsOutputFormat(cliconfig.Config().OutputFormat()) == RawOutput {
-		fmt.Printf("\n%s\n%s\n", lineSep, configBytes)
+		fmt.Printf("\n%s\n[%s]\n", lineSep, configBytes)
 	} else {
 		var configs []mgmtapi.ConfigKV
 		if err := json.Unmarshal(configBytes, &configs); err != nil {
-			cliconfig.Config().Logger().Errorf("Got error while unmarshalling config: %v", err)
+			cliconfig.Config().Logger().Errorf("Got error while unmarshalling config: %s", err)
 			return
 		}
 		for _, config := range configs {
-			fmt.Printf("\n%s\n----- MSPID: %s, Peer: %s, App: %s:,AppVersion: %s:,Component: %s:,ComponentVersion: %s:\n%s\n%s\n", lineSep, config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.AppVersion, config.Key.ComponentName, config.Key.ComponentVersion, config.Value, lineSep)
+			fmt.Printf("\n%s\n", lineSep)
+			fmt.Printf("----- MSPID: %s, Peer: %s, App: %s:,AppVersion: %s:,Component: %s:,ComponentVersion: %s: [%s]", config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.AppVersion, config.Key.ComponentName, config.Key.ComponentVersion, config.Value)
+			fmt.Printf("\n%s\n", lineSep)
 		}
 	}
 }

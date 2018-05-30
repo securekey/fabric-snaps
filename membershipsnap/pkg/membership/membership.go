@@ -68,7 +68,7 @@ func Get() (memserviceapi.Service, error) {
 
 	if atomic.CompareAndSwapUint32(&initialized, 0, 1) {
 		membershipService = memService
-		logger.Infof("... successfully initialized membership service\n")
+		logger.Info("... successfully initialized membership service\n")
 	}
 
 	return membershipService, nil

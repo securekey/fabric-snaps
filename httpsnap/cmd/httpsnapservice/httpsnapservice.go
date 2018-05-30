@@ -261,7 +261,7 @@ func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, p
 		}
 
 		if pinValid == false {
-			return nil, errors.Errorf(errors.GeneralError, "Failed to validate peer cert pins %v against allowed pins: %v", peerPins, pins)
+			return nil, errors.Errorf(errors.GeneralError, "Failed to validate peer cert pins %s against allowed pins: %s", peerPins, pins)
 		}
 
 		return c, nil

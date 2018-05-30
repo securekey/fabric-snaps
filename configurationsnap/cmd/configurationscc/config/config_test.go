@@ -86,7 +86,7 @@ func TestGetBCCSPProvider(t *testing.T) {
 	}
 	csrCfg, err = GetBCCSPProvider("../sampleconfig")
 	if err != nil {
-		t.Fatalf("Got error while getting BCCSP provider %v", err)
+		t.Fatalf("Got error while getting BCCSP provider %s", err)
 	}
 	if csrCfg == "" {
 		t.Fatalf("BCCSP provider is not set")
@@ -122,7 +122,7 @@ func TestCSROptions(t *testing.T) {
 
 	csrCfg, err := GetCSRConfigOptions("testChannel", "../sampleconfig")
 	if err != nil {
-		t.Fatalf("Got error while getting csr options %v", err)
+		t.Fatalf("Got error while getting csr options %s", err)
 	}
 
 	if csrCfg.CommonName == "" {

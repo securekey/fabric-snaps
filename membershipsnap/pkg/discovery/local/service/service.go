@@ -64,11 +64,11 @@ func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint
 		}
 		peerConfig, err := s.endpointConfig.PeerConfig(url)
 		if err != nil {
-			return nil, fmt.Errorf("error get peer config by url: %v", err)
+			return nil, fmt.Errorf("error get peer config by url: %s", err)
 		}
 		peer, err := peer.New(s.endpointConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(endpoint.GetMSPid())}))
 		if err != nil {
-			return nil, fmt.Errorf("error creating new peer: %v", err)
+			return nil, fmt.Errorf("error creating new peer: %s", err)
 		}
 		channelPeer, err := channelpeer.New(peer, s.channelID, endpoint.LedgerHeight, s.service)
 		if err != nil {

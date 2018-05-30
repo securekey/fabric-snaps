@@ -10,15 +10,14 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
 
 	"crypto/sha256"
 	"encoding/base64"
@@ -130,7 +129,7 @@ func getInstance(key CacheKey) (api.Client, error) {
 	once.Do(func() {
 		logger.Debugf("Setting client cache refresh interval %d\n", key.TxnSnapConfig().GetClientCacheRefreshInterval())
 		cache = newRefCache(key.TxnSnapConfig().GetClientCacheRefreshInterval())
-		logger.Debugf("Cache was intialized")
+		logger.Debug("Cache was intialized")
 	})
 
 	ref, err := cache.Get(key)
@@ -265,7 +264,7 @@ func NewCustomConfig(config fabApi.EndpointConfig, localPeer *api.PeerConfig, lo
 }
 
 func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, error) {
-	logger.Debugf("EndorseTransaction with endorseRequest %v", endorseRequest)
+	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
@@ -299,8 +298,22 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	return &response, nil
 }
 
+// getDisplayableEndorseRequest strips out TransientData and Args[1:] from endorseRequest for logging purposes
+func getDisplayableEndorseRequest(endorseRequest *api.EndorseTxRequest) api.EndorseTxRequest {
+	newMessage := api.EndorseTxRequest{
+		ChaincodeID:          endorseRequest.ChaincodeID,
+		PeerFilter:           endorseRequest.PeerFilter,
+		RWSetIgnoreNameSpace: endorseRequest.RWSetIgnoreNameSpace,
+		ChaincodeIDs:         endorseRequest.ChaincodeIDs,
+		Targets:              endorseRequest.Targets,
+		Args:                 []string{endorseRequest.Args[0]},
+	}
+
+	return newMessage
+}
+
 func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, error) {
-	logger.Debugf("CommitTransaction with endorseRequest %v", endorseRequest)
+	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, errors.New(errors.GeneralError, "function arg is required")
@@ -365,7 +378,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 		return errors.Wrap(errors.GeneralError, err, "The creator certificate is not valid")
 	}
 
-	logger.Debugf("verifyTPSignature info: creator is valid")
+	logger.Debug("verifyTPSignature info: creator is valid")
 
 	// validate the signature
 	err = membership.Verify(creatorBytes, signedProposal.ProposalBytes, signedProposal.Signature)
@@ -373,7 +386,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 		return errors.Wrap(errors.GeneralError, err, "The creator's signature over the proposal is not valid")
 	}
 
-	logger.Debugf("VerifyTxnProposalSignature exists successfully")
+	logger.Debug("VerifyTxnProposalSignature exits successfully")
 
 	return nil
 }
@@ -410,7 +423,7 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	}
 	ccCodes, err := c.txnSnapConfig.CCErrorRetryableCodes()
 	if err != nil {
-		logger.Warnf("Could not parse CC error retry args: %s", err.Error())
+		logger.Warnf("Could not parse CC error retry args: %s", err)
 	}
 	for _, code := range ccCodes {
 		addRetryCode(opts.RetryableCodes, status.ChaincodeStatus, status.Code(code))

@@ -103,13 +103,13 @@ func testInvalidFunctionName(t *testing.T, stub *mockstub.MockStub) {
 	// Test function name not provided
 	_, err := invoke(stub, [][]byte{})
 	if err == nil {
-		t.Fatalf("Function name is mandatory")
+		t.Fatal("Function name is mandatory")
 	}
 
 	// Test wrong function name provided
 	_, err = invoke(stub, [][]byte{[]byte("test")})
 	if err == nil {
-		t.Fatalf("Should have failed due to wrong function name")
+		t.Fatal("Should have failed due to wrong function name")
 	}
 
 }
@@ -120,22 +120,22 @@ func TestGenerateCSR(t *testing.T) {
 	// configuration Scc call generateCSR
 	_, err := invoke(stub, [][]byte{[]byte("generateCSR")})
 	if err == nil {
-		t.Fatalf("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
+		t.Fatal("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
 	}
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"),
 		[]byte("keyType"), []byte("false"), []byte("sigalg"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
+		t.Fatal("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
 	}
 
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+		t.Fatal("Expected: 'Could not initialize BCCSP'")
 	}
 
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+		t.Fatal("Expected: 'Could not initialize BCCSP'")
 	}
 
 }
@@ -147,7 +147,7 @@ func TestSendRefreshRequest(t *testing.T) {
 func TestNew(t *testing.T) {
 	cc := New()
 	if cc == nil {
-		t.Fatalf("Chain code is not created")
+		t.Fatal("Chain code is not created")
 	}
 }
 
@@ -166,18 +166,18 @@ func TestParseKey(t *testing.T) {
 	testOpts := &bccsp.ECDSAKeyGenOpts{Temporary: true}
 	k, err := bccspDef.KeyGen(testOpts)
 	if err != nil {
-		t.Fatalf("Error  %v", err)
+		t.Fatalf("Error %s", err)
 	}
 	response := parseKey(k)
 	if response.Status != 200 {
-		t.Fatalf("Error  %v", response.Message)
+		t.Fatalf("Error %v", response.Message)
 	}
 
 }
 func TestCreateSnapTxRequest(t *testing.T) {
 	req := createTransactionSnapRequest("ccid", "testchannel", nil, nil, nil)
 	if req == nil {
-		t.Fatalf("Request should have been created ")
+		t.Fatal("Request should have been created ")
 	}
 }
 
@@ -187,11 +187,11 @@ func TestGetCSRTemplate(t *testing.T) {
 	//	getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType string, csrCommonName string) (x509.CertificateRequest, error) {
 	_, err := getCSRTemplate("testChannel", nil, "ECDSA", "ECDSA", "csrCommonName")
 	if err == nil {
-		t.Fatalf("Expected: ' Alg is not supported'")
+		t.Fatal("Expected: ' Alg is not supported'")
 	}
 	_, err = getCSRTemplate("testChannel", nil, "ECDSA", "ECDSAWithSHA1", "csrCommonName")
 	if err == nil {
-		t.Fatalf("Expected 'Error Invalid key'")
+		t.Fatal("Expected 'Error Invalid key'")
 	}
 
 	var jsonBCCSP *factory.FactoryOpts
@@ -208,12 +208,12 @@ func TestGetCSRTemplate(t *testing.T) {
 	testOpts := &bccsp.ECDSAKeyGenOpts{Temporary: true}
 	k, err := bccspDef.KeyGen(testOpts)
 	if err != nil {
-		t.Fatalf("Error  %v", err)
+		t.Fatalf("Error  %s", err)
 	}
 
 	_, err = getCSRTemplate("testChannel", k, "ECDSA", "ECDSAWithSHA1", "csrCommonName")
 	if err != nil {
-		t.Fatalf("Expected 'Error Invalid key' %v", err)
+		t.Fatalf("Expected 'Error Invalid key' %s", err)
 	}
 }
 
@@ -221,7 +221,7 @@ func testHealthcheck(t *testing.T, stub *mockstub.MockStub) {
 	// configuration Scc healthcheck call
 	echoBytes, err := invoke(stub, [][]byte{[]byte("healthCheck")})
 	if err != nil {
-		t.Fatalf("Failed to call healthcheck, reason :%v", err)
+		t.Fatalf("Failed to call healthcheck, reason :%s", err)
 	}
 
 	logger.Infof("Message received from healthcheck: %s", echoBytes)
@@ -248,13 +248,13 @@ func TestSavedConfigs(t *testing.T) {
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer1", AppName: "configurationsnap"}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err := invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not get saved configuration :%v", err)
+		t.Fatalf("Could not get saved configuration :%s", err)
 	}
 	if !aclCheckCalled {
 		t.Fatal("ACL check call was expected")
@@ -311,13 +311,13 @@ func TestGetACLSuccess(t *testing.T) {
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err := invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not get configuration :%v", err)
+		t.Fatalf("Could not get configuration :%s", err)
 	}
 	if !aclCheckCalled {
 		t.Fatal("ACL check call was expected")
@@ -338,7 +338,7 @@ func TestGetACLSuccess(t *testing.T) {
 	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not get configuration :%v", err)
+		t.Fatalf("Could not get configuration :%s", err)
 	}
 	if !aclCheckCalled {
 		t.Fatal("ACL check call was expected")
@@ -386,13 +386,13 @@ func TestDeleteACLSuccess(t *testing.T) {
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not delete configuration :%v", err)
+		t.Fatalf("Could not delete configuration :%s", err)
 	}
 	if !aclCheckCalled {
 		t.Fatal("ACL check call was expected")
@@ -401,13 +401,13 @@ func TestDeleteACLSuccess(t *testing.T) {
 	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not delete configuration :%v", err)
+		t.Fatalf("Could not delete configuration :%s", err)
 	}
 	if !aclCheckCalled {
 		t.Fatal("ACL check call was expected")
@@ -416,13 +416,13 @@ func TestDeleteACLSuccess(t *testing.T) {
 	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
-		t.Fatalf("Expect error: 'Config Key does not have valid MSPId'")
+		t.Fatal("Expect error: 'Config Key does not have valid MSPId'")
 	}
 	if aclCheckCalled {
 		t.Fatal("ACL check call was NOT expected")
@@ -432,7 +432,7 @@ func TestDeleteACLSuccess(t *testing.T) {
 	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, nil})
 	if err == nil {
-		t.Fatalf("Expect error: Config is empty (no key)")
+		t.Fatal("Expect error: Config is empty (no key)")
 	}
 	if aclCheckCalled {
 		t.Fatal("ACL check call was NOT expected")
@@ -450,7 +450,7 @@ func TestDeleteACLFailure(t *testing.T) {
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: true}
@@ -466,33 +466,33 @@ func TestDeleteACLFailure(t *testing.T) {
 func TestGetKey(t *testing.T) {
 	_, err := getKey(nil)
 	if err == nil {
-		t.Fatalf("Expected error: Config is empty (no key)")
+		t.Fatal("Expected error: Config is empty (no key)")
 	}
 	b := [][]byte{[]byte(""), []byte("")}
 	_, err = getKey(b)
 	if err == nil {
-		t.Fatalf("Expected error: Config is empty (no key)")
+		t.Fatal("Expected error: Config is empty (no key)")
 	}
 	b = [][]byte{[]byte("a"), []byte("")}
 	_, err = getKey(b)
 	if err == nil {
-		t.Fatalf("Expected error:Got error unmarshalling config key")
+		t.Fatal("Expected error:Got error unmarshalling config key")
 	}
 	b = [][]byte{[]byte(""), []byte("b")}
 	_, err = getKey(b)
 	if err == nil {
-		t.Fatalf("Expected error:Got error unmarshalling config key")
+		t.Fatal("Expected error:Got error unmarshalling config key")
 	}
 
 	b = [][]byte{[]byte(""), []byte("b")}
 	_, err = getKey(b)
 	if err == nil {
-		t.Fatalf("Expected error:Got error unmarshalling config key")
+		t.Fatal("Expected error:Got error unmarshalling config key")
 	}
 	ch := make(chan int)
 	_, err = json.Marshal(ch)
 	if err != nil {
-		errStr := fmt.Sprintf("Got error while marshalling config %v", err)
+		errStr := fmt.Sprintf("Got error while marshalling config %s", err)
 		logger.Error(errStr)
 
 	}
@@ -507,31 +507,31 @@ func TestGetConfigUsingInvalidKey(t *testing.T) {
 	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
-		t.Fatalf("expected error: Cannot create config key using empty MspId")
+		t.Fatal("expected error: Cannot create config key using empty MspId")
 	}
 
 	configKey = mgmtapi.ConfigKey{MspID: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
-		t.Fatalf("expected error: Cannot create config key using empty MspId")
+		t.Fatal("expected error: Cannot create config key using empty MspId")
 	}
 
 	configKey = mgmtapi.ConfigKey{}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
-		t.Fatalf("Could not marshal key: %v", err)
+		t.Fatalf("Could not marshal key: %s", err)
 	}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
-		t.Fatalf("expected error: Cannot create config key using empty MspId")
+		t.Fatal("expected error: Cannot create config key using empty MspId")
 	}
 
 }
@@ -541,28 +541,28 @@ func TestSaveErrors(t *testing.T) {
 	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err := invoke(stub, getBytes("save", []string{strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)}))
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not save configuration :%s", err)
 	}
 
 	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "b", AppName: "b", AppVersion: api.VERSION}
 	configKeyStr, err := mgmt.ConfigKeyToString(configKey)
 	if err == nil {
-		t.Fatalf("expected error: Cannot create config key using empty MspId")
+		t.Fatal("expected error: Cannot create config key using empty MspId")
 	}
 
 	_, err = invoke(stub, getBytes("getConfiguration", []string{configKeyStr}))
 	if err == nil {
-		t.Fatalf("expected error: Cannot create config key using empty MspId  %v", err)
+		t.Fatalf("expected error: Cannot create config key using empty MspId  %s", err)
 	}
 	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName", AppVersion: api.VERSION}
 	//pass key string instead of configkey struct
 	configKeyStr, err = mgmt.ConfigKeyToString(configKey)
 	if err != nil {
-		t.Fatalf("Error: %v", err)
+		t.Fatalf("Error: %s", err)
 	}
 	_, err = invoke(stub, getBytes("getConfiguration", []string{configKeyStr}))
 	if err == nil {
-		t.Fatalf("expected error: invalid character 'm' looking for beginning of value unmarshalling Org1MSP!peerOne!AppName")
+		t.Fatal("expected error: invalid character 'm' looking for beginning of value unmarshalling Org1MSP!peerOne!AppName")
 	}
 }
 
@@ -570,7 +570,7 @@ func TestSaveConfigurationsWithEmptyPayload(t *testing.T) {
 	stub := mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
 	_, err := invoke(stub, getBytes("save", []string{""}))
 	if err == nil {
-		t.Fatalf("Expected error : 'Config is empty-cannot be saved'")
+		t.Fatal("Expected error : 'Config is empty-cannot be saved'")
 	}
 
 }
@@ -581,7 +581,7 @@ func TestSaveConfigurationsWithBogusPayload(t *testing.T) {
 	payload := []byte(invalidJSONMsg)
 	_, err := invoke(stub, [][]byte{funcName, payload})
 	if err == nil {
-		t.Fatalf("Expected error : 'Cannot unmarshal config message ....'%v", err)
+		t.Fatalf("Expected error : 'Cannot unmarshal config message ....'%s", err)
 	}
 
 }
@@ -593,19 +593,19 @@ func TestGenerateKeyArgs(t *testing.T) {
 	funcName := []byte("generateKeyPair")
 	_, err := invoke(stub, [][]byte{funcName, []byte("ECDSA")})
 	if err == nil {
-		t.Fatalf("Expected: 'Required arguments are: key type and ephemeral flag'")
+		t.Fatal("Expected: 'Required arguments are: key type and ephemeral flag'")
 	}
 	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA-FAKE"), []byte("false")})
 	if err == nil {
-		t.Fatalf("Expected: 'The key option is invalid. Valid options: [ECDSA, ECDSAP256,ECDSAP384]' ")
+		t.Fatal("Expected: 'The key option is invalid. Valid options: [ECDSA, ECDSAP256,ECDSAP384]' ")
 	}
 	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA"), []byte("notbool")})
 	if err == nil {
-		t.Fatalf("Expected: 'Ephemeral flag is not set'")
+		t.Fatal("Expected: 'Ephemeral flag is not set'")
 	}
 	_, err = invoke(stub, [][]byte{funcName, []byte("ECDSA"), []byte("")})
 	if err == nil {
-		t.Fatalf("Expected: 'Ephemeral flag is not set'")
+		t.Fatal("Expected: 'Ephemeral flag is not set'")
 	}
 
 }
@@ -614,37 +614,37 @@ func TestGetCSRSubject(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	raw, err := getCSRSubject("testChannel", "CSRCommonName")
 	if err != nil {
-		t.Fatalf("Error %v", err)
+		t.Fatalf("Error %s", err)
 	}
 	peerConfigPath = "./sampleconfig"
 	// configuration Scc call generateCSR
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR")})
 	if err == nil {
-		t.Fatalf("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
+		t.Fatal("Expected: 'Required arguments are: [key type,ephemeral flag and CSR's signature algorithm")
 	}
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"),
 		[]byte("keyType"), []byte("false"), []byte("sigalg"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
+		t.Fatal("Expected: 'The key algorithm is invalid. Supported options: ECDSA,ECDSAP256,ECDSAP384,RSA,RSA1024,RSA2048,RSA3072,RSA4096'")
 	}
 
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+		t.Fatal("Expected: 'Could not initialize BCCSP'")
 	}
 
 	_, err = invoke(stub, [][]byte{[]byte("generateCSR"), []byte("ECDSA"), []byte("false"), []byte("ECDSA"), []byte("CSRCommoName")})
 	if err == nil {
-		t.Fatalf("Expected: 'Could not initialize BCCSP'")
+		t.Fatal("Expected: 'Could not initialize BCCSP'")
 	}
 
 	csr := pem.EncodeToMemory(&pem.Block{
 		Type: "CERTIFICATE REQUEST", Bytes: raw,
 	})
-	fmt.Printf("CSR was created \n%v\n", string(csr))
+	fmt.Printf("CSR was created: [%v]", string(csr))
 
 	if csr == nil {
-		t.Fatalf("Error %v", err)
+		t.Fatalf("Error %s", err)
 	}
 
 }
@@ -653,11 +653,11 @@ func TestGetBCCSPAndKeyPair(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	_, _, err := getBCCSPAndKeyPair("", nil)
 	if err == nil {
-		t.Fatalf("Expected error: 'Channel is required '")
+		t.Fatal("Expected error: 'Channel is required '")
 	}
 	_, _, err = getBCCSPAndKeyPair("testChannel", nil)
 	if err == nil {
-		t.Fatalf("Expected error: 'The key gen option is required '")
+		t.Fatal("Expected error: 'The key gen option is required '")
 	}
 }
 
@@ -665,16 +665,16 @@ func TestGenerateKeyWithOpts(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	rsp := generateKeyWithOpts("", nil)
 	if rsp.Message == "" {
-		t.Fatalf("Expected: Cannot obtain ledger for channel")
+		t.Fatal("Expected: Cannot obtain ledger for channel")
 	}
 	rsp = generateKeyWithOpts("testChannel", nil)
 	if rsp.Message == "" {
-		t.Fatalf("Expected: The key gen option is required")
+		t.Fatal("Expected: The key gen option is required")
 	}
 	opts, _ := getKeyOpts("ECDSA", false)
 	rsp = generateKeyWithOpts("testChannel", opts)
 	if rsp.Message == "" {
-		t.Fatalf("Expected: Failed initializing PKCS11 library")
+		t.Fatal("Expected: Failed initializing PKCS11 library")
 	}
 }
 
@@ -684,23 +684,23 @@ func TestGetPublicKeyAlg(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	alg, err = getPublicKeyAlg("FAKE")
 	if err == nil {
-		t.Fatalf("Expected error: 'Public key algorithm is not supported FAKE")
+		t.Fatal("Expected error: 'Public key algorithm is not supported FAKE")
 	}
 	if alg != 0 {
-		t.Fatalf("Alg should be nil")
+		t.Fatal("Alg should be nil")
 
 	}
 	_, err = getPublicKeyAlg("RSA")
 	if err != nil {
-		t.Fatalf("Error:  %v", err)
+		t.Fatalf("Error:  %s", err)
 	}
 	_, err = getPublicKeyAlg("ECDSA")
 	if err != nil {
-		t.Fatalf("Error:  %v", err)
+		t.Fatalf("Error:  %s", err)
 	}
 	_, err = getPublicKeyAlg("DSA")
 	if err != nil {
-		t.Fatalf("Error:  %v", err)
+		t.Fatalf("Error:  %s", err)
 	}
 }
 
@@ -708,46 +708,46 @@ func TestGetCSRConfig(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	cfg, err := getCSRConfig("", peerConfigPath)
 	if err == nil {
-		t.Fatalf("Expected Error: Channel is required")
+		t.Fatal("Expected Error: Channel is required")
 	}
 	cfg, err = getCSRConfig("testChannel", peerConfigPath)
 	if err != nil {
-		t.Fatalf("Error: %v", err)
+		t.Fatalf("Error: %s", err)
 	}
 	if cfg.CommonName == "" {
-		t.Fatalf("Error: common name is required")
+		t.Fatal("Error: common name is required")
 	}
 	if cfg.Country == "" {
-		t.Fatalf("Error: country name is required")
+		t.Fatal("Error: country name is required")
 
 	}
 	if cfg.StateProvince == "" {
-		t.Fatalf("Error: province name is required")
+		t.Fatal("Error: province name is required")
 
 	}
 	if cfg.Locality == "" {
-		t.Fatalf("Error: locality name is required")
+		t.Fatal("Error: locality name is required")
 
 	}
 	if cfg.Org == "" {
-		t.Fatalf("Error: organization name is required")
+		t.Fatal("Error: organization name is required")
 
 	}
 
 	if cfg.OrgUnit == "" {
-		t.Fatalf("Error: org init name is required")
+		t.Fatal("Error: org init name is required")
 
 	}
 	if len(cfg.DNSNames) == 0 {
-		t.Fatalf("Error: DNS names are required")
+		t.Fatal("Error: DNS names are required")
 
 	}
 	if len(cfg.EmailAddresses) == 0 {
-		t.Fatalf("Error: EmailAddresses are required")
+		t.Fatal("Error: EmailAddresses are required")
 
 	}
 	if len(cfg.IPAddresses) == 0 {
-		t.Fatalf("Error: IPAddresses are required")
+		t.Fatal("Error: IPAddresses are required")
 	}
 
 }
@@ -755,76 +755,76 @@ func TestGetSignatureAlg(t *testing.T) {
 
 	_, err := getSignatureAlg("ECDSAWithSHA256")
 	if err != nil {
-		t.Fatalf("Valid alg errors out: %v", err)
+		t.Fatalf("Valid alg errors out: %s", err)
 	}
 	_, err = getSignatureAlg("SHA256WithRSAPSS")
 	if err != nil {
-		t.Fatalf("Valid alg errors out: %v", err)
+		t.Fatalf("Valid alg errors out: %s", err)
 	}
 	_, err = getSignatureAlg("SHA256WithRSAPSS-FAKE")
 	if err == nil {
-		t.Fatalf("Expected error invalid alg ")
+		t.Fatal("Expected error invalid alg")
 	}
 	_, err = getSignatureAlg("ECDSAWithSHA1")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("ECDSAWithSHA1")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("ECDSAWithSHA384")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 
 	_, err = getSignatureAlg("ECDSAWithSHA512")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA256WithRSAPSS")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA384WithRSAPSS")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA512WithRSAPSS")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("DSAWithSHA256")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("DSAWithSHA1")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA512WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA384WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA256WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("SHA1WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("MD5WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 	_, err = getSignatureAlg("MD2WithRSA")
 	if err != nil {
-		t.Fatalf("Error %v ", err)
+		t.Fatalf("Error %s", err)
 	}
 
 }
@@ -832,65 +832,65 @@ func TestGetSignatureAlg(t *testing.T) {
 func TestGetKeyOpts(t *testing.T) {
 	key, err := getKeyOpts("ECDSA", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "ECDSA" {
-		t.Fatalf("Expected ECDSA alg")
+		t.Fatal("Expected ECDSA alg")
 	}
 	key, err = getKeyOpts("RSA", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "RSA" {
-		t.Fatalf("Expected RSA alg")
+		t.Fatal("Expected RSA alg")
 	}
 	key, err = getKeyOpts("ECDSA-XXX", false)
 	if err == nil {
-		t.Fatalf("Expected Supported options: ECDSA,ECDSAP256 ... ")
+		t.Fatal("Expected Supported options: ECDSA,ECDSAP256 ... ")
 	}
 
 	key, err = getKeyOpts("ECDSAP256", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "ECDSAP256" {
-		t.Fatalf("Expected ECDSAP256 alg")
+		t.Fatal("Expected ECDSAP256 alg")
 	}
 	key, err = getKeyOpts("ECDSAP384", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "ECDSAP384" {
-		t.Fatalf("Expected ECDSAP384 alg")
+		t.Fatal("Expected ECDSAP384 alg")
 	}
 
 	key, err = getKeyOpts("RSA1024", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "RSA1024" {
-		t.Fatalf("Expected RSA1024 alg")
+		t.Fatal("Expected RSA1024 alg")
 	}
 	key, err = getKeyOpts("RSA2048", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "RSA2048" {
-		t.Fatalf("Expected RSA2048 alg")
+		t.Fatal("Expected RSA2048 alg")
 	}
 	key, err = getKeyOpts("RSA3072", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "RSA3072" {
-		t.Fatalf("Expected RSA3072 alg")
+		t.Fatal("Expected RSA3072 alg")
 	}
 	key, err = getKeyOpts("RSA4096", false)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err.Error())
 	}
 	if key.Algorithm() != "RSA4096" {
-		t.Fatalf("Expected RSA4096 alg")
+		t.Fatal("Expected RSA4096 alg")
 	}
 
 }
@@ -939,7 +939,7 @@ func uplaodConfigToHL(t *testing.T, stub *mockstub.MockStub, message []byte) err
 func TestMain(m *testing.M) {
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
-		panic(fmt.Sprintf("File error: %v\n", err))
+		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{

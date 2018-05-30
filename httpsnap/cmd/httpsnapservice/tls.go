@@ -39,7 +39,7 @@ func NewCertPoolCache() *lazycache.Cache {
 			return nil, errors.New("unexpected cache key")
 		}
 
-		logger.Infof("Initializing cert pool cache")
+		logger.Info("Initializing cert pool cache")
 
 		return commtls.NewCertPool(ck.UseSystemPool()), nil
 	}

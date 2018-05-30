@@ -111,7 +111,11 @@ func (s *eventConsumerSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 
 	function, valid := s.functions[functionName]
 	if !valid {
-		return shim.Error(fmt.Sprintf("Invalid invoke function [%s]. Expecting one of: %v", functionName, s.functions))
+		fnNames := []string{}
+		for k := range s.functions {
+			fnNames = append(fnNames, k)
+		}
+		return shim.Error(fmt.Sprintf("Invalid invoke function [%s]. Expecting one of: %s", functionName, fnNames))
 	}
 
 	return function(stub, args)
@@ -146,19 +150,19 @@ func (s *eventConsumerSnap) registerBlockEvents(stub shim.ChaincodeStubInterface
 	s.blockRegistrations[channelID] = reg
 
 	go func() {
-		logger.Infof("Listening for block events on channel: %s\n")
+		logger.Info("Listening for block events on channel...")
 		for {
 			bevent, ok := <-eventch
 			if !ok {
-				logger.Infof("Stopped listening for block events on channel %s\n", channelID)
+				logger.Infof("Stopped listening for block events on channel %s", channelID)
 				return
 			}
 			go func() {
-				logger.Infof("Received block event: %v\n", bevent.Block)
+				logger.Infof("Received block event: %s", bevent.Block)
 
 				chID, err := channelutil.ChannelIDFromBlock(bevent.Block)
 				if err != nil {
-					logger.Errorf("Error extracting channel ID from block: %s\n", err)
+					logger.Errorf("Error extracting channel ID from block: %s", err)
 				} else {
 					s.eventmutex.Lock()
 					defer s.eventmutex.Unlock()
@@ -263,19 +267,19 @@ func (s *eventConsumerSnap) registerFilteredBlockEvents(stub shim.ChaincodeStubI
 	s.fblockRegistrations[channelID] = reg
 
 	go func() {
-		logger.Infof("Listening for filtered block events on channel %s\n", channelID)
+		logger.Infof("Listening for filtered block events on channel %s ...", channelID)
 		for {
 			fbevent, ok := <-eventch
 			if !ok {
-				logger.Infof("Stopped listening for filtered block events on channel %s\n", channelID)
+				logger.Infof("Stopped listening for filtered block events on channel %s", channelID)
 				return
 			}
 			go func() {
-				logger.Infof("Received filtered block event: %v\n", fbevent.FilteredBlock)
+				logger.Infof("Received filtered block event: %s", fbevent.FilteredBlock)
 
 				chID, err := channelutil.ChannelIDFromFilteredBlock(fbevent.FilteredBlock)
 				if err != nil {
-					logger.Errorf("Error extracting channel ID from filtered block: %s\n", err)
+					logger.Errorf("Error extracting channel ID from filtered block: %s", err)
 				} else {
 					s.eventmutex.Lock()
 					defer s.eventmutex.Unlock()
@@ -306,7 +310,7 @@ func (s *eventConsumerSnap) unregisterFilteredBlockEvents(stub shim.ChaincodeStu
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
 
-	logger.Infof("Unregistering filtered block events on channel %s\n", channelID)
+	logger.Infof("Unregistering filtered block events on channel %s", channelID)
 
 	eventService.Unregister(reg)
 
@@ -327,7 +331,7 @@ func (s *eventConsumerSnap) getFilteredBlockEvents(stub shim.ChaincodeStubInterf
 
 	bytes, err := protoToJSON(s.fblockEvents[channelID])
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Error marshalling filtered block events: %s", err))
+		return shim.Error(fmt.Sprintf("Error marshalling filtered block events for channel [%s], error: %s", channelID, err))
 	}
 
 	return shim.Success(bytes)
@@ -380,15 +384,15 @@ func (s *eventConsumerSnap) registerCCEvents(stub shim.ChaincodeStubInterface, a
 	s.ccRegistrations[regKey] = reg
 
 	go func() {
-		logger.Infof("Listening for chaincode events on channel %s, CC ID: %s, Event filter: %s\n", channelID, ccID, eventFilter)
+		logger.Infof("Listening for chaincode events on channel %s, CC ID: %s, Event filter: %s ...", channelID, ccID, eventFilter)
 		for {
 			ccevent, ok := <-eventch
 			if !ok {
-				logger.Infof("Stopped listening for chaincode events on channel %s, CC ID: %s, Event filter: %s\n", channelID, ccID, eventFilter)
+				logger.Infof("Stopped listening for chaincode events on channel %s, CC ID: %s, Event filter: %s", channelID, ccID, eventFilter)
 				return
 			}
 			go func() {
-				logger.Infof("Received CC event on channel %s, CC ID: %s, Event: %s, TxID: %s\n", channelID, ccID, ccevent.EventName, ccevent.TxID)
+				logger.Infof("Received CC event on channel %s, CC ID: %s, Event: %s, TxID: %s", channelID, ccID, ccevent.EventName, ccevent.TxID)
 				s.eventmutex.Lock()
 				defer s.eventmutex.Unlock()
 				s.ccEvents[channelID] = append(s.ccEvents[channelID], ccevent)
@@ -487,23 +491,23 @@ func (s *eventConsumerSnap) registerTxEvents(stub shim.ChaincodeStubInterface, a
 
 	reg, eventch, err := eventService.RegisterTxStatusEvent(txID)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Error registering for Tx Status events on channel %s and TxID %s err:%v", channelID, txID, err))
+		return shim.Error(fmt.Sprintf("Error registering for Tx Status events on channel %s and TxID %s err:%s", channelID, txID, err))
 	}
 
 	s.txRegistrations[regKey] = reg
 
 	go func() {
-		logger.Infof("Listening for Tx Status events on channel %s for Tx: %s\n", channelID, txID)
+		logger.Infof("Listening for Tx Status events on channel %s for Tx: %s", channelID, txID)
 
 		txevent, ok := <-eventch
 		if !ok {
-			logger.Infof("Stopped listening for Tx Status events for Tx: %s\n", txID)
+			logger.Infof("Stopped listening for Tx Status events for Tx: %s", txID)
 			return
 		}
 		go func() {
 			s.eventmutex.Lock()
 			defer s.eventmutex.Unlock()
-			logger.Infof("Received Tx Status event - TxID: %s, Status: %s\n", txevent.TxID, txevent.TxValidationCode)
+			logger.Infof("Received Tx Status event - TxID: %s, Status: %s", txevent.TxID, txevent.TxValidationCode)
 			s.txEvents[channelID] = append(s.txEvents[channelID], txevent)
 		}()
 	}()
