@@ -97,7 +97,7 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 	for _, ccArg := range endorserArgs {
 		ccargs = append(ccargs, string(ccArg))
 	}
-	logger.Debug("Endorser args:", ccargs)
+	logger.Debugf("Endorser args[0]: %s", ccargs[0])
 
 	var peerFilter api.PeerFilter
 	if snapTxRequest.PeerFilter != nil {

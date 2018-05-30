@@ -49,7 +49,7 @@ func getStateDBProviderInstance() (privacyenabledstate.DBProvider, error) {
 		logger.Info("Creating StateDB provider")
 		stateDBProvider, dbProviderErr = privacyenabledstate.NewCommonStorageDBProvider()
 		if dbProviderErr != nil {
-			logger.Warnf("Error creating StateDB provider %s", dbProviderErr.Error())
+			logger.Warnf("Error creating StateDB provider %s", dbProviderErr)
 		}
 	})
 

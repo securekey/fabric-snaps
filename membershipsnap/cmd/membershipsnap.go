@@ -60,7 +60,7 @@ var initializer ccInitializer = func(mscc *MembershipSnap) error {
 	mscc.policyChecker = policyChecker
 	mscc.membershipService = service
 
-	logger.Infof("Successfully initialized membership snap")
+	logger.Info("Successfully initialized membership snap")
 
 	return nil
 }
@@ -68,12 +68,12 @@ var initializer ccInitializer = func(mscc *MembershipSnap) error {
 // Init is called once when the chaincode started the first time
 func (t *MembershipSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	if stub.GetChannelID() == "" {
-		logger.Infof("Initializing membership snap...\n")
+		logger.Info("Initializing membership snap...\n")
 		err := initializer(t)
 		if err != nil {
 			return shim.Error(fmt.Sprintf("Error initializing Membership Snap: %s", err))
 		}
-		logger.Infof("... successfully initialized membership snap\n")
+		logger.Info("... successfully initialized membership snap\n")
 	} else {
 		logger.Infof("Initializing membership snap - nothing to do for channel [%s]\n", stub.GetChannelID())
 	}
@@ -144,7 +144,7 @@ func (t *MembershipSnap) getPeersOfChannel(stub shim.ChaincodeStubInterface, arg
 func (t *MembershipSnap) marshalEndpoints(endpoints []*memserviceapi.PeerEndpoint) ([]byte, error) {
 	payload, err := proto.Marshal(&memserviceapi.PeerEndpoints{Endpoints: endpoints})
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling peer endpoints: %v", err)
+		return nil, fmt.Errorf("error marshalling peer endpoints: %s", err)
 	}
 	return payload, nil
 }

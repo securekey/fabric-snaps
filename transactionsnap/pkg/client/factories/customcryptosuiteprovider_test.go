@@ -35,11 +35,11 @@ func TestDefaultCryptoSuiteFactory(t *testing.T) {
 	cryptoSuiteProvider, err := cryptoSuiteFactory.CreateCryptoSuiteProvider(nil)
 
 	if err != nil {
-		t.Fatalf("Not supposed to get error from cryptoSuiteFactory.NewCryptoSuiteProvider")
+		t.Fatal("Not supposed to get error from cryptoSuiteFactory.NewCryptoSuiteProvider")
 	}
 
 	if cryptoSuiteProvider == nil {
-		t.Fatalf("expected to get valid cryptosuite from cryptoSuiteFactory.NewCryptoSuiteProvider")
+		t.Fatal("expected to get valid cryptosuite from cryptoSuiteFactory.NewCryptoSuiteProvider")
 	}
 
 }

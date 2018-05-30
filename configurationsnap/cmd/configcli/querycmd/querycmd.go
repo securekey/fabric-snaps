@@ -118,7 +118,7 @@ func (a *queryAction) query() error {
 		return errors.Wrapf(err, "error marshalling config key")
 	}
 
-	cliconfig.Config().Logger().Debugf("Using config key: %s\n", configKeyBytes)
+	cliconfig.Config().Logger().Debugf("Using config key: [%s]\n", configKeyBytes)
 
 	response, err := a.Query(cliconfig.ConfigSnapID, "get", [][]byte{[]byte(configKeyBytes)})
 	if err != nil {

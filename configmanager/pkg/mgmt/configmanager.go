@@ -94,12 +94,12 @@ func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
 	}
 	creator, err := stub.GetCreator()
 	if err != nil {
-		logger.Errorf("Cannot get creatorBytes error %v", err)
+		logger.Errorf("Cannot get creatorBytes error %s", err)
 		return "", errors.Wrap(errors.GeneralError, err, "Error getting creator")
 	}
 	sid := &protosMSP.SerializedIdentity{}
 	if err := proto.Unmarshal(creator, sid); err != nil {
-		logger.Errorf("Unmarshal creatorBytes error %v", err)
+		logger.Errorf("Unmarshal creatorBytes error %s", err)
 		return "", errors.Wrap(errors.GeneralError, err, "Unmarshal creatorBytes error")
 	}
 	return sid.Mspid, nil

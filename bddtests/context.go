@@ -268,7 +268,7 @@ func (b *BDDContext) PeerConfigForChannel(channelID string) *PeerConfig {
 
 	pconfigs := b.peersByChannel[channelID]
 	if len(pconfigs) == 0 {
-		logger.Warnf("Peer config not found for channel [%s]\n", channelID)
+		logger.Warnf("Peer config not found for channel [%s]", channelID)
 		return nil
 	}
 	return pconfigs[rand.Intn(len(pconfigs))]

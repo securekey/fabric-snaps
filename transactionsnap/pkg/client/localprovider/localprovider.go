@@ -64,7 +64,7 @@ func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating new peer: %v", err)
 	}
-	logger.Debugf("return local peer(%v) from GetPeers DiscoveryService", peer)
+	logger.Debugf("return local peer(%+v) from GetPeers DiscoveryService", peer)
 	return []fabApi.Peer{peer}, nil
 
 }

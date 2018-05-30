@@ -54,7 +54,7 @@ const (
 // Print prints the given config bytes, which is a marshalled JSON array of ConfigKV
 func Print(configBytes []byte) {
 	if AsOutputFormat(cliconfig.Config().OutputFormat()) == RawOutput {
-		fmt.Printf("\n%s\n%s\n", lineSep, configBytes)
+		fmt.Printf("\n%s\n[%s]", lineSep, configBytes)
 	} else {
 		var configs []mgmtapi.ConfigKV
 		if err := json.Unmarshal(configBytes, &configs); err != nil {
@@ -62,7 +62,7 @@ func Print(configBytes []byte) {
 			return
 		}
 		for _, config := range configs {
-			fmt.Printf("\n%s\n----- MSPID: %s, Peer: %s, App: %s:,Version: %s:\n%s\n%s\n", lineSep, config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.Version, config.Value, lineSep)
+			fmt.Printf("\n%s\n----- MSPID: %s, Peer: %s, App: %s:,Version: %s:[%s]\n%s\n", lineSep, config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.Version, config.Value, lineSep)
 		}
 	}
 }

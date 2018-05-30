@@ -47,7 +47,7 @@ func (c *ConfigurationsSnapSteps) checkCSR(ccID string) error {
 		Type: "CERTIFICATE REQUEST", Bytes: raw,
 	})
 
-	logger.Debugf("CSR was created \n%v\n", string(csr))
+	logger.Debugf("CSR was created [%v]", string(csr))
 	//returned certificate request should have fields configured in config.yaml
 	cr, e := x509.ParseCertificateRequest(raw)
 	if e != nil {
@@ -56,7 +56,7 @@ func (c *ConfigurationsSnapSteps) checkCSR(ccID string) error {
 	if cr.Subject.Organization[0] == "" {
 		return errors.Errorf("CSR should have non nil subject-organization")
 	}
-	logger.Debugf("CSR was created \n%v\n", cr.Subject)
+	logger.Debugf("CSR was created [%v]", cr.Subject)
 	return nil
 }
 
@@ -77,7 +77,7 @@ func (c *ConfigurationsSnapSteps) checkKeyGenResponse(ccID string, expectedKeyTy
 	switch k := pk.(type) {
 	case *ecdsa.PublicKey:
 		if !strings.Contains(expectedKeyType, "ECDSA") {
-			return errors.Errorf("Expected ECDSA key but got %v", k)
+			return errors.Errorf("Expected ECDSA key but got [%v]", k)
 		}
 		ecdsaPK, ok := pk.(*ecdsa.PublicKey)
 		if !ok {
@@ -92,7 +92,7 @@ func (c *ConfigurationsSnapSteps) checkKeyGenResponse(ccID string, expectedKeyTy
 
 	case *rsa.PublicKey:
 		if !strings.Contains(expectedKeyType, "RSA") {
-			return errors.Errorf("Expected RSA key but got %v", k)
+			return errors.Errorf("Expected RSA key but got [%v]", k)
 		}
 		rsaPK, ok := pk.(*rsa.PublicKey)
 		if !ok {
@@ -106,7 +106,7 @@ func (c *ConfigurationsSnapSteps) checkKeyGenResponse(ccID string, expectedKeyTy
 			return errors.New("Invalid RSA key")
 		}
 	default:
-		logger.Debugf("Not supported %v", k)
+		logger.Debugf("Not supported type: '%s'", k)
 		return errors.Errorf("Received unsupported key type")
 	}
 

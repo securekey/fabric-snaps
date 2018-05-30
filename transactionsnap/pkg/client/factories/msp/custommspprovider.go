@@ -25,7 +25,7 @@ type CustomMSPProvider struct {
 func (p *CustomMSPProvider) IdentityManager(orgName string) (mspApi.IdentityManager, bool) {
 	customIdenMgr, err := NewCustomIdentityManager(orgName, p.cryptoProvider, p.config, p.cryptoPath)
 	if err != nil {
-		logger.Errorf("NewCustomIdentityManager return error %v", err)
+		logger.Errorf("NewCustomIdentityManager return error %s", err)
 		return nil, false
 	}
 	return customIdenMgr, true

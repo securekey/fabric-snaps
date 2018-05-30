@@ -61,7 +61,7 @@ func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService
 func TestInvalidConfig(t *testing.T) {
 	_, err := New("", "./invalid")
 	if err == nil {
-		t.Fatalf("Expecting error for invalid config but received none")
+		t.Fatal("Expecting error for invalid config but received none")
 	}
 }
 
@@ -73,7 +73,7 @@ func TestConfig(t *testing.T) {
 	// Test with no channel config
 	config, err := New("", "../sampleconfig")
 	if err == nil {
-		t.Fatalf("Expecting error creating new config with no channel")
+		t.Fatal("Expecting error creating new config with no channel")
 	}
 
 	// Test config on channel1
@@ -90,7 +90,7 @@ func TestConfig(t *testing.T) {
 	client.ServiceProviderFactory = &MockProviderFactory{}
 	_, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
-		panic(fmt.Sprintf("Client GetInstance return error %v", err))
+		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
 
 	config, err = New(channelID, "../sampleconfig")
