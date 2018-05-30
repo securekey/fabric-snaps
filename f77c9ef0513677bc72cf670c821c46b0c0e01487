@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d969bfe0_47629148",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-05-30T16:27:27Z",
+      "side": 1,
+      "message": "This actually should be Component.",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 15
+      },
+      "revId": "f77c9ef0513677bc72cf670c821c46b0c0e01487",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
