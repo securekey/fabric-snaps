@@ -30,7 +30,7 @@ type ConfigKV struct {
 	Value []byte
 }
 
-//Components represents app component
+//Component represents app component
 type Component struct {
 	Name   string
 	Config string
