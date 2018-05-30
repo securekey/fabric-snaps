@@ -17,10 +17,11 @@ const VERSION = "1"
 
 // ConfigKey contain org,peer,appname,version
 type ConfigKey struct {
-	MspID   string
-	PeerID  string
-	AppName string
-	Version string
+	MspID         string
+	PeerID        string
+	AppName       string
+	ComponentName string
+	Version       string
 }
 
 //ConfigKV represents key value struct for managing configurations
@@ -29,11 +30,18 @@ type ConfigKV struct {
 	Value []byte
 }
 
+//Components represents app component
+type Components struct {
+	Name   string
+	Config string
+}
+
 //AppConfig identifier has application name , config version
 type AppConfig struct {
-	AppName string
-	Version string
-	Config  string
+	AppName    string
+	Version    string
+	Config     string
+	Components []Components
 }
 
 //PeerConfig identifier has peer identifier and collection of application configurations
@@ -134,8 +142,8 @@ func (ac AppConfig) IsValid() error {
 	if ac.AppName == "" {
 		return errors.New("AppName cannot be empty")
 	}
-	if len(ac.Config) == 0 {
-		return errors.New("AppConfig is not set (empty payload)")
+	if len(ac.Config) == 0 && len(ac.Components) == 0 {
+		return errors.New("Neither AppConfig or Components is set (empty payload)")
 	}
 	if len(ac.Version) == 0 {
 		return errors.New("AppVersion is not set (empty version)")

@@ -13,13 +13,13 @@ import (
 )
 
 func TestCreateConfigKey(t *testing.T) {
-	if _, err := CreateConfigKey("", "asv", "aaa", "1"); err == nil {
+	if _, err := CreateConfigKey("", "asv", "aaa", "1", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
-	if _, err := CreateConfigKey("sdfsdf", "asv", "", "1"); err == nil {
+	if _, err := CreateConfigKey("sdfsdf", "asv", "", "1", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
-	if _, err := CreateConfigKey("sdfsdf", "asv", "www", ""); err == nil {
+	if _, err := CreateConfigKey("sdfsdf", "asv", "www", "", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
 
