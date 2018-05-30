@@ -84,17 +84,17 @@ func TestEndorseTransaction(t *testing.T) {
 
 	response, err := txService.EndorseTransaction(&snapTxReq, nil)
 	if err != nil {
-		t.Fatalf("Error endorsing transaction %v", err)
+		t.Fatalf("Error endorsing transaction %s", err)
 	}
 	if response == nil {
-		t.Fatalf("Expected proposal response")
+		t.Fatal("Expected proposal response")
 	}
 
 	if len(response.Responses) == 0 {
-		t.Fatalf("Received an empty transaction proposal response")
+		t.Fatal("Received an empty transaction proposal response")
 	}
 	if response.Responses[0].ProposalResponse.Response.Status != 200 {
-		t.Fatalf("Expected proposal response status: SUCCESS")
+		t.Fatal("Expected proposal response status: SUCCESS")
 	}
 	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
 		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
@@ -129,7 +129,7 @@ func TestCommitTransaction(t *testing.T) {
 
 	_, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
-		t.Fatalf("Error commit transaction %v", err)
+		t.Fatalf("Error commit transaction %s", err)
 	}
 
 }
@@ -138,7 +138,7 @@ func TestVerifyProposalSignature(t *testing.T) {
 	txService := newMockTxService(nil)
 	err := txService.VerifyTxnProposalSignature(nil)
 	if err == nil {
-		t.Fatalf("SignedProposal is mandatory field")
+		t.Fatal("SignedProposal is mandatory field")
 	}
 }
 
@@ -216,7 +216,7 @@ func TestMain(m *testing.M) {
 	client.ServiceProviderFactory = &MockProviderFactory{}
 	fcClient, err = client.GetInstance(channelID, &sampleConfig{txSnapConfig})
 	if err != nil {
-		panic(fmt.Sprintf("Client GetInstance return error %v", err))
+		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
 
 	mockBroadcastServer, _ = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())

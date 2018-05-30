@@ -161,11 +161,11 @@ func TestPost(t *testing.T) {
 func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
 	httpService, err := Get(channelID)
 	if err != nil {
-		t.Fatalf("Get return error: %v", err)
+		t.Fatalf("Get return error: %s", err)
 	}
 	res, err := httpService.Invoke(httpServiceInvokeRequest)
 	if err != nil {
-		t.Fatalf("Invoke should have completed successfully: %v", err)
+		t.Fatalf("Invoke should have completed successfully: %s", err)
 	}
 
 	if !strings.Contains(string(res), expected) {
@@ -176,7 +176,7 @@ func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 func verifyFailure(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
 	httpService, err := Get(channelID)
 	if err != nil {
-		t.Fatalf("Get return error: %v", err)
+		t.Fatalf("Get return error: %s", err)
 	}
 	_, err = httpService.Invoke(httpServiceInvokeRequest)
 	if err == nil {
@@ -261,7 +261,7 @@ func initHTTPServerConfig() {
 func TestMain(m *testing.M) {
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
 	if err != nil {
-		panic(fmt.Sprintf("File error: %v\n", err))
+		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	config := &configmanagerApi.ConfigMessage{MspID: mspID, Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{PeerID: "jdoe",
 		App: []configmanagerApi.AppConfig{configmanagerApi.AppConfig{AppName: "httpsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}

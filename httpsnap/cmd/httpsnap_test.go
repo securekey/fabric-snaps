@@ -287,7 +287,7 @@ func createHTTPSnapRequest(url string, headers map[string]string, body string) [
 	req := api.HTTPSnapRequest{URL: url, Headers: headers, Body: body}
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		fmt.Printf("err: %s\n", err)
 		return nil
 	}
 

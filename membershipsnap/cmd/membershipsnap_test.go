@@ -47,7 +47,7 @@ func TestErrorInInit(t *testing.T) {
 
 	resp := stub.MockInit("txid", nil)
 	if resp.Status == shim.OK {
-		t.Fatalf("Expecting Init to return error but got success.")
+		t.Fatal("Expecting Init to return error but got success.")
 	}
 }
 
@@ -59,12 +59,12 @@ func TestInvokeInvalidFunction(t *testing.T) {
 	args := [][]byte{}
 	stub := newMockStub(identity, identityDeserializer, msp1, address1, mockbcinfo.ChannelBCInfos())
 	if res := stub.MockInvokeWithSignedProposal("txID", args, sProp); res.Status == shim.OK {
-		t.Fatalf("mscc invoke expecting error for invalid number of args")
+		t.Fatal("mscc invoke expecting error for invalid number of args")
 	}
 
 	args = [][]byte{[]byte("invalid")}
 	if res := stub.MockInvokeWithSignedProposal("txID", args, sProp); res.Status == shim.OK {
-		t.Fatalf("mscc invoke expecting error for invalid function")
+		t.Fatal("mscc invoke expecting error for invalid function")
 	}
 }
 
@@ -85,7 +85,7 @@ func TestGetAllPeers(t *testing.T) {
 	}
 
 	if len(res.Payload) == 0 {
-		t.Fatalf("mscc invoke(getAllPeers) - unexpected nil payload in response")
+		t.Fatal("mscc invoke(getAllPeers) - unexpected nil payload in response")
 	}
 
 	endpoints := &memserviceapi.PeerEndpoints{}
@@ -124,7 +124,7 @@ func TestGetAllPeers(t *testing.T) {
 	}
 
 	if len(res.Payload) == 0 {
-		t.Fatalf("mscc invoke(getAllPeers) - unexpected nil payload in response")
+		t.Fatal("mscc invoke(getAllPeers) - unexpected nil payload in response")
 	}
 
 	endpoints = &memserviceapi.PeerEndpoints{}
@@ -145,7 +145,7 @@ func TestGetAllPeers(t *testing.T) {
 
 // TestGetPeersOfChannel tests Invoke with the "getPeersOfChannel" function.
 func TestGetPeersOfChannel(t *testing.T) {
-	t.Skipf("TestGetPeersOfChannel is skipped since MockCreateChain doesn't work with Viper 1.0.0.")
+	t.Skip("TestGetPeersOfChannel is skipped since MockCreateChain doesn't work with Viper 1.0.0.")
 
 	channelID := "testchannel"
 	localAddress := "host3:1000"
@@ -174,13 +174,13 @@ func TestGetPeersOfChannel(t *testing.T) {
 	args := [][]byte{[]byte(getPeersOfChannelFunction)}
 	res := stub.MockInvokeWithSignedProposal("txID", args, sProp)
 	if res.Status == shim.OK {
-		t.Fatalf("mscc invoke(getPeersOfChannel) - Expecting error for nil channel ID")
+		t.Fatal("mscc invoke(getPeersOfChannel) - Expecting error for nil channel ID")
 	}
 
 	args = [][]byte{[]byte(getPeersOfChannelFunction), nil}
 	res = stub.MockInvokeWithSignedProposal("txID", args, sProp)
 	if res.Status == shim.OK {
-		t.Fatalf("mscc invoke(getPeersOfChannel) - Expecting error for nil channel ID")
+		t.Fatal("mscc invoke(getPeersOfChannel) - Expecting error for nil channel ID")
 	}
 
 	args = [][]byte{[]byte(getPeersOfChannelFunction), []byte(channelID)}
@@ -190,7 +190,7 @@ func TestGetPeersOfChannel(t *testing.T) {
 	}
 
 	if len(res.Payload) == 0 {
-		t.Fatalf("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
+		t.Fatal("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
 	}
 
 	endpoints := &memserviceapi.PeerEndpoints{}
@@ -219,7 +219,7 @@ func TestGetPeersOfChannel(t *testing.T) {
 	}
 
 	if len(res.Payload) == 0 {
-		t.Fatalf("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
+		t.Fatal("mscc invoke(getPeersOfChannel) - unexpected nil payload in response")
 	}
 
 	endpoints = &memserviceapi.PeerEndpoints{}

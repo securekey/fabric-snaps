@@ -180,8 +180,8 @@ func (a *updateAction) update() error {
 	}
 
 	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{[]byte(configBytes)}); err != nil {
-		fmt.Printf("Error invoking chaincode: %v\n", err)
-		return errors.Wrap(err, "Update command returned with error %v")
+		fmt.Printf("Error invoking chaincode: %s\n", err)
+		return errors.Wrap(err, "Update command returned with error")
 	}
 	fmt.Println("Configuration successfully updated!")
 
@@ -195,7 +195,7 @@ func (a *updateAction) update() error {
 func configFromString(configString string, baseFilePath string) (*mgmtapi.ConfigMessage, error) {
 	configMsg, err := unmarshal([]byte(configString))
 	if err != nil {
-		return nil, errors.Errorf("Invalid configuration: %v", err)
+		return nil, errors.Errorf("Invalid configuration: %s", err)
 	}
 	newConfigMsg := &mgmtapi.ConfigMessage{
 		MspID: configMsg.MspID,
@@ -256,7 +256,7 @@ func unmarshal(updateMsgBytes []byte) (*mgmtapi.ConfigMessage, error) {
 	}
 	configMsg := &mgmtapi.ConfigMessage{}
 	if err := json.Unmarshal(updateMsgBytes, &configMsg); err != nil {
-		return nil, errors.Wrapf(err, "error unmarshalling config message")
+		return nil, errors.Wrap(err, "error unmarshalling config message")
 	}
 	return configMsg, nil
 }

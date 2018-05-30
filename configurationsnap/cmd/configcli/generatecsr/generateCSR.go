@@ -127,8 +127,8 @@ func (a *queryAction) generateCSR() error {
 	if err != nil {
 		return err
 	}
-	cliconfig.Config().Logger().Debugf("***Generated CSR*** \n%v\n", response)
-	fmt.Printf("\nPEM encoded CSR:\n%s\n", csrToPem(response))
+	cliconfig.Config().Logger().Debugf("***Generated CSR*** [%v]", response)
+	fmt.Printf("\nPEM encoded CSR:[%s]", csrToPem(response))
 	return nil
 }
 

@@ -38,7 +38,7 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		}
 	}
 
-	logger.Debugf("Checking write sets to see if commit is necessary for Tx [%s]", txID)
+	logger.Debugf("[txID %s] Checking write sets to see if commit is necessary", txID)
 
 	var err error
 
@@ -71,17 +71,17 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 	for _, nsRWSet := range txRWSet.NsRwSets {
 		if contains(c.rwSetIgnoreNameSpace, nsRWSet.NameSpace) {
 			// Ignore this writeset
-			logger.Debugf("Ignoring writes to [%s] for Tx [%s]", nsRWSet.NameSpace, txID)
+			logger.Debugf("[txID %s] Ignoring writes to [%s]", txID, nsRWSet.NameSpace)
 			continue
 		}
 		if nsRWSet.KvRwSet != nil && len(nsRWSet.KvRwSet.Writes) > 0 {
-			logger.Debugf("Found writes to CC [%s] for Tx [%s]. A commit will be required.", nsRWSet.NameSpace, txID)
+			logger.Debugf("[txID %s] Found writes to CC [%s]. A commit will be required.", txID, nsRWSet.NameSpace)
 			c.next.Handle(requestContext, clientContext)
 			return
 		}
 		for _, collRWSet := range nsRWSet.CollHashedRwSets {
 			if collRWSet.HashedRwSet != nil && len(collRWSet.HashedRwSet.HashedWrites) > 0 {
-				logger.Debugf("Found writes to private data collection [%s] in CC [%s] for Tx [%s]. A commit will be required.", collRWSet.CollectionName, nsRWSet.NameSpace, txID)
+				logger.Debugf("[txID %s] Found writes to private data collection [%s] in CC [%s]. A commit will be required.", txID, collRWSet.CollectionName, nsRWSet.NameSpace)
 				c.next.Handle(requestContext, clientContext)
 				return
 			}

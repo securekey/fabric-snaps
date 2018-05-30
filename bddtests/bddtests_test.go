@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 				composeProjectName := strings.Replace(util.GenerateUUID(), "-", "", -1)
 				newComposition, err := NewComposition(composeProjectName, "docker-compose.yml", "./fixtures")
 				if err != nil {
-					panic(fmt.Sprintf("Error composing system in BDD context:  %s", err))
+					panic(fmt.Sprintf("Error composing system in BDD context: %s", err))
 				}
 
 				composition = newComposition
@@ -91,7 +91,7 @@ func FeatureContext(s *godog.Suite) {
 	context, err := NewBDDContext([]string{"peerorg1"}, "orderer.example.com", "./fixtures/clientconfig/",
 		"config.yaml", "./fixtures/config/snaps/", peersMspID, "./fixtures", "../build/configcli")
 	if err != nil {
-		panic(fmt.Sprintf("ERROR return from NewBDDContext: %v" + err.Error()))
+		panic(fmt.Sprintf("Error returned from NewBDDContext: %s", err))
 	}
 
 	// Context is shared between tests - for now

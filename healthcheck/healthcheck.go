@@ -35,16 +35,16 @@ type SmokeTestResult struct {
 func SmokeTest(extScc string, stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	switch extScc {
 	case FMPScc:
-		logger.Infof("Executing FMP SCC smoke test...")
+		logger.Info("Executing FMP SCC smoke test...")
 		return healthcheckFmpScc(stub, args)
 	case ConfigurationScc:
-		logger.Infof("Executing Confirguration SCC smoke test...")
+		logger.Info("Executing Confirguration SCC smoke test...")
 		return healthcheckConfigurationScc(stub, args)
 	case TxDelegationScc:
-		logger.Infof("Executing Tx Delegation SCC smoke test...")
+		logger.Info("Executing Tx Delegation SCC smoke test...")
 		return healthcheckTxDelegationScc(stub, args)
 	default:
-		logger.Infof("Smoke test of unrecognized ExtSCC '%s' ...")
+		logger.Info("Smoke test of unrecognized ExtSCC '%s' ...")
 		defaultResult := &SmokeTestResult{
 			fmt.Sprintf("%s Healthcheck had nothing to run. Returning empty success response..", extScc),
 			shim.OK,

@@ -124,7 +124,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	cmngr := mgmt.NewConfigManager(stub)
 	err := cmngr.Save(config)
 	if err != nil {
-		logger.Errorf("Got error while saving cnfig %v", err)
+		logger.Errorf("Got error while saving config %s", err)
 		return shim.Error(err.Error())
 	}
 
@@ -142,13 +142,13 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	cmngr := mgmt.NewConfigManager(stub)
 	config, err := cmngr.Get(*configKey)
 	if err != nil {
-		logger.Errorf("Get for key %v returns error: %v", configKey, err)
+		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
 		return shim.Error(err.Error())
 	}
 
 	payload, err := json.Marshal(config)
 	if err != nil {
-		logger.Errorf("Got error while marshalling config: %v", err)
+		logger.Errorf("Got error while marshalling config: %s", err)
 		return shim.Error(err.Error())
 	}
 	return shim.Success(payload)
@@ -164,7 +164,7 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	if err := cmngr.Delete(*configKey); err != nil {
-		logger.Errorf("Got error while deleting config: %v", err)
+		logger.Errorf("Got error while deleting config: %s", err)
 		return shim.Error(err.Error())
 
 	}
@@ -175,7 +175,7 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("error getting peer's msp id %v", err))
+		return shim.Error(fmt.Sprintf("error getting peer's msp id %s", err))
 	}
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
@@ -224,7 +224,7 @@ func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	logger.Debugf("Keygen options %v")
+	logger.Debugf("Keygen options %+v", options)
 	bccspsuite, keys, err := getBCCSPAndKeyPair(stub.GetChannelID(), options)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -233,7 +233,7 @@ func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	logger.Debugf("Certificate request template %v", csrTemplate)
+	logger.Debugf("Certificate request template %+v", csrTemplate)
 	//generate the csr request
 	cryptoSigner, err := signer.New(bccspsuite, keys)
 	if err != nil {
@@ -270,12 +270,12 @@ func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType
 	}
 	pubKey, err := keys.PublicKey()
 	if err != nil {
-		logger.Debugf("Get error parsing public key %v", err)
+		logger.Debugf("Get error parsing public key %s", err)
 		return csrTemplate, err
 	}
 	pubKeyAlg, err := getPublicKeyAlg(keyType)
 	if err != nil {
-		logger.Debugf("Get error parsing public key alg %v", err)
+		logger.Debugf("Get error parsing public key alg %s", err)
 		return csrTemplate, err
 	}
 	//generate a csr template
@@ -290,7 +290,7 @@ func getCSRTemplate(channelID string, keys bccsp.Key, keyType string, sigAlgType
 		EmailAddresses: csrConfig.EmailAddresses,
 		IPAddresses:    csrConfig.IPAddresses,
 	}
-	logger.Debugf("Certificate request template %v", csrTemplate)
+	logger.Debugf("Certificate request template %+v", csrTemplate)
 	return csrTemplate, nil
 
 }
@@ -304,7 +304,7 @@ func getCSRSubject(channelID string, csrCommonName string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Debugf("csrConfig options %v", csrConfig)
+	logger.Debugf("csrConfig options %+v", csrConfig)
 	subj := pkix.Name{
 		CommonName:         csrCommonName,
 		Country:            []string{csrConfig.Country},
@@ -313,7 +313,7 @@ func getCSRSubject(channelID string, csrCommonName string) ([]byte, error) {
 		Organization:       []string{csrConfig.Org},
 		OrganizationalUnit: []string{csrConfig.OrgUnit},
 	}
-	logger.Debugf("Subject options %v", subj)
+	logger.Debugf("Subject options %+v", subj)
 
 	rawSubj := subj.ToRDNSequence()
 
@@ -376,7 +376,7 @@ func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, b
 	logger.Debugf("***Configured BCCSP provider's ID is %s", bccspProvider)
 	bccspsuite, err = factory.GetBCCSP(bccspProvider)
 	if err != nil {
-		logger.Debugf("Error getting BCCSP based on provider ID %s %v", bccspProvider, err)
+		logger.Debugf("Error getting BCCSP based on provider ID %s %s", bccspProvider, err)
 		return bccspsuite, k, errors.Wrap(errors.GeneralError, err, "BCCSP Initialize failed")
 	}
 	logger.Debugf("***Configured BCCSP provider is %s", reflect.TypeOf(bccspsuite))
@@ -470,14 +470,14 @@ func generateKeyWithOpts(channelID string, opts bccsp.KeyGenOpts) pb.Response {
 
 	_, k, err := getBCCSPAndKeyPair(channelID, opts)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Got error from getBCCSPAndKeyPair in %v %v", opts, err))
+		return shim.Error(fmt.Sprintf("Got error from getBCCSPAndKeyPair in %+v %s", opts, err))
 	}
 	return parseKey(k)
 }
 
 //pass generated key (private/public) and return public to caller
 func parseKey(k bccsp.Key) pb.Response {
-	logger.Debugf("Parsing key %v", k)
+	//logger.Debugf("Parsing key %v", k)
 	var pubKey bccsp.Key
 	var err error
 	if k.Private() {
@@ -575,8 +575,8 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 		return configKey, errors.New(errors.GeneralError, "Config is empty (no key)")
 	}
 	if err := json.Unmarshal(configBytes, &configKey); err != nil {
-		logger.Errorf("Got error %v unmarshalling config key %s", err, string(configBytes[:]))
-		return configKey, errors.Errorf(errors.GeneralError, "Got error %v unmarshalling config key %s", err, string(configBytes[:]))
+		logger.Errorf("Got error %s unmarshalling config key %s", err, string(configBytes[:]))
+		return configKey, errors.Errorf(errors.GeneralError, "Got error %s unmarshalling config key %s", err, string(configBytes[:]))
 	}
 
 	return configKey, nil

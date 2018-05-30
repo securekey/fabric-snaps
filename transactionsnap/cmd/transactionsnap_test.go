@@ -145,7 +145,7 @@ func TestNotSpecifiedChannel(t *testing.T) {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
 		if response.Message == "" {
-			t.Fatalf("Expecting error due to an misconfigured endorsers args")
+			t.Fatal("Expecting error due to an misconfigured endorsers args")
 		}
 	}
 }
@@ -183,7 +183,7 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
 		if response.Message == "" {
-			t.Fatalf("Expecting error 'ChaincodeID is mandatory field of the SnapTransactionRequest'")
+			t.Fatal("Expecting error 'ChaincodeID is mandatory field of the SnapTransactionRequest'")
 		}
 	}
 
@@ -195,7 +195,7 @@ func TestSupportedFunctionWithoutRequest(t *testing.T) {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
 	if response.Message == "" {
-		t.Fatalf("Expecting 'Expected args  containing channelID'")
+		t.Fatal("Expecting 'Expected args containing channelID'")
 	}
 
 }
@@ -233,18 +233,18 @@ func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) 
 		t.Fatalf("Expected response status %d but got %d", shim.OK, response.Status)
 	}
 	if len(response.GetPayload()) == 0 {
-		t.Fatalf("Received an empty payload")
+		t.Fatal("Received an empty payload")
 	}
 	var chResponse *channel.Response
 	err := json.Unmarshal(response.GetPayload(), &chResponse)
 	if err != nil {
-		t.Fatalf("Cannot unmarshal transaction proposal response %v", err)
+		t.Fatalf("Cannot unmarshal transaction proposal response %s", err)
 	}
 	if len(chResponse.Responses) == 0 {
 		t.Fatalf("Received an empty transaction proposal response")
 	}
 	if chResponse.Responses[0].ProposalResponse.Response.Status != 200 {
-		t.Fatalf("Expected proposal response status: SUCCESS")
+		t.Fatal("Expected proposal response status: SUCCESS")
 	}
 	if string(chResponse.Responses[0].ProposalResponse.Response.Payload) != "value" {
 		t.Fatalf("Expected proposal response payload: value but got %v", string(chResponse.Responses[0].ProposalResponse.Response.Payload))
@@ -384,7 +384,7 @@ func TestTransactionSnapInvokeFuncVerifyTxnProposalSignatureReturnError(t *testi
 
 	signedProposalBytes, err := proto.Marshal(signedProposal)
 	if err != nil {
-		t.Fatalf("Error Marshal signedProposal: %v", err)
+		t.Fatalf("Error Marshal signedProposal: %s", err)
 	}
 
 	snap := newMockTxnSnap(nil)
@@ -424,7 +424,7 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 		RegisterTxEvent:     registerTxEvent}
 	snapTxReqB, err := json.Marshal(snapTxReq)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		fmt.Printf("err: %s\n", err)
 		return nil
 	}
 
@@ -468,7 +468,7 @@ func newSignedProposal(channelID string, request fabApi.ChaincodeInvokeRequest) 
 	// sign proposal bytes
 	proposalBytes, err := proto.Marshal(proposal)
 	if err != nil {
-		return nil, fmt.Errorf("Error marshalling proposal: %v", err)
+		return nil, fmt.Errorf("Error marshalling proposal: %s", err)
 	}
 
 	block, _ := pem.Decode(mocks.KeyPem)
@@ -554,7 +554,7 @@ func TestMain(m *testing.M) {
 
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
-		panic(fmt.Sprintf("File error: %v\n", err))
+		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
 		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
@@ -593,7 +593,7 @@ func TestMain(m *testing.M) {
 	client.ServiceProviderFactory = &MockProviderFactory{}
 	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
-		panic(fmt.Sprintf("Client GetInstance return error %v", err))
+		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
 
 	mockBroadcastServer, _ = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())

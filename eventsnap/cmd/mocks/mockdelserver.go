@@ -40,7 +40,7 @@ func StartMockDeliverServer(testAddress string) (*MockDeliverServer, error) {
 	fmt.Printf("Starting mock deliver server\n")
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
-			fmt.Printf("StartMockDeliverServer failed %v", err.Error())
+			fmt.Printf("StartMockDeliverServer failed %s", err)
 		}
 	}()
 
@@ -83,7 +83,7 @@ func (s *MockDeliverServer) Deliver(srv pb.Deliver_DeliverServer) error {
 				Status: status,
 			},
 		})
-		return errors.Errorf("returning error status: %s %v", status, err)
+		return errors.Errorf("returning error status: %s %s", status, err)
 	}
 
 	for {
@@ -117,7 +117,7 @@ func (s *MockDeliverServer) DeliverFiltered(srv pb.Deliver_DeliverFilteredServer
 				Status: s.status,
 			},
 		})
-		return errors.Errorf("returning error status: %s %v", s.status, err1)
+		return errors.Errorf("returning error status: %s %s", s.status, err1)
 	}
 
 	for {
