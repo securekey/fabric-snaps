@@ -249,20 +249,31 @@ func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	mspID := parsedConfig.MspID
 	for _, config := range parsedConfig.Peers {
 		for _, appConfig := range config.App {
-			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version)
+			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version, "")
 			if err != nil {
 				return nil, err
 			}
 			configMap[key] = []byte(appConfig.Config)
 		}
 	}
-
+	var key api.ConfigKey
+	var err error
 	for _, app := range parsedConfig.Apps {
-		key, err := CreateConfigKey(mspID, "", app.AppName, app.Version)
-		if err != nil {
-			return nil, err
+		if len(app.Components) == 0 {
+			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "")
+			if err != nil {
+				return nil, err
+			}
+			configMap[key] = []byte(app.Config)
+		} else {
+			for _, v := range app.Components {
+				key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, v.Name)
+				if err != nil {
+					return nil, err
+				}
+				configMap[key] = []byte(v.Config)
+			}
 		}
-		configMap[key] = []byte(app.Config)
 	}
 	return configMap, nil
 }
