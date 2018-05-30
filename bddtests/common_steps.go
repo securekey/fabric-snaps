@@ -546,6 +546,11 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 		resmgmt.WithTimeout(fabApi.Execute, 5*time.Minute),
 		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
 	)
+
+	if err != nil && strings.Contains(err.Error(), "chaincode exists") {
+		logger.Warnf("error from InstantiateCC %v", err)
+		return nil
+	}
 	return err
 }
 
