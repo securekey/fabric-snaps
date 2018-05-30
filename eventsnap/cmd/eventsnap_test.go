@@ -98,7 +98,7 @@ func TestEventSnap(t *testing.T) {
 	// Start mock deliver server
 	deliverServer, err := mocks.StartMockDeliverServer("127.0.0.1:7040")
 	if err != nil {
-		t.Fatalf("Failed to start mock event hub: %v", err)
+		t.Fatalf("Failed to start mock event hub: %s", err)
 	}
 	defer deliverServer.Stop()
 

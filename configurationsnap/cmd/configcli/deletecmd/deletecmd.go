@@ -63,7 +63,7 @@ func newCmd(baseAction action.Action) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			action, err := newDeleteAction(baseAction)
 			if err != nil {
-				return errors.Errorf("Error while initializing deleteAction: %v", err)
+				return errors.Errorf("Error while initializing deleteAction: %s", err)
 			}
 			if len(action.Peers()) == 0 {
 				return errors.Errorf("Please specify an orgid, mspid, or a peer to connect to")
@@ -120,7 +120,7 @@ func (a *deleteAction) delete() error {
 	}
 
 	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "delete", [][]byte{[]byte(configKeyBytes)}); err != nil {
-		fmt.Printf("Error invoking chaincode: %v\n", err)
+		fmt.Printf("Error invoking chaincode: %s\n", err)
 	} else {
 		fmt.Println("Invocation successful!")
 	}

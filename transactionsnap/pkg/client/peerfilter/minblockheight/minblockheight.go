@@ -57,11 +57,11 @@ type peerFilter struct {
 // Accept returns true if the given peer's block height is
 // at least the height of the local peer.
 func (f *peerFilter) Accept(p fabApi.Peer) bool {
-	logger.Debugf("minblockheight check if peer of type channel peer")
+	logger.Debug("minblockheight check if peer of type channel peer")
 	chanPeer, ok := p.(api.ChannelPeer)
 	if !ok {
 		// This shouldn't happen since all peers should implement ChannelPeer
-		logger.Errorf("Peer is not a ChannelPeer")
+		logger.Error("Peer is not a ChannelPeer")
 		return false
 	}
 

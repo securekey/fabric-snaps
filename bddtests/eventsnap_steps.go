@@ -78,7 +78,7 @@ func (t *EventSnapSteps) invokeAndRegisterTxEvent(ccID, channelID string, strArg
 
 	chClient, err := t.BDDContext.OrgChannelClient(t.BDDContext.Orgs()[0], USER, channelID)
 	if err != nil {
-		return fmt.Errorf("NewChannelClient returned error: %v", err)
+		return fmt.Errorf("NewChannelClient returned error: %s", err)
 	}
 
 	customExecuteHandler :=
@@ -110,7 +110,7 @@ func queryEventConsumer(ctx *BDDContext, fcn string, channelID string, args ...s
 
 	chClient, err := ctx.OrgChannelClient(ctx.Orgs()[0], USER, channelID)
 	if err != nil {
-		return fmt.Errorf("NewChannelClient returned error: %v", err)
+		return fmt.Errorf("NewChannelClient returned error: %s", err)
 	}
 
 	var bargs [][]byte

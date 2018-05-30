@@ -106,7 +106,7 @@ func (a *action) OrgID() string {
 func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) {
 	channelClient, err := a.ChannelClient()
 	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
+		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %s", err)
 	}
 
 	resp, err := channelClient.Query(channel.Request{
@@ -124,7 +124,7 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 	channelClient, err := a.ChannelClient()
 	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Error getting channel client: %v", err)
+		return errors.Errorf(errors.GeneralError, "Error getting channel client: %s", err)
 	}
 	_, err = channelClient.Execute(
 		channel.Request{
@@ -142,7 +142,7 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 		queryBytes := []byte(cliconfig.Config().ConfigKey())
 		configKey, err := configkeyutil.Unmarshal(queryBytes)
 		if err != nil {
-			return nil, errors.Errorf(errors.GeneralError, "invalid config key: %v", err)
+			return nil, errors.Errorf(errors.GeneralError, "invalid config key: %s", err)
 		}
 		return configKey, nil
 	}
@@ -223,7 +223,7 @@ func (a *action) initTargetPeers() error {
 			return errors.Wrapf(errors.GeneralError, err, "error getting MSP ID for org [%s]", orgID)
 		}
 
-		cliconfig.Config().Logger().Debugf("Peers for org [%s]: %v\n", orgID, peersConfig)
+		cliconfig.Config().Logger().Debugf("Peers for org [%s]: %+v\n", orgID, peersConfig)
 
 		for _, p := range peersConfig {
 
@@ -237,7 +237,7 @@ func (a *action) initTargetPeers() error {
 			}
 
 			if includePeer {
-				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %v\n", orgID, p.URL)
+				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %s\n", orgID, p.URL)
 
 				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: mspID}))
 				if err != nil {
@@ -250,7 +250,7 @@ func (a *action) initTargetPeers() error {
 		}
 	}
 
-	cliconfig.Config().Logger().Debugf("All peers: %v\n", a.peers)
+	cliconfig.Config().Logger().Debugf("All peers: %+v\n", a.peers)
 
 	return nil
 }

@@ -121,7 +121,7 @@ func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) 
 		ccargs = append(ccargs, string(ccArg))
 
 	}
-	logger.Debug("Endorser args:", ccargs)
+	logger.Debugf("Endorser args: %s", ccargs)
 	srvc, err := es.getTxService(snapTxRequest.ChannelID)
 	if err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ func (es *TxnSnap) commitTransaction(args [][]byte) error {
 		ccargs = append(ccargs, string(ccArg))
 
 	}
-	logger.Debug("Endorser args:", ccargs)
+	logger.Debugf("Endorser args: %s", ccargs)
 	srvc, err := es.getTxService(snapTxRequest.ChannelID)
 	if err != nil {
 		return err

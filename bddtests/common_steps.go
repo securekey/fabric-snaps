@@ -110,7 +110,7 @@ func (d *CommonSteps) getChannelBlockHeight(channelID string) (int, error) {
 
 	var info queryInfoResponse
 	if err := json.Unmarshal([]byte(resp), &info); err != nil {
-		return 0, fmt.Errorf("Error unmarshalling JSON response: %v", err)
+		return 0, fmt.Errorf("Error unmarshalling JSON response: %s", err)
 	}
 
 	return strconv.Atoi(info.Height)
@@ -127,12 +127,10 @@ func (d *CommonSteps) wait(seconds int) error {
 }
 
 func (d *CommonSteps) createChannelAndJoinAllPeers(channelID string) error {
-	logger.Infof("Creating channel [%s] and joining all peers from orgs [%v]\n", channelID, d.BDDContext.Orgs)
 	return d.createChannelAndJoinPeers(channelID, d.BDDContext.Orgs())
 }
 
 func (d *CommonSteps) createChannelAndJoinPeersFromOrg(channelID, orgs string) error {
-	logger.Infof("Creating channel [%s] and joining all peers from orgs [%v]\n", channelID, orgs)
 	orgList := strings.Split(orgs, ",")
 	if len(orgList) == 0 {
 		return fmt.Errorf("must specify at least one org ID")
@@ -141,6 +139,7 @@ func (d *CommonSteps) createChannelAndJoinPeersFromOrg(channelID, orgs string) e
 }
 
 func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string) error {
+	logger.Infof("Creating channel [%s] and joining all peers from orgs %s", channelID, orgs)
 	if len(orgs) == 0 {
 		return fmt.Errorf("no orgs specified")
 	}
@@ -180,7 +179,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 	// Check if primary peer has joined channel
 	alreadyJoined, err := HasPrimaryPeerJoinedChannel(channelID, resourceMgmt, d.BDDContext.OrgUserContext(orgID, ADMIN), peer)
 	if err != nil {
-		return fmt.Errorf("Error while checking if primary peer has already joined channel: %v", err)
+		return fmt.Errorf("Error while checking if primary peer has already joined channel: %s", err)
 	} else if alreadyJoined {
 		logger.Infof("alreadyJoined orgID [%s]\n", orgID)
 		return nil
@@ -226,7 +225,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 
 	resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 	if err = resMgmtClient.JoinChannel(channelID, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
-		return fmt.Errorf("JoinChannel returned error: %v", err)
+		return fmt.Errorf("JoinChannel returned error: %s", err)
 	}
 
 	return nil
@@ -235,7 +234,7 @@ func (d *CommonSteps) joinPeersToChannel(channelID, orgID string, peersConfig []
 // InvokeCConOrg invoke cc on org
 func (d *CommonSteps) InvokeCConOrg(ccID, args, orgIDs, channelID string) error {
 	if _, err := d.InvokeCCWithArgs(ccID, channelID, d.OrgPeers(orgIDs, channelID), strings.Split(args, ","), nil); err != nil {
-		return fmt.Errorf("InvokeCCWithArgs return error: %v", err)
+		return fmt.Errorf("InvokeCCWithArgs return error: %s", err)
 	}
 	return nil
 }
@@ -246,7 +245,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 		return channel.Response{}, fmt.Errorf("no target peer specified")
 	}
 
-	//	logger.Infof("Invoking chaincode [%s] with args [%v] on channel [%s]\n", ccID, args, channelID)
+	//	logger.Infof("Invoking chaincode [%s] with args [%s] on channel [%s]\n", ccID, args, channelID)
 
 	var peers []fabApi.Peer
 
@@ -278,7 +277,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 	)
 
 	if err != nil {
-		return channel.Response{}, fmt.Errorf("InvokeChaincode return error: %v", err)
+		return channel.Response{}, fmt.Errorf("InvokeChaincode return error: %s", err)
 	}
 	return response, nil
 }
@@ -287,9 +286,9 @@ func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
 	var err error
 	queryValue, err = d.QueryCCWithArgs(false, ccID, channelID, strings.Split(args, ","), nil, d.OrgPeers(orgIDs, channelID)...)
 	if err != nil {
-		return fmt.Errorf("QueryCCWithArgs return error: %v", err)
+		return fmt.Errorf("QueryCCWithArgs return error: %s", err)
 	}
-	logger.Debugf("QueryCCWithArgs return value: %s", queryValue)
+	logger.Debugf("QueryCCWithArgs return value: [%s]", queryValue)
 	return nil
 }
 
@@ -306,9 +305,9 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 	queryValue, err = d.QueryCCWithArgs(true, ccID, channelID, argsArray, nil,
 		[]*PeerConfig{&PeerConfig{Config: peersConfig[0], OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}}...)
 	if err != nil {
-		return fmt.Errorf("QueryCCWithArgs return error: %v", err)
+		return fmt.Errorf("QueryCCWithArgs return error: %s", err)
 	}
-	logger.Debugf("QueryCCWithArgs return value: %s", queryValue)
+	logger.Debugf("QueryCCWithArgs return value: [%s]", queryValue)
 	return nil
 }
 
@@ -320,7 +319,7 @@ func (d *CommonSteps) QueryCCWithArgs(systemCC bool, ccID, channelID string, arg
 // QueryCCWithOpts ...
 func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, args []string, timeout time.Duration, concurrent bool, interval time.Duration, transientData map[string][]byte, targets ...*PeerConfig) (string, error) {
 	if len(targets) == 0 {
-		logger.Errorf("No target specified\n")
+		logger.Errorf("No target specified")
 		return "", errors.New("no targets specified")
 	}
 
@@ -340,7 +339,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 
 	chClient, err := d.BDDContext.OrgChannelClient(orgID, ADMIN, channelID)
 	if err != nil {
-		logger.Errorf("Failed to create new channel client: %s\n", err)
+		logger.Errorf("Failed to create new channel client: %s", err)
 		return "", errors.Wrap(err, "Failed to create new channel client")
 	}
 	if systemCC {
@@ -359,7 +358,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			TransientMap: transientData,
 		}, channel.WithTargets(peers...), channel.WithTimeout(fabApi.Execute, timeout))
 		if err != nil {
-			return "", fmt.Errorf("QueryChaincode return error: %v", err)
+			return "", fmt.Errorf("QueryChaincode return error: %s", err)
 		}
 		queryResult = string(resp.Payload)
 		return queryResult, nil
@@ -374,7 +373,7 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			TransientMap: transientData,
 		}, channel.WithTargets(peers...), channel.WithTimeout(fabApi.Execute, timeout))
 		if err != nil {
-			return "", fmt.Errorf("QueryChaincode return error: %v", err)
+			return "", fmt.Errorf("QueryChaincode return error: %s", err)
 		}
 		queryResult = string(resp.Payload)
 
@@ -401,11 +400,11 @@ func (d *CommonSteps) QueryCCWithOpts(systemCC bool, ccID, channelID string, arg
 			}
 		}
 		if len(errs) > 0 {
-			return "", fmt.Errorf("QueryChaincode return error: %v", errs[0])
+			return "", fmt.Errorf("QueryChaincode return error: %s", errs[0])
 		}
 	}
 
-	logger.Debugf("QueryChaincode return value: %s", queryResult)
+	logger.Debugf("QueryChaincode return value: [%s]", queryResult)
 	return queryResult, nil
 }
 
@@ -432,27 +431,27 @@ func (d *CommonSteps) equalQueryValue(ccID string, value string) error {
 }
 
 func (d *CommonSteps) installChaincodeToAllPeers(ccType, ccID, ccPath string) error {
-	logger.Infof("Installing chaincode [%s] from path [%s] to all peers\n", ccID, ccPath, "")
+	logger.Infof("Installing chaincode [%s] from path [%s] to all peers", ccID, ccPath)
 	return d.installChaincodeToOrg(ccType, ccID, ccPath, "")
 }
 
 func (d *CommonSteps) instantiateChaincode(ccType, ccID, ccPath, channelID, args, ccPolicy, collectionNames string) error {
-	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]\n", ccID, ccPath, channelID, args, ccPolicy, collectionNames)
+	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]", ccID, ccPath, channelID, args, ccPolicy, collectionNames)
 	return d.instantiateChaincodeWithOpts(ccType, ccID, ccPath, "", channelID, args, ccPolicy, collectionNames, false)
 }
 
 func (d *CommonSteps) instantiateChaincodeOnOrg(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string) error {
-	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]\n", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
+	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
 	return d.instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames, false)
 }
 
 func (d *CommonSteps) deployChaincode(ccType, ccID, ccPath, channelID, args, ccPolicy, collectionPolicy string) error {
-	logger.Infof("Installing and instantiating chaincode [%s] from path [%s] to channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]\n", ccID, ccPath, channelID, args, ccPolicy, collectionPolicy)
+	logger.Infof("Installing and instantiating chaincode [%s] from path [%s] to channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]", ccID, ccPath, channelID, args, ccPolicy, collectionPolicy)
 	return d.deployChaincodeToOrg(ccType, ccID, ccPath, "", channelID, args, ccPolicy, collectionPolicy)
 }
 
 func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string) error {
-	logger.Infof("Preparing to install chaincode [%s] from path [%s] to orgs [%s]\n", ccID, ccPath, orgIDs)
+	logger.Infof("Preparing to install chaincode [%s] from path [%s] to orgs [%s]", ccID, ccPath, orgIDs)
 
 	var oIDs []string
 	if orgIDs != "" {
@@ -470,20 +469,20 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 			return err
 		}
 
-		logger.Infof("... installing chaincode [%s] from path [%s] to org [%s]\n", ccID, ccPath, orgID)
+		logger.Infof("... installing chaincode [%s] from path [%s] to org [%s]", ccID, ccPath, orgID)
 		_, err = resMgmtClient.InstallCC(
 			resmgmt.InstallCCRequest{Name: ccID, Path: ccPath, Version: "v1", Package: ccPkg},
 			resmgmt.WithRetry(retry.DefaultResMgmtOpts),
 		)
 		if err != nil {
-			return fmt.Errorf("SendInstallProposal return error: %v", err)
+			return fmt.Errorf("SendInstallProposal return error: %s", err)
 		}
 	}
 	return nil
 }
 
 func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string, allPeers bool) error {
-	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]\n", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
+	logger.Infof("Preparing to instantiate chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
 
 	peers := d.OrgPeers(orgIDs, channelID)
 	if len(peers) == 0 {
@@ -491,7 +490,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 	}
 	chaincodePolicy, err := d.newChaincodePolicy(ccPolicy, channelID)
 	if err != nil {
-		return fmt.Errorf("error creating endirsement policy: %s", err)
+		return fmt.Errorf("error creating endorsement policy: %s", err)
 	}
 
 	var sdkPeers []fabApi.Peer
@@ -530,7 +529,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 
 	resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 
-	logger.Infof("Instantiating chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s] to the following peers: [%s]\n", ccID, ccPath, channelID, args, ccPolicy, collectionNames, peersAsString(sdkPeers))
+	logger.Infof("Instantiating chaincode [%s] from path [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s] to the following peers: [%s]", ccID, ccPath, channelID, args, ccPolicy, collectionNames, peersAsString(sdkPeers))
 
 	_, err = resMgmtClient.InstantiateCC(
 		channelID,
@@ -555,7 +554,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 }
 
 func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string) error {
-	logger.Infof("Installing and instantiating chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]\n", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
+	logger.Infof("Installing and instantiating chaincode [%s] from path [%s] to orgs [%s] on channel [%s] with args [%s] and CC policy [%s] and collectionPolicy [%s]", ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames)
 
 	peers := d.OrgPeers(orgIDs, channelID)
 	if len(peers) == 0 {
@@ -594,7 +593,7 @@ func (d *CommonSteps) deployChaincodeToOrg(ccType, ccID, ccPath, orgIDs, channel
 			installRqst := resmgmt.InstallCCRequest{Name: ccID, Path: ccPath, Version: "v1", Package: ccPkg}
 			_, err = resMgmtClient.InstallCC(installRqst, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
 			if err != nil {
-				return fmt.Errorf("SendInstallProposal return error: %v", err)
+				return fmt.Errorf("SendInstallProposal return error: %s", err)
 			}
 		}
 
@@ -649,7 +648,7 @@ func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCom
 		}
 		mspIDs = append(mspIDs, mspID)
 	}
-	logger.Infof("Returning SignedByAnyMember policy for MSPs %v\n", mspIDs)
+	logger.Infof("Returning SignedByAnyMember policy for MSPs %s", mspIDs)
 	return cauthdsl.SignedByAnyMember(mspIDs), nil
 }
 
@@ -672,12 +671,12 @@ func (d *CommonSteps) OrgPeers(orgIDs, channelID string) []*PeerConfig {
 }
 
 func (d *CommonSteps) warmUpCC(ccID, channelID string) error {
-	logger.Infof("Warming up chaincode [%s] on channel [%s]\n", ccID, channelID)
+	logger.Infof("Warming up chaincode [%s] on channel [%s]", ccID, channelID)
 	return d.warmUpCConOrg(ccID, "", channelID)
 }
 
 func (d *CommonSteps) warmUpCConOrg(ccID, orgIDs, channelID string) error {
-	logger.Infof("Warming up chaincode [%s] on orgs [%s] and channel [%s]\n", ccID, orgIDs, channelID)
+	logger.Infof("Warming up chaincode [%s] on orgs [%s] and channel [%s]", ccID, orgIDs, channelID)
 	for {
 		_, err := d.QueryCCWithOpts(false, ccID, channelID, []string{"warmup"}, 5*time.Minute, false, 0, nil, d.OrgPeers(orgIDs, channelID)...)
 		if err != nil && strings.Contains(err.Error(), "premature execution - chaincode") {
@@ -692,7 +691,7 @@ func (d *CommonSteps) warmUpCConOrg(ccID, orgIDs, channelID string) error {
 }
 
 func (d *CommonSteps) defineCollectionConfig(id, collection, policy string, requiredPeerCount int, maxPeerCount int) error {
-	logger.Infof("Defining collection config [%s] for collection [%s] - policy=[%s], requiredPeerCount=[%d], maxPeerCount=[%d]\n", id, collection, policy, requiredPeerCount, maxPeerCount)
+	logger.Infof("Defining collection config [%s] for collection [%s] - policy=[%s], requiredPeerCount=[%d], maxPeerCount=[%d]", id, collection, policy, requiredPeerCount, maxPeerCount)
 	d.BDDContext.DefineCollectionConfig(id, collection, policy, int32(requiredPeerCount), int32(maxPeerCount))
 	return nil
 }

@@ -61,7 +61,7 @@ func (s *eventSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// Check the config periodically and start
-	logger.Warnf("The event service will be started when configuration is available.", stub.GetChannelID())
+	logger.Warnf("The event service will be started when configuration is available for channel [%s].", stub.GetChannelID())
 	go s.delayStartChannelEvents(stub.GetChannelID())
 
 	return shim.Success(nil)
@@ -117,7 +117,7 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 			logger.Warnf("Error reading configuration: %s", err)
 		} else if config != nil {
 			if err := s.startChannelEvents(channelID, config); err != nil {
-				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!", channelID, err.Error())
+				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!", channelID, err)
 			} else {
 				logger.Infof("Channel events successfully started for channel [%s].", channelID)
 			}

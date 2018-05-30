@@ -33,12 +33,12 @@ func TestLocalService(t *testing.T) {
 	}
 
 	if s := Get(channelID1); s != service1 {
-		t.Fatalf("invalid service retrieved for channel")
+		t.Fatal("invalid service retrieved for channel")
 	}
 	if s := Get(channelID2); s != service2 {
-		t.Fatalf("invalid service retrieved for channel")
+		t.Fatal("invalid service retrieved for channel")
 	}
 	if s := Get("invalidchannel"); s != nil {
-		t.Fatalf("expecting nil service for invalid channel")
+		t.Fatal("expecting nil service for invalid channel")
 	}
 }

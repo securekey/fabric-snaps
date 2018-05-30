@@ -55,11 +55,11 @@ func (m *mspIDMgr) GetMSPID(pkiID gcommon.PKIidType) string {
 
 func (m *mspIDMgr) receive(msgch <-chan gossip.ReceivedMessage) {
 	for {
-		logger.Debugf("Listening to gossip messages...\n")
+		logger.Debug("Listening to gossip messages...\n")
 		select {
 		case msg, ok := <-msgch:
 			if !ok {
-				logger.Infof("Gossip listener terminated")
+				logger.Info("Gossip listener terminated")
 				return
 			}
 

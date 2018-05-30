@@ -53,7 +53,7 @@ type ChannelHeight struct {
 func New(name string, mspID string, channelID string, blockHeight uint64, chHeights ...ChannelHeight) api.ChannelPeer {
 	peer, err := peer.New(config, peer.WithURL("grpc://"+name+":7051"), peer.WithServerName(name), peer.WithMSPID(mspID))
 	if err != nil {
-		panic(fmt.Sprintf("Failed to create peer: %v)", err))
+		panic(fmt.Sprintf("Failed to create peer: %s)", err))
 	}
 
 	blockHeights := make(map[string]uint64)

@@ -88,7 +88,7 @@ func TestCustomIdentityMgr(t *testing.T) {
 	//Positive Scenario
 	identityManager := getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
-		t.Fatalf("Expected valid identity manager")
+		t.Fatal("Expected valid identity manager")
 	}
 
 	// temporarily remove the list of embedded users to check for the org's CryptoPath
@@ -96,13 +96,13 @@ func TestCustomIdentityMgr(t *testing.T) {
 	// test empty embedded user certs and empty mspConfigPath
 	identityManager = getIdentityManager(t, "", orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager != nil {
-		t.Fatalf("Expected nil identity manager")
+		t.Fatal("Expected nil identity manager")
 	}
 
 	// reset customMspPkg with mspConfigPath
 	identityManager = getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
-		t.Fatalf("Expected valid identity manager")
+		t.Fatal("Expected valid identity manager")
 	}
 
 	// reset config with list of embedded users
@@ -111,23 +111,23 @@ func TestCustomIdentityMgr(t *testing.T) {
 	// test empty org name
 	identityManager = getIdentityManager(t, mspConfigPath, "", &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager != nil {
-		t.Fatalf("Expected nil identity manager")
+		t.Fatal("Expected nil identity manager")
 	}
 
 	// test empty config
 	identityManager = getIdentityManager(t, mspConfigPath, orgName, nil, factories.GetSuite(factory.GetDefault()))
 	if identityManager != nil {
-		t.Fatalf("Expected nil identity manager")
+		t.Fatal("Expected nil identity manager")
 	}
 	// test empty cryptoProvider
 	identityManager = getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, nil)
 	if identityManager != nil {
-		t.Fatalf("Expected nil identity manager")
+		t.Fatal("Expected nil identity manager")
 	}
 	// test happy path using embedded users without org.CryptoPath (latest tNetWorkConfig assignment above)
 	identityManager = getIdentityManager(t, "", orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
-		t.Fatalf("Expected vaild identity manager")
+		t.Fatal("Expected vaild identity manager")
 	}
 
 }
@@ -139,7 +139,7 @@ func getIdentityManager(t *testing.T, mspConfigPath string, orgName string, conf
 		t.Fatalf("Unexpected error '%s'", err)
 	}
 	if mspProvider == nil {
-		t.Fatalf("Expected valid msp provider")
+		t.Fatal("Expected valid msp provider")
 	}
 	identityManager, _ := mspProvider.IdentityManager(orgName)
 	return identityManager
@@ -149,37 +149,37 @@ func TestGetSigningIdentity(t *testing.T) {
 
 	identityManager := getIdentityManager(t, mspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
-		t.Fatalf("Expected vaild identity manager")
+		t.Fatal("Expected vaild identity manager")
 	}
 
 	signingIdentity, err := identityManager.GetSigningIdentity(txnSnapUser)
 
 	if err != nil {
-		t.Fatalf("Not supposed to get error when getting signingIdentity, but got : %s", err.Error())
+		t.Fatalf("Not supposed to get error when getting signingIdentity, but got : %s", err)
 	}
 
 	if signingIdentity == nil {
-		t.Fatalf("Expected to get valid signing identity")
+		t.Fatal("Expected to get valid signing identity")
 	}
 
 	if signingIdentity.Identifier().MSPID != mspID || signingIdentity.PrivateKey() == nil || signingIdentity.PublicVersion().EnrollmentCertificate() == nil ||
 		string(signingIdentity.PublicVersion().EnrollmentCertificate()) == "" {
-		t.Fatalf("Invalid signing identity")
+		t.Fatal("Invalid signing identity")
 	}
 
 	if !verifyBytes(t, signingIdentity.PublicVersion().EnrollmentCertificate(), "../../../../cmd/sampleconfig/msp/signcerts/cert.pem") {
-		t.Fatalf(" signingIdentity.EnrollmentCert cert is invalid")
+		t.Fatal(" signingIdentity.EnrollmentCert cert is invalid")
 	}
 
 	//Negative Case
 
 	identityManager = getIdentityManager(t, invalidMspConfigPath, orgName, &testConfig{}, factories.GetSuite(factory.GetDefault()))
 	if identityManager == nil {
-		t.Fatalf("Expected vaild identity manager")
+		t.Fatal("Expected vaild identity manager")
 	}
 	signingIdentity, err = identityManager.GetSigningIdentity(txnSnapUser)
 	if err == nil {
-		t.Fatalf("Supposed to get error for credential manager GetSigningIdentity for invalid msp config path")
+		t.Fatal("Supposed to get error for credential manager GetSigningIdentity for invalid msp config path")
 	}
 	if !strings.HasPrefix(err.Error(), errorFindPrivateKeyfailed) {
 		t.Fatalf("Unexpected error for credential manager GetSigningIdentity, expected '%s', got : %s", errorFindPrivateKeyfailed, err.Error())
@@ -190,7 +190,7 @@ func TestGetSigningIdentity(t *testing.T) {
 func verifyBytes(t *testing.T, testBytes []byte, path string) bool {
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		t.Fatalf("failed to read bytes, err : %v ", err)
+		t.Fatalf("failed to read bytes, err : %s", err)
 	}
 
 	if string(testBytes) != string(fileBytes) {

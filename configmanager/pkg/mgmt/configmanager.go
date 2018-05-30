@@ -135,14 +135,14 @@ func (cmngr *configManagerImpl) getConfigs(configKey api.ConfigKey) ([]*api.Conf
 
 func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) error {
 	if configKey.MspID == "" {
-		return errors.Errorf(errors.GeneralError, "Invalid config key %v. MspID is required. ", configKey)
+		return errors.Errorf(errors.GeneralError, "Invalid config key %+v. MspID is required.", configKey)
 	}
 	configs, err := cmngr.getConfigs(configKey)
 	if err != nil {
 		return err
 	}
 	for _, value := range configs {
-		logger.Debugf("Deleting state for key: %v", value.Key)
+		logger.Debugf("Deleting state for key: %+v", value.Key)
 		keyStr, err := ConfigKeyToString(value.Key)
 		if err != nil {
 			return err
@@ -168,7 +168,7 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 			return err
 		}
 		for _, value := range configs {
-			logger.Debugf("Deleting state for key: %v", value.Key)
+			logger.Debugf("Deleting state for key: %+v", value.Key)
 			keyStr, err := ConfigKeyToString(value.Key)
 			if err != nil {
 				return err
@@ -195,7 +195,7 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 	configMap := make(map[api.ConfigKey][]byte)
 	var parsedConfig api.ConfigMessage
 	if err := json.Unmarshal(configData, &parsedConfig); err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Cannot unmarshal config message %v %v", string(configData[:]), err)
+		return nil, errors.Errorf(errors.GeneralError, "Cannot unmarshal config message %s %s", string(configData[:]), err)
 	}
 	//validate config
 	if err := parsedConfig.IsValid(); err != nil {
@@ -245,7 +245,7 @@ func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) error {
 	}
 	for _, index := range indexes {
 		if err := cmngr.addIndex(index, key); err != nil {
-			return errors.Errorf(errors.GeneralError, "error adding index [%s]: %v", index, err)
+			return errors.Errorf(errors.GeneralError, "error adding index [%s]: %s", index, err)
 		}
 	}
 	return nil
@@ -310,7 +310,7 @@ func getFieldsForIndex(index string, key api.ConfigKey) ([]string, error) {
 func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, error) {
 	//verify if key has MspID
 	if key.MspID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Invalid config key %v", key)
+		return nil, errors.Errorf(errors.GeneralError, "Invalid config key %+v", key)
 	}
 	index, fields, err := getIndexAndFields(key)
 	configsMap, err := cmngr.getConfigurations(index, fields)
@@ -325,7 +325,7 @@ func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, erro
 func (cmngr *configManagerImpl) getConfigurations(index string, fields []string) ([]*api.ConfigKV, error) {
 	it, err := cmngr.stub.GetStateByPartialCompositeKey(index, fields)
 	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Unexpected error retrieving message statuses with index [%s]: %v", index, err)
+		return nil, errors.Errorf(errors.GeneralError, "Unexpected error retrieving message statuses with index [%s]: %s", index, err)
 	}
 	defer it.Close()
 	configKeys := []*api.ConfigKV{}
@@ -336,7 +336,7 @@ func (cmngr *configManagerImpl) getConfigurations(index string, fields []string)
 		}
 		_, compositeKeyParts, err := cmngr.stub.SplitCompositeKey(compositeKey.Key)
 		if err != nil {
-			return nil, errors.Wrapf(errors.GeneralError, err, "Unexpected error splitting composite key. Key: [%s], Error: %v", compositeKey, err)
+			return nil, errors.Wrapf(errors.GeneralError, err, "Unexpected error splitting composite key. Key: [%s], Error: %s", compositeKey, err)
 		}
 		configID := compositeKeyParts[len(compositeKeyParts)-1]
 		ck, err := StringToConfigKey(configID)
@@ -378,7 +378,7 @@ func getIndexAndFields(key api.ConfigKey) (string, []string, error) {
 //getIndexedFields returns fields defined for search criteria
 func getIndexedFields(key api.ConfigKey) ([]string, error) {
 	if key.MspID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Invalid key %v", key)
+		return nil, errors.Errorf(errors.GeneralError, "Invalid key %+v", key)
 	}
 	var fields []string
 	fields = append(fields, key.MspID)

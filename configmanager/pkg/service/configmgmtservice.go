@@ -138,7 +138,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		r := stringutils.GenerateRandomAlphaOnlyString(12)
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
-			logger.Errorf("Cannot create transaction simulator %v", err)
+			logger.Errorf("Cannot create transaction simulator %s", err)
 			return nil, errors.WithMessage(errors.GeneralError, err, "Cannot create transaction simulator")
 		}
 		defer txsim.Done()
@@ -146,7 +146,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		keyStr, err := mgmt.ConfigKeyToString(configKey)
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
-			logger.Errorf("Error getting state for app %s %v", keyStr, err)
+			logger.Errorf("Error getting state for app %s %s", keyStr, err)
 			return nil, errors.Wrap(errors.GeneralError, err, "Error getting state")
 		}
 		return config, nil
