@@ -23,17 +23,23 @@ The Config Key consists of:
 * MspID (mandatory) - The MSP ID of the organization
 * PeerID (optional) - The ID of the peer
 * AppName (optional) - The application name
-* ConfigVer (optional) - The config version
+* AppVer (optional) - The application version
+* ComponentName (optional) - The component name
+* ComponentVer (optional) - The component version
+
 
 The Config Key may be specified as a JSON string (using the --configkey option) or it may be
-specified using the options: --mspid, --peerid, --appname and --configver. A specific application
+specified using the options: --mspid, --peerid, --appname, --appver, --componentname and --componentver. A specific application
 configuration may be deleted if PeerID and AppName are specified, or the org's entire configuration
 may be deleted if only MspID is specified.
 `
 
 const examples = `
 - Delete a the configuration of a particular application:
-    $ ./configcli delete --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --configver 1
+    $ ./configcli delete --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --appver 1
+
+- Delete a the configuration of a particular component:
+    $ ./configcli delete --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --appname myapp --appver 1 --componentname comp1 --componentver 1
 
 - Delete all configuration in Org1MSP:
     $ ./configcli delete --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP
@@ -73,7 +79,9 @@ func newCmd(baseAction action.Action) *cobra.Command {
 	cliconfig.InitConfigKey(flags)
 	cliconfig.InitPeerID(flags)
 	cliconfig.InitAppName(flags)
-	cliconfig.InitConfigVer(flags)
+	cliconfig.InitAppVer(flags)
+	cliconfig.InitComponentName(flags)
+	cliconfig.InitComponentVer(flags)
 	cliconfig.InitNoPrompt(flags)
 
 	return cmd

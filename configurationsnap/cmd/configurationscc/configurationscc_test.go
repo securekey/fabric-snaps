@@ -308,7 +308,7 @@ func TestGetACLSuccess(t *testing.T) {
 	//get configuration - pass config key that has only MspID field set
 	//implicitly designed criteria by MspID
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -329,7 +329,7 @@ func TestGetACLSuccess(t *testing.T) {
 		t.Fatalf("Expected six records, but got  %d", len(*expected))
 	}
 	//config key is explicit - expect to get only one record back
-	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.one.one.example.com", AppName: "appNameB", Version: api.VERSION}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.one.one.example.com", AppName: "appNameB", AppVersion: api.VERSION}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -359,7 +359,7 @@ func TestGetACLFailure(t *testing.T) {
 	//get configuration - pass config key that has only MspID field set
 	//implicitly designed criteria by MspID
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -383,7 +383,7 @@ func TestDeleteACLSuccess(t *testing.T) {
 	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 
 	funcName := []byte("delete")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", Version: api.VERSION}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -398,7 +398,7 @@ func TestDeleteACLSuccess(t *testing.T) {
 		t.Fatal("ACL check call was expected")
 	}
 
-	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
+	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -413,7 +413,7 @@ func TestDeleteACLSuccess(t *testing.T) {
 		t.Fatal("ACL check call was expected")
 	}
 
-	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", Version: ""}
+	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err = json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -447,7 +447,7 @@ func TestDeleteACLFailure(t *testing.T) {
 	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 
 	funcName := []byte("delete")
-	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", Version: api.VERSION}
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -504,7 +504,7 @@ func TestGetConfigUsingInvalidKey(t *testing.T) {
 	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
 
 	funcName := []byte("get")
-	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", Version: ""}
+	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", AppVersion: ""}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
@@ -544,7 +544,7 @@ func TestSaveErrors(t *testing.T) {
 		t.Fatalf("Could not save configuration :%v", err)
 	}
 
-	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "b", AppName: "b", Version: api.VERSION}
+	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "b", AppName: "b", AppVersion: api.VERSION}
 	configKeyStr, err := mgmt.ConfigKeyToString(configKey)
 	if err == nil {
 		t.Fatalf("expected error: Cannot create config key using empty MspId")
@@ -554,7 +554,7 @@ func TestSaveErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error: Cannot create config key using empty MspId  %v", err)
 	}
-	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName", Version: api.VERSION}
+	configKey = api.ConfigKey{MspID: "Org1MSP", PeerID: "peerOne", AppName: "AppName", AppVersion: api.VERSION}
 	//pass key string instead of configkey struct
 	configKeyStr, err = mgmt.ConfigKeyToString(configKey)
 	if err != nil {

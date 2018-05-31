@@ -162,10 +162,12 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 	}
 
 	return &mgmtapi.ConfigKey{
-		MspID:   mspID,
-		PeerID:  cliconfig.Config().PeerID(),
-		AppName: cliconfig.Config().AppName(),
-		Version: cliconfig.Config().ConfigVer(),
+		MspID:            mspID,
+		PeerID:           cliconfig.Config().PeerID(),
+		AppName:          cliconfig.Config().AppName(),
+		AppVersion:       cliconfig.Config().AppVer(),
+		ComponentName:    cliconfig.Config().ComponentName(),
+		ComponentVersion: cliconfig.Config().ComponentVer(),
 	}, nil
 }
 

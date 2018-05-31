@@ -58,8 +58,8 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	if csi == nil {
 		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
-	if configKey.Version == "" {
-		configKey.Version = api.VERSION
+	if configKey.AppVersion == "" {
+		configKey.AppVersion = api.VERSION
 	}
 
 	channelCache := csi.getCache(channelID)
