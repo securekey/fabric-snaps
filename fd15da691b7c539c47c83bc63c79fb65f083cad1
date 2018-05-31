@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c01f46d7_926e52b3",
+        "filename": "transactionsnap/pkg/txsnapservice/txsnapservice.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-05-31T18:34:38Z",
+      "side": 1,
+      "message": "This is misleading. It should say \"first arg\" or \"function name\"",
+      "range": {
+        "startLine": 100,
+        "startChar": 16,
+        "endLine": 100,
+        "endChar": 31
+      },
+      "revId": "fd15da691b7c539c47c83bc63c79fb65f083cad1",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
