@@ -48,9 +48,9 @@ func (cli *ConfigCLI) ExecUpdate(channelID, mspID, org, configFile string) (stri
 }
 
 // Exec executes the config-cli action with the given args and returns a response
-func (cli *ConfigCLI) Exec(action, channelID, mspID, peerID, appName, version string) (string, error) {
+func (cli *ConfigCLI) Exec(action, channelID, mspID, peerID, appName, appVersion, compName, compVersion string) (string, error) {
 	cmdArgs := []string{action, "--clientconfig", cli.clientconfig, "--cid", channelID, "--mspid", mspID,
-		"--user", cli.user, "--peerid", peerID, "--appname", appName, "--configver", version}
+		"--user", cli.user, "--peerid", peerID, "--appname", appName, "--appver", appVersion, "--componentname", compName, "--componentver", compVersion}
 	if action == "delete" {
 		cmdArgs = append(cmdArgs, "--noprompt")
 	}

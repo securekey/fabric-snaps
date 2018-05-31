@@ -78,6 +78,21 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 		//search for all configs by mspID
 		return cmngr.getConfigs(configKey)
 	}
+
+	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
+		values, err := cmngr.getConfigs(configKey)
+		if err != nil {
+			return nil, err
+		}
+		filterComp := make([]*api.ConfigKV, 0)
+		for _, v := range values {
+			if v.Key.ComponentName == configKey.ComponentName && v.Key.AppName == configKey.AppName {
+				filterComp = append(filterComp, v)
+			}
+		}
+		return filterComp, nil
+	}
+
 	//search for one config by valid key
 	config, err := cmngr.getConfig(configKey)
 	if err != nil {
@@ -166,6 +181,26 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 		//search for all configs by mspID
 		return cmngr.deleteConfigs(configKey)
 	}
+
+	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
+		configs, err := cmngr.getConfigs(configKey)
+		if err != nil {
+			return err
+		}
+		for _, value := range configs {
+			logger.Debugf("Deleting state for key: %v", value.Key)
+			keyStr, err := ConfigKeyToString(value.Key)
+			if err != nil {
+				return err
+			}
+			if value.Key.ComponentName == configKey.ComponentName && value.Key.AppName == configKey.AppName {
+				if err := cmngr.stub.DelState(keyStr); err != nil {
+					return errors.Wrap(errors.GeneralError, err, "DeleteState failed")
+				}
+			}
+		}
+	}
+
 	key, err := ConfigKeyToString(configKey)
 	if err != nil {
 		return err
@@ -189,7 +224,7 @@ func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	mspID := parsedConfig.MspID
 	for _, config := range parsedConfig.Peers {
 		for _, appConfig := range config.App {
-			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version, "")
+			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version, "", "")
 			if err != nil {
 				return nil, err
 			}
@@ -200,18 +235,22 @@ func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	var err error
 	for _, app := range parsedConfig.Apps {
 		if len(app.Components) == 0 {
-			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "")
+			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "", "")
 			if err != nil {
 				return nil, err
 			}
 			configMap[key] = []byte(app.Config)
 		} else {
 			for _, v := range app.Components {
-				key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, v.Name)
+				key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, v.Name, v.Version)
 				if err != nil {
 					return nil, err
 				}
-				configMap[key] = []byte(v.Config)
+				bytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, err
+				}
+				configMap[key] = bytes
 			}
 		}
 	}

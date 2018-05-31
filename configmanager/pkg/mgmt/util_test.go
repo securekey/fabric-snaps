@@ -13,20 +13,20 @@ import (
 )
 
 func TestCreateConfigKey(t *testing.T) {
-	if _, err := CreateConfigKey("", "asv", "aaa", "1", ""); err == nil {
+	if _, err := CreateConfigKey("", "asv", "aaa", "1", "", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
-	if _, err := CreateConfigKey("sdfsdf", "asv", "", "1", ""); err == nil {
+	if _, err := CreateConfigKey("sdfsdf", "asv", "", "1", "", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
-	if _, err := CreateConfigKey("sdfsdf", "asv", "www", "", ""); err == nil {
+	if _, err := CreateConfigKey("sdfsdf", "asv", "www", "", "", ""); err == nil {
 		t.Fatalf("Expected error ")
 	}
 
 }
 
 func TestValidateConfigKey(t *testing.T) {
-	key := api.ConfigKey{MspID: "", PeerID: "aaa", AppName: "bbbb", Version: "1"}
+	key := api.ConfigKey{MspID: "", PeerID: "aaa", AppName: "bbbb", AppVersion: "1", ComponentName: "", ComponentVersion: ""}
 	if err := ValidateConfigKey(key); err == nil {
 		t.Fatalf("Expected error ")
 	}
@@ -40,23 +40,24 @@ func TestValidateConfigKey(t *testing.T) {
 		t.Fatalf("Expected error ")
 	}
 	key.AppName = "app"
-	key.Version = ""
+	key.AppVersion = ""
 	if err := ValidateConfigKey(key); err == nil {
 		t.Fatalf("Expected error ")
 	}
+
 }
 
 func TestConfigKeyToString(t *testing.T) {
-	key := api.ConfigKey{MspID: "abc", PeerID: "peer.zero.sk.example", AppName: "testApp", Version: "1"}
+	key := api.ConfigKey{MspID: "abc", PeerID: "peer.zero.sk.example", AppName: "testApp", AppVersion: "1"}
 	keyStr, _ := ConfigKeyToString(key)
-	expectedKeyString := "abc!peer.zero.sk.example!testApp!1"
+	expectedKeyString := "abc!peer.zero.sk.example!testApp!1!!"
 	if keyStr != expectedKeyString {
 		t.Fatalf("Expected key string %s. Got %s", expectedKeyString, keyStr)
 	}
 }
 
 func TestStringToConfigKey(t *testing.T) {
-	key := "abc!peer.zero.sk.example!testApp!1"
+	key := "abc!peer.zero.sk.example!testApp!1!!"
 	if _, err := StringToConfigKey(key); err != nil {
 		t.Fatalf("Error %s", err)
 	}
