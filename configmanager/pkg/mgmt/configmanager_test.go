@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -45,7 +44,7 @@ const (
 
 func TestConfigWithPublicKeyAppNoConfig(t *testing.T) {
 	b := []byte(noPeerWithAppNoConfig)
-	keyConfigMap, err := parseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b)
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
@@ -68,7 +67,7 @@ func TestConfigWithPublicKeyAppNoConfig(t *testing.T) {
 
 func TestConfigWithPublicKeyApp(t *testing.T) {
 	b := []byte(noPeerWithAppAndConfig)
-	keyConfigMap, err := parseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b)
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
@@ -91,7 +90,7 @@ func TestConfigWithPublicKeyApp(t *testing.T) {
 
 func TestConfigWithComponents(t *testing.T) {
 	b := []byte(validWithAppComponents)
-	keyConfigMap, err := parseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b)
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
@@ -114,7 +113,7 @@ func TestConfigWithComponents(t *testing.T) {
 
 func TestValidConfiguration(t *testing.T) {
 	b := []byte(validMsg)
-	keyConfigMap, err := parseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b)
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
@@ -150,7 +149,7 @@ func TestInvalidConfigurations(t *testing.T) {
 
 	for _, message := range invalidMessages {
 		b := []byte(message)
-		_, err := parseConfigMessage(b)
+		_, err := ParseConfigMessage(b)
 		if err == nil {
 			t.Fatalf("ExCannot create config key usingpected error for message %s", message)
 		}
@@ -356,7 +355,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	callerIdentity = "msp.two"
+
 	configManager, err = uploadTestMessagesToHL(validMsgForMspTwo)
 	if err != nil {
 		t.Fatalf("Error %v", err)
@@ -380,15 +379,6 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	if len(configMessages) != 1 {
 		t.Fatalf("Expect exactly one config for key %v", key)
 	}
-
-	callerIdentity = "msp.fake"
-	configManager, err = uploadTestMessagesToHL(validMsgForMspTwo)
-	if err == nil {
-		t.Fatalf("Exected error 'Cannot save state'")
-	}
-
-	callerIdentity = "msp.one"
-
 }
 
 //valid config key has mspID, peer ID and App Name
@@ -434,14 +424,14 @@ func TestParseConfigMessage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot get ApiConfig bytes %v", err)
 	}
-	if _, err := parseConfigMessage(b); err == nil {
+	if _, err := ParseConfigMessage(b); err == nil {
 		t.Fatalf("Expected error: 'Cannot unmarshal config message...'")
 	}
-	if _, err := parseConfigMessage(nil); err == nil {
+	if _, err := ParseConfigMessage(nil); err == nil {
 		t.Fatalf("Expected error 'Cannot unmarshal config message...'%v", err)
 	}
 	var config []byte
-	if _, err := parseConfigMessage(config); err == nil {
+	if _, err := ParseConfigMessage(config); err == nil {
 		t.Fatalf("Expected error 'Cannot unmarshal config message'")
 	}
 
@@ -516,25 +506,30 @@ func TestGetWithInvalidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key := api.ConfigKey{MspID: "abc", PeerID: ""}
+	key := api.ConfigKey{MspID: "", PeerID: "peer.zero.example.com"}
 	_, err = configManager.Get(key)
 	if err == nil {
-		t.Fatalf("Expected 'Caller identity is not same as peer's MSPId'")
+		t.Fatalf("Expected error 'MspID is required'")
 	}
 
 }
 
-func TestGetWithNonExistingKey(t *testing.T) {
+func TestGetWithNonExistingValidKey(t *testing.T) {
 	configManager, err := uploadTestMessagesToHL(validMsg)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
 	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName", "1", "")
-	_, err = configManager.Get(key)
-	if err == nil {
-		t.Fatalf("Expected 'Caller identity is not same as peer's MSPId'")
+	config, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Cannot get config for key %s %s", key, err)
 	}
-
+	if len(config) == 0 {
+		t.Fatalf("Cannot get config content for key %s", key)
+	}
+	if len(config[0].Value) != 0 {
+		t.Fatalf("Value should have been empty for key %s", key)
+	}
 }
 
 func TestDeleteWithValidKey(t *testing.T) {
@@ -603,17 +598,17 @@ func TestDeleteByMspID(t *testing.T) {
 
 }
 
-func TestDeleteWithNonExistingKey(t *testing.T) {
+func TestDeleteWithNonExistingValidKey(t *testing.T) {
 	configManager, err := uploadTestMessagesToHL(validMsg)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
 	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName", "1", "")
-	if err := configManager.Delete(key); err == nil {
-		t.Fatalf("Expected 'Caller identity is not same as peer's MSPId'")
+	if err := configManager.Delete(key); err != nil {
+		t.Fatalf("Error %v ", err)
 	}
-
 }
+
 func TestDeleteWithInvalidKey(t *testing.T) {
 	configManager, err := uploadTestMessagesToHL(validMsg)
 	if err != nil {
@@ -665,9 +660,4 @@ func uploadTestMessagesToHL(msgName string) (api.ConfigManager, error) {
 
 	stub.MockTransactionEnd("saveConfiguration")
 	return configManager, nil
-}
-
-func TestMain(m *testing.M) {
-	callerIdentity = "msp.one"
-	os.Exit(m.Run())
 }

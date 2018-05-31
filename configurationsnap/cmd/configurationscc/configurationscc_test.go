@@ -34,6 +34,8 @@ const (
 	invalidJSONMsg               = `{"MspID":"Org1MSP","Peers":this willnot fly[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
 )
 
+var aclCheckCalled bool
+
 func TestInit(t *testing.T) {
 	stub := newMockStub(nil, nil)
 	res := stub.MockInit("txID", [][]byte{})
@@ -54,18 +56,37 @@ func TestInit(t *testing.T) {
 
 }
 
-func TestRefresh(t *testing.T) {
+func TestRefreshACLSuccess(t *testing.T) {
 	stub := newMockStub(nil, nil)
 
 	stub.ChannelID = "testChannel"
 	args := [][]byte{[]byte("testChannel")}
 	peerConfigPath = "./sampleconfig"
 
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	response := refresh(stub, args)
 	if response.Status != 200 {
 		t.Fatalf("Refresh failed: %v", response.Message)
 	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+}
 
+func TestRefreshACLFailure(t *testing.T) {
+	stub := newMockStub(nil, nil)
+
+	stub.ChannelID = "testChannel"
+	args := [][]byte{[]byte("testChannel")}
+	peerConfigPath = "./sampleconfig"
+
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: true}
+	response := refresh(stub, args)
+	if response.Status != 500 {
+		t.Fatal("Refresh should have failed for ACL with 500 status")
+	}
 }
 
 func TestInvoke(t *testing.T) {
@@ -219,7 +240,7 @@ func newMockStub(configErr error, httpErr error) *mockstub.MockStub {
 	return mockstub.NewMockStub("configurationsnap", new(ConfigurationSnap))
 }
 
-func TestSave(t *testing.T) {
+func TestSavedConfigs(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	stub := getMockStub("testChannel")
 	//verify that saved configs are accessible
@@ -229,10 +250,14 @@ func TestSave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
-
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err := invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not get saved configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
 	}
 	expected := &[]*mgmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
@@ -241,10 +266,41 @@ func TestSave(t *testing.T) {
 			t.Fatalf("Expected config")
 		}
 	}
-
 }
 
-func TestGet(t *testing.T) {
+func TestSaveACLSuccess(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+	stub := getMockStub("testChannel")
+	configMsgBytes := []byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1))
+	funcName := []byte("save")
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
+	_, err := invoke(stub, [][]byte{funcName, configMsgBytes})
+	if err != nil {
+		t.Fatalf("Could not save configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+}
+
+func TestSaveACLFailure(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+	stub := getMockStub("testChannel")
+	configMsgBytes := []byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1))
+	funcName := []byte("save")
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: true}
+	_, err := invoke(stub, [][]byte{funcName, configMsgBytes})
+	if err == nil {
+		t.Fatal("Save should have failed with ACL check error")
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+}
+
+func TestGetACLSuccess(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 
 	stub := getMockStub("testChannel")
@@ -257,9 +313,14 @@ func TestGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err := invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not get configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
 	}
 	expected := &[]*mgmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
@@ -273,9 +334,14 @@ func TestGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	response, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not get configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
 	}
 	expected = &[]*mgmtapi.ConfigKV{}
 	json.Unmarshal(response, expected)
@@ -285,7 +351,31 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestGetACLFailure(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
+	stub := getMockStub("testChannel")
+	uplaodConfigToHL(t, stub, []byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	//get configuration - pass config key that has only MspID field set
+	//implicitly designed criteria by MspID
+	funcName := []byte("get")
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
+	keyBytes, err := json.Marshal(&configKey)
+	if err != nil {
+		t.Fatalf("Could not marshal key: %v", err)
+	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: true}
+	_, err = invoke(stub, [][]byte{funcName, keyBytes})
+	if err == nil {
+		t.Fatal("Save should have failed with ACL check error")
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+}
+
+func TestDeleteACLSuccess(t *testing.T) {
 	peerConfigPath = "./sampleconfig"
 	stub := getMockStub("testChannel")
 
@@ -298,9 +388,14 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not delete configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
 	}
 
 	configKey = mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", Version: ""}
@@ -308,9 +403,14 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err != nil {
-		t.Fatalf("Could not save configuration :%v", err)
+		t.Fatalf("Could not delete configuration :%v", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
 	}
 
 	configKey = mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", Version: ""}
@@ -318,16 +418,49 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)
 	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, keyBytes})
 	if err == nil {
 		t.Fatalf("Expect error: 'Config Key does not have valid MSPId'")
 	}
+	if aclCheckCalled {
+		t.Fatal("ACL check call was NOT expected")
+	}
 
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err = invoke(stub, [][]byte{funcName, nil})
 	if err == nil {
 		t.Fatalf("Expect error: Config is empty (no key)")
 	}
+	if aclCheckCalled {
+		t.Fatal("ACL check call was NOT expected")
+	}
+}
 
+func TestDeleteACLFailure(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+	stub := getMockStub("testChannel")
+
+	configManager := mgmt.NewConfigManager(stub)
+	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+
+	funcName := []byte("delete")
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", Version: api.VERSION}
+	keyBytes, err := json.Marshal(&configKey)
+	if err != nil {
+		t.Fatalf("Could not marshal key: %v", err)
+	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: true}
+	_, err = invoke(stub, [][]byte{funcName, keyBytes})
+	if err == nil {
+		t.Fatal("Save should have failed with ACL check error")
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
 }
 
 func TestGetKey(t *testing.T) {
@@ -405,6 +538,7 @@ func TestGetConfigUsingInvalidKey(t *testing.T) {
 func TestSaveErrors(t *testing.T) {
 	stub := getMockStub("testChannel")
 
+	aclProvider = &mockACLProvider{aclFailed: false}
 	_, err := invoke(stub, getBytes("save", []string{strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)}))
 	if err != nil {
 		t.Fatalf("Could not save configuration :%v", err)
@@ -430,7 +564,6 @@ func TestSaveErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error: invalid character 'm' looking for beginning of value unmarshalling Org1MSP!peerOne!AppName")
 	}
-
 }
 
 func TestSaveConfigurationsWithEmptyPayload(t *testing.T) {
@@ -840,4 +973,16 @@ func getMockStub(channelID string) *mockstub.MockStub {
 	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
+}
+
+type mockACLProvider struct {
+	aclFailed bool
+}
+
+func (m *mockACLProvider) CheckACL(resName string, channelID string, idinfo interface{}) error {
+	aclCheckCalled = true
+	if m.aclFailed {
+		return fmt.Errorf("ACL failed")
+	}
+	return nil
 }

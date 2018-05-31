@@ -47,6 +47,9 @@ Profiles:
         Consortium: SampleConsortium
         Application:
             <<: *ApplicationDefaults
+            ACLs:
+                configdata/read/Org1MSP: Org1MemberPolicy
+                configdata/write/Org1MSP: Org1MemberPolicy
             Organizations:
                 - *Org1
                 - *Org2
@@ -329,6 +332,9 @@ Application: &ApplicationDefaults
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
+        Org1MemberPolicy:
+            Type: Signature
+            Rule: "OR('Org1MSP.member')"
 
 ################################################################################
 #
