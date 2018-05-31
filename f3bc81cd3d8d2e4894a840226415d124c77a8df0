@@ -16,6 +16,24 @@
       "revId": "f3bc81cd3d8d2e4894a840226415d124c77a8df0",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16f45227_c59001c2",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-05-31T17:54:02Z",
+      "side": 1,
+      "message": "Is this function even used?",
+      "parentUuid": "693f9110_b1890de5",
+      "revId": "f3bc81cd3d8d2e4894a840226415d124c77a8df0",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
