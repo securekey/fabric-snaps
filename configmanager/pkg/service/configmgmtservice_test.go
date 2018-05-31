@@ -264,21 +264,6 @@ func TestMngmtServiceRefreshSameConfig(t *testing.T) {
 
 }
 
-func TestCreateSearchCriteriaForNonexistingMspID(t *testing.T) {
-
-	stub := getMockStub()
-	stub.SetMspID("msp.one")
-	_ = Initialize(stub, mspID)
-	//upload valid message to HL
-	_, err := uplaodConfigToHL(t, stub, inValidMsg)
-	if err == nil {
-		t.Fatalf("Expected error: 'The caller MSP does not match configured MSP'")
-	}
-
-	stub.MockTransactionEnd("saveConfiguration")
-
-}
-
 func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 
 	stub := getMockStub()

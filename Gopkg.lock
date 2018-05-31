@@ -245,6 +245,7 @@
     "common/tools/configtxlator/update",
     "common/util",
     "common/viperutil",
+    "core/aclmgmt",
     "core/aclmgmt/resources",
     "core/chaincode/platforms",
     "core/chaincode/platforms/car",
@@ -733,6 +734,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "92d05c7bc2962b04196b126b441f49922734697f17df4f93baa2fc02f1de0af3"
+  inputs-digest = "d59c65bed602e96b2d504f260584da16127069bddcae92045758884cbc7c36e5"
   solver-name = "gps-cdcl"
   solver-version = 1
