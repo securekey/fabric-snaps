@@ -62,7 +62,7 @@ func Print(configBytes []byte) {
 			return
 		}
 		for _, config := range configs {
-			fmt.Printf("\n%s\n----- MSPID: %s, Peer: %s, App: %s:,Version: %s:\n%s\n%s\n", lineSep, config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.Version, config.Value, lineSep)
+			fmt.Printf("\n%s\n----- MSPID: %s, Peer: %s, App: %s:,AppVersion: %s:,Component: %s:,ComponentVersion: %s:\n%s\n%s\n", lineSep, config.Key.MspID, config.Key.PeerID, config.Key.AppName, config.Key.AppVersion, config.Key.ComponentName, config.Key.ComponentVersion, config.Value, lineSep)
 		}
 	}
 }

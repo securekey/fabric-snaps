@@ -40,15 +40,18 @@ func TestValidConfigKey(t *testing.T) {
 
 func TestValidConfigKeyOptions(t *testing.T) {
 	// Uses Org1MSP
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--appver", "1")
 	// Display in raw format
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1", "--format", "raw")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--appver", "1", "--format", "raw")
 	// Uses default org
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--appver", "1")
 	// Uses org2
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--orgid", "org2", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--orgid", "org2", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--appver", "1")
 	// Uses peer URL grpcs://peer0.org1.example.com:7053
-	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerurl", "grpcs://peer0.org1.example.com:7051", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--configver", "1")
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--peerurl", "grpcs://peer0.org1.example.com:7051", "--peerid", "peer0.org1.example.com", "--appname", "myapp", "--appver", "1")
+
+	execute(t, false, []byte(configKV), "--clientconfig", clientConfigPath, "--cid", "mychannel", "--mspid", "Org1MSP", "--appname", "myapp", "--appver", "1", "--componentname", "comp1")
+
 }
 
 func execute(t *testing.T, expectError bool, response []byte, args ...string) {

@@ -9,7 +9,27 @@
     {
       "AppName": "app2",
       "Version": "1",
-      "Config": "{ a }"
+      "Config": "",
+      "Components": [
+        {
+          "Name": "comp1",
+          "Config": "{comp1 data ver 1}",
+          "TxID": "1",
+          "Version": "1"
+        },
+        {
+          "Name": "comp1",
+          "Config": "{comp1 data ver 2}",
+          "TxID": "2",
+          "Version": "2"
+        },
+        {
+          "Name": "comp2",
+          "Config": "{comp2 data ver 1}",
+          "TxID": "1",
+          "Version": "1"
+        }
+      ]
     }
   ]
 }

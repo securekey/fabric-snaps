@@ -84,8 +84,14 @@ const (
 	appNameFlag        = "appname"
 	appNameDescription = "The name of the application to query for"
 
-	configVerFlag        = "configver"
-	configVerDescription = "The config version"
+	appVerFlag        = "appver"
+	appVerDescription = "The app version"
+
+	componentNameFlag        = "componentname"
+	componentNameDescription = "The name of the component to query for"
+
+	componentVerFlag        = "componentver"
+	componentVerDescription = "The component version"
 
 	noPromptFlag        = "noprompt"
 	noPromptDescription = "If specified then update and delete operations will not prompt for confirmation"
@@ -124,7 +130,9 @@ type options struct {
 	mspID            string
 	peerID           string
 	appName          string
-	configVer        string
+	appVer           string
+	componentName    string
+	componentVer     string
 	noPrompt         bool
 	keyType          string
 	ephemeralFlag    string
@@ -281,14 +289,34 @@ func InitAppName(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.appName, appNameFlag, "", appNameDescription)
 }
 
-// ConfigVer returns an config ver (used in the config query command)
-func (c *CLIConfig) ConfigVer() string {
-	return opts.configVer
+// AppVer returns an app ver (used in the config query command)
+func (c *CLIConfig) AppVer() string {
+	return opts.appVer
 }
 
-// InitConfigVer initializes the config ver from the provided arguments
-func InitConfigVer(flags *pflag.FlagSet) {
-	flags.StringVar(&opts.configVer, configVerFlag, "", configVerDescription)
+// InitAppVer initializes the app ver from the provided arguments
+func InitAppVer(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.appVer, appVerFlag, "", appVerDescription)
+}
+
+// ComponentName returns an component name (used in the config query command)
+func (c *CLIConfig) ComponentName() string {
+	return opts.componentName
+}
+
+// InitComponentName initializes the component name from the provided arguments
+func InitComponentName(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.componentName, componentNameFlag, "", componentNameDescription)
+}
+
+// ComponentVer returns an component ver (used in the config query command)
+func (c *CLIConfig) ComponentVer() string {
+	return opts.componentVer
+}
+
+// InitComponentVer initializes the component ver from the provided arguments
+func InitComponentVer(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.componentVer, componentVerFlag, "", componentVerDescription)
 }
 
 // KeyType returns an KeyType name (used in the config generteCSR command)
