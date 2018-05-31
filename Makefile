@@ -106,6 +106,9 @@ pkcs11-unit-test: depend populate
 integration-test: clean depend populate snaps cliconfig
 	@scripts/integration.sh
 
+int-test:
+	@scripts/integration.sh
+
 http-server:
 	@go build -o build/test/httpserver ${PACKAGE_NAME}/bddtests/fixtures/httpserver
 

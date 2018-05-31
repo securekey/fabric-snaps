@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp"
 	factory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
+	acl "github.com/hyperledger/fabric/core/aclmgmt"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -54,6 +55,17 @@ type ConfigurationSnap struct {
 }
 
 var peerConfigPath = ""
+
+// ACLProvider is used to check ACL
+var aclProvider acl.ACLProvider
+
+const (
+	// configDataReadACLPrefix is the prefix for read-only (get) policy resource names
+	configDataReadACLPrefix = "configdata/read/"
+
+	// configDataWriteACLPrefix is the prefix for the write (save, delete) policy resource names
+	configDataWriteACLPrefix = "configdata/write/"
+)
 
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
@@ -115,14 +127,50 @@ func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	return shim.Success(response.Payload)
 }
 
+//checkACLforKey - checks acl for the given config key
+func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigKey, aclResourcePrefix string) error {
+	if configKey.MspID == "" {
+		return fmt.Errorf("ACL check failed, config has empty msp")
+	}
+
+	resourceName := aclResourcePrefix + configKey.MspID
+
+	logger.Debugf("Checking ACL for resource: %v", resourceName)
+
+	sp, err := stub.GetSignedProposal()
+	if err != nil {
+		return fmt.Errorf("ACL check failed, error getting signed proposal: %v", err)
+	}
+
+	err = getACLProvider().CheckACL(resourceName, stub.GetChannelID(), sp)
+	if err != nil {
+		return fmt.Errorf("ACL check failed, error: %v", err)
+	}
+
+	return nil
+}
+
 //save - saves configuration passed in args
 func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-	config := args[0]
-	if len(config) == 0 {
+	configMsg := args[0]
+	if len(configMsg) == 0 {
 		return shim.Error("Config is empty-cannot be saved")
 	}
+
+	// parse config message for ACL check
+	configMessageMap, err := mgmt.ParseConfigMessage(configMsg)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	for key := range configMessageMap {
+		if err := checkACLforKey(stub, &key, configDataWriteACLPrefix); err != nil {
+			return shim.Error(err.Error())
+		}
+	}
+
 	cmngr := mgmt.NewConfigManager(stub)
-	err := cmngr.Save(config)
+	err = cmngr.Save(configMsg)
 	if err != nil {
 		logger.Errorf("Got error while saving cnfig %v", err)
 		return shim.Error(err.Error())
@@ -138,6 +186,11 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+
+	if err := checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
+		return shim.Error(err.Error())
+	}
+
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	config, err := cmngr.Get(*configKey)
@@ -161,6 +214,11 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+
+	if err := checkACLforKey(stub, configKey, configDataWriteACLPrefix); err != nil {
+		return shim.Error(err.Error())
+	}
+
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	if err := cmngr.Delete(*configKey); err != nil {
@@ -177,6 +235,12 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if err != nil {
 		return shim.Error(fmt.Sprintf("error getting peer's msp id %v", err))
 	}
+
+	// ACL check
+	if err := checkACLforKey(stub, &mgmtapi.ConfigKey{MspID: peerMspID}, configDataReadACLPrefix); err != nil {
+		return shim.Error(err.Error())
+	}
+
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	instance.Refresh(stub, peerMspID)
@@ -580,6 +644,15 @@ func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
 	}
 
 	return configKey, nil
+}
+
+// getACLProvider gets the ACLProvider used for ACL checks
+func getACLProvider() acl.ACLProvider {
+	// always nil except for unit tests
+	if aclProvider != nil {
+		return aclProvider
+	}
+	return acl.GetACLProvider()
 }
 
 // New chaincode implementation
