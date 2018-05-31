@@ -9,12 +9,12 @@ package mgmt
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"testing"
+
+	"strings"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
-	"strings"
 )
 
 const (
@@ -28,7 +28,7 @@ const (
 	validMsgForMspTwo      = `{"MspID":"msp.two","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameP","Version":"1","Config":"msptwoconfigforfirstpeer"},{"AppName":"appNameThree","Version":"1","Config":"config for appNameThree"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameThreeOnPeerOne","Version":"1","Config":"config for appNameThreeOnPeerOne goes here"},{"AppName":"appNameOneThree","Version":"1","Config":"config for appNameOneOnThree goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLThree"}]}]}`
 	noPeerWithAppAndConfig = `{"MspID":"msp.one", "Apps": [{"AppName": "publickey", "Version": "1", "Config": "{type:a, key:b}" }]}`
 	noPeerWithAppNoConfig  = `{"MspID":"msp.one", "Apps": [{"AppName": "publickey", "Version": "1" }]}`
-	validWithAppComponents = `{"MspID":"general", "Apps": [{"AppName": "publickey", "Version": "1", "Components": [{"Name":"sk-td","Config":"{abc}"}] }]}`
+	validWithAppComponents = `{"MspID":"msp.one","Apps":[{"AppName":"app1","Version":"1","Components":[{"Name":"comp1","Config":"{comp1 data ver 1}","Version":"1"},{"Name":"comp1","Config":"{comp1 data ver 2}","TxID":"2","Version":"2"},{"Name":"comp2","Config":"{comp2 data ver 1}","TxID":"1","Version":"1"}]}]}`
 
 	//misconfigured messages
 	noPeersMsg      = `{"MspID":"asd"}`
@@ -44,14 +44,14 @@ const (
 
 func TestConfigWithPublicKeyAppNoConfig(t *testing.T) {
 	b := []byte(noPeerWithAppNoConfig)
-	keyConfigMap, err := ParseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b, "")
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}
 
 	//verify that key exists in map
-	key, err := CreateConfigKey(mspID, "", "publickey", "1", "")
+	key, err := CreateConfigKey(mspID, "", "publickey", "1", "", "")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -67,14 +67,14 @@ func TestConfigWithPublicKeyAppNoConfig(t *testing.T) {
 
 func TestConfigWithPublicKeyApp(t *testing.T) {
 	b := []byte(noPeerWithAppAndConfig)
-	keyConfigMap, err := ParseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b, "")
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}
 
 	//verify that key exists in map
-	key, err := CreateConfigKey(mspID, "", "publickey", "1", "")
+	key, err := CreateConfigKey(mspID, "", "publickey", "1", "", "")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -90,14 +90,14 @@ func TestConfigWithPublicKeyApp(t *testing.T) {
 
 func TestConfigWithComponents(t *testing.T) {
 	b := []byte(validWithAppComponents)
-	keyConfigMap, err := ParseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b, "1")
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}
 
 	//verify that key exists in map
-	key, err := CreateConfigKey("general", "", "publickey", "1", "sk-td")
+	key, err := CreateConfigKey("msp.one", "", "app1", "1", "comp1", "1")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -105,21 +105,22 @@ func TestConfigWithComponents(t *testing.T) {
 	if !present {
 		t.Fatalf("Key : %s should be in the map", key)
 	}
-	if strings.Compare(string(config), "{abc}") != 0 {
-		t.Fatalf("Expected `{abc}` in config field, but got %s", string(config))
+	value := `{"Name":"comp1","Config":"{comp1 data ver 1}","Version":"1","TxID":"1"}`
+	if strings.Compare(string(config), value) != 0 {
+		t.Fatalf("Expected %s in config field, but got %s", value, string(config))
 	}
 
 }
 
 func TestValidConfiguration(t *testing.T) {
 	b := []byte(validMsg)
-	keyConfigMap, err := ParseConfigMessage(b)
+	keyConfigMap, err := ParseConfigMessage(b, "")
 
 	if err != nil {
 		t.Fatalf("Error: %s", err)
 	}
 	//verify that key exists in map
-	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "")
+	key, err := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "", "")
 	if err != nil {
 		t.Fatalf("Cannot create key %v", err)
 	}
@@ -129,7 +130,7 @@ func TestValidConfiguration(t *testing.T) {
 	}
 
 	//verify that key does not exists in map
-	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName", "1", "")
+	key, _ = CreateConfigKey("non.existing.msp", "peer.zero.example.com", "appName", "1", "", "")
 	_, present = keyConfigMap[key]
 	if present {
 		t.Fatalf("Key : %s should NOT be in map", key)
@@ -149,7 +150,7 @@ func TestInvalidConfigurations(t *testing.T) {
 
 	for _, message := range invalidMessages {
 		b := []byte(message)
-		_, err := ParseConfigMessage(b)
+		_, err := ParseConfigMessage(b, "")
 		if err == nil {
 			t.Fatalf("ExCannot create config key usingpected error for message %s", message)
 		}
@@ -170,7 +171,9 @@ func TestGetConfigForKey(t *testing.T) {
 	key.MspID = "ssss"
 	key.PeerID = "peerID"
 	key.AppName = ""
-	key.Version = ""
+	key.AppVersion = ""
+	key.ComponentName = ""
+	key.ComponentVersion = ""
 
 	stub := shim.NewMockStub("testConfigState", nil)
 	stub.MockTransactionStart("saveConfiguration")
@@ -246,7 +249,9 @@ func TestGetFieldsForIndex(t *testing.T) {
 	key.MspID = "ssss"
 	key.PeerID = "peerID"
 	key.AppName = "appname"
-	key.Version = "1"
+	key.AppVersion = "1"
+	key.ComponentName = ""
+	key.ComponentVersion = ""
 	_, err = getFieldsForIndex("index", key)
 	if err == nil {
 		t.Fatalf("Error 'unknown index' expected")
@@ -259,7 +264,9 @@ func TestAddIndexes(t *testing.T) {
 	key.MspID = "msp"
 	key.PeerID = "peer"
 	key.AppName = "appname"
-	key.Version = "1"
+	key.AppVersion = "1"
+	key.ComponentName = ""
+	key.ComponentVersion = ""
 	configManagerImpl := configManagerImpl{}
 
 	if err := configManagerImpl.addIndex("", key); err == nil {
@@ -313,6 +320,34 @@ func TestGetIndexKey(t *testing.T) {
 
 }
 
+func TestGetForValidComponentsOnValidKey(t *testing.T) {
+
+	configManager, err := uploadTestMessagesToHL(validWithAppComponents)
+	if err != nil {
+		t.Fatalf("Error %v", err)
+	}
+	key, _ := CreateConfigKey("msp.one", "", "app1", "1", "comp1", "1")
+
+	configMessages, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Cannot query for configs %v", err)
+	}
+	if len(configMessages) != 1 {
+		t.Fatalf("Expect exactly one config for key %v", key)
+	}
+
+	key, _ = CreateConfigKey("msp.one", "", "app1", "1", "comp1", "")
+
+	configMessages, err = configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Cannot query for configs %v", err)
+	}
+	if len(configMessages) != 2 {
+		t.Fatalf("Expect exactly two config for key %v", key)
+	}
+
+}
+
 func TestGetForValidConfigsOnValidKey(t *testing.T) {
 
 	configManager, err := uploadTestMessagesToHL(validMsg)
@@ -320,7 +355,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	// get two Versions
-	key, _ := CreateConfigKey("msp.one", "peer.zero.example.com", "testAppName", "1", "")
+	key, _ := CreateConfigKey("msp.one", "peer.zero.example.com", "testAppName", "1", "", "")
 	configMessages, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -332,7 +367,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	if string(configMessages[0].Value) != configMsg {
 		t.Fatalf("Expect config (%v) but got (%v)", configMsg, string(configMessages[0].Value))
 	}
-	key.Version = "2"
+	key.AppVersion = "2"
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -350,7 +385,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ = CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "")
+	key, _ = CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "", "")
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -361,7 +396,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ = CreateConfigKey("msp.two", "peer.zero.example.com", "appNameTwo", "1", "")
+	key, _ = CreateConfigKey("msp.two", "peer.zero.example.com", "appNameTwo", "1", "", "")
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -371,7 +406,7 @@ func TestGetForValidConfigsOnValidKey(t *testing.T) {
 	}
 
 	//look for another key
-	key, _ = CreateConfigKey("msp.two", "peer.one.example.com", "appNameP", "1", "")
+	key, _ = CreateConfigKey("msp.two", "peer.one.example.com", "appNameP", "1", "", "")
 	configMessages, err = configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
@@ -390,14 +425,13 @@ func TestGetForValidConfigsOnPartialValidKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ := CreateConfigKey("msp.one", "", "", "", "")
+	key, _ := CreateConfigKey("msp.one", "", "", "", "", "")
 	configMessages, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot query for configs %v", err)
 	}
-	fmt.Printf("%d\n", len(configMessages))
 	if len(configMessages) != 8 {
-		t.Fatalf("Expected 6 configs. Got %d", len(configMessages))
+		t.Fatalf("Expected 8 configs. Got %d", len(configMessages))
 	}
 
 }
@@ -409,7 +443,7 @@ func TestGetForValidConfigsOnInvalidPartialKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	//look for this key
-	key, _ := CreateConfigKey("", "aaaa", "", "", "")
+	key, _ := CreateConfigKey("", "aaaa", "", "", "", "")
 	_, err = configManager.Get(key)
 	if err == nil {
 		t.Fatalf("Expected error: ' Error Invalid config key { aaaa }. MspID is required. ")
@@ -424,14 +458,14 @@ func TestParseConfigMessage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot get ApiConfig bytes %v", err)
 	}
-	if _, err := ParseConfigMessage(b); err == nil {
+	if _, err := ParseConfigMessage(b, ""); err == nil {
 		t.Fatalf("Expected error: 'Cannot unmarshal config message...'")
 	}
-	if _, err := ParseConfigMessage(nil); err == nil {
+	if _, err := ParseConfigMessage(nil, ""); err == nil {
 		t.Fatalf("Expected error 'Cannot unmarshal config message...'%v", err)
 	}
 	var config []byte
-	if _, err := ParseConfigMessage(config); err == nil {
+	if _, err := ParseConfigMessage(config, ""); err == nil {
 		t.Fatalf("Expected error 'Cannot unmarshal config message'")
 	}
 
@@ -467,7 +501,7 @@ func TestSaveInvalidConfig(t *testing.T) {
 
 func TestSaveConfigs(t *testing.T) {
 	configs := make(map[api.ConfigKey][]byte)
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "", "")
 	//value := []byte("adsf")
 	//nil value is accepted
 	configs[key] = nil
@@ -490,7 +524,7 @@ func TestGetWithValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "appNameTwo", "1", "", "")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
@@ -519,7 +553,7 @@ func TestGetWithNonExistingValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName", "1", "")
+	key, _ := CreateConfigKey("msp.one.does.not.exist", "peer.zero.example.com", "appName", "1", "", "")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Cannot get config for key %s %s", key, err)
@@ -546,7 +580,7 @@ func TestDeleteWithValidKey(t *testing.T) {
 		t.Fatalf("Cannot save state ")
 	}
 
-	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "testAppName", "1", "")
+	key, _ := CreateConfigKey(mspID, "peer.zero.example.com", "testAppName", "1", "", "")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Error %v ", err)
@@ -569,6 +603,98 @@ func TestDeleteWithValidKey(t *testing.T) {
 
 }
 
+func TestDeleteComponentWithVersion(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	configManager := NewConfigManager(stub)
+	if configManager == nil {
+		t.Fatalf("Cannot instantiate config manager")
+	}
+	//store config messages
+	b := []byte(validWithAppComponents)
+	if err := configManager.Save(b); err != nil {
+		t.Fatalf("Cannot save state ")
+	}
+
+	key, _ := CreateConfigKey(mspID, "", "app1", "1", "comp1", "1")
+	config, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(config[0].Value) == 0 {
+		t.Fatalf("Config should exist for key %v ", key)
+	}
+	if err := configManager.Delete(key); err != nil {
+		t.Fatalf("Cannot delete config for  key %s %s", key, err)
+	}
+	stub.MockTransactionEnd("saveConfiguration")
+	stub.MockTransactionStart("a")
+
+	config, err = configManager.Get(key)
+	if len(config[0].Value) != 0 {
+		t.Fatalf("Config should be deleted for key %v ", key)
+	}
+
+	key, _ = CreateConfigKey(mspID, "", "app1", "1", "comp1", "2")
+	config, err = configManager.Get(key)
+	if len(config[0].Value) == 0 {
+		t.Fatalf("Config should exist for key %v ", key)
+	}
+
+	stub.MockTransactionEnd("a")
+
+}
+
+func TestDeleteComponentWithoutVersion(t *testing.T) {
+
+	stub := shim.NewMockStub("testConfigStateRefresh", nil)
+	stub.MockTransactionStart("saveConfiguration")
+	configManager := NewConfigManager(stub)
+	if configManager == nil {
+		t.Fatalf("Cannot instantiate config manager")
+	}
+	//store config messages
+	b := []byte(validWithAppComponents)
+	if err := configManager.Save(b); err != nil {
+		t.Fatalf("Cannot save state ")
+	}
+
+	key, _ := CreateConfigKey(mspID, "", "app1", "1", "comp1", "")
+	config, err := configManager.Get(key)
+	if err != nil {
+		t.Fatalf("Error %v ", err)
+	}
+	if len(config[0].Value) == 0 {
+		t.Fatalf("Config should exist for key %v ", key)
+	}
+	if err := configManager.Delete(key); err != nil {
+		t.Fatalf("Cannot delete config for  key %s %s", key, err)
+	}
+	stub.MockTransactionEnd("saveConfiguration")
+	stub.MockTransactionStart("a")
+
+	config, err = configManager.Get(key)
+	if len(config[0].Value) != 0 {
+		t.Fatalf("Config should be deleted for key %v ", key)
+	}
+
+	key, _ = CreateConfigKey(mspID, "", "app1", "1", "comp1", "2")
+	config, err = configManager.Get(key)
+	if len(config[0].Value) != 0 {
+		t.Fatalf("Config should be deleted for key %v ", key)
+	}
+
+	key, _ = CreateConfigKey(mspID, "", "app1", "1", "comp2", "1")
+	config, err = configManager.Get(key)
+	if len(config[0].Value) == 0 {
+		t.Fatalf("Config should exist for key %v ", key)
+	}
+
+	stub.MockTransactionEnd("a")
+
+}
+
 func TestDeleteByMspID(t *testing.T) {
 
 	stub := shim.NewMockStub("testConfigStateRefresh", nil)
@@ -583,7 +709,7 @@ func TestDeleteByMspID(t *testing.T) {
 		t.Fatalf("Cannot save state ")
 	}
 
-	key, _ := CreateConfigKey(mspID, "", "", "1", "")
+	key, _ := CreateConfigKey(mspID, "", "", "1", "", "")
 	config, err := configManager.Get(key)
 	if err != nil {
 		t.Fatalf("Error %v ", err)
@@ -603,7 +729,7 @@ func TestDeleteWithNonExistingValidKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName", "1", "")
+	key, _ := CreateConfigKey("msp.one.some.bogus.key", "peer.zero.example.com", "appName", "1", "", "")
 	if err := configManager.Delete(key); err != nil {
 		t.Fatalf("Error %v ", err)
 	}

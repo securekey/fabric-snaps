@@ -48,6 +48,41 @@ The format of the configuration is as follows:
   ]
 }
 
+
+The format of the configuration for peer-less config is listed below:
+{
+  "MspID": "Org1MSP",
+  "Apps": [
+    {
+      "AppName": "app1",
+      "Version": "1",
+      "Config": "{config goes here}"
+    }
+    {
+      "AppName": "app2",
+      "Version": "1",
+      "Config": "",
+      "Components": [
+        {
+          "Name": "comp1",
+          "Config": "{comp1 data ver 1}",
+          "Version": "1"
+        },
+        {
+          "Name": "comp1",
+          "Config": "{comp1 data ver 2}",
+          "Version": "2"
+        },
+        {
+          "Name": "comp2",
+          "Config": "{comp2 data ver 1}",
+          "Version": "1"
+        }
+      ]
+    }.....
+  ]
+}
+
 The configuration may be embedded direcly in the "Config" element or the Config element may reference a file containing the configuration. 
 
 ### query

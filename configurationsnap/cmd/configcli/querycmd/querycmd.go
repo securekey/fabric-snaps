@@ -22,27 +22,39 @@ The Config Key consists of:
 * MspID (mandatory) - The MSP ID of the organization
 * PeerID (optional) - The ID of the peer
 * AppName (optional) - The application name
-* ConfigVer (optional) - The config version
+* AppVer (optional) - The application version
+* ComponentName (optional) - The component name
+* ComponentVer (optional) - The component version
 
 The Config Key may be specified as a JSON string (using the --configkey option) or it may
-be specified using the options: --mspid, --peerid, --appname and --configver.
+be specified using the options: --mspid, --peerid, --appname, --appver, --componentname and --componentver
 
 If PeerID and AppName are not specified then all of the org's configuration is returned.
 `
 
 const examples = `
 - Query a single peer for configuration of a particular application:
-    $ ./configcli query --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --configver 1
+    $ ./configcli query --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --appver 1
 
 ... results in the following output:
 
     --------------------------------------------------------------------
-    ----- MSPID: Org1MSP, Peer: peer0.org1.example.com, App: myapp:
+    ----- MSPID: Org1MSP, Peer: peer0.org1.example.com, App: myapp, AppVersion:1, Component:, ComponentVersion::
+    embedded config
+    --------------------------------------------------------------------
+
+- Query a single peer for configuration of a particular component:
+    $ ./configcli query --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --mspid Org1MSP --appname myapp --appver 1 --componentname comp1 --componentver 1
+
+... results in the following output:
+
+    --------------------------------------------------------------------
+    ----- MSPID: Org1MSP, Peer:, App: myapp, AppVersion:1, Component:comp1, ComponentVersion:1:
     embedded config
     --------------------------------------------------------------------
 
 - To display the output in raw format:
-    $ ./configcli query --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --configver 1 --format raw
+    $ ./configcli query --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --peerurl grpcs://localhost:7051 --mspid Org1MSP --peerid peer0.org1.example.com --appname myapp --appver 1 --format raw
 
 ... results in the following output (note that this string would need to be unmarshalled using json.Unmarshal in order to get a readable config Value):
 
@@ -89,8 +101,10 @@ func newCmd(baseAction action.Action) *cobra.Command {
 	cliconfig.InitConfigKey(flags)
 	cliconfig.InitPeerID(flags)
 	cliconfig.InitAppName(flags)
+	cliconfig.InitAppVer(flags)
+	cliconfig.InitComponentName(flags)
+	cliconfig.InitComponentVer(flags)
 	cliconfig.InitOutputFormat(flags)
-	cliconfig.InitConfigVer(flags)
 
 	return cmd
 }

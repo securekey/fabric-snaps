@@ -158,7 +158,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	}
 
 	// parse config message for ACL check
-	configMessageMap, err := mgmt.ParseConfigMessage(configMsg)
+	configMessageMap, err := mgmt.ParseConfigMessage(configMsg, stub.GetTxID())
 	if err != nil {
 		return shim.Error(err.Error())
 	}

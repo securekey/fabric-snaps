@@ -19,9 +19,9 @@ const (
 	KeyDivider = "!"
 )
 
-//CreateConfigKey creates key using mspID, peerID, appName and version
-func CreateConfigKey(mspID, peerID, appName, version, componentName string) (api.ConfigKey, error) {
-	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, Version: version, ComponentName: componentName}
+//CreateConfigKey creates key using mspID, peerID, appName, appVersion
+func CreateConfigKey(mspID, peerID, appName, appVersion, componentName, componentVersion string) (api.ConfigKey, error) {
+	configKey := api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, AppVersion: appVersion, ComponentName: componentName, ComponentVersion: componentVersion}
 	if err := ValidateConfigKey(configKey); err != nil {
 		return configKey, err
 	}
@@ -34,14 +34,15 @@ func ValidateConfigKey(configKey api.ConfigKey) error {
 		return errors.New(errors.GeneralError, "Cannot create config key using empty MspId")
 	}
 	if len(configKey.PeerID) == 0 && len(configKey.AppName) == 0 {
-		return errors.New(errors.GeneralError, "Cannot create config key using empty PeerID aand an empty App list")
+		return errors.New(errors.GeneralError, "Cannot create config key using empty PeerID and an empty AppName")
 	}
 	if len(configKey.PeerID) > 0 && len(configKey.AppName) == 0 {
 		return errors.New(errors.GeneralError, "Cannot create config key using empty AppName")
 	}
-	if len(configKey.Version) == 0 {
-		return errors.New(errors.GeneralError, "Cannot create config key using empty Version")
+	if len(configKey.AppVersion) == 0 {
+		return errors.New(errors.GeneralError, "Cannot create config key using empty AppVersion")
 	}
+
 	return nil
 }
 
@@ -50,19 +51,21 @@ func ConfigKeyToString(configKey api.ConfigKey) (string, error) {
 	if err := ValidateConfigKey(configKey); err != nil {
 		return "", errors.WithMessage(errors.GeneralError, err, "Config Key is not valid")
 	}
-	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName, configKey.Version}, KeyDivider), nil
+	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName, configKey.AppVersion, configKey.ComponentName, configKey.ComponentVersion}, KeyDivider), nil
 }
 
 //StringToConfigKey converts string to ConfigKey{}
 func StringToConfigKey(key string) (api.ConfigKey, error) {
 	ck := api.ConfigKey{}
 	keyParts := strings.Split(key, KeyDivider)
-	if len(keyParts) < 3 {
+	if len(keyParts) < 6 {
 		return ck, errors.Errorf(errors.GeneralError, "Invalid config key %v", key)
 	}
 	ck.MspID = keyParts[0]
 	ck.PeerID = keyParts[1]
 	ck.AppName = keyParts[2]
-	ck.Version = keyParts[3]
+	ck.AppVersion = keyParts[3]
+	ck.ComponentName = keyParts[4]
+	ck.ComponentVersion = keyParts[5]
 	return ck, nil
 }

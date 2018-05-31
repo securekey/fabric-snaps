@@ -15,13 +15,14 @@ import (
 // VERSION of config data
 const VERSION = "1"
 
-// ConfigKey contain org,peer,appname,version
+// ConfigKey contain mspID,peerID,appname,appversion,componentname,componentversion
 type ConfigKey struct {
-	MspID         string
-	PeerID        string
-	AppName       string
-	ComponentName string
-	Version       string
+	MspID            string
+	PeerID           string
+	AppName          string
+	AppVersion       string
+	ComponentName    string
+	ComponentVersion string
 }
 
 //ConfigKV represents key value struct for managing configurations
@@ -30,10 +31,12 @@ type ConfigKV struct {
 	Value []byte
 }
 
-//Component represents app component
-type Component struct {
-	Name   string
-	Config string
+//ComponentConfig represents app component
+type ComponentConfig struct {
+	Name    string
+	Config  string
+	Version string
+	TxID    string
 }
 
 //AppConfig identifier has application name , config version
@@ -41,7 +44,7 @@ type AppConfig struct {
 	AppName    string
 	Version    string
 	Config     string
-	Components []Component
+	Components []ComponentConfig
 }
 
 //PeerConfig identifier has peer identifier and collection of application configurations
@@ -147,6 +150,23 @@ func (ac AppConfig) IsValid() error {
 	}
 	if len(ac.Version) == 0 {
 		return errors.New("AppVersion is not set (empty version)")
+	}
+	return nil
+}
+
+//IsValid ComponentConfig
+func (cc ComponentConfig) IsValid() error {
+	if cc.Name == "" {
+		return errors.New("Component Name cannot be empty")
+	}
+	if cc.TxID != "" {
+		return errors.New("Tx id should be empty")
+	}
+	if cc.Config == "" {
+		return errors.New("Component config cannot be empty")
+	}
+	if len(cc.Version) == 0 {
+		return errors.New("Component Version is not set (empty version)")
 	}
 	return nil
 }

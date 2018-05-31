@@ -9,10 +9,8 @@ package mgmt
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -44,7 +42,7 @@ func (cmngr *configManagerImpl) Save(configData []byte) error {
 		return errors.New(errors.GeneralError, "Configuration must be provided")
 	}
 	//parse configuration request
-	configMessageMap, err := ParseConfigMessage(configData)
+	configMessageMap, err := ParseConfigMessage(configData, cmngr.stub.GetTxID())
 	if err != nil {
 		return err
 	}
@@ -78,6 +76,21 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 		//search for all configs by mspID
 		return cmngr.getConfigs(configKey)
 	}
+
+	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
+		values, err := cmngr.getConfigs(configKey)
+		if err != nil {
+			return nil, err
+		}
+		filterComp := make([]*api.ConfigKV, 0)
+		for _, v := range values {
+			if v.Key.ComponentName == configKey.ComponentName && v.Key.AppName == configKey.AppName {
+				filterComp = append(filterComp, v)
+			}
+		}
+		return filterComp, nil
+	}
+
 	//search for one config by valid key
 	config, err := cmngr.getConfig(configKey)
 	if err != nil {
@@ -85,24 +98,6 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	}
 	configKeys := []*api.ConfigKV{&api.ConfigKV{Key: configKey, Value: config}}
 	return configKeys, nil
-}
-
-//getIdentity gets associated membership service provider
-func getIdentity(stub shim.ChaincodeStubInterface) (string, error) {
-	if stub == nil {
-		return "", errors.New(errors.GeneralError, "Stub is nil")
-	}
-	creator, err := stub.GetCreator()
-	if err != nil {
-		logger.Errorf("Cannot get creatorBytes error %v", err)
-		return "", errors.Wrap(errors.GeneralError, err, "Error getting creator")
-	}
-	sid := &protosMSP.SerializedIdentity{}
-	if err := proto.Unmarshal(creator, sid); err != nil {
-		logger.Errorf("Unmarshal creatorBytes error %v", err)
-		return "", errors.Wrap(errors.GeneralError, err, "Unmarshal creatorBytes error")
-	}
-	return sid.Mspid, nil
 }
 
 //getConfig to get config for valid key
@@ -166,6 +161,26 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 		//search for all configs by mspID
 		return cmngr.deleteConfigs(configKey)
 	}
+
+	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
+		configs, err := cmngr.getConfigs(configKey)
+		if err != nil {
+			return err
+		}
+		for _, value := range configs {
+			logger.Debugf("Deleting state for key: %v", value.Key)
+			keyStr, err := ConfigKeyToString(value.Key)
+			if err != nil {
+				return err
+			}
+			if value.Key.ComponentName == configKey.ComponentName && value.Key.AppName == configKey.AppName {
+				if err := cmngr.stub.DelState(keyStr); err != nil {
+					return errors.Wrap(errors.GeneralError, err, "DeleteState failed")
+				}
+			}
+		}
+	}
+
 	key, err := ConfigKeyToString(configKey)
 	if err != nil {
 		return err
@@ -176,7 +191,7 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 
 //ParseConfigMessage unmarshals supplied config message and returns
 //map[compositekey]configurationbytes to the caller
-func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
+func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byte, error) {
 	configMap := make(map[api.ConfigKey][]byte)
 	var parsedConfig api.ConfigMessage
 	if err := json.Unmarshal(configData, &parsedConfig); err != nil {
@@ -189,7 +204,7 @@ func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	mspID := parsedConfig.MspID
 	for _, config := range parsedConfig.Peers {
 		for _, appConfig := range config.App {
-			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version, "")
+			key, err := CreateConfigKey(mspID, config.PeerID, appConfig.AppName, appConfig.Version, "", "")
 			if err != nil {
 				return nil, err
 			}
@@ -200,18 +215,23 @@ func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	var err error
 	for _, app := range parsedConfig.Apps {
 		if len(app.Components) == 0 {
-			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "")
+			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "", "")
 			if err != nil {
 				return nil, err
 			}
 			configMap[key] = []byte(app.Config)
 		} else {
 			for _, v := range app.Components {
-				key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, v.Name)
+				v.TxID = txID
+				key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, v.Name, v.Version)
 				if err != nil {
 					return nil, err
 				}
-				configMap[key] = []byte(v.Config)
+				bytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, err
+				}
+				configMap[key] = bytes
 			}
 		}
 	}
