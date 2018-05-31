@@ -19,10 +19,6 @@ import (
 
 var logger = logging.NewLogger("configsnap")
 
-//this is used for unit test only
-//to set and verify caller identity
-var callerIdentity string
-
 const (
 	// indexOrg is the name of the index to retrieve configurations per org
 	indexMspID = "cfgmgmt-mspid"
@@ -48,7 +44,7 @@ func (cmngr *configManagerImpl) Save(configData []byte) error {
 		return errors.New(errors.GeneralError, "Configuration must be provided")
 	}
 	//parse configuration request
-	configMessageMap, err := parseConfigMessage(configData)
+	configMessageMap, err := ParseConfigMessage(configData)
 	if err != nil {
 		return err
 	}
@@ -58,20 +54,7 @@ func (cmngr *configManagerImpl) Save(configData []byte) error {
 //saveConfigs saves key&configs to the repository.
 //also it adds indexes for saved records
 func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][]byte) error {
-	var mspID string
-	var err error
-	mspID, err = cmngr.getCallerIdentity()
-	if err != nil {
-		return errors.Wrapf(errors.GeneralError, err, "Cannot save config. Caller identity is not same as peer's")
-	}
-
-	logger.Debugf("Caller MspID %s", mspID)
 	for key, value := range configMessageMap {
-		//in case of any discrepancy between caller MSP and configured MSP
-		//reject whole config
-		if key.MspID != mspID {
-			return errors.New(errors.GeneralError, "The caller MSP does not match configured MSP ")
-		}
 		logger.Debugf("Saving configs %v,%s", key, string(value[:]))
 		strkey, err := ConfigKeyToString(key)
 		if err != nil {
@@ -88,31 +71,9 @@ func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][
 	return nil
 }
 
-func (cmngr *configManagerImpl) verifyCallerID(configKey api.ConfigKey) error {
-	var err error
-	if configKey.MspID == "" {
-		return errors.New(errors.GeneralError, "Config Key does not have valid MSPId")
-	}
-	mspID, err := cmngr.getCallerIdentity()
-	if err != nil {
-		return errors.Wrapf(errors.GeneralError, err, "Cannot verify caller identity")
-	}
-	if mspID != configKey.MspID {
-		return errors.New(errors.GeneralError, "Caller identity is not same as peer's MSPId")
-
-	}
-	return nil
-}
-
 // Get gets configuration from the ledger using config key
 func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, error) {
-
-	err := cmngr.verifyCallerID(configKey)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ValidateConfigKey(configKey)
+	err := ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
 		return cmngr.getConfigs(configKey)
@@ -124,23 +85,6 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	}
 	configKeys := []*api.ConfigKV{&api.ConfigKV{Key: configKey, Value: config}}
 	return configKeys, nil
-}
-
-//to get caller identity -creator bytes from request
-func (cmngr *configManagerImpl) getCallerIdentity() (string, error) {
-	var mspID string
-	var err error
-
-	if callerIdentity != "" {
-		mspID = callerIdentity
-	} else {
-		mspID, err = getIdentity(cmngr.stub)
-		if err != nil {
-			return mspID, errors.Wrapf(errors.GeneralError, err, "Cannot get identity of caller (MSPID)")
-		}
-	}
-	logger.Debugf("Caller identity %s", mspID)
-	return mspID, nil
 }
 
 //getIdentity gets associated membership service provider
@@ -215,13 +159,9 @@ func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) error {
 	return nil
 }
 
-//Delete delets configuration from the ledger using config key
+//Delete deletes configuration from the ledger using config key
 func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
-	err := cmngr.verifyCallerID(configKey)
-	if err != nil {
-		return err
-	}
-	err = ValidateConfigKey(configKey)
+	err := ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
 		return cmngr.deleteConfigs(configKey)
@@ -236,7 +176,7 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 
 //ParseConfigMessage unmarshals supplied config message and returns
 //map[compositekey]configurationbytes to the caller
-func parseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
+func ParseConfigMessage(configData []byte) (map[api.ConfigKey][]byte, error) {
 	configMap := make(map[api.ConfigKey][]byte)
 	var parsedConfig api.ConfigMessage
 	if err := json.Unmarshal(configData, &parsedConfig); err != nil {
