@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "693f9110_b1890de5",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-05-31T17:51:37Z",
+      "side": 1,
+      "message": "We don\u0027t need to check ACL when refreshing the config cache.",
+      "revId": "f3bc81cd3d8d2e4894a840226415d124c77a8df0",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
