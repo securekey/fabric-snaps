@@ -13,7 +13,7 @@
       "Components": [
         {
           "Name": "comp1",
-          "Config": "{comp1 data ver 1}",
+          "Config": "file://./comp1.json",
           "Version": "1"
         },
         {

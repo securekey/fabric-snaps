@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/pkg/errors"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/action"
@@ -221,7 +223,6 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 	}
 	newConfigMsg := &mgmtapi.ConfigMessage{
 		MspID: configMsg.MspID,
-		Apps:  configMsg.Apps,
 	}
 	cliconfig.Config().Logger().Debugf("Config message: %s\n", configMsg)
 	for _, peerConfig := range configMsg.Peers {
@@ -244,6 +245,29 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 		}
 		newConfigMsg.Peers = append(newConfigMsg.Peers, newPeerConfig)
 	}
+
+	for _, appConfig := range configMsg.Apps {
+		newAppConfig := mgmtapi.AppConfig{
+			AppName: appConfig.AppName,
+			Version: appConfig.Version,
+			Config:  appConfig.Config,
+		}
+		for _, compConfig := range appConfig.Components {
+			newCompConfig := &compConfig
+			// Substitute all of the file refs with the actual contents of the file
+			if strings.HasPrefix(compConfig.Config, "file://") {
+				refFilePath := newCompConfig.Config[7:]
+				contents, err := readFileRef(baseFilePath, refFilePath)
+				if err != nil {
+					return nil, errors.Wrapf(err, "error retrieving contents of file [%s]", refFilePath)
+				}
+				newCompConfig.Config = contents
+			}
+			newAppConfig.Components = append(newAppConfig.Components, *newCompConfig)
+		}
+		newConfigMsg.Apps = append(newConfigMsg.Apps, newAppConfig)
+	}
+
 	return newConfigMsg, nil
 }
 func readFile(filePath string) (string, error) {
