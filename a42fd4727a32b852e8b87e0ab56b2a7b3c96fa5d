@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6f85b8f6_31751795",
+        "filename": "bddtests/fixtures/config/configcli/org1-peerless-config.json",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-06-01T13:17:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a7c956eb_aa1d0895",
+      "revId": "a42fd4727a32b852e8b87e0ab56b2a7b3c96fa5d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afb82571_212a043a",
         "filename": "configmanager/api/configmanager.go",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2018-06-01T11:31:52Z",
       "side": 1,
       "message": "I think the logic should be the opposite, i.e. if TxID !\u003d \"\" then error.",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 2
+      },
+      "revId": "a42fd4727a32b852e8b87e0ab56b2a7b3c96fa5d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d9fc14f_cbb383cd",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-06-01T13:17:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afb82571_212a043a",
       "range": {
         "startLine": 162,
         "startChar": 0,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "216b6fae_17eb3948",
+        "filename": "configurationsnap/cmd/configcli/sampleconfig/org1-peerless-config.json",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-06-01T13:17:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be9c5749_7b051781",
+      "revId": "a42fd4727a32b852e8b87e0ab56b2a7b3c96fa5d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "264c590f_2e30a23e",
         "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
         "patchSetId": 4
@@ -70,6 +130,24 @@
       "writtenOn": "2018-06-01T11:31:52Z",
       "side": 1,
       "message": "TxID shouldn\u0027t be here.",
+      "revId": "a42fd4727a32b852e8b87e0ab56b2a7b3c96fa5d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d46eac9_2b4ee8dc",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-06-01T13:17:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "264c590f_2e30a23e",
       "revId": "a42fd4727a32b852e8b87e0ab56b2a7b3c96fa5d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
