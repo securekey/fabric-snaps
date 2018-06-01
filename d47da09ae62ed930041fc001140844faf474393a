@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6384cebc_43401e67",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000036
+      },
+      "writtenOn": "2018-06-01T15:10:05Z",
+      "side": 1,
+      "message": "This method should have %v changed to %s?",
+      "revId": "d47da09ae62ed930041fc001140844faf474393a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
