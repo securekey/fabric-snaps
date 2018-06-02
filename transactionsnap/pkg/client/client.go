@@ -300,13 +300,17 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 
 // getDisplayableEndorseRequest strips out TransientData and Args[1:] from endorseRequest for logging purposes
 func getDisplayableEndorseRequest(endorseRequest *api.EndorseTxRequest) api.EndorseTxRequest {
+	arg0 := ""
+	if len(endorseRequest.Args) > 0 {
+		arg0 = endorseRequest.Args[0]
+	}
 	newMessage := api.EndorseTxRequest{
 		ChaincodeID:          endorseRequest.ChaincodeID,
 		PeerFilter:           endorseRequest.PeerFilter,
 		RWSetIgnoreNameSpace: endorseRequest.RWSetIgnoreNameSpace,
 		ChaincodeIDs:         endorseRequest.ChaincodeIDs,
 		Targets:              endorseRequest.Targets,
-		Args:                 []string{endorseRequest.Args[0]},
+		Args:                 []string{arg0},
 	}
 
 	return newMessage
