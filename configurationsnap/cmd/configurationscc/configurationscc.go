@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/bccsp"
@@ -24,6 +25,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp/signer"
 	acl "github.com/hyperledger/fabric/core/aclmgmt"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
@@ -142,12 +144,31 @@ func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigK
 		return fmt.Errorf("ACL check failed, error getting signed proposal: %v", err)
 	}
 
+	mspID, err := getMspID(stub)
+	if err != nil {
+		return fmt.Errorf("ACL check failed, error getting mspID from signed proposal: %v", err)
+	}
+
 	err = getACLProvider().CheckACL(resourceName, stub.GetChannelID(), sp)
 	if err != nil {
+		logger.Debugf("ACL check failed for resource: %s, with signing mspID: %s", resourceName, mspID)
 		return fmt.Errorf("ACL check failed, error: %v", err)
 	}
 
 	return nil
+}
+
+//getMspID as a string from the creator of signed proposal
+func getMspID(stub shim.ChaincodeStubInterface) (string, error) {
+	creator, err := stub.GetCreator()
+	if err != nil {
+		return "", fmt.Errorf("cannot get creatorBytes error %s", err)
+	}
+	sid := &protosMSP.SerializedIdentity{}
+	if err := proto.Unmarshal(creator, sid); err != nil {
+		return "", fmt.Errorf("unmarshal creatorBytes error %s", err)
+	}
+	return sid.Mspid, nil
 }
 
 //save - saves configuration passed in args
