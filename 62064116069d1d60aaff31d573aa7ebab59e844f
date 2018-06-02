@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99a576b8_d0f98781",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000036
+      },
+      "writtenOn": "2018-06-02T10:28:24Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be \u003e 0 ?",
+      "revId": "62064116069d1d60aaff31d573aa7ebab59e844f",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
