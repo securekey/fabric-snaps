@@ -62,9 +62,9 @@ func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint
 			logger.Warnf("Endpoint for %s has missing url, skipping it in GetPeers()..", endpoint.GetMSPid())
 			continue
 		}
-		peerConfig, err := s.endpointConfig.PeerConfig(url)
-		if err != nil {
-			return nil, fmt.Errorf("error get peer config by url: %s", err)
+		peerConfig, ok := s.endpointConfig.PeerConfig(url)
+		if !ok {
+			return nil, fmt.Errorf("peer config not found for url [%s]", url)
 		}
 		peer, err := peer.New(s.endpointConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(endpoint.GetMSPid())}))
 		if err != nil {

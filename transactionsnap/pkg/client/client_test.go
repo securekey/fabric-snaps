@@ -13,19 +13,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/securekey/fabric-snaps/mocks/mockprovider"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"io/ioutil"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
@@ -134,8 +131,8 @@ func TestInitializer(t *testing.T) {
 	assert.Nil(t, client.sdk)
 
 	//initialize on test channel ID
-	err := client.initialize(testChannelID, &MockProviderFactory{})
-	assert.Nil(t, err)
+	err := client.initialize(testChannelID, &mockprovider.Factory{})
+	require.NoError(t, err)
 
 	//sdk, channel client, context are loaded and config hash updated
 	assert.NotNil(t, client.channelClient)
@@ -150,8 +147,8 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient := client.channelClient
 	oldHash := client.configHash.Load()
 
-	err = client.initialize(testChannelID, &MockProviderFactory{})
-	assert.Nil(t, err)
+	err = client.initialize(testChannelID, &mockprovider.Factory{})
+	assert.NoError(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
 	assert.True(t, oldSdk == client.sdk)
@@ -165,7 +162,7 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient = client.channelClient
 	oldHash = client.configHash.Load()
 
-	err = client.initialize(testChannelID, &MockProviderFactory{})
+	err = client.initialize(testChannelID, &mockprovider.Factory{})
 	assert.Nil(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
@@ -183,41 +180,11 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient = client.channelClient
 	oldHash = client.configHash.Load()
 
-	err = client.initialize(testChannelID, &MockProviderFactory{})
-	assert.Nil(t, err)
+	err = client.initialize(testChannelID, &mockprovider.Factory{})
+	assert.NoError(t, err)
 	//pointer negative compare should pass on sdk, context , channel client and config hash
 	assert.False(t, oldSdk == client.sdk)
 	assert.False(t, oldCtx == client.context)
 	assert.False(t, oldChannelClient == client.channelClient)
 	assert.False(t, oldHash == client.configHash.Load())
-
-	//Test if previous sdk is closed,
-	chCtxPvdr := oldSdk.ChannelContext(testChannelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgName))
-	chCtx, err := chCtxPvdr()
-	assert.NotNil(t, chCtx)
-	assert.Nil(t, err)
-
-	//channel membership should fail with cache closed error since oldSDK is closed
-	mmbr, err := chCtx.ChannelService().Membership()
-	assert.Nil(t, mmbr)
-	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Channel_Cfg_Cache - cache is closed"))
-}
-
-type MockProviderFactory struct {
-	defsvc.ProviderFactory
-}
-
-func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
-	return &impl{clientConfig: config}, nil
-}
-
-type impl struct {
-	clientConfig fabApi.EndpointConfig
-}
-
-// CreateDiscoveryService return impl of DiscoveryService
-func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
-	memService := membership.NewServiceWithMocks([]byte(org1MSP), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
-	return service.New(channelID, p.clientConfig, memService), nil
 }

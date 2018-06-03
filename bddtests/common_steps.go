@@ -145,9 +145,9 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 	}
 
 	for _, orgID := range orgs {
-		peersConfig, err := d.BDDContext.clientConfig.PeersConfig(orgID)
-		if err != nil {
-			return fmt.Errorf("error getting peers config: %s", err)
+		peersConfig, ok := d.BDDContext.clientConfig.PeersConfig(orgID)
+		if !ok {
+			return fmt.Errorf("could not get peers config for org [%s]", orgID)
 		}
 		if len(peersConfig) == 0 {
 			return fmt.Errorf("no peers for org [%s]", orgID)
@@ -283,6 +283,8 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 }
 
 func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
+	queryValue = ""
+
 	var err error
 	queryValue, err = d.QueryCCWithArgs(false, ccID, channelID, strings.Split(args, ","), nil, d.OrgPeers(orgIDs, channelID)...)
 	if err != nil {
@@ -293,8 +295,12 @@ func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
 }
 
 func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
+	queryValue = ""
 
-	peersConfig, err := d.BDDContext.clientConfig.PeersConfig(orgID)
+	peersConfig, ok := d.BDDContext.clientConfig.PeersConfig(orgID)
+	if !ok {
+		return fmt.Errorf("could not get peers config for org [%s]", orgID)
+	}
 
 	serverHostOverride := ""
 	if str, ok := peersConfig[0].GRPCOptions["ssl-target-name-override"].(string); ok {
@@ -302,6 +308,7 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 	}
 	argsArray := strings.Split(args, ",")
 
+	var err error
 	queryValue, err = d.QueryCCWithArgs(true, ccID, channelID, argsArray, nil,
 		[]*PeerConfig{&PeerConfig{Config: peersConfig[0], OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}}...)
 	if err != nil {
@@ -639,14 +646,16 @@ func (d *CommonSteps) newChaincodePolicy(ccPolicy, channelID string) (*fabricCom
 		return newPolicy(ccPolicy)
 	}
 
+	netwkConfig := d.BDDContext.clientConfig.NetworkConfig()
+
 	// Default policy is 'signed by any member' for all known orgs
 	var mspIDs []string
 	for _, orgID := range d.BDDContext.OrgsByChannel(channelID) {
-		mspID, err := d.BDDContext.clientConfig.MSPID(orgID)
-		if err != nil {
-			return nil, errors.Errorf("Unable to get the MSP ID from org ID %s: %s", orgID, err)
+		orgConfig, ok := netwkConfig.Organizations[strings.ToLower(orgID)]
+		if !ok {
+			return nil, errors.Errorf("org config not found for org ID %s", orgID)
 		}
-		mspIDs = append(mspIDs, mspID)
+		mspIDs = append(mspIDs, orgConfig.MSPID)
 	}
 	logger.Infof("Returning SignedByAnyMember policy for MSPs %s", mspIDs)
 	return cauthdsl.SignedByAnyMember(mspIDs), nil

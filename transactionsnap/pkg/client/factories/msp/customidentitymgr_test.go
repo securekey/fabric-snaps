@@ -47,8 +47,8 @@ func (c *testConfig) MSPID(org string) (string, error) {
 }
 
 // NetworkConfig creates a test network config with some orgs for testing
-func (c *testConfig) NetworkConfig() (*fabApi.NetworkConfig, error) {
-	return tNetworkConfig, nil
+func (c *testConfig) NetworkConfig() *fabApi.NetworkConfig {
+	return tNetworkConfig
 }
 
 func initNetworkConfigWithOrgEmbeddedUsers() *fabApi.NetworkConfig {

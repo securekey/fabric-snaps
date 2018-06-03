@@ -26,7 +26,6 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -39,9 +38,6 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -68,24 +64,6 @@ var mspID = "Org1MSP"
 
 type sampleConfig struct {
 	api.Config
-}
-
-type MockProviderFactory struct {
-	defsvc.ProviderFactory
-}
-
-func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
-	return &impl{clientConfig: config}, nil
-}
-
-type impl struct {
-	clientConfig fabApi.EndpointConfig
-}
-
-// CreateDiscoveryService return impl of DiscoveryService
-func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
-	memService := membership.NewServiceWithMocks([]byte("Org1MSP"), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
-	return service.New(channelID, p.clientConfig, memService), nil
 }
 
 func TestTransactionSnapInit(t *testing.T) {
@@ -590,7 +568,7 @@ func TestMain(m *testing.M) {
 	payloadMap["default"] = []byte("value")
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
 		Payload: payloadMap})
-	client.ServiceProviderFactory = &MockProviderFactory{}
+	client.ServiceProviderFactory = &mocks.MockProviderFactory{}
 	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))

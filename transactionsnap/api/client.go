@@ -66,7 +66,7 @@ type Client interface {
 	// @returns {fabApi.Peer} fab api peer
 	GetTargetPeer(peerCfg *PeerConfig, opts ...peer.Option) (fabApi.Peer, error)
 
-	// GetContext get client context
-	// @returns {Client} client
-	GetContext() contextApi.Client
+	// GetContext get channel context
+	// @returns {Channel} channel
+	GetContext() contextApi.Channel
 }

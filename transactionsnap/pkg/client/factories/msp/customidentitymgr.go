@@ -31,6 +31,7 @@ var logger = logging.NewLogger("txnsnap")
 type CustomIdentityManager struct {
 	*msp.IdentityManager
 	orgName        string
+	mspID          string
 	embeddedUsers  map[string]endpoint.TLSKeyPair
 	keyDir         string
 	certDir        string
@@ -60,10 +61,7 @@ func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite
 		return nil, errors.New(errors.GeneralError, "config is required")
 	}
 
-	netwkConfig, err := config.NetworkConfig()
-	if err != nil {
-		return nil, err
-	}
+	netwkConfig := config.NetworkConfig()
 
 	// viper keys are case insensitive
 	orgConfig, ok := netwkConfig.Organizations[strings.ToLower(orgName)]
@@ -77,7 +75,7 @@ func NewCustomIdentityManager(orgName string, cryptoProvider coreApi.CryptoSuite
 
 	mspConfigPath = filepath.Join(orgConfig.CryptoPath, mspConfigPath)
 
-	return &CustomIdentityManager{orgName: orgName, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
+	return &CustomIdentityManager{orgName: orgName, mspID: orgConfig.MSPID, config: config, embeddedUsers: orgConfig.Users, keyDir: mspConfigPath + "/keystore", certDir: mspConfigPath + "/signcerts", cryptoProvider: cryptoProvider}, nil
 }
 
 // GetSigningIdentity will sign the given object with provided key,
@@ -93,11 +91,6 @@ func (c *CustomIdentityManager) GetSigningIdentity(id string) (mspApi.SigningIde
 func (c *CustomIdentityManager) GetUser(userName string) (*User, error) {
 	if userName == "" {
 		return nil, errors.New(errors.GeneralError, "username is required")
-	}
-
-	mspID, err := c.config.MSPID(c.orgName)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "MSP ID config read failed")
 	}
 
 	enrollmentCert, err := c.getEnrollmentCert(userName)
@@ -124,7 +117,7 @@ func (c *CustomIdentityManager) GetUser(userName string) (*User, error) {
 	}
 
 	return &User{
-		mspID: mspID,
+		mspID: c.mspID,
 		id:    userName,
 		enrollmentCertificate: enrollmentCert,
 		privateKey:            privateKey,

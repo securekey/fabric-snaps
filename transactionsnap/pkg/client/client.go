@@ -10,14 +10,16 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
+	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	selection "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
 
 	"crypto/sha256"
 	"encoding/base64"
@@ -27,7 +29,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -35,7 +36,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/provider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
@@ -63,20 +63,15 @@ type clientImpl struct {
 	sdk           *fabsdk.FabricSDK
 }
 
-// DynamicProviderFactory is configured with dynamic discovery provider and dynamic selection provider
+// DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
+// based on the local Membership Snap, dynamic selection provider, and the local Event Snap
 type DynamicProviderFactory struct {
 	defsvc.ProviderFactory
-	ChannelUsers []selection.ChannelUser
 }
 
-// CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (f *DynamicProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
-	return dynamicDiscovery.New(config), nil
-}
-
-// CreateSelectionProvider returns a new implementation of dynamic selection provider
-func (f *DynamicProviderFactory) CreateSelectionProvider(config fabApi.EndpointConfig) (fabApi.SelectionProvider, error) {
-	return selection.New(config, f.ChannelUsers)
+// CreateChannelProvider returns a new default implementation of channel provider
+func (f *DynamicProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+	return chprovider.New(config)
 }
 
 // CustomConfig override client config
@@ -87,20 +82,23 @@ type CustomConfig struct {
 }
 
 // ChannelPeers returns the channel peers configuration
-// TODO this is a workaround.
-// Currently there is no way to pass in a set of target peers to the selection provider.
-func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, error) {
-	peerConfig, err := c.PeerConfig(fmt.Sprintf("%s:%d", c.localPeer.Host,
-		c.localPeer.Port))
-	if err != nil {
-		return nil, fmt.Errorf("error get peer config by url: %v", err)
+func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, bool) {
+	url := fmt.Sprintf("%s:%d", c.localPeer.Host, c.localPeer.Port)
+	peerConfig, ok := c.PeerConfig(url)
+	if !ok {
+		logger.Warnf("Could not find channel peer for [%s]", url)
+		return nil, false
 	}
-	networkPeer := fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(c.localPeer.MSPid)}
-	networkPeer.TLSCACerts = endpoint.TLSConfig{Pem: string(c.localPeerTLSCertPem)}
+	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(c.localPeer.MSPid), c.localPeerTLSCertPem)
+	if err != nil {
+		logger.Errorf("Error creating network peer for [%s]", url)
+		return nil, false
+	}
+
 	peer := fabApi.ChannelPeer{PeerChannelConfig: fabApi.PeerChannelConfig{EndorsingPeer: true,
-		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: networkPeer}
+		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: *networkPeer}
 	logger.Debugf("ChannelPeers return %v", peer)
-	return []fabApi.ChannelPeer{peer}, nil
+	return []fabApi.ChannelPeer{peer}, true
 }
 
 var once sync.Once
@@ -120,7 +118,13 @@ func GetInstanceWithLocalDiscovery(channelID string, txnSnapConfig api.Config) (
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
-	serviceProviderFactory := &localprovider.Factory{LocalPeer: localPeer, LocalPeerTLSCertPem: txnSnapConfig.GetTLSCertPem()}
+
+	var serviceProviderFactory apisdk.ServiceProviderFactory
+	if ServiceProviderFactory != nil {
+		serviceProviderFactory = ServiceProviderFactory
+	} else {
+		serviceProviderFactory = &localprovider.Factory{LocalPeer: localPeer, LocalPeerTLSCertPem: txnSnapConfig.GetTLSCertPem()}
+	}
 	return getInstance(newLocalCacheKey(channelID, txnSnapConfig, serviceProviderFactory))
 }
 
@@ -186,10 +190,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// Get org name
-	nconfig, err := endpointConfig.NetworkConfig()
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed to get network config")
-	}
+	nconfig := endpointConfig.NetworkConfig()
 
 	// Get local peer
 	localPeer, err := c.txnSnapConfig.GetLocalPeer()
@@ -216,15 +217,14 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	if serviceProviderFactory == nil {
-		channelUser := selection.ChannelUser{ChannelID: channelID, Username: txnSnapUser, OrgName: orgname}
-		serviceProviderFactory = &DynamicProviderFactory{ChannelUsers: []selection.ChannelUser{channelUser}}
+		serviceProviderFactory = &DynamicProviderFactory{}
 	}
 
 	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, c.txnSnapConfig.GetTLSCertPem())
 
 	//create sdk
 	c.sdk, err = fabsdk.New(configProvider,
-		fabsdk.WithConfigEndpoint(customEndpointConfig),
+		fabsdk.WithEndpointConfig(customEndpointConfig),
 		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
 		fabsdk.WithServicePkg(serviceProviderFactory),
 		fabsdk.WithMSPPkg(&factoriesMsp.CustomMspPkg{CryptoPath: c.txnSnapConfig.GetMspConfigPath()}))
@@ -238,7 +238,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	// Channel client is used to query and execute transactions
 	chClient, err := channel.New(chContextProv)
 	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client %v", channelID, err)
+		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
 	}
 	if chClient == nil {
 		return errors.New(errors.GeneralError, "channel client is nil")
@@ -246,7 +246,7 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 
 	chContext, err := chContextProv()
 	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context %v", channelID, err)
+		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
 	}
 
 	c.channelClient = chClient
@@ -402,10 +402,10 @@ func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option)
 
 	//TODO argument 'peerCfg' should come as opts instead of nil check
 	if peerCfg != nil {
-		peerConfig, err := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
+		peerConfig, ok := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
 			peerCfg.Port))
-		if err != nil {
-			return nil, errors.Wrap(errors.GeneralError, err, "Failed to get peer config by url")
+		if !ok {
+			return nil, errors.Errorf(errors.GeneralError, "Failed to get peer config by url")
 		}
 		opts = append(opts, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(peerCfg.MSPid)}),
 			peer.WithTLSCert(c.txnSnapConfig.GetTLSRootCert()))
@@ -441,7 +441,7 @@ func (c *clientImpl) retryOpts() retry.Opts {
 //GetContext returns SDK context object of given client
 //For thread safety, care should be taken while using returned value since it can be updated if there are any
 // txnsnap config updates and lazyref cache refresh kicks in.
-func (c *clientImpl) GetContext() contextApi.Client {
+func (c *clientImpl) GetContext() contextApi.Channel {
 
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()

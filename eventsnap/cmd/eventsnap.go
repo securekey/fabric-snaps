@@ -13,7 +13,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
@@ -31,7 +30,7 @@ var logger = logging.NewLogger("eventsnap")
 var delayStartChannelEventsDuration = 5 * time.Second
 
 const (
-	channelConfigCheckDuration = 1 * time.Second
+	channelConfigCheckDuration = 3 * time.Second
 )
 
 var mutex sync.RWMutex
@@ -88,11 +87,12 @@ func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventS
 
 	client, err := txnSnapClient.GetInstanceWithLocalDiscovery(channelID, txnsnapser.Config)
 	if err != nil {
+		logger.Errorf("Error getting txsnap client: %s", err)
 		return errors.WithMessage(errors.GeneralError, err, "GetInstanceWithLocalDiscovery return error")
 	}
 
 	// Create a new channel event service which gets its events from the event relay
-	eventClient, err := s.connectEventClient(client.GetContext(), channelID, esconfig)
+	eventClient, err := s.connectEventClient(client.GetContext(), esconfig)
 	if err != nil {
 		logger.Errorf("Error connecting event client: %s", err)
 		return errors.WithMessage(errors.GeneralError, err, "Error connecting event client")
@@ -104,6 +104,8 @@ func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventS
 		return errors.WithMessage(errors.GeneralError, err, "Error registering local event service")
 	}
 
+	logger.Infof("Registered local event service for channel [%s]", channelID)
+
 	return nil
 }
 
@@ -111,31 +113,39 @@ func (s *eventSnap) delayStartChannelEvents(channelID string) {
 	// wait for 5 seconds for delivery client to start
 	time.Sleep(delayStartChannelEventsDuration)
 	for {
-		time.Sleep(channelConfigCheckDuration)
 		logger.Debugf("Checking if EventSnap configuration is available for channel [%s]...", channelID)
 		if config, err := config.New(channelID, s.peerConfigPath); err != nil {
-			logger.Warnf("Error reading configuration: %s", err)
+			logger.Warnf("Error reading configuration for channel [%s]: [%s]. Will try again in %s", err, channelID, channelConfigCheckDuration)
 		} else if config != nil {
 			if err := s.startChannelEvents(channelID, config); err != nil {
-				logger.Errorf("Error starting channel events for channel [%s]: %s. Aborting!!!", channelID, err)
+				logger.Errorf("Error starting channel events for channel [%s]: [%s]. Will try again in %s", channelID, err, channelConfigCheckDuration)
 			} else {
 				logger.Infof("Channel events successfully started for channel [%s].", channelID)
+				return
 			}
-			return
+		} else {
+			logger.Warnf("EventSnap configuration is not available yet for channel [%s]. Will try again in %s", channelID, channelConfigCheckDuration)
 		}
-		logger.Debugf("... EventSnap configuration is not available yet for channel [%s]", channelID)
+		time.Sleep(channelConfigCheckDuration)
 	}
 }
 
 // startEventService ...
-func (s *eventSnap) connectEventClient(context context.Client, channelID string, config *config.EventSnapConfig) (fab.EventClient, error) {
-	logger.Infof("Starting event service for channel [%s]...", channelID)
+func (s *eventSnap) connectEventClient(context context.Channel, config *config.EventSnapConfig) (fab.EventClient, error) {
+	logger.Infof("Starting event service for channel [%s]...", context.ChannelID())
 
-	// FIXME: This will go away with the latest SDK
-	chConfig := chconfig.NewChannelCfg(channelID)
+	chConfig, err := context.ChannelService().ChannelConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	discovery, err := context.LocalDiscoveryProvider().CreateLocalDiscoveryService(context.Identifier().MSPID)
+	if err != nil {
+		return nil, err
+	}
 
 	eventClient, err := deliverclient.New(
-		context, chConfig,
+		context, chConfig, discovery,
 		comm.WithConnectTimeout(config.ResponseTimeout), // FIXME: Should be connect timeout
 		dispatcher.WithEventConsumerBufferSize(config.EventConsumerBufferSize),
 		dispatcher.WithEventConsumerTimeout(config.EventConsumerTimeout),
@@ -143,7 +153,6 @@ func (s *eventSnap) connectEventClient(context context.Client, channelID string,
 		client.WithMaxReconnectAttempts(0),                    // Retry connecting forever
 		client.WithTimeBetweenConnectAttempts(10*time.Second), // TODO: Make configurable
 		client.WithResponseTimeout(config.ResponseTimeout),
-		// deliverclient.WithBlockEvents(), // TODO: Use block events?
 	)
 
 	if err != nil {

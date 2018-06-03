@@ -1,0 +1,88 @@
+/*
+Copyright SecureKey Technologies Inc. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+package mocks
+
+import (
+	"fmt"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection"
+
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
+	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+)
+
+// MockProviderFactory mocks out the CHannel Provider
+type MockProviderFactory struct {
+	defsvc.ProviderFactory
+}
+
+// CreateChannelProvider creates a mock ChannelProvider
+func (f *MockProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+	provider, err := f.ProviderFactory.CreateChannelProvider(config)
+	if err != nil {
+		return nil, err
+	}
+	return &mockChannelProvider{
+		ChannelProvider: provider,
+	}, nil
+}
+
+type mockChannelProvider struct {
+	fabApi.ChannelProvider
+}
+
+type providerInit interface {
+	Initialize(providers contextApi.Providers) error
+}
+
+func (cp *mockChannelProvider) Initialize(providers contextApi.Providers) error {
+	if pi, ok := cp.ChannelProvider.(providerInit); ok {
+		err := pi.Initialize(providers)
+		if err != nil {
+			return fmt.Errorf("failed to initialize channel provider: %s", err)
+		}
+	}
+	return nil
+}
+
+func (cp *mockChannelProvider) ChannelService(ctx fabApi.ClientContext, channelID string) (fabApi.ChannelService, error) {
+	chService, err := cp.ChannelProvider.ChannelService(ctx, channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	memService := membership.NewServiceWithMocks([]byte(ctx.Identifier().MSPID), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
+	discovery := service.New(channelID, ctx.EndpointConfig(), memService)
+	selection, err := staticselection.NewService(discovery)
+	if err != nil {
+		return nil, err
+	}
+
+	return &mockChannelService{
+		ChannelService: chService,
+		discovery:      discovery,
+		selection:      selection,
+	}, nil
+}
+
+type mockChannelService struct {
+	fabApi.ChannelService
+	discovery fabApi.DiscoveryService
+	selection fabApi.SelectionService
+}
+
+func (cs *mockChannelService) Discovery() (fabApi.DiscoveryService, error) {
+	return cs.discovery, nil
+}
+
+func (cs *mockChannelService) Selection() (fabApi.SelectionService, error) {
+	return cs.selection, nil
+}

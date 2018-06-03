@@ -11,10 +11,11 @@ import (
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -26,8 +27,9 @@ type Factory struct {
 	LocalPeerTLSCertPem []byte
 }
 
-// CreateDiscoveryProvider returns a new implementation of dynamic discovery provider
-func (l *Factory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
+// CreateLocalDiscoveryProvider returns a new implementation of a dynamic discovery provider
+// that always returns the local peer
+func (l *Factory) CreateLocalDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.LocalDiscoveryProvider, error) {
 	logger.Debug("create local Provider Impl")
 	return &impl{config, l.LocalPeer, l.LocalPeerTLSCertPem}, nil
 }
@@ -39,8 +41,8 @@ type impl struct {
 	localPeerTLSCertPem []byte
 }
 
-// CreateDiscoveryService return impl of local discovery service
-func (l *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
+// CreateLocalDiscoveryService returns impl of local discovery service
+func (l *impl) CreateLocalDiscoveryService(mspID string) (fabApi.DiscoveryService, error) {
 	return &localDiscoveryService{l.clientConfig, l.localPeer, l.localPeerTLSCertPem}, nil
 }
 
@@ -53,14 +55,19 @@ type localDiscoveryService struct {
 
 // GetPeers return []sdkapi.Peer
 func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
-	peerConfig, err := s.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", s.localPeer.Host,
-		s.localPeer.Port))
-	if err != nil {
-		return nil, fmt.Errorf("error get peer config by url: %v", err)
+	url := fmt.Sprintf("%s:%d", s.localPeer.Host, s.localPeer.Port)
+	peerConfig, ok := s.clientConfig.PeerConfig(url)
+	if !ok {
+		return nil, errors.Errorf(errors.GeneralError, "unable to find peer config for url [%s]", url)
 	}
-	peerConfig.TLSCACerts = endpoint.TLSConfig{Pem: string(s.localPeerTLSCertPem)}
 
-	peer, err := peer.New(s.clientConfig, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(s.localPeer.MSPid)}))
+	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(s.localPeer.MSPid), s.localPeerTLSCertPem)
+	if err != nil {
+		logger.Errorf("Error creating network peer for [%s]", url)
+		return nil, err
+	}
+
+	peer, err := peer.New(s.clientConfig, peer.FromPeerConfig(networkPeer))
 	if err != nil {
 		return nil, fmt.Errorf("error creating new peer: %v", err)
 	}

@@ -152,11 +152,11 @@ func (a *action) ConfigKey() (*mgmtapi.ConfigKey, error) {
 		// MSP ID not provide. Attempt to get the MSP ID from the Org ID
 		orgID := a.OrgID()
 		if orgID != "" {
-			var err error
-			mspID, err = cliconfig.Config().MSPID(orgID)
-			if err != nil {
-				return nil, err
+			orgConfig, ok := cliconfig.Config().NetworkConfig().Organizations[orgID]
+			if !ok {
+				return nil, errors.Errorf(errors.GeneralError, "org config not found for org [%s]", orgID)
 			}
+			mspID = orgConfig.MSPID
 			cliconfig.Config().Logger().Debugf("Attempted to get MspID from org [%s]. MspID [%s]\n", orgID, mspID)
 		}
 	}
@@ -186,7 +186,7 @@ func (a *action) initSDK() error {
 	}
 
 	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ClientConfigFile()),
-		fabsdk.WithConfigEndpoint(cliconfig.Config()),
+		fabsdk.WithEndpointConfig(cliconfig.Config()),
 	)
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Error initializing SDK: %s", err)
@@ -196,10 +196,7 @@ func (a *action) initSDK() error {
 }
 
 func (a *action) initTargetPeers() error {
-	netConfig, err := cliconfig.Config().NetworkConfig()
-	if err != nil {
-		return err
-	}
+	netConfig := cliconfig.Config().NetworkConfig()
 
 	selectedOrgID := cliconfig.Config().OrgID()
 	if selectedOrgID == "" {
@@ -213,14 +210,14 @@ func (a *action) initTargetPeers() error {
 	for orgID := range netConfig.Organizations {
 		cliconfig.Config().Logger().Debugf("Getting peers for org [%s]\n", orgID)
 
-		peersConfig, err := cliconfig.Config().PeersConfig(orgID)
-		if err != nil {
-			return errors.Wrapf(errors.GeneralError, err, "error getting peer configs for org [%s]", orgID)
+		peersConfig, ok := cliconfig.Config().PeersConfig(orgID)
+		if !ok {
+			return errors.Errorf(errors.GeneralError, "peer config not found for org [%s]", orgID)
 		}
 
-		mspID, err := cliconfig.Config().MSPID(orgID)
-		if err != nil {
-			return errors.Wrapf(errors.GeneralError, err, "error getting MSP ID for org [%s]", orgID)
+		orgConfig, ok := netConfig.Organizations[orgID]
+		if !ok {
+			return errors.Errorf(errors.GeneralError, "org config not found for org [%s]", orgID)
 		}
 
 		cliconfig.Config().Logger().Debugf("Peers for org [%s]: %+v\n", orgID, peersConfig)
@@ -233,13 +230,13 @@ func (a *action) initTargetPeers() error {
 				includePeer = cliconfig.Config().PeerURL() == p.URL
 			} else {
 				// An org ID and/or MSP ID was specified. Include if the peer's org/MSP matches
-				includePeer = (selectedOrgID == orgID || cliconfig.Config().GetMspID() == mspID)
+				includePeer = (selectedOrgID == orgID || cliconfig.Config().GetMspID() == orgConfig.MSPID)
 			}
 
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %s\n", orgID, p.URL)
 
-				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: mspID}))
+				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: orgConfig.MSPID}))
 				if err != nil {
 					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}

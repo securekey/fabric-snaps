@@ -13,9 +13,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	configmanagerapi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -24,9 +22,7 @@ import (
 	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/eventsnap/cmd/mocks"
-	discoveryService "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/mocks/mockprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	transactionsnapMocks "github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
@@ -48,25 +44,8 @@ type sampleConfig struct {
 	api.Config
 }
 
-type MockProviderFactory struct {
-	defsvc.ProviderFactory
-}
-
-func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
-	return &impl{clientConfig: config}, nil
-}
-
-type impl struct {
-	clientConfig fabApi.EndpointConfig
-}
-
-// CreateDiscoveryService return impl of DiscoveryService
-func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
-	memService := membership.NewServiceWithMocks([]byte("Org1MSP"), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
-	return discoveryService.New(channelID, p.clientConfig, memService), nil
-}
-
 func TestEventSnap(t *testing.T) {
+
 	delayStartChannelEventsDuration = 0 * time.Second
 	configStub1 := configmocks.NewMockStub(channelID1)
 	configStub1.ChannelID = channelID1
@@ -102,7 +81,7 @@ func TestEventSnap(t *testing.T) {
 	}
 	defer deliverServer.Stop()
 
-	client.ServiceProviderFactory = &MockProviderFactory{}
+	client.ServiceProviderFactory = &mockprovider.Factory{}
 	// Happy Path
 	stub.ChannelID = channelID1
 	if resp := stub.MockInit("txid2", nil); resp.Status != shim.OK {

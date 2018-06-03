@@ -336,6 +336,9 @@
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
     "internal/github.com/hyperledger/fabric-ca/lib",
+    "internal/github.com/hyperledger/fabric-ca/lib/client/credential",
+    "internal/github.com/hyperledger/fabric-ca/lib/client/credential/x509",
+    "internal/github.com/hyperledger/fabric-ca/lib/common",
     "internal/github.com/hyperledger/fabric-ca/lib/streamer",
     "internal/github.com/hyperledger/fabric-ca/lib/tls",
     "internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge",
@@ -346,18 +349,23 @@
     "internal/github.com/hyperledger/fabric/bccsp/signer",
     "internal/github.com/hyperledger/fabric/bccsp/sw",
     "internal/github.com/hyperledger/fabric/bccsp/utils",
+    "internal/github.com/hyperledger/fabric/common/attrmgr",
     "internal/github.com/hyperledger/fabric/common/channelconfig",
     "internal/github.com/hyperledger/fabric/common/crypto",
     "internal/github.com/hyperledger/fabric/common/ledger",
     "internal/github.com/hyperledger/fabric/common/util",
     "internal/github.com/hyperledger/fabric/core/ledger",
+    "internal/github.com/hyperledger/fabric/discovery/client",
     "internal/github.com/hyperledger/fabric/msp",
+    "internal/github.com/hyperledger/fabric/protos/discovery",
+    "internal/github.com/hyperledger/fabric/protos/gossip",
     "internal/github.com/hyperledger/fabric/protos/orderer",
     "internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge",
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
     "pkg/client/channel",
     "pkg/client/channel/invoke",
     "pkg/client/common/discovery",
+    "pkg/client/common/discovery/dynamicdiscovery",
     "pkg/client/common/discovery/greylist",
     "pkg/client/common/discovery/staticdiscovery",
     "pkg/client/common/filter",
@@ -396,6 +404,7 @@
     "pkg/fab/channel/membership",
     "pkg/fab/chconfig",
     "pkg/fab/comm",
+    "pkg/fab/discovery",
     "pkg/fab/events/api",
     "pkg/fab/events/client",
     "pkg/fab/events/client/dispatcher",
@@ -447,7 +456,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "f3fee0ed285492fae97bdbf6938c0c7ffb148954"
+  revision = "df181da0c806d03bd8b7fcde8dfa147472ff6a89"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -601,7 +610,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "d77da356e56a7428ad25149ca77381849a6a5232"
 
 [[projects]]
@@ -734,6 +746,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d59c65bed602e96b2d504f260584da16127069bddcae92045758884cbc7c36e5"
+  inputs-digest = "88417e11e81019592c9b2557da2d981bfbc7cd33ffaa01d1e33e102e533f3722"
   solver-name = "gps-cdcl"
   solver-version = 1

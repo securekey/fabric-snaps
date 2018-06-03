@@ -62,22 +62,22 @@ Feature:  Event Snap
       And client C1 receives a response containing 2 filtered block events
     And client C1 unregisters for filtered block events on channel "mychannel"
 
-  @eventsnapfour
-  Scenario: Register with Local Event Service for Block Events
-    Given the channel "mychannel" is created and all peers have joined
-    And we wait 5 seconds
-    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
-    And we wait 15 seconds
+  #TODO event service currently doesn't support block event
+  # @eventsnapfour
+  # Scenario: Register with Local Event Service for Block Events
+  #   Given the channel "mychannel" is created and all peers have joined
+  #   And we wait 5 seconds
+  #   And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
+  #   And we wait 15 seconds
 
 
-      # First clean up from any previous tests
-    And client C1 unregisters for block events on channel "mychannel"
-    And client C1 deletes all block events on channel "mychannel"
+  #     # First clean up from any previous tests
+  #   And client C1 unregisters for block events on channel "mychannel"
+  #   And client C1 deletes all block events on channel "mychannel"
 
-    And we wait 20 seconds
+  #   And we wait 20 seconds
 
       # Register for block events
-    #TODO event service currently doesn't support block event
     #Then client C1 registers for block events on channel "mychannel"
     #And client invokes chaincode "eventconsumersnap" with args "put,key1,value1,event1" on all peers in the "peerorg1" org on the "mychannel" channel
     #And client invokes chaincode "eventconsumersnap" with args "put,key2,value2,event2" on all peers in the "peerorg1" org on the "mychannel" channel

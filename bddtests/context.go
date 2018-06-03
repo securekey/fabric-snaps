@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -20,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 )
 
 // ADMIN type
@@ -100,7 +103,9 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		return
 	}
 
-	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath + b.clientConfigFileName))
+	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath+b.clientConfigFileName),
+		fabsdk.WithServicePkg(&staticSelectionProviderFactory{}),
+	)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
@@ -354,10 +359,10 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 }
 
 func (b *BDDContext) populateChannelPeers() {
-	networkConfig, _ := b.ClientConfig().NetworkConfig()
+	networkConfig := b.ClientConfig().NetworkConfig()
 	for channelID := range networkConfig.Channels {
-		peers, err := b.ClientConfig().ChannelPeers(channelID)
-		if err != nil {
+		peers, ok := b.ClientConfig().ChannelPeers(channelID)
+		if !ok {
 			continue
 		}
 
@@ -382,4 +387,77 @@ func (b *BDDContext) populateChannelPeers() {
 				MspID: b.peersMspID[serverHostOverride], PeerID: serverHostOverride}, channelID)
 		}
 	}
+}
+
+type staticSelectionProviderFactory struct {
+	defsvc.ProviderFactory
+}
+
+// CreateChannelProvider creates a mock ChannelProvider
+func (f *staticSelectionProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+	provider, err := f.ProviderFactory.CreateChannelProvider(config)
+	if err != nil {
+		return nil, err
+	}
+	return &staticSelectionChannelProvider{
+		ChannelProvider: provider,
+	}, nil
+}
+
+type staticSelectionChannelProvider struct {
+	fabApi.ChannelProvider
+}
+
+type providerInit interface {
+	Initialize(providers contextApi.Providers) error
+}
+
+type closable interface {
+	Close()
+}
+
+func (cp *staticSelectionChannelProvider) Initialize(providers contextApi.Providers) error {
+	if pi, ok := cp.ChannelProvider.(providerInit); ok {
+		err := pi.Initialize(providers)
+		if err != nil {
+			return fmt.Errorf("failed to initialize channel provider: %s", err)
+		}
+	}
+	return nil
+}
+
+func (cp *staticSelectionChannelProvider) Close() {
+	if c, ok := cp.ChannelProvider.(closable); ok {
+		c.Close()
+	}
+}
+
+func (cp *staticSelectionChannelProvider) ChannelService(ctx fabApi.ClientContext, channelID string) (fabApi.ChannelService, error) {
+	chService, err := cp.ChannelProvider.ChannelService(ctx, channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	discovery, err := chService.Discovery()
+	if err != nil {
+		return nil, err
+	}
+	selection, err := staticselection.NewService(discovery)
+	if err != nil {
+		return nil, err
+	}
+
+	return &staticSelectionChannelService{
+		ChannelService: chService,
+		selection:      selection,
+	}, nil
+}
+
+type staticSelectionChannelService struct {
+	fabApi.ChannelService
+	selection fabApi.SelectionService
+}
+
+func (cs *staticSelectionChannelService) Selection() (fabApi.SelectionService, error) {
+	return cs.selection, nil
 }

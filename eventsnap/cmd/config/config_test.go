@@ -14,15 +14,11 @@ import (
 
 	"fmt"
 
-	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	configmanagerapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configmocks "github.com/securekey/fabric-snaps/configmanager/pkg/mocks"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	discoveryService "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/mocks/mockprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	txnConfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
@@ -38,24 +34,6 @@ const (
 
 type sampleConfig struct {
 	api.Config
-}
-
-type MockProviderFactory struct {
-	defsvc.ProviderFactory
-}
-
-func (m *MockProviderFactory) CreateDiscoveryProvider(config fabApi.EndpointConfig) (fabApi.DiscoveryProvider, error) {
-	return &impl{clientConfig: config}, nil
-}
-
-type impl struct {
-	clientConfig fabApi.EndpointConfig
-}
-
-// CreateDiscoveryService return impl of DiscoveryService
-func (p *impl) CreateDiscoveryService(channelID string) (fabApi.DiscoveryService, error) {
-	memService := membership.NewServiceWithMocks([]byte("Org1MSP"), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
-	return discoveryService.New(channelID, p.clientConfig, memService), nil
 }
 
 func TestInvalidConfig(t *testing.T) {
@@ -87,7 +65,7 @@ func TestConfig(t *testing.T) {
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing config: %s", err))
 	}
-	client.ServiceProviderFactory = &MockProviderFactory{}
+	client.ServiceProviderFactory = &mockprovider.Factory{}
 	_, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))

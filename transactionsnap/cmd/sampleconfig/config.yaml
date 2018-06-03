@@ -210,6 +210,9 @@ organizations:
             URQPp0/vJ3tldK0z9xjFvsSecj8aqnDvZvGz07/v
             -----END CERTIFICATE-----
 
+    peers:
+      - peer0.org1.example.com
+
 entityMatchers:
   peer:
     - pattern: (\w+)
