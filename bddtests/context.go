@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	sdkApi "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 )
 
@@ -33,25 +34,26 @@ var USER = "user"
 
 // BDDContext ...
 type BDDContext struct {
-	composition          *Composition
-	clientConfig         fabApi.EndpointConfig
-	mutex                sync.RWMutex
-	orgs                 []string
-	ordererOrgID         string
-	peersByChannel       map[string][]*PeerConfig
-	orgsByChannel        map[string][]string
-	collectionConfigs    map[string]*CollectionConfig
-	resmgmtClients       map[string]*resmgmt.Client
-	contexts             map[string]contextApi.Client
-	orgChannelClients    map[string]*channel.Client
-	peersMspID           map[string]string
-	clientConfigFilePath string
-	clientConfigFileName string
-	snapsConfigFilePath  string
-	testCCPath           string
-	createdChannels      map[string]bool
-	sdk                  *fabsdk.FabricSDK
-	configCLI            *ConfigCLI
+	composition            *Composition
+	clientConfig           fabApi.EndpointConfig
+	mutex                  sync.RWMutex
+	orgs                   []string
+	ordererOrgID           string
+	peersByChannel         map[string][]*PeerConfig
+	orgsByChannel          map[string][]string
+	collectionConfigs      map[string]*CollectionConfig
+	resmgmtClients         map[string]*resmgmt.Client
+	contexts               map[string]contextApi.Client
+	orgChannelClients      map[string]*channel.Client
+	peersMspID             map[string]string
+	clientConfigFilePath   string
+	clientConfigFileName   string
+	snapsConfigFilePath    string
+	testCCPath             string
+	createdChannels        map[string]bool
+	sdk                    *fabsdk.FabricSDK
+	configCLI              *ConfigCLI
+	serviceProviderFactory sdkApi.ServiceProviderFactory
 }
 
 // PeerConfig holds the peer configuration and org ID
@@ -103,9 +105,12 @@ func (b *BDDContext) BeforeScenario(scenarioOrScenarioOutline interface{}) {
 		return
 	}
 
-	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath+b.clientConfigFileName),
-		fabsdk.WithServicePkg(&staticSelectionProviderFactory{}),
-	)
+	var opts []fabsdk.Option
+	if b.serviceProviderFactory != nil {
+		opts = append(opts, fabsdk.WithServicePkg(b.serviceProviderFactory))
+	}
+
+	sdk, err := fabsdk.New(config.FromFile(b.clientConfigFilePath+b.clientConfigFileName), opts...)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new SDK: %s", err))
 	}
@@ -184,6 +189,13 @@ func FindPKCS11Lib(configuredLib string) string {
 	}
 	logger.Debugf("Found pkcs library '%s'", lib)
 	return lib
+}
+
+// SetServiceProviderFactory sets the service provider factory for the test
+func (b *BDDContext) SetServiceProviderFactory(factory sdkApi.ServiceProviderFactory) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	b.serviceProviderFactory = factory
 }
 
 // Orgs returns the orgs
@@ -389,12 +401,14 @@ func (b *BDDContext) populateChannelPeers() {
 	}
 }
 
-type staticSelectionProviderFactory struct {
+// StaticSelectionProviderFactory uses a static selection service
+// that doesn't use CC policies. (Required for System CC invocations.)
+type StaticSelectionProviderFactory struct {
 	defsvc.ProviderFactory
 }
 
 // CreateChannelProvider creates a mock ChannelProvider
-func (f *staticSelectionProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+func (f *StaticSelectionProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
 	provider, err := f.ProviderFactory.CreateChannelProvider(config)
 	if err != nil {
 		return nil, err

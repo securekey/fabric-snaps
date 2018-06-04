@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/godog"
+	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
@@ -329,8 +330,23 @@ func getTxEvents(jsonstr string) ([]*fab.TxStatusEvent, error) {
 }
 
 func (t *EventSnapSteps) registerSteps(s *godog.Suite) {
-	s.BeforeScenario(t.BDDContext.BeforeScenario)
-	s.AfterScenario(t.BDDContext.AfterScenario)
+	s.BeforeFeature(func(feature *gherkin.Feature) {
+		if feature.Name != "Event Snap" {
+			return
+		}
+
+		// Use a static selection provider to invoke the eventconsumer SCC
+		// since Dynamic Selection uses CC policy and a system CC doesn't
+		// have a policy and the invocation will fail.
+		t.BDDContext.SetServiceProviderFactory(&StaticSelectionProviderFactory{})
+	})
+	s.AfterFeature(func(feature *gherkin.Feature) {
+		if feature.Name != "Event Snap" {
+			return
+		}
+		t.BDDContext.SetServiceProviderFactory(nil)
+	})
+
 	s.Step(`^client C1 queries for block events on channel "([^"]*)"$`, t.getBlockEvents)
 	s.Step(`^client C1 queries for filtered block events on channel "([^"]*)"$`, t.getFilteredBlockEvents)
 	s.Step(`^client C1 queries for chaincode events on channel "([^"]*)"$`, t.getCCEvents)
