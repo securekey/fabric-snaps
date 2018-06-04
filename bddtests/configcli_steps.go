@@ -26,8 +26,8 @@ func NewConfigCLISteps(context *BDDContext) *ConfigCLISteps {
 	return &ConfigCLISteps{BDDContext: context}
 }
 
-// updateConfig update config using config cli
-func (c *ConfigCLISteps) updateConfig(configFile, mspID, orgID, channelID string) error {
+// UpdateConfig update config using config cli
+func (c *ConfigCLISteps) UpdateConfig(configFile, mspID, orgID, channelID string) error {
 	_, err := c.BDDContext.configCLI.ExecUpdate(channelID, mspID, orgID, configFile)
 	if err != nil {
 		return fmt.Errorf("failed to update config: %v", err)
@@ -68,7 +68,7 @@ func (c *ConfigCLISteps) notContainsInQueryResult(value string) error {
 func (c *ConfigCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(c.BDDContext.BeforeScenario)
 	s.AfterScenario(c.BDDContext.AfterScenario)
-	s.Step(`^client update config "([^"]*)" with mspid "([^"]*)" with orgid "([^"]*)" on the "([^"]*)" channel$`, c.updateConfig)
+	s.Step(`^client update config "([^"]*)" with mspid "([^"]*)" with orgid "([^"]*)" on the "([^"]*)" channel$`, c.UpdateConfig)
 	s.Step(`^client "([^"]*)" config by peer id "([^"]*)" with mspid "([^"]*)" with app name "([^"]*)" with app version "([^"]*)" with comp name "([^"]*)" with comp version "([^"]*)" on the "([^"]*)" channel$`, c.exec)
 	s.Step(`^response from cli query to client contains value "([^"]*)"$`, c.containsInQueryResult)
 	s.Step(`^response from cli query to client not contains value "([^"]*)"$`, c.notContainsInQueryResult)
