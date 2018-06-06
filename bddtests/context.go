@@ -291,6 +291,28 @@ func (b *BDDContext) PeerConfigForChannel(channelID string) *PeerConfig {
 	return pconfigs[rand.Intn(len(pconfigs))]
 }
 
+// PeerConfigForChannelAndMsp returns a single peer for the given channel and msp or nil if
+// no peers are configured for the channel and msp
+func (b *BDDContext) PeerConfigForChannelAndMsp(channelID string, mspID string) *PeerConfig {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	pconfigs := b.peersByChannel[channelID]
+	if len(pconfigs) == 0 {
+		logger.Warnf("Peer config not found for channel [%s]", channelID)
+		return nil
+	}
+
+	for _, p := range pconfigs {
+		if p.MspID == mspID {
+			return p
+		}
+	}
+
+	logger.Warnf("Peer config not found for channel [%s] and msp [%s]", channelID, mspID)
+	return nil
+}
+
 // PeerConfigForURL returns the peer config for the given URL or nil if not found
 func (b *BDDContext) PeerConfigForURL(url string) *PeerConfig {
 	b.mutex.RLock()
