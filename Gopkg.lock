@@ -23,7 +23,8 @@
 [[projects]]
   name = "github.com/Knetic/govaluate"
   packages = ["."]
-  revision = "3cc7c7de92e74a87c657e957e003600723db32f6"
+  revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
+  version = "v3.0.0"
 
 [[projects]]
   name = "github.com/Microsoft/go-winio"
@@ -40,9 +41,11 @@
 [[projects]]
   name = "github.com/Shopify/sarama"
   packages = ["."]
-  revision = "6a8d89d71d22bbdc14b6cb52778889a710be19a7"
+  revision = "35324cf48e33d8260e1c7c18854465a904ade249"
+  version = "v1.17.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/cloudflare/cfssl"
   packages = [
     "api",
@@ -59,12 +62,13 @@
     "ocsp/config",
     "signer"
   ]
-  revision = "7d88da830aad9d533c2fb8532da23f6a75331b52"
+  revision = "275fb308ac705bf5631d23b941f7b56dc436e39d"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
-  revision = "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -100,7 +104,6 @@
     "pkg/term/windows"
   ]
   revision = "969b76d85f93e214cbc44f25a3f44b67cb0dc078"
-  source = "github.com/moby/moby"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -132,14 +135,14 @@
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
-  revision = "629574ca2a5df945712d3079857300b5e4da0236"
-  version = "v1.4.2"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
 
 [[projects]]
-  branch = "master"
   name = "github.com/fsouza/go-dockerclient"
   packages = ["."]
-  revision = "98edf3edfae6a6500fecc69d2bcccf1302544004"
+  revision = "ca33ff277b527ce11b793e62f9ba244129b01caf"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -148,9 +151,10 @@
   version = "v0.4"
 
 [[projects]]
+  branch = "master"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
-  revision = "b710c8433bd175204919eb38776e944233235d03"
+  revision = "24b0969c4cb722950103eed87108c8d291a8df00"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -172,7 +176,6 @@
   revision = "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
 
 [[projects]]
-  branch = "master"
   name = "github.com/google/certificate-transparency-go"
   packages = [
     ".",
@@ -181,7 +184,7 @@
     "x509",
     "x509/pkix"
   ]
-  revision = "abb79e468b6f3bbd48d1ab0c9e68febf80d52c4d"
+  revision = "5ab67e519c93568ac3ee50fd6772a5bcf8aa460d"
 
 [[projects]]
   branch = "master"
@@ -204,7 +207,7 @@
     "json/scanner",
     "json/token"
   ]
-  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
   name = "github.com/hyperledger/fabric"
@@ -239,7 +242,7 @@
     "common/mocks/configtx",
     "common/mocks/policies",
     "common/policies",
-    "common/resourcesconfig",
+    "common/tools/configtxgen/configtxgentest",
     "common/tools/configtxgen/encoder",
     "common/tools/configtxgen/localconfig",
     "common/tools/configtxlator/update",
@@ -249,6 +252,7 @@
     "core/aclmgmt/resources",
     "core/chaincode/platforms",
     "core/chaincode/platforms/car",
+    "core/chaincode/platforms/ccmetadata",
     "core/chaincode/platforms/golang",
     "core/chaincode/platforms/java",
     "core/chaincode/platforms/node",
@@ -259,21 +263,28 @@
     "core/committer/txvalidator",
     "core/common/ccpackage",
     "core/common/ccprovider",
-    "core/common/ccprovider/metadata",
     "core/common/privdata",
     "core/common/sysccprovider",
     "core/common/validation",
     "core/config",
+    "core/config/configtest",
     "core/container/util",
     "core/deliverservice",
     "core/deliverservice/blocksprovider",
+    "core/handlers/validation/api",
+    "core/handlers/validation/api/capabilities",
+    "core/handlers/validation/api/identities",
+    "core/handlers/validation/api/state",
     "core/ledger",
     "core/ledger/cceventmgmt",
+    "core/ledger/confighistory",
     "core/ledger/customtx",
     "core/ledger/kvledger",
+    "core/ledger/kvledger/bookkeeping",
     "core/ledger/kvledger/history/historydb",
     "core/ledger/kvledger/history/historydb/historyleveldb",
     "core/ledger/kvledger/txmgmt/privacyenabledstate",
+    "core/ledger/kvledger/txmgmt/pvtstatepurgemgmt",
     "core/ledger/kvledger/txmgmt/rwsetutil",
     "core/ledger/kvledger/txmgmt/statedb",
     "core/ledger/kvledger/txmgmt/statedb/statecouchdb",
@@ -288,6 +299,7 @@
     "core/ledger/ledgerconfig",
     "core/ledger/ledgermgmt",
     "core/ledger/ledgerstorage",
+    "core/ledger/pvtdatapolicy",
     "core/ledger/pvtdatastorage",
     "core/ledger/util",
     "core/ledger/util/couchdb",
@@ -315,6 +327,8 @@
     "gossip/state",
     "gossip/util",
     "idemix",
+    "integration/helpers",
+    "integration/runner",
     "msp",
     "msp/cache",
     "msp/mgmt",
@@ -326,10 +340,19 @@
     "protos/msp",
     "protos/orderer",
     "protos/peer",
+    "protos/transientstore",
     "protos/utils"
   ]
-  revision = "523f644b909d5699fbd992a011e7ed6031e96a9a"
-  version = "v1.1.0"
+  revision = "d7656e2bff0a368cda09d9e2b190ed8702938219"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hyperledger/fabric-amcl"
+  packages = [
+    "amcl",
+    "amcl/FP256BN"
+  ]
+  revision = "600b0c45a024131b326a41096da0559a9a7461fd"
 
 [[projects]]
   name = "github.com/hyperledger/fabric-sdk-go"
@@ -465,12 +488,6 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/looplab/fsm"
-  packages = ["."]
-  revision = "bcc3636384ce80a109a6039432b30ff5b82476ee"
-
-[[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
   revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
@@ -483,17 +500,55 @@
   revision = "8e05810e8ea41a5ff4ace1fcaeb88ee798239331"
 
 [[projects]]
-  branch = "dep"
-  name = "github.com/milagro-crypto/amcl"
-  packages = ["version3/go/amcl"]
-  revision = "c9aac557ce671ca4c59602ef3b777825a9140cf0"
-  source = "github.com/troyronda/amcl"
-
-[[projects]]
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   revision = "d0303fe809921458f417bcf828397a65db30a7e4"
+
+[[projects]]
+  name = "github.com/onsi/ginkgo"
+  packages = [
+    ".",
+    "config",
+    "internal/codelocation",
+    "internal/containernode",
+    "internal/failer",
+    "internal/leafnodes",
+    "internal/remote",
+    "internal/spec",
+    "internal/spec_iterator",
+    "internal/specrunner",
+    "internal/suite",
+    "internal/testingtproxy",
+    "internal/writer",
+    "reporters",
+    "reporters/stenographer",
+    "reporters/stenographer/support/go-colorable",
+    "reporters/stenographer/support/go-isatty",
+    "types"
+  ]
+  revision = "a3b6351eb1ff8e1bfa30b2f55d7e282186ed8fee"
+
+[[projects]]
+  name = "github.com/onsi/gomega"
+  packages = [
+    ".",
+    "format",
+    "gbytes",
+    "gexec",
+    "internal/assertion",
+    "internal/asyncassertion",
+    "internal/oraclematcher",
+    "internal/testingtsupport",
+    "matchers",
+    "matchers/support/goraph/bipartitegraph",
+    "matchers/support/goraph/edge",
+    "matchers/support/goraph/node",
+    "matchers/support/goraph/util",
+    "types"
+  ]
+  revision = "62bff4df71bdbc266561a0caee19f0594b17c240"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
@@ -528,8 +583,8 @@
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "16398bac157da96aa88f98a2df640c7f32af1da2"
-  version = "v1.0.1"
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pierrec/lz4"
@@ -542,7 +597,6 @@
   revision = "5a004441f897722c627870a981d02b29924215fa"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
@@ -551,6 +605,7 @@
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/rcrowley/go-metrics"
@@ -570,13 +625,13 @@
   version = "v1.0.3"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/afero"
   packages = [
     ".",
     "mem"
   ]
-  revision = "5660eeed305fe5f69c8fc6cf899132a459a97064"
+  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -603,7 +658,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/viper"
   packages = ["."]
   revision = "aafc9e6bc7b7bb53ddaa75a5ef49a17d6e654be5"
@@ -614,9 +668,11 @@
     "assert",
     "require"
   ]
-  revision = "d77da356e56a7428ad25149ca77381849a6a5232"
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -632,7 +688,16 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "6b4daa5362b502898ddf367c5c11deb9e7a5c727"
+  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/tedsuo/ifrit"
+  packages = [
+    ".",
+    "ginkgomon"
+  ]
+  revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
 
 [[projects]]
   branch = "master"
@@ -656,6 +721,8 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "cryptobyte",
+    "cryptobyte/asn1",
     "ocsp",
     "pkcs12",
     "pkcs12/internal/rc2",
@@ -670,6 +737,9 @@
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
+    "html/charset",
     "http2",
     "http2/hpack",
     "idna",
@@ -695,12 +765,28 @@
   revision = "7a85bfad8bb9558204b9cc9b3624680d2d443a35"
 
 [[projects]]
-  branch = "master"
   name = "golang.org/x/text"
   packages = [
+    "collate",
+    "collate/build",
+    "encoding",
+    "encoding/charmap",
+    "encoding/htmlindex",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "encoding/korean",
+    "encoding/simplifiedchinese",
+    "encoding/traditionalchinese",
+    "encoding/unicode",
+    "internal/colltab",
     "internal/gen",
+    "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "internal/utf8internal",
+    "language",
+    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -708,7 +794,8 @@
     "unicode/norm",
     "unicode/rangetable"
   ]
-  revision = "acd49d43e9b95df46670431bf5c7ae59586daad8"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   branch = "master"
@@ -720,32 +807,41 @@
   name = "google.golang.org/grpc"
   packages = [
     ".",
+    "balancer",
+    "balancer/base",
+    "balancer/roundrobin",
     "codes",
     "connectivity",
     "credentials",
-    "grpclb/grpc_lb_v1",
+    "encoding",
+    "encoding/proto",
+    "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
     "keepalive",
     "metadata",
     "naming",
     "peer",
+    "resolver",
+    "resolver/dns",
+    "resolver/passthrough",
     "stats",
     "status",
     "tap",
     "transport"
   ]
-  revision = "b3ddf786825de56a4178401b7e174ee332173b66"
+  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
+  version = "v1.11.3"
 
 [[projects]]
-  branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "88417e11e81019592c9b2557da2d981bfbc7cd33ffaa01d1e33e102e533f3722"
+  inputs-digest = "717ba0c94ed01116a0b9576dc31fe56e633f4da1550fcc7754af392be7886439"
   solver-name = "gps-cdcl"
   solver-version = 1

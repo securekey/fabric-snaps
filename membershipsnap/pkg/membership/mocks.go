@@ -14,14 +14,16 @@ import (
 	"github.com/hyperledger/fabric/gossip/comm"
 	gossip2 "github.com/hyperledger/fabric/gossip/gossip"
 
+	"github.com/hyperledger/fabric/gossip/common"
 	gcommon "github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/gossip/discovery"
 	"github.com/hyperledger/fabric/gossip/filter"
 	"github.com/hyperledger/fabric/gossip/service"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/gossip"
-	"github.com/hyperledger/fabric/protos/ledger/rwset"
+	protogossip "github.com/hyperledger/fabric/protos/gossip"
 	msppb "github.com/hyperledger/fabric/protos/msp"
+	"github.com/hyperledger/fabric/protos/transientstore"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/securekey/fabric-snaps/mocks/mockchinfo"
 )
@@ -88,7 +90,27 @@ func (s *mockGossipService) AddPayload(chainID string, payload *gossip.Payload) 
 	panic("not implemented")
 }
 
-func (s *mockGossipService) DistributePrivateData(chainID string, txID string, privateData *rwset.TxPvtReadWriteSet) error {
+func (s *mockGossipService) DistributePrivateData(chainID string, txID string, privateData *transientstore.TxPvtReadWriteSetWithConfigInfo, blkHt uint64) error {
+	panic("not implemented")
+}
+
+func (s *mockGossipService) IdentityInfo() api.PeerIdentitySet {
+	panic("not implemented")
+}
+
+func (s *mockGossipService) SelfChannelInfo(common.ChainID) *protogossip.SignedGossipMessage {
+	panic("not implemented")
+}
+
+func (s *mockGossipService) SelfMembershipInfo() discovery.NetworkMember {
+	panic("not implemented")
+}
+
+func (s *mockGossipService) UpdateChaincodes(chaincode []*protogossip.Chaincode, chainID common.ChainID) {
+	panic("not implemented")
+}
+
+func (s *mockGossipService) UpdateLedgerHeight(height uint64, chainID common.ChainID) {
 	panic("not implemented")
 }
 

@@ -25,6 +25,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp/signer"
 	acl "github.com/hyperledger/fabric/core/aclmgmt"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/peer"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -673,7 +674,8 @@ func getACLProvider() acl.ACLProvider {
 	if aclProvider != nil {
 		return aclProvider
 	}
-	return acl.GetACLProvider()
+
+	return acl.NewACLProvider(peer.GetStableChannelConfig)
 }
 
 // New chaincode implementation

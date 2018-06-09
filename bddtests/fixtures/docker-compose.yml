@@ -116,7 +116,7 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: ${FABRIC_NEXT_NS}/fabric-couchdb:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
+    image: ${FABRIC_COUCHDB_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BASEIMAGE_FIXTURE_TAG}
     ports:
       - 5984:5984
     environment:
