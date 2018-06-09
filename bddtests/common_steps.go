@@ -21,7 +21,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
@@ -29,7 +29,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	fabricCommon "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/grpclog"
 )
 
 // CommonSteps contain BDDContext
@@ -49,7 +48,7 @@ type queryInfoResponse struct {
 
 // NewCommonSteps create new CommonSteps struct
 func NewCommonSteps(context *BDDContext) *CommonSteps {
-	grpclog.SetLogger(logger)
+	//grpclog.SetLogger(logger)
 	return &CommonSteps{BDDContext: context}
 }
 

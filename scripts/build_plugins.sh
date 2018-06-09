@@ -23,11 +23,6 @@ cd /opt/gopath/src/github.com/hyperledger/fabric
 
 cd  /opt/gopath/src/github.com/securekey/fabric-snaps
 
-# This can be deleted once we have Go 1.10
-echo "Patching Go Compiler..."
-patch -p1 $GOROOT/src/cmd/link/internal/ld/data.go ./scripts/patches/linker.patch
-echo "Re-building Go Compiler..."
-go install -a cmd
 
 echo "Executing move script..."
 ./scripts/move_snaps.sh

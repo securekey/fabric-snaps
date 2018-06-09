@@ -20,7 +20,7 @@ echo "Running linters..."
    fi
 
    echo "Checking govet"
-   OUTPUT="$(go vet  $(go list ./... | grep -v /vendor/))"
+   OUTPUT="$(go vet -tags pkcs11  $(go list ./... | grep -v /vendor/))"
    if [[ $OUTPUT ]]; then
       echo "YOU MUST FIX THE FOLLOWING THE FOLLOWING GOVET SUGGESTIONS:"
       printf "$OUTPUT\n"

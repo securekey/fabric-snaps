@@ -20,8 +20,8 @@ csr:
      - a.b.c
      - something.com
     EmailAddresses:
-     - support.securekey.com
-     - ops.securekey.com
+     - admin@support.securekey.com
+     - admin@ops.securekey.com
     IPAddresses:
      - "172.0.0.1"
      - "172.0.0.0"
