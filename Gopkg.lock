@@ -186,7 +186,7 @@
     "x509",
     "x509/pkix"
   ]
-  revision = "5ab67e519c93568ac3ee50fd6772a5bcf8aa460d"
+  revision = "391726f8973ddb3521ab1a462bd55a35c6f67f0b"
 
 [[projects]]
   branch = "master"
@@ -496,7 +496,6 @@
   version = "v1.7.3"
 
 [[projects]]
-  branch = "master"
   name = "github.com/miekg/pkcs11"
   packages = ["."]
   revision = "6dbd569b952ec150d1425722dbbe80f2c6193f83"
@@ -843,6 +842,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "43f418b9a81c8d7f48d95327d7c6586e063b02ac38f5b10d5c26f556bc35f466"
+  inputs-digest = "278f4852c33fe4ebfb585fb4a77c4d886bfe27983c540d26701912c05aa06b3f"
   solver-name = "gps-cdcl"
   solver-version = 1

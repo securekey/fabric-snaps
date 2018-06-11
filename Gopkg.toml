@@ -46,6 +46,15 @@
   name = "github.com/hyperledger/fabric"
   revision = "d7656e2bff0a368cda09d9e2b190ed8702938219"
 
+
+[[override]]
+  name = "github.com/miekg/pkcs11"
+  revision = "6dbd569b952ec150d1425722dbbe80f2c6193f83"
+
+[[override]]
+  name = "github.com/google/certificate-transparency-go"
+  revision = "391726f8973ddb3521ab1a462bd55a35c6f67f0b"
+
 [[constraint]]
   name = "github.com/op/go-logging"
   branch="master"
