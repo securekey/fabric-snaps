@@ -65,13 +65,18 @@
   revision = "275fb308ac705bf5631d23b941f7b56dc436e39d"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/containerd/continuity"
+  packages = ["pathdriver"]
+  revision = "d3c23511c1bf5851696cba83143d9cbcd666869b"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/docker/docker"
   packages = [
     "api/types",
@@ -91,19 +96,16 @@
     "pkg/homedir",
     "pkg/idtools",
     "pkg/ioutils",
-    "pkg/jsonlog",
     "pkg/jsonmessage",
     "pkg/longpath",
     "pkg/mount",
     "pkg/pools",
-    "pkg/promise",
     "pkg/stdcopy",
-    "pkg/stringutils",
     "pkg/system",
     "pkg/term",
     "pkg/term/windows"
   ]
-  revision = "969b76d85f93e214cbc44f25a3f44b67cb0dc078"
+  revision = "57142e89befe90977da6dce7762f9fcc70f28da1"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -798,10 +800,9 @@
   version = "v0.3.0"
 
 [[projects]]
-  branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "4eb30f4778eed4c258ba66527a0d4f9ec8a36c45"
+  revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -842,6 +843,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "451949ff7fa46ce87c70ec13732e02730c799b95fe6c64c749738492b22f50ce"
+  inputs-digest = "43f418b9a81c8d7f48d95327d7c6586e063b02ac38f5b10d5c26f556bc35f466"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -14,13 +14,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/docker/docker/pkg/stringutils"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"math/rand"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/securekey/fabric-snaps/configmanager/api"
-	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
-	errors "github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("configsnap")
@@ -135,7 +136,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 
 	if lgr != nil {
 		logger.Debugf("****Ledger is set for channelID %s\n", channelID)
-		r := stringutils.GenerateRandomAlphaOnlyString(12)
+		r := generateRandomAlphaOnlyString(12)
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
 			logger.Errorf("Cannot create transaction simulator %s", err)
@@ -183,4 +184,15 @@ func (csi *ConfigServiceImpl) getCache(channelID string) cache {
 	csi.mtx.RLock()
 	defer csi.mtx.RUnlock()
 	return csi.cacheMap[channelID]
+}
+
+// generateRandomAlphaOnlyString generates an alphabetical random string with length n.
+func generateRandomAlphaOnlyString(n int) string {
+	// make a really long string
+	letters := []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
