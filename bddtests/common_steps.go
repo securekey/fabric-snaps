@@ -552,7 +552,7 @@ func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs,
 		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
 	)
 
-	if err != nil && strings.Contains(err.Error(), "chaincode exists") {
+	if err != nil && strings.Contains(err.Error(), "already exists") {
 		logger.Warnf("error from InstantiateCC %v", err)
 		return nil
 	}
