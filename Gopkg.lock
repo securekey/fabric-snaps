@@ -45,7 +45,6 @@
   version = "v1.17.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/cloudflare/cfssl"
   packages = [
     "api",
@@ -62,7 +61,8 @@
     "ocsp/config",
     "signer"
   ]
-  revision = "275fb308ac705bf5631d23b941f7b56dc436e39d"
+  revision = "5d63dbd981b5c408effbb58c442d54761ff94fbd"
+  version = "1.3.2"
 
 [[projects]]
   branch = "master"
@@ -468,6 +468,7 @@
     "pkg/util/concurrent/lazycache",
     "pkg/util/concurrent/lazyref",
     "pkg/util/pathvar",
+    "pkg/util/test",
     "test/metadata",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
@@ -481,7 +482,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "df181da0c806d03bd8b7fcde8dfa147472ff6a89"
+  revision = "68e4066986fcc29e02d96ec01ba6720fe57a75ac"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -842,6 +843,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "278f4852c33fe4ebfb585fb4a77c4d886bfe27983c540d26701912c05aa06b3f"
+  inputs-digest = "8431d81041d2a9b76b1ac92eebe04dd4962f94227b204b31874537c023ebaed0"
   solver-name = "gps-cdcl"
   solver-version = 1
