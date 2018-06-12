@@ -15,7 +15,6 @@ import (
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
@@ -52,11 +51,8 @@ func (c *testConfig) NetworkConfig() *fabApi.NetworkConfig {
 }
 
 func initNetworkConfigWithOrgEmbeddedUsers() *fabApi.NetworkConfig {
-	org1KeyPair := map[string]endpoint.TLSKeyPair{
-		txnSnapUser: {
-			Key:  endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/key", Pem: "some_sampleOrg_Txn-Snap-User_key_content"},
-			Cert: endpoint.TLSConfig{Path: "/path/to/sampleOrg/Txn-Snap-User/cert", Pem: "some_sampleOrg_Txn-Snap-User_cert_content"},
-		},
+	org1KeyPair := map[string]fabApi.CertKeyPair{
+		txnSnapUser: {},
 	}
 
 	orgs := map[string]fabApi.OrganizationConfig{
