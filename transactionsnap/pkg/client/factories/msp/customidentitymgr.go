@@ -18,7 +18,6 @@ import (
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
@@ -32,7 +31,7 @@ type CustomIdentityManager struct {
 	*msp.IdentityManager
 	orgName        string
 	mspID          string
-	embeddedUsers  map[string]endpoint.TLSKeyPair
+	embeddedUsers  map[string]fabApi.CertKeyPair
 	keyDir         string
 	certDir        string
 	config         fabApi.EndpointConfig
@@ -126,21 +125,13 @@ func (c *CustomIdentityManager) GetUser(userName string) (*User, error) {
 }
 
 func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, error) {
-	var err error
 
-	certPem := c.embeddedUsers[strings.ToLower(userName)].Cert.Pem
-	certPath := c.embeddedUsers[strings.ToLower(userName)].Cert.Path
+	enrollmentCertBytes := c.embeddedUsers[strings.ToLower(userName)].Cert
+	if len(enrollmentCertBytes) > 0 {
+		return enrollmentCertBytes, nil
+	}
 
-	var enrollmentCertBytes []byte
-
-	if certPem != "" {
-		enrollmentCertBytes = []byte(certPem)
-	} else if certPath != "" {
-		enrollmentCertBytes, err = ioutil.ReadFile(certPath)
-		if err != nil {
-			return nil, errors.Wrap(errors.GeneralError, err, "reading enrollment cert path failed")
-		}
-	} else if c.certDir != "" {
+	if c.certDir != "" {
 		enrollmentCertDir := strings.Replace(c.certDir, "{userName}", userName, -1)
 		enrollmentCertPath, err := getFirstPathFromDir(enrollmentCertDir)
 		if err != nil {
