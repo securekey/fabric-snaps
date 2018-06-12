@@ -7,10 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
+	"crypto/x509"
+
+	"encoding/pem"
+
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
+	"github.com/pkg/errors"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
-	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // PeerConfigs represents a list of peers. It implements the sort interface
@@ -29,11 +32,17 @@ func (p PeerConfigs) Swap(i, j int) {
 }
 
 // NewNetworkPeer creates a NetworkPeer
-func NewNetworkPeer(peerConfig *fabApi.PeerConfig, mspID string, pem []byte) (*fabApi.NetworkPeer, error) {
+func NewNetworkPeer(peerConfig *fabApi.PeerConfig, mspID string, pemBytes []byte) (*fabApi.NetworkPeer, error) {
 	networkPeer := &fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: mspID}
-	networkPeer.TLSCACerts = endpoint.TLSConfig{Pem: string(pem)}
-	if err := networkPeer.TLSCACerts.LoadBytes(); err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "error loading TLSCACert bytes")
+
+	block, _ := pem.Decode(pemBytes)
+	if block != nil {
+		pub, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, errors.WithMessage(err, "certificate parsing failed")
+		}
+		networkPeer.TLSCACert = pub
 	}
+
 	return networkPeer, nil
 }

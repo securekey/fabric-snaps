@@ -49,7 +49,11 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 				p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
 			}
 			var err error
-			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(p.chaincodeIDs, selectionOpts...)
+			ccCalls := make([]*fabApi.ChaincodeCall, len(p.chaincodeIDs))
+			for i, cid := range p.chaincodeIDs {
+				ccCalls[i] = &fabApi.ChaincodeCall{ID: cid}
+			}
+			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(ccCalls, selectionOpts...)
 			if err != nil {
 				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
 				return

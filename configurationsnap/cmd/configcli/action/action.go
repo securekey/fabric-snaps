@@ -200,7 +200,7 @@ func (a *action) initTargetPeers() error {
 
 	selectedOrgID := cliconfig.Config().OrgID()
 	if selectedOrgID == "" {
-		selectedOrgID = netConfig.Client.Organization
+		selectedOrgID = cliconfig.Config().Client().Organization
 	}
 
 	cliconfig.Config().Logger().Debugf("Selected org [%s]\n", selectedOrgID)
