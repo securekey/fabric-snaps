@@ -252,6 +252,16 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 			Version: appConfig.Version,
 			Config:  appConfig.Config,
 		}
+		// Substitute all of the file refs with the actual contents of the file
+		if strings.HasPrefix(appConfig.Config, "file://") {
+			refFilePath := newAppConfig.Config[7:]
+			contents, err := readFileRef(baseFilePath, refFilePath)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error retrieving contents of file [%s]", refFilePath)
+			}
+			newAppConfig.Config = contents
+		}
+
 		for _, compConfig := range appConfig.Components {
 			newCompConfig := &compConfig
 			// Substitute all of the file refs with the actual contents of the file
