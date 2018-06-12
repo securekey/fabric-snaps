@@ -46,7 +46,6 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
 )
 
 var mockEndorserServer *mocks.MockEndorserServer
@@ -256,7 +255,11 @@ func TestTransactionSnapInvokeFuncEndorseTransactionReturnError(t *testing.T) {
 
 func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 	mockEndorserServer.GetMockPeer().KVWrite = true
+
+	mockBroadcastServer := &fcmocks.MockBroadcastServer{}
+	mockBroadcastServer.Start(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
 	mockBroadcastServer.BroadcastInternalServerError = false
+	defer mockBroadcastServer.Stop()
 
 	snap := newMockTxnSnap(nil)
 
@@ -289,7 +292,10 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 
 func TestTransactionSnapInvokeFuncEndorseAndCommitTransactionReturnError(t *testing.T) {
 	mockEndorserServer.GetMockPeer().KVWrite = true
+	mockBroadcastServer := &fcmocks.MockBroadcastServer{}
+	mockBroadcastServer.Start(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
 	mockBroadcastServer.BroadcastInternalServerError = true
+	defer mockBroadcastServer.Stop()
 
 	snap := newMockTxnSnap(nil)
 	stub := shim.NewMockStub("transactionsnap", snap)
@@ -574,8 +580,6 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
 
-	mockBroadcastServer, _ = fcmocks.StartMockBroadcastServer(fmt.Sprintf("%s:%d", testhost, testBroadcastPort), grpc.NewServer())
-
 	if eventProducer == nil {
 		eventService, producer, err := eventserviceMocks.NewServiceWithMockProducer([]options.Opt{}, eventserviceMocks.WithFilteredBlockLedger())
 		if err != nil {
@@ -587,6 +591,7 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
+
 }
 
 func newMockTxService(callback api.EndorsedCallback) *txsnapservice.TxServiceImpl {

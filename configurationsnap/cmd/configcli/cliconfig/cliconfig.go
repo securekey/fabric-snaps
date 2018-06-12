@@ -12,8 +12,10 @@ import (
 	"time"
 
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -152,6 +154,7 @@ func init() {
 // CLIConfig overrides certain configuration values with those supplied on the command-line
 type CLIConfig struct {
 	fabApi.EndpointConfig
+	mspApi.IdentityConfig
 	logger *logging.Logger
 }
 
@@ -175,7 +178,12 @@ func InitConfig() error {
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}
+	identityConfig, err := msp.ConfigFromBackend(cnfg...)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
+	}
 	instance.EndpointConfig = endpointConfig
+	instance.IdentityConfig = identityConfig
 	return nil
 }
 
