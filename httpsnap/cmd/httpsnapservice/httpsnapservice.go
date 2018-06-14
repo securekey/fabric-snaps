@@ -28,7 +28,7 @@ import (
 	"crypto/ecdsa"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
@@ -362,7 +362,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
 	}
-	certPool := cp.(commtls.CertPool)
+	certPool := cp.(fab.CertPool)
 	pool, err := certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
@@ -385,7 +385,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
 	}
-	certPool := cp.(commtls.CertPool)
+	certPool := cp.(fab.CertPool)
 	pool, err := certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
