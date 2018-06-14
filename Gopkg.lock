@@ -159,6 +159,12 @@
   revision = "24b0969c4cb722950103eed87108c8d291a8df00"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/golang/mock"
+  packages = ["gomock"]
+  revision = "22bbf0ddf08105dfa364d0a2fa619dfa71014af5"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -410,6 +416,7 @@
     "pkg/common/providers/core",
     "pkg/common/providers/fab",
     "pkg/common/providers/msp",
+    "pkg/common/providers/test/mockfab",
     "pkg/context",
     "pkg/core/config",
     "pkg/core/config/comm",
@@ -483,7 +490,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "c235146d2b3912807f1ededd8ef946f5089b5a24"
+  revision = "v1.0.0-alpha4"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -844,6 +851,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ba41e76e946451b99e369281fc357a025633cbb824ea5213ad44e48af50bf5df"
+  inputs-digest = "3b9676aa13b3853a945c6b4f71871d67d0546fc2a77cd3ac9b822b77a7646316"
   solver-name = "gps-cdcl"
   solver-version = 1
