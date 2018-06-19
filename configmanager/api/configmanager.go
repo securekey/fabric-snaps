@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package api
 
 import (
+	"strings"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -23,6 +25,10 @@ type ConfigKey struct {
 	AppVersion       string
 	ComponentName    string
 	ComponentVersion string
+}
+
+func (configKey *ConfigKey) String() string {
+	return strings.Join([]string{configKey.MspID, configKey.PeerID, configKey.AppName, configKey.AppVersion, configKey.ComponentName, configKey.ComponentVersion}, "!")
 }
 
 //ConfigKV represents key value struct for managing configurations
