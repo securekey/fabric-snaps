@@ -79,10 +79,7 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	txnSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	c := &Config{peerConfig: peerConfig, txnSnapConfig: txnSnapConfig, txnSnapConfigBytes: dataConfig}
-	err = c.initializeLogging()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
-	}
+
 	return c, nil
 }
 
@@ -313,23 +310,4 @@ func (c *Config) CCErrorRetryableCodes() ([]int32, error) {
 	}
 
 	return codes, nil
-}
-
-// initializeLogging initializes the logger
-func (c *Config) initializeLogging() error {
-	logLevel := c.txnSnapConfig.GetString("txnsnap.loglevel")
-
-	if logLevel == "" {
-		logLevel = defaultLogLevel
-	}
-
-	level, err := logging.LogLevel(logLevel)
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
-	}
-
-	logging.SetLevel("txnsnap", level)
-	logger.Debugf("Txnsnap logging initialized. Log level: %s", logLevel)
-
-	return nil
 }

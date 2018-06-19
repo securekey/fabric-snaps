@@ -29,6 +29,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/lookup"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -48,7 +49,8 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 const (
-	txnSnapUser = "Txn-Snap-User"
+	txnSnapUser     = "Txn-Snap-User"
+	defaultLogLevel = "info"
 )
 
 type clientImpl struct {
@@ -255,6 +257,16 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	c.context = chContext
 	c.configHash.Store(currentCfgHash)
 
+	//update log level
+	cfgBackend, err := c.sdk.Config()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
+	}
+	c.updateLogLevel(cfgBackend)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "error initializing logging")
+	}
+
 	return nil
 }
 
@@ -447,6 +459,23 @@ func (c *clientImpl) GetContext() contextApi.Channel {
 	defer c.mutex.RUnlock()
 
 	return c.context
+}
+
+func (c *clientImpl) updateLogLevel(configBacked core.ConfigBackend) error {
+	logLevel := lookup.New(configBacked).GetString("txnsnap.loglevel")
+	if logLevel == "" {
+		logLevel = defaultLogLevel
+	}
+
+	level, err := logging.LogLevel(logLevel)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+	}
+
+	logging.SetLevel("txnsnap", level)
+	logger.Debugf("Txnsnap logging initialized. Log level: %s", logLevel)
+
+	return nil
 }
 
 // addRetryCode adds the given group and code to the given map
