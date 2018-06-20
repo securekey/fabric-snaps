@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4240f0f_6035a1e6",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-06-20T13:44:20Z",
+      "side": 1,
+      "message": "the log level is not part of sdk config is part of txn snap config",
+      "range": {
+        "startLine": 465,
+        "startChar": 38,
+        "endLine": 465,
+        "endChar": 47
+      },
+      "revId": "4bed85c064883a4576d2abe6d728132300a9909d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
