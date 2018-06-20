@@ -22,6 +22,30 @@
       "revId": "4bed85c064883a4576d2abe6d728132300a9909d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7483bbdc_580a165f",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-06-20T13:56:10Z",
+      "side": 1,
+      "message": "Yes, that\u0027s why I used backend here.(key-value pair from config bytes)",
+      "parentUuid": "a4240f0f_6035a1e6",
+      "range": {
+        "startLine": 465,
+        "startChar": 38,
+        "endLine": 465,
+        "endChar": 47
+      },
+      "revId": "4bed85c064883a4576d2abe6d728132300a9909d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
