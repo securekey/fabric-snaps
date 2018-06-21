@@ -38,11 +38,15 @@ import (
 	errors "github.com/securekey/fabric-snaps/util/errors"
 )
 
+//GeneralMspID msp id generic config
+const GeneralMspID = "general"
+
 // functionRegistry is a registry of the functions that are supported by configuration snap
 var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb.Response{
 	"healthCheck":     healthCheck,
 	"save":            save,
 	"get":             get,
+	"getFromCache":    getFromCache,
 	"delete":          delete,
 	"refresh":         refresh,
 	"generateKeyPair": generateKeyPair,
@@ -266,7 +270,30 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	instance.Refresh(stub, peerMspID)
+	instance.Refresh(stub, GeneralMspID)
 	return shim.Success(nil)
+}
+
+//getFromCache - gets configuration using configkey as criteria from cache
+func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+
+	configKey, err := getKey(args)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	if err := checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
+		return shim.Error(err.Error())
+	}
+	//valid key
+	x := configmgmtService.GetInstance()
+	instance := x.(*configmgmtService.ConfigServiceImpl)
+	config, err := instance.Get(stub.GetChannelID(), *configKey)
+	if err != nil {
+		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
+		return shim.Error(err.Error())
+	}
+	return shim.Success(config)
 }
 
 //to generate key pair based on options submitted
