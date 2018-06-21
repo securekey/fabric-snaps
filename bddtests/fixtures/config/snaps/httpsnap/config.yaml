@@ -6,6 +6,11 @@
 
 logging:
   level: debug
+
+httpclient:
+  cache:
+      refreshInterval: 30s
+
 tls:
   allowPeerConfig: false
   enableSystemCertPool: true

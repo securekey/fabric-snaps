@@ -7,7 +7,6 @@ package config
 
 import (
 	"bytes"
-	"go/build"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -20,13 +19,17 @@ import (
 	"github.com/securekey/fabric-snaps/util/configcache"
 	"github.com/securekey/fabric-snaps/util/errors"
 
+	"crypto/sha256"
+	"encoding/base64"
+
 	"github.com/spf13/viper"
 )
 
 const (
-	peerConfigFileName = "core"
-	cmdRootPrefix      = "core"
-	defaultTimeout     = time.Second * 5
+	peerConfigFileName          = "core"
+	cmdRootPrefix               = "core"
+	defaultTimeout              = time.Second * 5
+	defaultCacheRefreshInterval = 60 * time.Second
 )
 
 var logger = logging.NewLogger("httpsnap")
@@ -41,6 +44,7 @@ type config struct {
 	peerConfig     *viper.Viper
 	httpSnapConfig *viper.Viper
 	peerConfigPath string
+	configBytes    []byte
 }
 
 // NewConfig return config struct
@@ -71,31 +75,9 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, err
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
-	err = c.initializeLogging()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
-	}
+	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath, configBytes: configData}
+
 	return c, nil
-}
-
-// Helper function to initialize logging
-func (c *config) initializeLogging() error {
-	logLevel := c.httpSnapConfig.GetString("logging.level")
-
-	if logLevel == "" {
-		logLevel = defaultLogLevel
-	}
-
-	level, err := logging.LogLevel(logLevel)
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
-	}
-
-	logging.SetLevel("httpsnap", level)
-	logger.Debugf("Httpsnap logging initialized. Log level: %s", logLevel)
-
-	return nil
 }
 
 // GetConfigPath returns the absolute value of the given path that is relative to the config file
@@ -319,11 +301,28 @@ func (c *config) GetCryptoProvider() (string, error) {
 	return cryptoProvider, nil
 }
 
-// substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
-// has multiple GOPATHs then the first is used.
-func substGoPath(s string) string {
-	gpDefault := build.Default.GOPATH
-	gps := filepath.SplitList(gpDefault)
+// GetLogLevel returns logging level provided in config
+func (c *config) GetLogLevel() (logging.Level, error) {
+	logLevel := c.httpSnapConfig.GetString("logging.level")
 
-	return strings.Replace(s, "$GOPATH", gps[0], -1)
+	if logLevel == "" {
+		logLevel = defaultLogLevel
+	}
+
+	return logging.LogLevel(logLevel)
+}
+
+// GetConfigHash generates hash for config bytes
+func (c *config) GetConfigHash() string {
+	digest := sha256.Sum256(c.configBytes)
+	return base64.StdEncoding.EncodeToString(digest[:])
+}
+
+//GetClientCacheRefreshInterval returns httpclient cache refresh interval
+func (c *config) GetClientCacheRefreshInterval() time.Duration {
+	interval := c.httpSnapConfig.GetDuration("httpclient.cache.refreshInterval")
+	if interval == 0 {
+		return defaultCacheRefreshInterval
+	}
+	return interval
 }

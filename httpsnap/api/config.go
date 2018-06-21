@@ -6,7 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
-import "time"
+import (
+	"time"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+)
 
 // SchemaConfig defines request and response schemas for content type
 type SchemaConfig struct {
@@ -56,4 +60,7 @@ type Config interface {
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool
 	IsHeaderAllowed(name string) (bool, error)
+	GetLogLevel() (logging.Level, error)
+	GetConfigHash() string
+	GetClientCacheRefreshInterval() time.Duration
 }

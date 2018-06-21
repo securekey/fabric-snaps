@@ -17,6 +17,8 @@ httpclient:
     dialer:
       timeout: 10s
       keepAlive: 10s
+  cache:
+    refreshInterval: 30s
 tls:
   allowPeerConfig: false
   enableSystemCertPool: true
