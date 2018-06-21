@@ -18,14 +18,15 @@ import (
 )
 
 const (
-	mspID             = "msp.one"
-	channelID         = "testChannel"
-	originalConfigStr = "ConfigForAppOne"
-	refreshCongifgStr = "ConfigForAppOneWas Refreshed. Just for fun"
-	validMsg          = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOne"}]}]}`
-	invalidJSONMsg    = `{"MspID":"msp.one","Peers":this willnot fly[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
-	inValidMsg        = `{"MspID":"msp.one.bogus","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOne"}]}]}`
-	validMsgRefresh   = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOneWas Refreshed. Just for fun"},{"AppName":"appNameOne","Version":"1","Config":"config for appNameOne"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.one.example.com","App":[{"AppName":"appNameOneOnPeerOne","Version":"1","Config":"config for appNameOneOnPeerOne goes here"},{"AppName":"appNameOneOne","Version":"1","Config":"config for appNameOneOne goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLOne"}]}]}`
+	mspID                  = "msp.one"
+	channelID              = "testChannel"
+	originalConfigStr      = "ConfigForAppOne"
+	refreshCongifgStr      = "ConfigForAppOneWas Refreshed. Just for fun"
+	validMsg               = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOne"}]}]}`
+	invalidJSONMsg         = `{"MspID":"msp.one","Peers":this willnot fly[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
+	inValidMsg             = `{"MspID":"msp.one.bogus","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOne"}]}]}`
+	validMsgRefresh        = `{"MspID":"msp.one","Peers":[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Version":"1","Config":"ConfigForAppOneWas Refreshed. Just for fun"},{"AppName":"appNameOne","Version":"1","Config":"config for appNameOne"},{"AppName":"appNameTwo","Version":"1","Config":"mnopq"}]},{"PeerID":"peer.one.example.com","App":[{"AppName":"appNameOneOnPeerOne","Version":"1","Config":"config for appNameOneOnPeerOne goes here"},{"AppName":"appNameOneOne","Version":"1","Config":"config for appNameOneOne goes here"},{"AppName":"appNameTwo","Version":"1","Config":"BLOne"}]}]}`
+	validWithAppComponents = `{"MspID":"msp.one","Apps":[{"AppName":"app1","Version":"1","Components":[{"Name":"comp1","Config":"{comp1 data ver 1}","Version":"1"},{"Name":"comp1","Config":"{comp1 data ver 2}","TxID":"2","Version":"2"},{"Name":"comp2","Config":"{comp2 data ver 1}","TxID":"1","Version":"1"}]}]}`
 )
 
 func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
@@ -86,6 +87,39 @@ func TestGetCacheByMspID(t *testing.T) {
 		t.Fatalf("Expected error: 'Config Key is not valid Cannot create config key using empty PeerID'")
 	}
 
+}
+
+func TestGetCacheByCompID(t *testing.T) {
+	stub := getMockStub()
+
+	//upload valid message to HL
+	_, err := uplaodConfigToHL(t, stub, validWithAppComponents)
+	if err != nil {
+		t.Fatalf("Cannot upload %s", err)
+	}
+	cacheInstance := Initialize(stub, mspID)
+
+	key := api.ConfigKey{MspID: mspID, AppName: "app1", AppVersion: "1", ComponentName: "comp1"}
+	value, err := cacheInstance.Get(stub.GetChannelID(), key)
+	if err != nil {
+		t.Fatalf("Get return error %s", err)
+	}
+	compsConfig := &[]*api.ComponentConfig{}
+	json.Unmarshal(value, &compsConfig)
+	if len(*compsConfig) != 2 {
+		t.Fatalf("Expected return compsConfig 2")
+	}
+
+	key = api.ConfigKey{MspID: mspID, AppName: "app1", AppVersion: "1", ComponentName: "comp1", ComponentVersion: "1"}
+	value, err = cacheInstance.Get(stub.GetChannelID(), key)
+	if err != nil {
+		t.Fatalf("Get return error %s", err)
+	}
+	compConfig := api.ComponentConfig{}
+	json.Unmarshal(value, &compConfig)
+	if compConfig.Name != "comp1" || compConfig.Version != "1" {
+		t.Fatalf("Expected return compConfig with name comp1 and version 1")
+	}
 }
 
 func TestGetViper(t *testing.T) {

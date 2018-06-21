@@ -32,6 +32,7 @@ import (
 const (
 	validMsgMultiplePeersAndApps = `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Version":"$v","Config":"configstringgoeshere"},{"AppName":"appNameB","Version":"$v","Config":"config for appNametwo"},{"AppName":"appNameC","Version":"$v","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Version":"1","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Version":"$v","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Version":"$v","Config":"BLTwo"}]}]}`
 	invalidJSONMsg               = `{"MspID":"Org1MSP","Peers":this willnot fly[{"PeerID":"peer.zero.example.com","App":[{"AppName":"testAppName","Config":"ConfigForAppOne"}]}]}`
+	validWithAppComponents       = `{"MspID":"Org1MSP","Apps":[{"AppName":"app1","Version":"1","Components":[{"Name":"comp1","Config":"{comp1 data ver 1}","Version":"1"},{"Name":"comp1","Config":"{comp1 data ver 2}","TxID":"2","Version":"2"},{"Name":"comp2","Config":"{comp2 data ver 1}","TxID":"1","Version":"1"}]}]}`
 )
 
 var aclCheckCalled bool
@@ -360,6 +361,71 @@ func TestGetACLFailure(t *testing.T) {
 	//implicitly designed criteria by MspID
 	funcName := []byte("get")
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "", AppName: "", AppVersion: ""}
+	keyBytes, err := json.Marshal(&configKey)
+	if err != nil {
+		t.Fatalf("Could not marshal key: %v", err)
+	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: true}
+	_, err = invoke(stub, [][]byte{funcName, keyBytes})
+	if err == nil {
+		t.Fatal("Save should have failed with ACL check error")
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+}
+
+func TestGetFromCacheACLSuccess(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
+	stub := getMockStub("testChannel")
+
+	//upload valid message to HL
+	err := uplaodConfigToHL(t, stub, []byte(validWithAppComponents))
+	if err != nil {
+		t.Fatalf("Cannot upload %s", err)
+	}
+	configmgmtService.Initialize(stub, "Org1MSP")
+
+	//get configuration - pass config key that has only MspID field set
+	//implicitly designed criteria by MspID
+	funcName := []byte("getFromCache")
+	//config key is explicit - expect to get only one record back
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", AppName: "app1", AppVersion: "1", ComponentName: "comp1"}
+	keyBytes, err := json.Marshal(&configKey)
+	if err != nil {
+		t.Fatalf("Could not marshal key: %v", err)
+	}
+	aclCheckCalled = false
+	aclProvider = &mockACLProvider{aclFailed: false}
+	response, err := invoke(stub, [][]byte{funcName, keyBytes})
+	if err != nil {
+		t.Fatalf("Could not get configuration :%s", err)
+	}
+	if !aclCheckCalled {
+		t.Fatal("ACL check call was expected")
+	}
+	compsConfig := &[]*api.ComponentConfig{}
+	json.Unmarshal(response, &compsConfig)
+	if len(*compsConfig) != 2 {
+		t.Fatalf("Expected return compsConfig 2")
+	}
+}
+
+func TestGetFromCacheACLFailure(t *testing.T) {
+	peerConfigPath = "./sampleconfig"
+
+	stub := getMockStub("testChannel")
+	err := uplaodConfigToHL(t, stub, []byte(validWithAppComponents))
+	if err != nil {
+		t.Fatalf("Cannot upload %s", err)
+	}
+	configmgmtService.Initialize(stub, "Org1MSP")
+	//get configuration - pass config key that has only MspID field set
+	//implicitly designed criteria by MspID
+	funcName := []byte("getFromCache")
+	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", AppName: "app1", AppVersion: "1", ComponentName: "comp1"}
 	keyBytes, err := json.Marshal(&configKey)
 	if err != nil {
 		t.Fatalf("Could not marshal key: %v", err)

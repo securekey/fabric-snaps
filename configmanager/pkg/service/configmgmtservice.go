@@ -16,6 +16,8 @@ import (
 
 	"math/rand"
 
+	"encoding/json"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
@@ -163,6 +165,7 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 	logger.Debugf("Updating cache for channel %s\n", channelID)
 
 	cache := make(map[string][]byte)
+	compCache := make(map[string][]*api.ComponentConfig)
 
 	for _, val := range configMessages {
 		keyStr, err := mgmt.ConfigKeyToString(val.Key)
@@ -171,6 +174,27 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 		}
 		logger.Debugf("Adding item for key [%s] and channel [%s] to cache\n", keyStr, channelID)
 		cache[keyStr] = val.Value
+		if val.Key.ComponentName != "" {
+			key := val.Key
+			key.ComponentVersion = ""
+			keyStr, err = mgmt.ConfigKeyToString(key)
+			if err != nil {
+				return err
+			}
+			compConfig := api.ComponentConfig{}
+			json.Unmarshal(val.Value, &compConfig)
+			if _, ok := compCache[keyStr]; !ok {
+				compCache[keyStr] = make([]*api.ComponentConfig, 0)
+			}
+			compCache[keyStr] = append(compCache[keyStr], &compConfig)
+		}
+	}
+	for key, comps := range compCache {
+		compsBytes, err := json.Marshal(comps)
+		if err != nil {
+			return err
+		}
+		cache[key] = compsBytes
 	}
 	csi.mtx.Lock()
 	defer csi.mtx.Unlock()
