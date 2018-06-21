@@ -243,7 +243,7 @@ func TestRefreshCache(t *testing.T) {
 	configKV := api.ConfigKV{Key: key, Value: []byte("someValue")}
 	configMessages := []*api.ConfigKV{&configKV}
 
-	err := cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
+	err := cacheInstance.refreshCache(stub.GetChannelID(), configMessages, mspID)
 	if err != nil {
 		t.Fatalf("Error 'refreshing cache %s", err)
 	}
@@ -256,7 +256,7 @@ func TestRefreshCache(t *testing.T) {
 	configKV = api.ConfigKV{Key: key, Value: []byte("someValue")}
 	configMessages = []*api.ConfigKV{&configKV}
 
-	err = cacheInstance.refreshCache(stub.GetChannelID(), configMessages)
+	err = cacheInstance.refreshCache(stub.GetChannelID(), configMessages, mspID)
 	if err != nil {
 		t.Fatalf("Error 'refreshing cache %s", err)
 	}

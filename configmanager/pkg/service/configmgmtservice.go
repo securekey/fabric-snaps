@@ -65,7 +65,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 		configKey.AppVersion = api.VERSION
 	}
 
-	channelCache := csi.getCache(channelID)
+	channelCache := csi.getCache(channelID, configKey.MspID)
 	if channelCache == nil {
 		logger.Debugf("Config cache is not initialized for channel [%s]. Getting config from ledger.\n", channelID)
 		return csi.GetConfigFromLedger(channelID, configKey)
@@ -127,7 +127,7 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 		return errors.Errorf(errors.GeneralError, "Cannot create criteria for search by mspID %v", configMessages)
 	}
 
-	return csi.refreshCache(stub.GetChannelID(), configMessages)
+	return csi.refreshCache(stub.GetChannelID(), configMessages, mspID)
 }
 
 //GetConfigFromLedger - gets snaps configs from ledger
@@ -157,7 +157,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 	return nil, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
 }
 
-func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV) error {
+func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV, mspID string) error {
 	if csi == nil {
 		return errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
@@ -198,16 +198,16 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 	}
 	csi.mtx.Lock()
 	defer csi.mtx.Unlock()
-	instance.cacheMap[channelID] = cache
+	instance.cacheMap[channelID+"_"+mspID] = cache
 
 	logger.Debugf("Updated cache for channel %s\n", channelID)
 	return nil
 }
 
-func (csi *ConfigServiceImpl) getCache(channelID string) cache {
+func (csi *ConfigServiceImpl) getCache(channelID, mspID string) cache {
 	csi.mtx.RLock()
 	defer csi.mtx.RUnlock()
-	return csi.cacheMap[channelID]
+	return csi.cacheMap[channelID+"_"+mspID]
 }
 
 // generateRandomAlphaOnlyString generates an alphabetical random string with length n.
