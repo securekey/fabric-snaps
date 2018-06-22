@@ -85,7 +85,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	return channelCache[keyStr], nil
 }
 
-//Get items from cache
+//GetFromCache get items from cache
 func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.ConfigKey) ([]byte, error) {
 	if csi == nil {
 		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
