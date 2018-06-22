@@ -85,6 +85,32 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 	return channelCache[keyStr], nil
 }
 
+//Get items from cache
+func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.ConfigKey) ([]byte, error) {
+	if csi == nil {
+		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+	}
+	if configKey.AppVersion == "" {
+		configKey.AppVersion = api.VERSION
+	}
+
+	channelCache := csi.getCache(channelID, configKey.MspID)
+	if channelCache == nil {
+		return nil, errors.Errorf(errors.GeneralError, "Config cache is not initialized for channel [%s]. Getting config from ledger.\n", channelID)
+	}
+
+	keyStr, err := mgmt.ConfigKeyToString(configKey)
+	if err != nil {
+		return nil, err
+	}
+
+	val := channelCache[keyStr]
+	if len(val) == 0 {
+		return nil, errors.Errorf(errors.GeneralError, "Config cache does not contain config for key [%s] on channel [%s]. Getting config from ledger.\n", keyStr, channelID)
+	}
+	return channelCache[keyStr], nil
+}
+
 //GetViper configuration as Viper
 func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, error) {
 	configData, err := csi.Get(channelID, configKey)

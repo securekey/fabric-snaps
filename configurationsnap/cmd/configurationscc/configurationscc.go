@@ -288,7 +288,7 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	//valid key
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
-	config, err := instance.Get(stub.GetChannelID(), *configKey)
+	config, err := instance.GetFromCache(stub.GetChannelID(), *configKey)
 	if err != nil {
 		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
 		return shim.Error(err.Error())
