@@ -209,6 +209,11 @@ func (a *updateAction) update() error {
 	}
 	fmt.Println("Configuration successfully updated!")
 
+	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "refresh", [][]byte{}); err != nil {
+		fmt.Printf("Error invoking chaincode: %s\n", err)
+		return errors.Wrap(err, "Refresh command returned with error")
+	}
+	fmt.Println("Configuration successfully Refreshed!")
 	return nil
 }
 

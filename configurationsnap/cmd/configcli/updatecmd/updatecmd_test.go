@@ -73,18 +73,23 @@ func newMockAction() *action.MockAction {
 			if chaincodeID != cliconfig.ConfigSnapID {
 				return nil, errors.Errorf("expecting chaincode ID [%s] but got [%s]", cliconfig.ConfigSnapID, chaincodeID)
 			}
-			if fctn != "save" {
-				return nil, errors.Errorf("expecting function [save] but got [%s]", fctn)
-			}
-			if len(args) == 0 {
-				return nil, errors.New("expecting one arg but got none")
-			}
-			configMessage, err := unmarshal(args[0])
-			if err != nil {
-				return nil, errors.Wrap(err, "got error unmarshalling config message arg")
-			}
-			if err := configMessage.IsValid(); err != nil {
-				return nil, errors.Wrap(err, "invalid config message")
+			if fctn == "save" {
+				if len(args) == 0 {
+					return nil, errors.New("expecting one arg but got none")
+				}
+				configMessage, err := unmarshal(args[0])
+				if err != nil {
+					return nil, errors.Wrap(err, "got error unmarshalling config message arg")
+				}
+				if err := configMessage.IsValid(); err != nil {
+					return nil, errors.Wrap(err, "invalid config message")
+				}
+			} else if fctn == "refresh" {
+				if len(args) != 0 {
+					return nil, errors.New("expecting zero arg for refresh")
+				}
+			} else {
+				return nil, errors.Errorf("expecting function [save] or [refresh] but got [%s]", fctn)
 			}
 			return nil, nil
 		},
