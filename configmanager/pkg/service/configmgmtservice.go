@@ -96,7 +96,7 @@ func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.Confi
 
 	channelCache := csi.getCache(channelID, configKey.MspID)
 	if channelCache == nil {
-		return nil, errors.Errorf(errors.GeneralError, "Config cache is not initialized for channel [%s]. Getting config from ledger.\n", channelID)
+		return nil, errors.Errorf(errors.GeneralError, "Config cache is not initialized for channel [%s]", channelID)
 	}
 
 	keyStr, err := mgmt.ConfigKeyToString(configKey)
@@ -106,7 +106,7 @@ func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.Confi
 
 	val := channelCache[keyStr]
 	if len(val) == 0 {
-		return nil, errors.Errorf(errors.GeneralError, "Config cache does not contain config for key [%s] on channel [%s]. Getting config from ledger.\n", keyStr, channelID)
+		return nil, errors.Errorf(errors.GeneralError, "Config cache does not contain config for key [%s] on channel [%s]", keyStr, channelID)
 	}
 	return channelCache[keyStr], nil
 }

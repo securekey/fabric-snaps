@@ -25,6 +25,7 @@ import (
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,6 +67,7 @@ func TestRefreshACLSuccess(t *testing.T) {
 
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
+	membershipService = &mockMembershipService{}
 	response := refresh(stub, args)
 	if response.Status != 200 {
 		t.Fatalf("Refresh failed: %v", response.Message)
@@ -84,6 +86,7 @@ func TestRefreshACLFailure(t *testing.T) {
 
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: true}
+	membershipService = &mockMembershipService{}
 	response := refresh(stub, args)
 	if response.Status != 500 {
 		t.Fatal("Refresh should have failed for ACL with 500 status")
@@ -1043,4 +1046,15 @@ func (m *mockACLProvider) CheckACL(resName string, channelID string, idinfo inte
 		return fmt.Errorf("ACL failed")
 	}
 	return nil
+}
+
+type mockMembershipService struct {
+}
+
+func (m *mockMembershipService) GetAllPeers() []*membership.PeerEndpoint {
+	return nil
+}
+
+func (m *mockMembershipService) GetPeersOfChannel(channelID string) ([]*membership.PeerEndpoint, error) {
+	return nil, nil
 }

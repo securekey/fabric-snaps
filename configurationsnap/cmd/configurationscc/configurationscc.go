@@ -33,6 +33,8 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/healthcheck"
+	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	errors "github.com/securekey/fabric-snaps/util/errors"
@@ -63,8 +65,11 @@ type ConfigurationSnap struct {
 
 var peerConfigPath = ""
 
-// ACLProvider is used to check ACL
+// aclProvider is used to check ACL
 var aclProvider acl.ACLProvider
+
+// membershipService is used to get peers of channel
+var membershipService memserviceapi.Service
 
 const (
 	// configDataReadACLPrefix is the prefix for read-only (get) policy resource names
@@ -269,9 +274,35 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
-	instance.Refresh(stub, peerMspID)
+	msps, err := getChannelPeersMsp(stub.GetChannelID())
+	if err != nil {
+		return shim.Error(fmt.Sprintf("getChannelPeersMsp return error %s", err))
+	}
+	for msp := range msps {
+		logger.Debugf("****** Refresh msp id %s", msp)
+		instance.Refresh(stub, msp)
+	}
 	instance.Refresh(stub, GeneralMspID)
+
 	return shim.Success(nil)
+}
+
+func getChannelPeersMsp(channelID string) (map[string]string, error) {
+	logger.Debugf("****** getChannelPeersMsp channel id %s", channelID)
+	msrv, err := getMembershipService()
+	if err != nil {
+		return nil, err
+	}
+	endpoints, err := msrv.GetPeersOfChannel(channelID)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debugf("****** getChannelPeersMsp channel id %s return endpoints %s", channelID, endpoints)
+	msps := make(map[string]string, 0)
+	for _, endpoint := range endpoints {
+		msps[string(endpoint.MSPid)] = ""
+	}
+	return msps, nil
 }
 
 //getFromCache - gets configuration using configkey as criteria from cache
@@ -703,6 +734,16 @@ func getACLProvider() acl.ACLProvider {
 	}
 
 	return acl.NewACLProvider(peer.GetStableChannelConfig)
+}
+
+// getMembershipService gets the membership service
+func getMembershipService() (memserviceapi.Service, error) {
+	// always nil except for unit tests
+	if membershipService != nil {
+		return membershipService, nil
+	}
+
+	return membership.Get()
 }
 
 // New chaincode implementation
