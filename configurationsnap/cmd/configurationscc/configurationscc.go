@@ -33,6 +33,7 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/healthcheck"
+	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	errors "github.com/securekey/fabric-snaps/util/errors"
@@ -269,9 +270,35 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
-	instance.Refresh(stub, peerMspID)
-	instance.Refresh(stub, GeneralMspID)
+	msps, err := getChannelPeersMsp(stub.GetChannelID())
+	if err != nil {
+		return shim.Error(fmt.Sprintf("getChannelPeersMsp return error %s", err))
+	}
+	for msp := range msps {
+		logger.Infof("****** Refresh msp id %s", msp)
+		instance.Refresh(stub, msp)
+	}
+	instance.Refresh(stub, "general")
+
 	return shim.Success(nil)
+}
+
+func getChannelPeersMsp(channelID string) (map[string]string, error) {
+	logger.Infof("****** getChannelPeersMsp channel id %s", channelID)
+	msrv, err := membership.Get()
+	if err != nil {
+		return nil, err
+	}
+	endpoints, err := msrv.GetPeersOfChannel(channelID)
+	if err != nil {
+		return nil, err
+	}
+	logger.Infof("****** getChannelPeersMsp channel id %s return endpoints %s", channelID, endpoints)
+	msps := make(map[string]string, 0)
+	for _, endpoint := range endpoints {
+		msps[string(endpoint.MSPid)] = ""
+	}
+	return msps, nil
 }
 
 //getFromCache - gets configuration using configkey as criteria from cache
