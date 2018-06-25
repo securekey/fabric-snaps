@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c99a242_0ca69c93",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1000013
+      },
+      "writtenOn": "2018-06-25T12:37:06Z",
+      "side": 1,
+      "message": "This assumes that gossip knows of all MSPs. This might not always be the case, especially during system startup when config is first updated. We should think of an alternate approach, if possible.",
+      "range": {
+        "startLine": 277,
+        "startChar": 14,
+        "endLine": 277,
+        "endChar": 32
+      },
+      "revId": "78e001c65cbe27eae6b7414fddbc62e9bcdd21cc",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
