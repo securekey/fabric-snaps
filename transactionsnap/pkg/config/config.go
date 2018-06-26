@@ -61,7 +61,8 @@ func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Conf
 	if cacheInstance == nil {
 		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
 	}
-	dataConfig, err := cacheInstance.Get(channelID, key)
+	//txn snap has its own cache and config hash checks, no need of dirty flag from config cache
+	dataConfig, _, err := cacheInstance.Get(channelID, key)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
 	}

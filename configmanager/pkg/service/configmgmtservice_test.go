@@ -15,6 +15,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -44,10 +45,11 @@ func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
 	cacheInstance := Initialize(stub, mspID)
 
 	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: "1"}
-	originalConfig, err := cacheInstance.Get(stub.GetChannelID(), key)
+	originalConfig, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
+	assert.True(t, dirty, "config supposed to be dirty")
 	//verify that original config is 'ConfigForAppOne'
 	if !bytes.Equal(originalConfig, []byte(originalConfigStr)) {
 		t.Fatalf("Expected to retrieve from cache  %v but got %s", originalConfigStr, string(originalConfig[:]))
@@ -62,10 +64,11 @@ func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
 	if err := cacheInstance.Refresh(stub, mspID); err != nil {
 		t.Fatalf("Error %v", err)
 	}
-	refreshedConfig, err := cacheInstance.Get(stub.GetChannelID(), key)
+	refreshedConfig, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
 	if !bytes.Equal(refreshedConfig, []byte(refreshCongifgStr)) {
 		t.Fatalf("Expected from cache %s from cache  but got %s", refreshCongifgStr, string(refreshedConfig[:]))
 	}
+	assert.True(t, dirty, "config supposed to be dirty")
 
 	stub.MockTransactionEnd("saveConfiguration")
 
@@ -82,7 +85,7 @@ func TestGetCacheByMspID(t *testing.T) {
 	cacheInstance := Initialize(stub, mspID)
 
 	key := api.ConfigKey{MspID: mspID, PeerID: "", AppName: ""}
-	_, err = cacheInstance.Get(stub.GetChannelID(), key)
+	_, _, err = cacheInstance.Get(stub.GetChannelID(), key)
 	if err == nil {
 		t.Fatalf("Expected error: 'Config Key is not valid Cannot create config key using empty PeerID'")
 	}
@@ -100,10 +103,11 @@ func TestGetCacheByCompID(t *testing.T) {
 	cacheInstance := Initialize(stub, mspID)
 
 	key := api.ConfigKey{MspID: mspID, AppName: "app1", AppVersion: "1", ComponentName: "comp1"}
-	value, err := cacheInstance.Get(stub.GetChannelID(), key)
+	value, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
 	if err != nil {
 		t.Fatalf("Get return error %s", err)
 	}
+	assert.True(t, dirty)
 	compsConfig := &[]*api.ComponentConfig{}
 	json.Unmarshal(value, &compsConfig)
 	if len(*compsConfig) != 2 {
@@ -111,10 +115,11 @@ func TestGetCacheByCompID(t *testing.T) {
 	}
 
 	key = api.ConfigKey{MspID: mspID, AppName: "app1", AppVersion: "1", ComponentName: "comp1", ComponentVersion: "1"}
-	value, err = cacheInstance.Get(stub.GetChannelID(), key)
+	value, dirty, err = cacheInstance.Get(stub.GetChannelID(), key)
 	if err != nil {
 		t.Fatalf("Get return error %s", err)
 	}
+	assert.True(t, dirty)
 	compConfig := api.ComponentConfig{}
 	json.Unmarshal(value, &compConfig)
 	if compConfig.Name != "comp1" || compConfig.Version != "1" {
@@ -161,14 +166,16 @@ someconfig:
 
 	cacheInstance := Initialize(stub, mspID)
 
-	config, err := cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: "unknown app"}, api.YAML)
+	config, dirty, err := cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: "unknown app"}, api.YAML)
 	if err == nil {
 		t.Fatalf("Expected: Getting channel cache from ledge ")
 	}
 	if config != nil {
 		t.Fatalf("expecting nil config")
 	}
-	config, err = cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, AppVersion: "1"}, api.YAML)
+	assert.False(t, dirty)
+
+	config, dirty, err = cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: appName, AppVersion: "1"}, api.YAML)
 	if err != nil {
 		t.Fatalf("expecting error for unknown config key but got none")
 	}
@@ -178,6 +185,7 @@ someconfig:
 	if value := config.GetString("someconfig.somestring"); value != "SomeValue" {
 		t.Fatalf("expected value to be [somevalue] but got [%s]", value)
 	}
+	assert.True(t, dirty)
 }
 
 func TestTwoChannels(t *testing.T) {
@@ -201,10 +209,11 @@ func TestTwoChannels(t *testing.T) {
 	}
 	stub.MockTransactionEnd("saveConfiguration")
 
-	b, err := cacheInstance.Get(channelID, configK)
+	b, dirty, err := cacheInstance.Get(channelID, configK)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
+	assert.True(t, dirty, "config supposed to be dirty")
 	//second channel
 	stub1 := mockstub.NewMockStub("testConfigState", nil)
 	stub1.MockTransactionStart("testTX")
@@ -214,10 +223,11 @@ func TestTwoChannels(t *testing.T) {
 		t.Fatalf("Cannot upload %s", err)
 	}
 	cacheInstance = Initialize(stub1, mspID)
-	b, err = cacheInstance.Get("channelIDTwo", configK)
+	b, dirty, err = cacheInstance.Get("channelIDTwo", configK)
 	if len(b) == 0 {
 		t.Fatalf("Error expected value here for key %s ", configK)
 	}
+	assert.True(t, dirty, "config supposed to be dirty")
 	stub.MockTransactionEnd("testTX")
 }
 
@@ -315,13 +325,14 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 		t.Fatalf("Error %v", err)
 	}
 	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: "1"}
-	_, err = cacheInstance.Get(stub.GetChannelID(), key)
+	_, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
 	if err != nil {
 		t.Fatalf("Error %v", err)
 	}
+	assert.True(t, dirty, "config supposed to be dirty")
 
 	key = api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com.does.not.exist", AppName: "testAppName", AppVersion: "1"}
-	originalConfig, err := adminService.Get(stub.GetChannelID(), key)
+	originalConfig, dirty, err := adminService.Get(stub.GetChannelID(), key)
 	//key does not exist in cache - should come from ledger
 	if err == nil {
 		t.Fatalf("Expected: 'Cannot obtain ledger for channel testChannel'")
@@ -329,7 +340,7 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 	if len(originalConfig) > 0 {
 		t.Fatalf("Expected nil config content for non existing key")
 	}
-
+	assert.False(t, dirty)
 	stub.MockTransactionEnd("saveConfiguration")
 
 }
@@ -338,10 +349,40 @@ func TestGetWithInvalidKey(t *testing.T) {
 	adminService := ConfigServiceImpl{}
 
 	key := api.ConfigKey{MspID: "", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: "1"}
-	_, err := adminService.Get("channelID", key)
+	_, _, err := adminService.Get("channelID", key)
 	if err == nil {
 		t.Fatalf("Error expected 'Cannot obtain ledger for channel'")
 	}
+}
+
+func TestIsDirty(t *testing.T) {
+	svcInstance := ConfigServiceImpl{}
+	svcInstance.configHashes = make(map[string]string)
+
+	isDirty := svcInstance.isConfigDirty("key1", []byte("value1"))
+	assert.True(t, isDirty, "supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key1", []byte("value1"))
+	assert.False(t, isDirty, "not supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key1", []byte("value2"))
+	assert.True(t, isDirty, "supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key1", []byte("value2"))
+	assert.False(t, isDirty, "not supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key1", []byte("value1"))
+	assert.True(t, isDirty, "supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key2", []byte("value1"))
+	assert.True(t, isDirty, "supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key2", []byte("value1"))
+	assert.False(t, isDirty, "not supposed to be dirty")
+
+	isDirty = svcInstance.isConfigDirty("key2", []byte("value2"))
+	assert.True(t, isDirty, "supposed to be dirty")
+
 }
 
 //uplaodConfigToHL to upload key&config to repository

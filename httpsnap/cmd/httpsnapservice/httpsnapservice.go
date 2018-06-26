@@ -27,8 +27,13 @@ import (
 
 	"crypto/ecdsa"
 
+	"sync"
+
+	"time"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
@@ -42,13 +47,15 @@ var logger = logging.NewLogger("httpsnap")
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
 
-// TODO: HTTP service is reconstructed per-request. These should be inside
-// the HTTPServiceImpl struct once that is cached correctly or made a singleton
-var certPoolCache = NewCertPoolCache()
+var once sync.Once
+
+var instance *HTTPServiceImpl
 
 //HTTPServiceImpl used to create transaction service
 type HTTPServiceImpl struct {
-	config httpsnapApi.Config
+	sync.RWMutex
+	config   httpsnapApi.Config
+	certPool fab.CertPool
 }
 
 //HTTPServiceInvokeRequest used to create http invoke service
@@ -70,6 +77,31 @@ type Dialer func(network, addr string) (net.Conn, error)
 //Get will return httpService to caller
 func Get(channelID string) (*HTTPServiceImpl, error) {
 	return newHTTPService(channelID)
+}
+
+//updateConfig http service updates http service config if provided config has any updates
+func initialize(config httpsnapApi.Config) {
+
+	once.Do(func() {
+		instance = &HTTPServiceImpl{}
+		logger.Infof("Created HTTPServiceImpl instance %v", time.Unix(time.Now().Unix(), 0))
+	})
+
+	//Update config in httpServiceImpl if any config update found in new config
+	instance.Lock()
+	defer instance.Unlock()
+
+	instance.config = config
+	instance.certPool = commtls.NewCertPool(config.IsSystemCertPoolEnabled())
+
+	level, err := config.GetLogLevel()
+	if err != nil {
+		//only error scenario when invalid non-empty log level is provided in config file which cannot be parsed to valid SDK log level
+		logger.Errorf("Unable to set log level, %s", err)
+	} else {
+		logging.SetLevel("httpsnap", level)
+	}
+
 }
 
 //Invoke http service
@@ -116,6 +148,9 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.Errorf(errors.GeneralError, "Unsupported scheme: %s", uri.Scheme)
 	}
 
+	httpServiceImpl.RLock()
+	defer httpServiceImpl.RUnlock()
+
 	schemaConfig, err := httpServiceImpl.config.GetSchemaConfig(headers[contentType])
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetSchemaConfig return error")
@@ -127,7 +162,7 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 	}
 
 	// URL is ok, retrieve data using http client
-	_, response, err := httpServiceImpl.getData(httpServiceInvokeRequest, httpServiceImpl.config)
+	_, response, err := httpServiceImpl.getData(httpServiceInvokeRequest)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "getData return error")
 	}
@@ -143,7 +178,7 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 
 //newHTTPService creates new http snap service
 func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
-	config, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
+	config, dirty, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed to initialize config")
 	}
@@ -151,35 +186,36 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	if config == nil {
 		return nil, errors.New(errors.GeneralError, "config from ledger is nil")
 	}
-	httpService := &HTTPServiceImpl{}
-	httpService.config = config
-	return httpService, nil
 
+	if dirty {
+		initialize(config)
+	}
+	return instance, nil
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest, config httpsnapApi.Config) (responseContentType string, responseBody []byte, err error) {
+func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, err error) {
 
-	tlsConfig, err := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, config)
+	tlsConfig, err := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
 	if err != nil {
 		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, err)
 		return "", nil, err
 	}
 
 	tlsConfig.BuildNameToCertificate()
-	transport := &http.Transport{TLSHandshakeTimeout: config.TimeoutOrDefault(httpsnapApi.TransportTLSHandshake),
-		ResponseHeaderTimeout: config.TimeoutOrDefault(httpsnapApi.TransportResponseHeader),
-		ExpectContinueTimeout: config.TimeoutOrDefault(httpsnapApi.TransportExpectContinue),
-		IdleConnTimeout:       config.TimeoutOrDefault(httpsnapApi.TransportIdleConn),
+	transport := &http.Transport{TLSHandshakeTimeout: httpServiceImpl.config.TimeoutOrDefault(httpsnapApi.TransportTLSHandshake),
+		ResponseHeaderTimeout: httpServiceImpl.config.TimeoutOrDefault(httpsnapApi.TransportResponseHeader),
+		ExpectContinueTimeout: httpServiceImpl.config.TimeoutOrDefault(httpsnapApi.TransportExpectContinue),
+		IdleConnTimeout:       httpServiceImpl.config.TimeoutOrDefault(httpsnapApi.TransportIdleConn),
 		DisableCompression:    true,
 		TLSClientConfig:       tlsConfig,
 	}
 
 	if len(invokeReq.PinSet) > 0 {
-		transport.DialTLS = httpServiceImpl.verifyPinDialer(tlsConfig, invokeReq.PinSet, config)
+		transport.DialTLS = httpServiceImpl.verifyPinDialer(tlsConfig, invokeReq.PinSet, httpServiceImpl.config)
 	}
 
 	client := &http.Client{
-		Timeout:   config.TimeoutOrDefault(httpsnapApi.Global),
+		Timeout:   httpServiceImpl.config.TimeoutOrDefault(httpsnapApi.Global),
 		Transport: transport,
 	}
 
@@ -192,7 +228,7 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 	// Set allowed headers only
 	for name, value := range invokeReq.RequestHeaders {
-		allowed, err := config.IsHeaderAllowed(name)
+		allowed, err := httpServiceImpl.config.IsHeaderAllowed(name)
 		if err != nil {
 			return "", nil, err
 		}
@@ -233,11 +269,14 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, pins []string, config httpsnapApi.Config) Dialer {
 
+	timeout := config.TimeoutOrDefault(httpsnapApi.DialerTimeout)
+	keepAlive := config.TimeoutOrDefault(httpsnapApi.DialerKeepAlive)
+
 	return func(network, addr string) (net.Conn, error) {
 
 		d := &net.Dialer{
-			Timeout:   config.TimeoutOrDefault(httpsnapApi.DialerTimeout),
-			KeepAlive: config.TimeoutOrDefault(httpsnapApi.DialerKeepAlive),
+			Timeout:   timeout,
+			KeepAlive: keepAlive,
 		}
 
 		c, err := tls.DialWithDialer(d, network, addr, tlsConfig)
@@ -358,12 +397,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
 
-	cp, err := certPoolCache.Get(NewCertPoolCacheKey(systemCertPoolEnabled))
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
-	}
-	certPool := cp.(fab.CertPool)
-	pool, err := certPool.Get(decodeCerts(caCerts)...)
+	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
 	}
@@ -381,12 +415,8 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "Failed X509KeyPair")
 	}
-	cp, err := certPoolCache.Get(NewCertPoolCacheKey(systemCertPoolEnabled))
-	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to load cert pool cache")
-	}
-	certPool := cp.(fab.CertPool)
-	pool, err := certPool.Get(decodeCerts(caCerts)...)
+
+	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
 	}

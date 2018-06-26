@@ -18,6 +18,9 @@ import (
 
 	"encoding/json"
 
+	"crypto/sha256"
+	"encoding/base64"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
@@ -32,8 +35,9 @@ type cache map[string][]byte
 
 //ConfigServiceImpl used to create cache instance
 type ConfigServiceImpl struct {
-	mtx      sync.RWMutex
-	cacheMap map[string]cache
+	mtx          sync.RWMutex
+	cacheMap     map[string]cache
+	configHashes map[string]string
 }
 
 var instance *ConfigServiceImpl
@@ -50,6 +54,7 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 	once.Do(func() {
 		instance = &ConfigServiceImpl{}
 		instance.cacheMap = make(map[string]cache)
+		instance.configHashes = make(map[string]string)
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
 	})
 	instance.Refresh(stub, mspID)
@@ -57,9 +62,9 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 }
 
 //Get items from cache
-func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, error) {
+func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, bool, error) {
 	if csi == nil {
-		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return nil, false, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
 	}
 	if configKey.AppVersion == "" {
 		configKey.AppVersion = api.VERSION
@@ -73,7 +78,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 
 	keyStr, err := mgmt.ConfigKeyToString(configKey)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	val := channelCache[keyStr]
@@ -82,7 +87,7 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 		//not in cache get from ledger
 		return csi.GetConfigFromLedger(channelID, configKey)
 	}
-	return channelCache[keyStr], nil
+	return val, csi.isConfigDirty(keyStr, val), nil
 }
 
 //GetFromCache get items from cache
@@ -112,23 +117,23 @@ func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.Confi
 }
 
 //GetViper configuration as Viper
-func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, error) {
-	configData, err := csi.Get(channelID, configKey)
+func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, bool, error) {
+	configData, dirty, err := csi.Get(channelID, configKey)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if len(configData) == 0 {
 		// No config found for the key. Return nil instead of an error so that the caller can differentiate between the two cases
-		return nil, nil
+		return nil, false, nil
 	}
 
 	v := viper.New()
 	v.SetConfigType(string(configType))
 	err = v.ReadConfig(bytes.NewBuffer(configData))
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+		return nil, false, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
 	}
-	return v, err
+	return v, dirty, err
 }
 
 //Refresh adds new items into cache and refreshes existing ones
@@ -157,7 +162,7 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 }
 
 //GetConfigFromLedger - gets snaps configs from ledger
-func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey api.ConfigKey) ([]byte, error) {
+func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey api.ConfigKey) ([]byte, bool, error) {
 
 	logger.Debugf("Getting key [%#v] on channel [%s]", configKey, channelID)
 	lgr := peer.GetLedger(channelID)
@@ -168,7 +173,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
 			logger.Errorf("Cannot create transaction simulator %s", err)
-			return nil, errors.WithMessage(errors.GeneralError, err, "Cannot create transaction simulator")
+			return nil, false, errors.WithMessage(errors.GeneralError, err, "Cannot create transaction simulator")
 		}
 		defer txsim.Done()
 
@@ -176,11 +181,47 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
 			logger.Errorf("Error getting state for app %s %s", keyStr, err)
-			return nil, errors.Wrap(errors.GeneralError, err, "Error getting state")
+			return nil, false, errors.Wrap(errors.GeneralError, err, "Error getting state")
 		}
-		return config, nil
+		return config, csi.isConfigDirty(keyStr, config), nil
 	}
-	return nil, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
+	return nil, false, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
+}
+
+//isConfigDirty checks if config retrieved for given key string is updated since its last retrieval.
+// it checks hash of config bytes previously to current one, if there is a mismatch then returns true
+func (csi *ConfigServiceImpl) isConfigDirty(keyStr string, config []byte) bool {
+
+	if len(config) == 0 {
+		return false
+	}
+
+	var dirtyFlag bool
+	currentHash := csi.generateHash(config)
+
+	csi.mtx.RLock()
+	hash, ok := csi.configHashes[keyStr]
+	if ok {
+		dirtyFlag = !(currentHash == hash)
+	} else {
+		dirtyFlag = true
+	}
+	csi.mtx.RUnlock()
+
+	if dirtyFlag {
+		//if there is config update then update hash values in map
+		csi.mtx.Lock()
+		csi.configHashes[keyStr] = currentHash
+		csi.mtx.Unlock()
+	}
+
+	return dirtyFlag
+}
+
+// generateHash generates hash for give bytes
+func (csi *ConfigServiceImpl) generateHash(bytes []byte) string {
+	digest := sha256.Sum256(bytes)
+	return base64.StdEncoding.EncodeToString(digest[:])
 }
 
 func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV, mspID string) error {
