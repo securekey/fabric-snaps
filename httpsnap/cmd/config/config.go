@@ -7,7 +7,6 @@ package config
 
 import (
 	"bytes"
-	"go/build"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -44,39 +43,43 @@ type config struct {
 }
 
 // NewConfig return config struct
-func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, error) {
+func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, bool, error) {
 	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	//httpSnapConfig Config
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
+		return nil, false, errors.New(errors.GeneralError, "Cannot create cache instance")
 	}
-	configData, err := cacheInstance.Get(channelID, key)
+	configData, dirty, err := cacheInstance.Get(channelID, key)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
+		return nil, false, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
 	}
 	if configData == nil {
-		return nil, errors.New(errors.GeneralError, "config data is empty")
+		return nil, false, errors.New(errors.GeneralError, "config data is empty")
 	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
 	err = httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+		return nil, false, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
 	}
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
-	err = c.initializeLogging()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+
+	if dirty {
+		err = c.initializeLogging()
+		if err != nil {
+			return nil, false, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+		}
 	}
-	return c, nil
+
+	return c, dirty, nil
 }
 
 // Helper function to initialize logging
@@ -317,13 +320,4 @@ func (c *config) GetCryptoProvider() (string, error) {
 		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
 	}
 	return cryptoProvider, nil
-}
-
-// substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
-// has multiple GOPATHs then the first is used.
-func substGoPath(s string) string {
-	gpDefault := build.Default.GOPATH
-	gps := filepath.SplitList(gpDefault)
-
-	return strings.Replace(s, "$GOPATH", gps[0], -1)
 }

@@ -151,7 +151,7 @@ func getInstance(key CacheKey) (api.Client, error) {
 	return client.(api.Client), nil
 }
 
-// GeneratePin returns pin of an x509 certificate
+// generateHash generates hash for give bytes
 func (c *clientImpl) generateHash(bytes []byte) string {
 	digest := sha256.Sum256(bytes)
 	return base64.StdEncoding.EncodeToString(digest[:])

@@ -75,10 +75,12 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 	}
 	var refreshInterval = defaultRefreshInterval
 	var customConfig *viper.Viper
+	var dirty = true
+	var dataConfig []byte
 	if channelID != "" {
 		logger.Debugf("Getting config for channel: %s", channelID)
 
-		dataConfig, err := cacheInstance.Get(channelID, key)
+		dataConfig, dirty, err = cacheInstance.Get(channelID, key)
 		if err != nil {
 			return nil, err
 		}
@@ -114,9 +116,11 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		RefreshInterval:  refreshInterval,
 		ConfigSnapConfig: customConfig,
 	}
-	err = config.initializeLogging()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+	if dirty {
+		err = config.initializeLogging()
+		if err != nil {
+			return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+		}
 	}
 	return config, nil
 }
@@ -191,7 +195,7 @@ func getMyConfig(channelID string, peerConfigPath string) (*viper.Viper, error) 
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 
-	csconfig, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
+	csconfig, _, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
 	if err != nil {
 		return nil, err
 	}
