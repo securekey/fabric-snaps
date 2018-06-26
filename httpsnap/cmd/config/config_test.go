@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 var snapConfig *viper.Viper
@@ -208,7 +209,7 @@ func TestMain(m *testing.M) {
 	}
 	configmgmtService.Initialize(stub2, mspID)
 
-	c, err = NewConfig("../sampleconfig", channelID)
+	c, _, err = NewConfig("../sampleconfig", channelID)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -241,19 +242,21 @@ func uploadConfigToHL(stub *mockstub.MockStub, config []byte) error {
 
 func TestNoConfig(t *testing.T) {
 	viper.Reset()
-	_, err := NewConfig("abc", channelID)
+	_, dirty, err := NewConfig("abc", channelID)
 	if err == nil {
 		t.Fatalf("Init config should have failed.")
 	}
+	assert.False(t, dirty)
 
 }
 
 func TestTLSPeerConfig(t *testing.T) {
 	peerTLSPrefix := "-----BEGIN CERTIFICATE-----"
-	testConfig, err := NewConfig("../sampleconfig", peerConfigChannelID)
+	testConfig, dirty, err := NewConfig("../sampleconfig", peerConfigChannelID)
 	if err != nil {
 		panic(err.Error())
 	}
+	assert.True(t, dirty)
 
 	//Test get client cert
 	clientCert, err := testConfig.GetClientCert()

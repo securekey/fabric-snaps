@@ -6,7 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
-import "time"
+import (
+	"time"
+)
 
 // SchemaConfig defines request and response schemas for content type
 type SchemaConfig struct {

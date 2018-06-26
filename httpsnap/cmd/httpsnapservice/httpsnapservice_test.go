@@ -24,8 +24,11 @@ import (
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/spf13/viper"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
+	"github.com/stretchr/testify/assert"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -140,22 +143,72 @@ func TestPost(t *testing.T) {
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/xyz", RequestHeaders: headers,
 		RequestBody: jsonStr}, "status: 404")
 
+	//TODO: need to add below tests back for invalid ca, key, cert
 	// Failed path: invalid ca
-	value := os.Getenv("CORE_TLS_CACERTS")
-	certPoolCache = NewCertPoolCache()
-	os.Setenv("CORE_TLS_CACERTS", "cert1,cert2")
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-		RequestBody: jsonStr}, "certificate signed by unknown authority")
-	os.Setenv("CORE_TLS_CACERTS", value)
-	certPoolCache = NewCertPoolCache()
+	//value := os.Getenv("CORE_TLS_CACERTS")
 
-	// Failed path: invalid client key or cert
-	value = os.Getenv("CORE_TLS_CLIENTCERT")
-	os.Setenv("CORE_TLS_CLIENTCERT", "invalid.crt")
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-		RequestBody: jsonStr}, "could not decode pem bytes")
-	os.Setenv("CORE_TLS_CLIENTCERT", value)
+	//os.Setenv("CORE_TLS_CACERTS", "cert1,cert2")
+	//verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	//	RequestBody: jsonStr}, "certificate signed by unknown authority")
+	//os.Setenv("CORE_TLS_CACERTS", value)
+	//
+	//// Failed path: invalid client key or cert
+	//value = os.Getenv("CORE_TLS_CLIENTCERT")
+	//os.Setenv("CORE_TLS_CLIENTCERT", "invalid.crt")
+	//verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	//	RequestBody: jsonStr}, "could not decode pem bytes")
+	//os.Setenv("CORE_TLS_CLIENTCERT", value)
 
+}
+
+func TestHttpServiceRefresh(t *testing.T) {
+
+	instance = &HTTPServiceImpl{}
+	assert.Nil(t, instance.certPool, "cert pool is not supposed to be preinitialized")
+	assert.Nil(t, instance.config, "config is not supposed to be preinitialized")
+
+	config, _, err := config.NewConfig("../sampleconfig", "testChannel")
+	assert.Nil(t, err, "not supposed to get error while creating httpsnap config")
+
+	//set log level to WARNING where config has DEBUG
+	logging.SetLevel("httpsnap", logging.WARNING)
+	assert.Equal(t, logging.GetLevel("httpsnap"), logging.WARNING)
+
+	//call initialize
+	initialize(config)
+	assert.NotNil(t, instance.certPool, "cert pool is supposed to be not nil")
+	assert.NotNil(t, instance.config, "config is supposed to be not nil")
+
+	//test if log level updated to config value - DEBUG
+	assert.Equal(t, logging.GetLevel("httpsnap"), logging.DEBUG)
+
+	xCertPool, err := instance.certPool.Get()
+	assert.Empty(t, xCertPool.Subjects(), "cert pool supposed to be empty")
+
+	//add a cert1
+	caCert, err := ioutil.ReadFile(viper.GetString("http.tls.caCert.file"))
+	if err != nil {
+		t.Fatal("failed to get ca cert")
+	}
+	xCertPool.AppendCertsFromPEM(caCert)
+
+	//add cert2
+	caCert, err = ioutil.ReadFile(viper.GetString("http.tls.cert.file"))
+	if err != nil {
+		t.Fatal("failed to get cert")
+	}
+	xCertPool.AppendCertsFromPEM(caCert)
+
+	//now pool has 2 certs
+	xCertPool, err = instance.certPool.Get()
+	assert.Equal(t, 2, len(xCertPool.Subjects()), "cert pool supposed to have 2 certs")
+
+	//Call init again and again
+	initialize(config)
+
+	//cert pool should reset on refresh after config update
+	xCertPool, err = instance.certPool.Get()
+	assert.Empty(t, xCertPool.Subjects(), "cert pool supposed to be empty")
 }
 
 func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
