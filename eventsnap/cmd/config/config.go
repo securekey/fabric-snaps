@@ -78,7 +78,7 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	logger.Debugf("Getting configuration from ledger for msp [%s], peer [%s], app [%s]", mspID, peerID, EventSnapAppName)
 
 	configKey := configapi.ConfigKey{MspID: mspID, PeerID: peerID, AppName: EventSnapAppName}
-	config, err := configservice.GetInstance().GetViper(channelID, configKey, configapi.YAML)
+	config, dirty, err := configservice.GetInstance().GetViper(channelID, configKey, configapi.YAML)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "error getting event snap configuration Viper")
 	}
@@ -86,7 +86,7 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 		return nil, errors.New(errors.GeneralError, "config data is empty")
 	}
 
-	bytes, err := configservice.GetInstance().Get(channelID, configKey)
+	bytes, _, err := configservice.GetInstance().Get(channelID, configKey)
 	if err != nil {
 		return nil, errors.Wrap(errors.GeneralError, err, "error getting event snap configuration bytes")
 	}
@@ -102,16 +102,18 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	eventSnapConfig.EventConsumerBufferSize = uint(config.GetInt("eventsnap.consumer.buffersize"))
 	eventSnapConfig.EventConsumerTimeout = config.GetDuration("eventsnap.consumer.timeout")
 
-	logLevel := config.GetString("eventsnap.loglevel")
-	if logLevel == "" {
-		logLevel = defaultLogLevel
+	if dirty {
+		logLevel := config.GetString("eventsnap.loglevel")
+		if logLevel == "" {
+			logLevel = defaultLogLevel
+		}
+		level, err := logging.LogLevel(logLevel)
+		if err != nil {
+			return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+		}
+		logging.SetLevel(EventSnapAppName, level)
+		logger.Debugf("Eventsnap logging initialized. Log level: %s", logLevel)
 	}
-	level, err := logging.LogLevel(logLevel)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
-	}
-	logging.SetLevel(EventSnapAppName, level)
-	logger.Debugf("Eventsnap logging initialized. Log level: %s", logLevel)
 
 	return eventSnapConfig, nil
 }

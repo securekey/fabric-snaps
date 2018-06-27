@@ -99,11 +99,13 @@ const (
 
 //ConfigService configuration service interface
 type ConfigService interface {
-	//Get returns the config bytes for the given channel and config key
-	Get(channelID string, configKey ConfigKey) ([]byte, error)
-	//GetViper returns a Viper instance that wraps the config for the given channel and config key.
+	//Get returns the config bytes along with dirty flag for the given channel and config key.
+	// dirty flag bool returns true only if config is updated since its last retrieval
+	Get(channelID string, configKey ConfigKey) ([]byte, bool, error)
+	//GetViper returns a Viper instance along with dirty fla that wraps the config for the given channel and config key.
 	// If the config key doesn't exist then nil is returned.
-	GetViper(channelID string, configKey ConfigKey, configType ConfigType) (*viper.Viper, error)
+	//dirty flag bool returns true only if config is updated since its last retrieval
+	GetViper(channelID string, configKey ConfigKey, configType ConfigType) (*viper.Viper, bool, error)
 }
 
 //IsValid validates config message
