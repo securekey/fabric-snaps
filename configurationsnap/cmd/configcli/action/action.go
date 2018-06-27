@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -109,11 +111,15 @@ func (a *action) Query(chaincodeID, fctn string, args [][]byte) ([]byte, error) 
 		return nil, errors.Errorf(errors.GeneralError, "Error getting channel client: %s", err)
 	}
 
-	resp, err := channelClient.Query(channel.Request{
-		ChaincodeID: chaincodeID,
-		Fcn:         fctn,
-		Args:        args,
-	}, channel.WithTargets(a.peers...))
+	resp, err := channelClient.Query(
+		channel.Request{
+			ChaincodeID: chaincodeID,
+			Fcn:         fctn,
+			Args:        args,
+		},
+		channel.WithTargets(a.peers...),
+		channel.WithRetry(retry.DefaultChannelOpts),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +137,10 @@ func (a *action) ExecuteTx(chaincodeID, fctn string, args [][]byte) error {
 			ChaincodeID: chaincodeID,
 			Fcn:         fctn,
 			Args:        args,
-		}, channel.WithTargets(a.peers...))
+		},
+		channel.WithTargets(a.peers...),
+		channel.WithRetry(retry.DefaultChannelOpts),
+	)
 
 	return err
 }

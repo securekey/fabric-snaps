@@ -261,6 +261,15 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if len(args) < 1 {
+		return shim.Error("expecting first arg to be a JSON array of MSP IDs")
+	}
+
+	var msps []string
+	err := json.Unmarshal(args[0], &msps)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("error unmarshaling MSP IDs argument: %s", err))
+	}
 
 	peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 	if err != nil {
@@ -274,35 +283,14 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
-	msps, err := getChannelPeersMsp(stub.GetChannelID())
-	if err != nil {
-		return shim.Error(fmt.Sprintf("getChannelPeersMsp return error %s", err))
-	}
-	for msp := range msps {
+
+	for _, msp := range msps {
 		logger.Debugf("****** Refresh msp id %s", msp)
 		instance.Refresh(stub, msp)
 	}
 	instance.Refresh(stub, GeneralMspID)
 
 	return shim.Success(nil)
-}
-
-func getChannelPeersMsp(channelID string) (map[string]string, error) {
-	logger.Debugf("****** getChannelPeersMsp channel id %s", channelID)
-	msrv, err := getMembershipService()
-	if err != nil {
-		return nil, err
-	}
-	endpoints, err := msrv.GetPeersOfChannel(channelID)
-	if err != nil {
-		return nil, err
-	}
-	logger.Debugf("****** getChannelPeersMsp channel id %s return endpoints %s", channelID, endpoints)
-	msps := make(map[string]string, 0)
-	for _, endpoint := range endpoints {
-		msps[string(endpoint.MSPid)] = ""
-	}
-	return msps, nil
 }
 
 //getFromCache - gets configuration using configkey as criteria from cache
@@ -680,15 +668,38 @@ func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
 func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
 	localPeer, err := txService.Config.GetLocalPeer()
 	if err != nil {
-		logger.Debugf("Cannot get local peer: %v", err)
+		logger.Errorf("Error getting local peer config when sending refresh request: %s", err)
 	}
 
 	targetPeer, err := txService.GetTargetPeer(localPeer)
 	if err != nil {
-		logger.Debugf("Error creating target peer: %v", err)
+		logger.Errorf("Error creating target peer when sending refresh request: %s", err)
+		return
 	}
 
-	args := [][]byte{[]byte("refresh")}
+	chConfig, err := txService.FcClient.GetContext().ChannelService().ChannelConfig()
+	if err != nil {
+		logger.Errorf("Error getting channel config: %s", err)
+		return
+	}
+
+	var mspIDs []string
+	for _, mspConfig := range chConfig.MSPs() {
+		fabricMSPConfig := &protosMSP.FabricMSPConfig{}
+		err := proto.Unmarshal(mspConfig.Config, fabricMSPConfig)
+		if err != nil {
+			logger.Errorf("Error unmarshalling MSP config: %s", err)
+		}
+		mspIDs = append(mspIDs, fabricMSPConfig.Name)
+	}
+
+	mspIDsBytes, err := json.Marshal(mspIDs)
+	if err != nil {
+		logger.Errorf("Error marshalling JSON args: %s", err)
+		return
+	}
+
+	args := [][]byte{[]byte("refresh"), mspIDsBytes}
 	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil)
 	txService.EndorseTransaction(txSnapReq, []fabApi.Peer{targetPeer})
 }

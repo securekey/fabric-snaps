@@ -209,11 +209,6 @@ func (a *updateAction) update() error {
 	}
 	fmt.Println("Configuration successfully updated!")
 
-	if _, err := a.Query(cliconfig.ConfigSnapID, "refresh", [][]byte{}); err != nil {
-		fmt.Printf("Error Query chaincode: %s\n", err)
-		return errors.Wrap(err, "Refresh command returned with error")
-	}
-	fmt.Println("Configuration successfully Refreshed!")
 	return nil
 }
 

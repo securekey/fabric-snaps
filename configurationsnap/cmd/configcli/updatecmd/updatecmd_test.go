@@ -84,10 +84,6 @@ func newMockAction() *action.MockAction {
 				if err := configMessage.IsValid(); err != nil {
 					return nil, errors.Wrap(err, "invalid config message")
 				}
-			} else if fctn == "refresh" {
-				if len(args) != 0 {
-					return nil, errors.New("expecting zero arg for refresh")
-				}
 			} else {
 				return nil, errors.Errorf("expecting function [save] or [refresh] but got [%s]", fctn)
 			}

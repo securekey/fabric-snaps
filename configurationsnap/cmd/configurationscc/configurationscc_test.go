@@ -28,6 +28,7 @@ import (
 	"github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -62,7 +63,11 @@ func TestRefreshACLSuccess(t *testing.T) {
 	stub := newMockStub(nil, nil)
 
 	stub.ChannelID = "testChannel"
-	args := [][]byte{[]byte("testChannel")}
+
+	mspsBytes, err := json.Marshal([]string{"Org1MSP", "Org2MSP", "Org3MSP"})
+	require.NoError(t, err)
+	args := [][]byte{mspsBytes}
+
 	peerConfigPath = "./sampleconfig"
 
 	aclCheckCalled = false
@@ -81,7 +86,11 @@ func TestRefreshACLFailure(t *testing.T) {
 	stub := newMockStub(nil, nil)
 
 	stub.ChannelID = "testChannel"
-	args := [][]byte{[]byte("testChannel")}
+
+	mspsBytes, err := json.Marshal([]string{"Org1MSP", "Org2MSP", "Org3MSP"})
+	require.NoError(t, err)
+	args := [][]byte{mspsBytes}
+
 	peerConfigPath = "./sampleconfig"
 
 	aclCheckCalled = false
