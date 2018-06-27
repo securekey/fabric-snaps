@@ -45,6 +45,18 @@
   version = "v1.17.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  name = "github.com/cactus/go-statsd-client"
+  packages = ["statsd"]
+  revision = "138b925ccdf617776955904ba7759fce64406cec"
+  version = "v3.1.1"
+
+[[projects]]
   name = "github.com/cloudflare/cfssl"
   packages = [
     "api",
@@ -133,6 +145,12 @@
   name = "github.com/eapache/queue"
   packages = ["."]
   revision = "44cc805cf13205b55f69e14bcb69867d1ae92f98"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/facebookgo/clock"
+  packages = ["."]
+  revision = "600d898af40aa09a7a93ecb9265d87b0504b6f03"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -279,6 +297,7 @@
     "core/container/util",
     "core/deliverservice",
     "core/deliverservice/blocksprovider",
+    "core/handlers/auth",
     "core/handlers/validation/api",
     "core/handlers/validation/api/capabilities",
     "core/handlers/validation/api/identities",
@@ -505,6 +524,12 @@
   version = "v1.7.3"
 
 [[projects]]
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/miekg/pkcs11"
   packages = ["."]
   revision = "6dbd569b952ec150d1425722dbbe80f2c6193f83"
@@ -618,6 +643,42 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/promhttp"
+  ]
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "7600349dcfe1abd18d72d3a1770870d9800a7801"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs"
+  ]
+  revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+
+[[projects]]
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
   revision = "ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8"
@@ -708,6 +769,16 @@
     "ginkgomon"
   ]
   revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
+
+[[projects]]
+  name = "github.com/uber-go/tally"
+  packages = [
+    ".",
+    "prometheus",
+    "statsd"
+  ]
+  revision = "522328b48efad0c6034dba92bf39228694e9d31f"
+  version = "v3.3.2"
 
 [[projects]]
   branch = "master"
@@ -851,6 +922,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1c189a8fdba291f3ca5b676a98599c08d1cca5a77231750746d3048a91bf3363"
+  inputs-digest = "7e975d6a74eae9999b2e88caa4618a8820b00cd5bdbd3f555febd32acfc338d7"
   solver-name = "gps-cdcl"
   solver-version = 1
