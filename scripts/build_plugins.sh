@@ -46,7 +46,8 @@ echo "Building eventconsumer snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./eventconsumersnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/eventconsumersnap
 echo "Building bootstrap snap..."
 go build -tags $GO_BUILD_TAGS -buildmode=plugin -o ./bootstrapsnap.so github.com/hyperledger/fabric/plugins/bddtests/fixtures/snapexample/bootstrap
-
+echo "Building metrics filter..."
+go build -tags "$GO_BUILD_TAGS" -buildmode=plugin -o ./metricsfilter.so github.com/hyperledger/fabric/plugins/metrics/cmd/filter
 
 cp httpsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp transactionsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/

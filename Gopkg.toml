@@ -79,11 +79,13 @@
   name = "github.com/stretchr/testify"
   version = "1.2.1"
 
+[[constraint]]
+  name = "github.com/uber-go/tally"
+  version = "=3.3.2"
+
 [[override]]
   name = "github.com/pkg/errors"
   revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
-
-
 
 [prune]
   go-tests = true
