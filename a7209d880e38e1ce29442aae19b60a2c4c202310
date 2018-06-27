@@ -22,6 +22,30 @@
       "revId": "a7209d880e38e1ce29442aae19b60a2c4c202310",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d93dab42_7f57ef64",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice_test.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-06-27T14:47:33Z",
+      "side": 1,
+      "message": "Created https://jira.securekey.com/browse/DEV-7956",
+      "parentUuid": "fecca3fc_f2044520",
+      "range": {
+        "startLine": 145,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 63
+      },
+      "revId": "a7209d880e38e1ce29442aae19b60a2c4c202310",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
