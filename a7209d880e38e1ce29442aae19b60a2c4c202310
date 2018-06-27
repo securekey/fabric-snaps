@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd58c6b6_25a61a6c",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-06-27T15:05:40Z",
+      "side": 1,
+      "message": "if we get an error, shouldn\u0027t we return true so that cache gets refreshed?",
+      "range": {
+        "startLine": 176,
+        "startChar": 15,
+        "endLine": 176,
+        "endChar": 20
+      },
+      "revId": "a7209d880e38e1ce29442aae19b60a2c4c202310",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fecca3fc_f2044520",
         "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice_test.go",
         "patchSetId": 4
