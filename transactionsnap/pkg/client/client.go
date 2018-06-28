@@ -11,8 +11,10 @@ import (
 	"sync"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
 	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+	"github.com/uber-go/tally"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
@@ -47,6 +49,7 @@ import (
 )
 
 var logger = logging.NewLogger("txnsnap")
+var retryCounter tally.Counter
 
 const (
 	txnSnapUser     = "Txn-Snap-User"
@@ -136,6 +139,7 @@ func getInstance(key CacheKey) (api.Client, error) {
 		logger.Debugf("Setting client cache refresh interval %d\n", key.TxnSnapConfig().GetClientCacheRefreshInterval())
 		cache = newRefCache(key.TxnSnapConfig().GetClientCacheRefreshInterval())
 		logger.Debug("Cache was intialized")
+		retryCounter = metrics.RootScope.Counter("transaction_retry")
 	})
 
 	ref, err := cache.Get(key)
@@ -302,7 +306,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()))
+		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(error) { retryCounter.Inc(1) }))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -358,7 +362,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()))
+		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(error) { retryCounter.Inc(1) }))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
