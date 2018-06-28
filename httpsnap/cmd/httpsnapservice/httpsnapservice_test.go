@@ -24,7 +24,9 @@ import (
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/spf13/viper"
 
+	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 	"github.com/stretchr/testify/assert"
@@ -142,21 +144,22 @@ func TestPost(t *testing.T) {
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/xyz", RequestHeaders: headers,
 		RequestBody: jsonStr}, "status: 404")
 
-	//TODO: need to add below tests back for invalid ca, key, cert
-	// Failed path: invalid ca
-	//value := os.Getenv("CORE_TLS_CACERTS")
+	currentConfig := instance.config
+	currenCertPool := instance.certPool
 
-	//os.Setenv("CORE_TLS_CACERTS", "cert1,cert2")
-	//verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-	//	RequestBody: jsonStr}, "certificate signed by unknown authority")
-	//os.Setenv("CORE_TLS_CACERTS", value)
-	//
-	//// Failed path: invalid client key or cert
-	//value = os.Getenv("CORE_TLS_CLIENTCERT")
-	//os.Setenv("CORE_TLS_CLIENTCERT", "invalid.crt")
-	//verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-	//	RequestBody: jsonStr}, "could not decode pem bytes")
-	//os.Setenv("CORE_TLS_CLIENTCERT", value)
+	// Failed path: invalid ca
+	instance.config = &customHTTPConfig{Config: currentConfig, customCaCerts: []string{"cert1,cert2"}}
+	instance.certPool = commtls.NewCertPool(currentConfig.IsSystemCertPoolEnabled())
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+		RequestBody: jsonStr}, "certificate signed by unknown authority")
+
+	// Failed path: invalid client key or cert
+	instance.config = &customHTTPConfig{Config: currentConfig, customClientCert: "invalid.crt"}
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+		RequestBody: jsonStr}, "could not decode pem bytes")
+
+	instance.config = currentConfig
+	instance.certPool = currenCertPool
 
 }
 
@@ -355,4 +358,24 @@ func newConfigMockStub(channelID string) *mockstub.MockStub {
 	stub.MockTransactionStart("startTxn")
 	stub.ChannelID = channelID
 	return stub
+}
+
+type customHTTPConfig struct {
+	api.Config
+	customCaCerts    []string
+	customClientCert string
+}
+
+func (c *customHTTPConfig) GetClientCert() (string, error) {
+	if len(c.customClientCert) > 0 {
+		return c.customClientCert, nil
+	}
+	return c.Config.GetClientCert()
+}
+
+func (c *customHTTPConfig) GetCaCerts() ([]string, error) {
+	if len(c.customCaCerts) > 0 {
+		return c.customCaCerts, nil
+	}
+	return c.Config.GetCaCerts()
 }
