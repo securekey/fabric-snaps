@@ -53,6 +53,7 @@ cp httpsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp transactionsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp membershipsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp eventsnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
+cp metricsfilter.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp txnsnapinvoker.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
 cp configurationscc.so /opt/temp/src/github.com/securekey/fabric-snaps/build/snaps/
 cp eventconsumersnap.so /opt/temp/src/github.com/securekey/fabric-snaps/build/test/
