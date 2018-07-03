@@ -220,10 +220,7 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 	// Set allowed headers only
 	for name, value := range invokeReq.RequestHeaders {
-		allowed, err := httpServiceImpl.config.IsHeaderAllowed(name)
-		if err != nil {
-			return "", nil, err
-		}
+		allowed := httpServiceImpl.config.IsHeaderAllowed(name)
 		if allowed {
 			req.Header.Set(name, value)
 			logger.Debugf("Setting header '%s' to '%s'", name, value)
@@ -325,10 +322,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	if client != "" {
 		//Use client TLS config override in https snap config
-		clientOverrideCrtMap, err := config.GetNamedClientOverride()
-		if err != nil {
-			return nil, err
-		}
+		clientOverrideCrtMap := config.GetNamedClientOverride()
 		clientOverrideCrt := clientOverrideCrtMap[client]
 		if clientOverrideCrt == nil {
 			return nil, errors.Errorf(errors.GeneralError, "client[%s] crt not found", client)

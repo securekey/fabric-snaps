@@ -43,9 +43,9 @@ func TestGetClientCert(t *testing.T) {
 }
 
 func TestGetNamedClientOverride(t *testing.T) {
-	clientMap, err := c.GetNamedClientOverride()
-	if err != nil {
-		t.Fatalf("Error from GetNamedClientOverride %v", err)
+	clientMap := c.GetNamedClientOverride()
+	if len(clientMap) == 0 {
+		t.Fatalf("invalid client map")
 	}
 	if _, exist := clientMap["abc"]; !exist {
 		t.Fatalf("abc client not exist")
@@ -80,30 +80,20 @@ func TestGetShemaConfig(t *testing.T) {
 
 func TestIsHeaderAllowed(t *testing.T) {
 
-	value, err := c.IsHeaderAllowed("not-configured")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if value == true {
+	value := c.IsHeaderAllowed("not-configured")
+	if value {
 		t.Fatal("Expected false, got true for not-configured header")
 	}
 
 	// Test exact match
-	value, err = c.IsHeaderAllowed("Content-Type")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if value == false {
+	value = c.IsHeaderAllowed("Content-Type")
+	if !value {
 		t.Fatal("Expected true, got false for 'Content-Type' header")
 	}
 
 	// Test mixed case (http headers are not case sensitive)
-	value, err = c.IsHeaderAllowed("CONTENT-Type")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if value == false {
+	value = c.IsHeaderAllowed("CONTENT-Type")
+	if !value {
 		t.Fatal("Expected true, got false for 'content-type' header")
 	}
 

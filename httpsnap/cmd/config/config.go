@@ -40,6 +40,10 @@ type config struct {
 	peerConfig     *viper.Viper
 	httpSnapConfig *viper.Viper
 	peerConfigPath string
+	//preloaded entities
+	clientTLS     map[string]*httpsnapApi.ClientTLS
+	headers       map[string]bool
+	schemaConfigs map[string]*httpsnapApi.SchemaConfig
 }
 
 // NewConfig return config struct
@@ -71,7 +75,10 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, boo
 	httpSnapConfig.AutomaticEnv()
 	httpSnapConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
-
+	err = c.preloadEntities()
+	if err != nil {
+		return nil, false, errors.WithMessage(errors.GeneralError, err, "Error preloading config entities")
+	}
 	if dirty {
 		err = c.initializeLogging()
 		if err != nil {
@@ -114,58 +121,10 @@ func (c *config) GetConfigPath(path string) string {
 	return filepath.Join(basePath, path)
 }
 
-// Helper function to retrieve schema configuration
-func (c *config) getSchemaMap() (schemaMap map[string]*httpsnapApi.SchemaConfig, err error) {
-
-	var schemaConfigs []httpsnapApi.SchemaConfig
-	err = c.httpSnapConfig.UnmarshalKey("schemas", &schemaConfigs)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
-	}
-
-	schemaMap = make(map[string]*httpsnapApi.SchemaConfig, len(schemaConfigs))
-
-	for _, sc := range schemaConfigs {
-		schemaMap[sc.Type] = &sc
-	}
-
-	return schemaMap, nil
-}
-
-// Helper function to retrieve allowed http request headers
-func (c *config) getHeaderMap() (headerMap map[string]bool, err error) {
-
-	var headers []string
-	err = c.httpSnapConfig.UnmarshalKey("headers", &headers)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error getting allowed headers")
-	}
-
-	if headers == nil || len(headers) == 0 {
-		return nil, errors.New(errors.GeneralError, "Missing http headers configuration")
-	}
-
-	headerMap = make(map[string]bool, len(headers))
-	for _, h := range headers {
-		headerMap[strings.ToLower(h)] = true
-	}
-
-	return headerMap, nil
-}
-
 // IsHeaderAllowed returns true if specified http header type is enabled
-func (c *config) IsHeaderAllowed(name string) (bool, error) {
-	headerMap, err := c.getHeaderMap()
-	if err != nil {
-		return false, err
-	}
-
-	val, ok := headerMap[strings.ToLower(name)]
-	if !ok {
-		return false, nil
-	}
-
-	return val, nil
+func (c *config) IsHeaderAllowed(name string) bool {
+	val, _ := c.headers[strings.ToLower(name)]
+	return val
 }
 
 // GetCaCerts returns the list of ca certs
@@ -263,23 +222,14 @@ func (c *config) translatePeerPath(path string) string {
 }
 
 // GetNamedClientOverridePath returns map of clientTLS
-func (c *config) GetNamedClientOverride() (map[string]*httpsnapApi.ClientTLS, error) {
-	var clientTLS map[string]*httpsnapApi.ClientTLS
-	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &clientTLS)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
-	}
-	return clientTLS, nil
+func (c *config) GetNamedClientOverride() map[string]*httpsnapApi.ClientTLS {
+	return c.clientTLS
 }
 
 // GetSchemaConfig return schema configuration based on content type
 func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig, error) {
-	schemaMap, err := c.getSchemaMap()
-	if err != nil {
-		return nil, err
-	}
 
-	schemaConfig := schemaMap[contentType]
+	schemaConfig := c.schemaConfigs[contentType]
 	logger.Debugf("Schema config: %s", schemaConfig)
 	if schemaConfig == nil {
 		return nil, errors.Errorf(errors.GeneralError, "Schema configuration for content-type: %s not found", contentType)
@@ -320,4 +270,44 @@ func (c *config) GetCryptoProvider() (string, error) {
 		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
 	}
 	return cryptoProvider, nil
+}
+
+func (c *config) preloadEntities() error {
+
+	//client TLS configs
+	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &c.clientTLS)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
+	}
+
+	// header configs
+	var allHeaders []string
+	err = c.httpSnapConfig.UnmarshalKey("headers", &allHeaders)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Error getting allowed headers")
+	}
+
+	if allHeaders == nil || len(allHeaders) == 0 {
+		return errors.New(errors.GeneralError, "Missing http headers configuration")
+	}
+
+	c.headers = make(map[string]bool, len(allHeaders))
+	for _, h := range allHeaders {
+		c.headers[strings.ToLower(h)] = true
+	}
+
+	//schema configs
+	var allSchemas []httpsnapApi.SchemaConfig
+	err = c.httpSnapConfig.UnmarshalKey("schemas", &allSchemas)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
+	}
+
+	c.schemaConfigs = make(map[string]*httpsnapApi.SchemaConfig, len(allSchemas))
+
+	for _, sc := range allSchemas {
+		c.schemaConfigs[sc.Type] = &sc
+	}
+
+	return nil
 }

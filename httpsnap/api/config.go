@@ -49,7 +49,7 @@ const (
 type Config interface {
 	GetConfigPath(path string) string
 	GetClientCert() (string, error)
-	GetNamedClientOverride() (map[string]*ClientTLS, error)
+	GetNamedClientOverride() map[string]*ClientTLS
 	GetSchemaConfig(contentType string) (*SchemaConfig, error)
 	GetCaCerts() ([]string, error)
 	GetPeerClientKey() (string, error)
@@ -57,5 +57,5 @@ type Config interface {
 	IsSystemCertPoolEnabled() bool
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool
-	IsHeaderAllowed(name string) (bool, error)
+	IsHeaderAllowed(name string) bool
 }
