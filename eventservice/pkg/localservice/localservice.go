@@ -9,6 +9,8 @@ package localservice
 import (
 	"sync"
 
+	"strings"
+
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/pkg/errors"
@@ -26,15 +28,19 @@ func Register(channelID string, service fab.EventService) error {
 		channelServices = make(map[string]fab.EventService)
 	})
 
+	if service == nil {
+		return errors.Errorf("invalid event service being registered for channel [%s]", channelID)
+	}
+
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if _, ok := channelServices[channelID]; ok {
+	if _, ok := channelServices[strings.ToLower(channelID)]; ok {
 		logger.Warnf("Event service already registered for channel [%s]\n", channelID)
 		return errors.Errorf("event service already registered for channel [%s]", channelID)
 	}
 
-	channelServices[channelID] = service
+	channelServices[strings.ToLower(channelID)] = service
 	return nil
 }
 
@@ -43,7 +49,11 @@ func Get(channelID string) fab.EventService {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
-	service, ok := channelServices[channelID]
+	if len(channelServices) == 0 {
+		logger.Debug("Event service list is empty")
+	}
+
+	service, ok := channelServices[strings.ToLower(channelID)]
 	if !ok {
 		return nil
 	}

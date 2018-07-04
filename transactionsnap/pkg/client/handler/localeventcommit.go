@@ -34,8 +34,11 @@ func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, 
 	txnID := string(requestContext.Response.TransactionID)
 	var txStatusEventCh <-chan *fabApi.TxStatusEvent
 	if l.registerTxEvent {
-		//TODO
 		events := eventservice.Get(l.channelID)
+		if events == nil {
+			requestContext.Error = errors.Errorf("unable to register for TxStatus event for TxID [%s] on channel [%s], local event service not found", txnID, l.channelID)
+			return
+		}
 		reg, eventch, err := events.RegisterTxStatusEvent(txnID)
 		if err != nil {
 			requestContext.Error = errors.Wrapf(err, "unable to register for TxStatus event for TxID [%s] on channel [%s]", txnID, l.channelID)
