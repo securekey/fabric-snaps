@@ -10,7 +10,6 @@ Feature:  Feature Invoke Transaction Snap
     @onetxn
 	Scenario: Invoke Transaction Snap commitTransaction,endorseTransaction function
 	    Given the channel "mychannel" is created and all peers have joined
-        And we wait 5 seconds
         And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
 		And "test" chaincode "example_cc" is installed from path "github.com/example_cc" to all peers
         And "test" chaincode "example_cc" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
@@ -22,7 +21,6 @@ Feature:  Feature Invoke Transaction Snap
 	@twotxn
     Scenario: Invoke Transaction Snap verifyTransactionProposalSignature function
 	    Given the channel "mychannel" is created and all peers have joined
-        And we wait 5 seconds
         And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
 	    And "test" chaincode "example_cc1" is installed from path "github.com/example_cc" to all peers
         And "test" chaincode "example_cc1" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
@@ -32,7 +30,6 @@ Feature:  Feature Invoke Transaction Snap
 @unsafeQuery
 Scenario: Invoke Transaction Snap verifyTransactionProposalSignature function
   Given the channel "mychannel" is created and all peers have joined
-    And we wait 5 seconds
     And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
     And "test" chaincode "readtest_cc" is installed from path "github.com/readtest_cc" to all peers
     And "test" chaincode "readtest_cc" is instantiated from path "github.com/readtest_cc" on the "mychannel" channel with args "init,k1,hello,k2,world" with endorsement policy "" with collection policy ""

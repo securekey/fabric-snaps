@@ -9,7 +9,6 @@ Feature:  Event Snap
   @eventsnapone
   Scenario: Register with Local Event Service for Chaincode Events
     Given the channel "mychannel" is created and all peers have joined
-    And we wait 5 seconds
     And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
     And we wait 15 seconds
 
@@ -29,7 +28,6 @@ Feature:  Event Snap
   @eventsnaptwo
   Scenario: Register with Local Event Service for Tx Status Events
     Given the channel "mychannel" is created and all peers have joined
-    And we wait 5 seconds
     And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
     And we wait 15 seconds
 
@@ -45,7 +43,6 @@ Feature:  Event Snap
   @eventsnapthree
   Scenario: Register with Local Event Service for Filtered Block Events
     Given the channel "mychannel" is created and all peers have joined
-    And we wait 5 seconds
     And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
     And we wait 15 seconds
 

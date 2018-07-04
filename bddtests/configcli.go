@@ -27,7 +27,7 @@ func NewConfigCLI(binaryPath, clientconfig, user string) *ConfigCLI {
 // ExecUpdate executes config-cli update with the given args and returns a response
 func (cli *ConfigCLI) ExecUpdate(channelID, mspID, org, configFile string) (string, error) {
 	cmdArgs := []string{"update", "--clientconfig", cli.clientconfig, "--cid", channelID, "--mspid", mspID,
-		"--user", cli.user, "--configfile", configFile, "--noprompt", "--orgid", org}
+		"--user", cli.user, "--configfile", configFile, "--noprompt", "--orgid", org, "--timeout", "120000"}
 
 	cmd := exec.Command(cli.binaryPath, cmdArgs...)
 

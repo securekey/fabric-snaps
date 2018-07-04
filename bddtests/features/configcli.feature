@@ -10,7 +10,6 @@ Feature:  Test config cli Features
 	@oneconfigcli
 	Scenario: Use config cli to update and delete configs
         Given the channel "mychannel" is created and all peers have joined
-		And we wait 5 seconds
 		And client update config "./fixtures/config/configcli/org1-config.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
         And client "query" config by peer id "peer0.org1.example.com" with mspid "Org1MSP" with app name "app1" with app version "1" with comp name "" with comp version "" on the "mychannel" channel
         And response from cli query to client contains value "app1 data v1"
@@ -24,7 +23,6 @@ Feature:  Test config cli Features
     @twoconfigcli
     Scenario: Use config cli to update configs
       Given the channel "mychannel" is created and all peers have joined
-      And we wait 5 seconds
       And client update config "./fixtures/config/configcli/org1-config.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
       And client update config "./fixtures/config/configcli/org1-config-update.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
       And client "query" config by peer id "peer0.org1.example.com" with mspid "Org1MSP" with app name "app1" with app version "1" with comp name "" with comp version "" on the "mychannel" channel
@@ -35,7 +33,6 @@ Feature:  Test config cli Features
     @threeconfigcli
     Scenario: Use config cli to update configs
       Given the channel "mychannel" is created and all peers have joined
-      And we wait 5 seconds
       And client update config "./fixtures/config/configcli/org1-peerless-config.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
       And client "query" config by peer id "" with mspid "Org1MSP" with app name "app1" with app version "1" with comp name "" with comp version "" on the "mychannel" channel
       And response from cli query to client contains value "config goes here"
@@ -45,7 +42,6 @@ Feature:  Test config cli Features
     @fourconfigcli
     Scenario: Use config cli to get components
      Given the channel "mychannel" is created and all peers have joined
-     And we wait 5 seconds
      And client update config "./fixtures/config/configcli/org1-peerless-config.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
      # query with component version
      And client "query" config by peer id "" with mspid "Org1MSP" with app name "app2" with app version "1" with comp name "comp1" with comp version "1" on the "mychannel" channel
