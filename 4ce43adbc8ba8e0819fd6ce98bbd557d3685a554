@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74920bd9_b80be792",
+        "filename": "transactionsnap/pkg/client/handler/localeventcommit.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-07-04T17:23:13Z",
+      "side": 1,
+      "message": "return after error",
+      "revId": "4ce43adbc8ba8e0819fd6ce98bbd557d3685a554",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
