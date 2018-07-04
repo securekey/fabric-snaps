@@ -306,7 +306,10 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(error) { retryCounter.Inc(1) }))
+		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
+			logger.Infof("Retrying on error: %s", err.Error())
+			retryCounter.Inc(1)
+		}))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
@@ -362,7 +365,10 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 
 	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(error) { retryCounter.Inc(1) }))
+		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
+			logger.Infof("Retrying on error: %s", err.Error())
+			retryCounter.Inc(1)
+		}))
 
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
