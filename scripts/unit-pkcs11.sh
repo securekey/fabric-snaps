@@ -47,4 +47,4 @@ do
     PKGS+=" $PKGS_LIST"
 done
 
-go test -tags pkcs11 -cover $PKGS -p 1 -timeout=10m
+go test -count=1 -tags pkcs11 -cover $PKGS -p 1 -timeout=10m

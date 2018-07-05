@@ -28,7 +28,7 @@ import (
 var logger = logging.NewLogger("txnsnap")
 
 type cache interface {
-	Get(lazycache.Key) (interface{}, error)
+	Get(lazycache.Key, ...interface{}) (interface{}, error)
 	Close()
 }
 
