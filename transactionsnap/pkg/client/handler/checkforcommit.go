@@ -16,15 +16,16 @@ import (
 )
 
 //NewCheckForCommitHandler returns a handler that check if there is need to commit
-func NewCheckForCommitHandler(rwSetIgnoreNameSpace []string, callback api.EndorsedCallback, next ...invoke.Handler) *CheckForCommitHandler {
-	return &CheckForCommitHandler{rwSetIgnoreNameSpace: rwSetIgnoreNameSpace, callback: callback, next: getNext(next)}
+func NewCheckForCommitHandler(rwSetIgnoreNameSpace []api.Namespace, callback api.EndorsedCallback, commitType api.CommitType, next ...invoke.Handler) *CheckForCommitHandler {
+	return &CheckForCommitHandler{rwSetIgnoreNameSpace: rwSetIgnoreNameSpace, callback: callback, commitType: commitType, next: getNext(next)}
 }
 
 //CheckForCommitHandler for checking need to commit
 type CheckForCommitHandler struct {
 	next                 invoke.Handler
-	rwSetIgnoreNameSpace []string
+	rwSetIgnoreNameSpace []api.Namespace
 	callback             api.EndorsedCallback
+	commitType           api.CommitType
 }
 
 //Handle for endorsing transactions
@@ -38,7 +39,16 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		}
 	}
 
-	logger.Debugf("[txID %s] Checking write sets to see if commit is necessary", txID)
+	if c.commitType == api.NoCommit {
+		logger.Debugf("[txID %s] No commit is necessary since commit type is [%s]", txID, c.commitType)
+		return
+	}
+
+	if c.commitType == api.Commit {
+		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s]", txID, c.commitType)
+		c.next.Handle(requestContext, clientContext)
+		return
+	}
 
 	var err error
 
@@ -56,43 +66,83 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 	}
 
 	ccAction := &pb.ChaincodeAction{}
-
 	if err = proto.Unmarshal(prp.Extension, ccAction); err != nil {
 		requestContext.Error = errors.WithMessage(err, "Error unmarshaling to ChaincodeAction")
 		return
 	}
 
-	txRWSet := &rwsetutil.TxRwSet{}
-	if err = txRWSet.FromProtoBytes(ccAction.Results); err != nil {
-		requestContext.Error = errors.WithMessage(err, "Error unmarshaling to txRWSet")
-		return
+	shouldCommit := false
+	if len(ccAction.Events) > 0 {
+		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and chaincode event exists in proposal response", txID, api.CommitOnWrite)
+		shouldCommit = true
+	} else {
+		txRWSet := &rwsetutil.TxRwSet{}
+		if err = txRWSet.FromProtoBytes(ccAction.Results); err != nil {
+			requestContext.Error = errors.WithMessage(err, "Error unmarshaling to txRWSet")
+			return
+		}
+		if c.hasWriteSet(txRWSet, txID) {
+			logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and write set exists in proposal response", txID, api.CommitOnWrite)
+			shouldCommit = true
+		}
 	}
 
+	if shouldCommit {
+		c.next.Handle(requestContext, clientContext)
+	} else {
+		logger.Debugf("[txID %s] Commit is NOT necessary since commit type is [%s] and NO write set exists in proposal response", txID, api.CommitOnWrite)
+	}
+}
+
+func (c *CheckForCommitHandler) hasWriteSet(txRWSet *rwsetutil.TxRwSet, txID string) bool {
 	for _, nsRWSet := range txRWSet.NsRwSets {
-		if contains(c.rwSetIgnoreNameSpace, nsRWSet.NameSpace) {
+		if ignoreCC(c.rwSetIgnoreNameSpace, nsRWSet.NameSpace) {
 			// Ignore this writeset
 			logger.Debugf("[txID %s] Ignoring writes to [%s]", txID, nsRWSet.NameSpace)
 			continue
 		}
 		if nsRWSet.KvRwSet != nil && len(nsRWSet.KvRwSet.Writes) > 0 {
 			logger.Debugf("[txID %s] Found writes to CC [%s]. A commit will be required.", txID, nsRWSet.NameSpace)
-			c.next.Handle(requestContext, clientContext)
-			return
+			return true
 		}
+
 		for _, collRWSet := range nsRWSet.CollHashedRwSets {
+			if ignoreCollection(c.rwSetIgnoreNameSpace, nsRWSet.NameSpace, collRWSet.CollectionName) {
+				// Ignore this writeset
+				logger.Debugf("[txID %s] Ignoring writes to private data collection [%s] in CC [%s]", txID, collRWSet.CollectionName, nsRWSet.NameSpace)
+				continue
+			}
 			if collRWSet.HashedRwSet != nil && len(collRWSet.HashedRwSet.HashedWrites) > 0 {
 				logger.Debugf("[txID %s] Found writes to private data collection [%s] in CC [%s]. A commit will be required.", txID, collRWSet.CollectionName, nsRWSet.NameSpace)
-				c.next.Handle(requestContext, clientContext)
-				return
+				return true
 			}
 		}
 	}
-
+	return false
 }
 
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
+func ignoreCC(namespaces []api.Namespace, ccName string) bool {
+	for _, ns := range namespaces {
+		if ns.Name == ccName {
+			// Ignore entire chaincode only if no collections specified
+			return len(ns.Collections) == 0
+		}
+	}
+	return false
+}
+
+func ignoreCollection(namespaces []api.Namespace, ccName, collName string) bool {
+	for _, ns := range namespaces {
+		if ns.Name == ccName && contains(ns.Collections, collName) {
+			return true
+		}
+	}
+	return false
+}
+
+func contains(namespaces []string, name string) bool {
+	for _, ns := range namespaces {
+		if ns == name {
 			return true
 		}
 	}

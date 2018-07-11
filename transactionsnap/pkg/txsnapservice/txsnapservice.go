@@ -124,6 +124,7 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 		ChaincodeIDs:         snapTxRequest.CCIDsForEndorsement,
 		Targets:              peers,
 		PeerFilter:           peerFilter,
+		CommitType:           snapTxRequest.CommitType,
 		RWSetIgnoreNameSpace: snapTxRequest.RWSetIgnoreNameSpace,
 	}
 	return request, nil

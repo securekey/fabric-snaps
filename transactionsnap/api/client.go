@@ -18,6 +18,35 @@ import (
 // phase of CommitTransaction. (Used in unit tests.)
 type EndorsedCallback func(invoke.Response) error
 
+// CommitType specifies how commits should be handled
+type CommitType int
+
+const (
+	// CommitOnWrite indicates that the transaction should be committed only if
+	// the consumer chaincode produces a write-set
+	CommitOnWrite CommitType = iota
+
+	// Commit indicates that the transaction should be committed
+	Commit
+
+	// NoCommit indicates that the transaction should not be committed
+	NoCommit
+)
+
+// String returns the string value of CommitType
+func (ct CommitType) String() string {
+	switch ct {
+	case CommitOnWrite:
+		return "commitOnWrite"
+	case Commit:
+		return "commit"
+	case NoCommit:
+		return "noCommit"
+	default:
+		return "unknown"
+	}
+}
+
 // EndorseTxRequest contains the parameters for the EndorseTransaction function
 type EndorseTxRequest struct {
 	// ChaincodeID identifies the chaincode to invoke
@@ -34,8 +63,10 @@ type EndorseTxRequest struct {
 	ChaincodeIDs []string
 	// PeerFilter filters out peers using application-specific logic (optional)
 	PeerFilter PeerFilter
+	// CommitType specifies how commits should be handled (default CommitOnWrite)
+	CommitType CommitType
 	// RWSetIgnoreNameSpace rw set ignore list
-	RWSetIgnoreNameSpace []string
+	RWSetIgnoreNameSpace []Namespace
 }
 
 // Client is a wrapper interface around the fabric client

@@ -6,6 +6,12 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
+// Namespace contains a chaincode name and an optional set of private data collections to ignore
+type Namespace struct {
+	Name        string
+	Collections []string
+}
+
 //SnapTransactionRequest type will be passed as argument to a transaction snap
 //ChannelID and ChaincodeID are mandatory fields
 type SnapTransactionRequest struct {
@@ -16,7 +22,8 @@ type SnapTransactionRequest struct {
 	CCIDsForEndorsement  []string          // optional ccIDs For endorsement selection
 	RegisterTxEvent      bool              // optional args for register Tx event (default is false)
 	PeerFilter           *PeerFilterOpts   // optional peer filter
-	RWSetIgnoreNameSpace []string          // RWSetIgnoreNameSpace rw set ignore list
+	CommitType           CommitType        // optional specifies how commits should be handled (default CommitOnWrite)
+	RWSetIgnoreNameSpace []Namespace       // RWSetIgnoreNameSpace rw set ignore list
 }
 
 // ClientService interface
