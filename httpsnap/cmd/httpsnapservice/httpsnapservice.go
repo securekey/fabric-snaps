@@ -82,18 +82,12 @@ func Get(channelID string) (*HTTPServiceImpl, error) {
 //updateConfig http service updates http service config if provided config has any updates
 func initialize(config httpsnapApi.Config) {
 
-	once.Do(func() {
-		instance = &HTTPServiceImpl{}
-		logger.Infof("Created HTTPServiceImpl instance %v", time.Unix(time.Now().Unix(), 0))
-	})
-
 	//Update config in httpServiceImpl if any config update found in new config
 	instance.Lock()
 	defer instance.Unlock()
 
 	instance.config = config
 	instance.certPool = commtls.NewCertPool(config.IsSystemCertPoolEnabled())
-
 }
 
 //Invoke http service
@@ -178,6 +172,13 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	if config == nil {
 		return nil, errors.New(errors.GeneralError, "config from ledger is nil")
 	}
+
+	once.Do(func() {
+		instance = &HTTPServiceImpl{}
+		initialize(config)
+		dirty = false
+		logger.Infof("Created HTTPServiceImpl instance %v", time.Unix(time.Now().Unix(), 0))
+	})
 
 	if dirty {
 		initialize(config)
