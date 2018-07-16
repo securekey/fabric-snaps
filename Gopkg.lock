@@ -194,7 +194,8 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/golang/snappy"
@@ -509,7 +510,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "22a0f775f826bf3a9bf7364e9b8ab0a7686cf711"
+  revision = "d489eba94c868f736015935e88da20faf9aa80d4"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -922,6 +923,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9587e2a486605ad36a0793b9e14eec208013d25b7308cf87fbce945cc9d843cd"
+  inputs-digest = "7e69dab5fefd7c81c90b0cae9451dc1511b0b53a978ce7f80de414bdb699b506"
   solver-name = "gps-cdcl"
   solver-version = 1
