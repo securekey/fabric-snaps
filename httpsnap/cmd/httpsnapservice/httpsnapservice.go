@@ -279,12 +279,14 @@ func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, p
 		pinValid := false
 		connState := c.ConnectionState()
 		for _, peerCert := range connState.PeerCertificates {
-			certPin := httpServiceImpl.GeneratePin(peerCert)
-			peerPins = append(peerPins, certPin)
-			for _, pin := range pins {
-				if pin == certPin {
-					pinValid = true
-					break
+			if !peerCert.IsCA {
+				certPin := httpServiceImpl.GeneratePin(peerCert)
+				peerPins = append(peerPins, certPin)
+				for _, pin := range pins {
+					if pin == certPin {
+						pinValid = true
+						break
+					}
 				}
 			}
 		}
