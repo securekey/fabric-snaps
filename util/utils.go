@@ -7,6 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package util
 
 import (
+	"runtime/debug"
+
+	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	protos_utils "github.com/hyperledger/fabric/protos/utils"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -42,4 +47,26 @@ func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, er
 	}
 
 	return signatureHeader.Creator, nil
+}
+
+// HandlePanic handles a panic (if any) by populating error response
+func HandlePanic(resp *pb.Response, log *logging.Logger, stub shim.ChaincodeStubInterface) {
+	if r := recover(); r != nil {
+
+		// TODO: Figure out what to log
+		log.Errorf("Recovering from panic: %s", string(debug.Stack()))
+		codedErr := errors.New(errors.PanicError, "Check server logs")
+
+		errResp := CreateShimResponseFromError(codedErr, log, stub)
+		resp.Reset()
+		resp.Status = errResp.Status
+		resp.Message = errResp.Message
+	}
+}
+
+// CreateShimResponseFromError creates shim response with codedErr as payload
+func CreateShimResponseFromError(codedErr errors.Error, log *logging.Logger, stub shim.ChaincodeStubInterface) pb.Response {
+
+	// TODO: We may add logging of all errors at info/warn level here
+	return shim.Error(codedErr.GenerateClientErrorMsg())
 }

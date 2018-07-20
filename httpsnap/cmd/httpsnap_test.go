@@ -62,33 +62,6 @@ func TestInvalidParameters(t *testing.T) {
 	// Test required argument: request
 	testRequiredArg(t, stub, [][]byte{[]byte("invoke")}, "Http Snap Request")
 
-	// Required args: nil headers
-	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", nil, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to nil headers")
-
-	// Required args: headers missing required 'Content-Type' header
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{}, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to missing required header")
-
-	// Required args: empty Content-Type header
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", map[string]string{"content-type": ""}, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to empty content type")
-
-	// Required args: empty request body
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", headers, "")}
-	verifyFailure(t, stub, args, "Invoke should have failed due to empty request body")
-
-	// Required args: empty URL
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("", headers, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed due to empty URL")
-
-	// Failed path: url syntax is not valid
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http/localhost/abc", headers, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed since URL syntax is not valid")
-
-	// Failed path: HTTP url not allowed (only HTTPS)
-	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("http://localhost/abc", headers, jsonStr)}
-	verifyFailure(t, stub, args, "Invoke should have failed since URL doesn't start with https")
 }
 
 func TestUsingHttpService(t *testing.T) {
