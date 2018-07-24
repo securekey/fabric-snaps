@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -82,6 +84,78 @@ func TestNamedClient(t *testing.T) {
 
 }
 
+func TestAsync(t *testing.T) {
+	httpService, err := Get(channelID)
+	require.NoError(t, err)
+
+	req := HTTPServiceInvokeRequest{
+		RequestURL:     "https://localhost:8443/hello",
+		RequestHeaders: headers,
+		RequestBody:    jsonStr,
+		NamedClient:    "abc",
+		TxID:           "txid1",
+	}
+
+	t.Run("Valid request", func(t *testing.T) {
+		invoker, err := httpService.NewInvoker(req)
+		require.NoError(t, err)
+
+		respChan, errChan := invoker.InvokeAsync()
+		require.NoError(t, err)
+
+		select {
+		case resp := <-respChan:
+			require.True(t, strings.Contains(string(resp), "Hello"))
+		case err := <-errChan:
+			t.Fatalf("Got error: %s", err)
+		}
+	})
+
+	t.Run("Invalid URL", func(t *testing.T) {
+		invalidReq := req
+		invalidReq.RequestURL = ""
+
+		_, err := httpService.NewInvoker(invalidReq)
+		require.Error(t, err)
+	})
+
+	t.Run("Invalid named client", func(t *testing.T) {
+		invalidReq := req
+		invalidReq.NamedClient = "xyz"
+
+		invoker, err := httpService.NewInvoker(invalidReq)
+		require.NoError(t, err)
+
+		respChan, errChan := invoker.InvokeAsync()
+		require.NoError(t, err)
+
+		select {
+		case <-respChan:
+			t.Fatalf("Expecting error")
+		case err := <-errChan:
+			t.Logf("Got expected error: %s", err)
+		}
+	})
+
+	t.Run("Invalid response", func(t *testing.T) {
+		invalidReq := req
+		invalidReq.RequestURL = "https://localhost:8443/test/invalidJSONResponse"
+
+		invoker, err := httpService.NewInvoker(invalidReq)
+		require.NoError(t, err)
+
+		respChan, errChan := invoker.InvokeAsync()
+		require.NoError(t, err)
+
+		select {
+		case <-respChan:
+			t.Fatalf("Expecting error")
+		case err := <-errChan:
+			t.Logf("Got expected error: %s", err)
+		}
+	})
+}
+
 func TestCertPinning(t *testing.T) {
 
 	// Happy path: Should get "Hello" back - one pin provided
@@ -114,7 +188,7 @@ func TestJsonValidation(t *testing.T) {
 
 	// Failed path: Response fails schema validation
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/invalidJSONResponse", RequestHeaders: headers,
-		RequestBody: jsonStr}, "validate return error: description is required")
+		RequestBody: jsonStr}, "validate returned an error: description is required")
 
 	// Failed path: Request content type doesn't match response content type
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/textResponse", RequestHeaders: headers,
@@ -217,7 +291,7 @@ func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 	}
 
 	if !strings.Contains(string(res), expected) {
-		t.Fatalf("Expecting response to contain %s, got %s", expected, string(res))
+		t.Fatalf("Expecting response to contain '%s', got '%s'", expected, string(res))
 	}
 }
 
@@ -228,10 +302,10 @@ func verifyFailure(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 	}
 	_, err = httpService.Invoke(httpServiceInvokeRequest)
 	if err == nil {
-		t.Fatalf("Invoke should have failed with err %s", expected)
+		t.Fatalf("Invoke should have failed with err '%s'", expected)
 	}
 	if !strings.Contains(string(err.Error()), expected) {
-		t.Fatalf("Expecting error response to contain %s, got %s", expected, string(err.Error()))
+		t.Fatalf("Expecting error response to contain '%s', got '%s'", expected, string(err.Error()))
 	}
 }
 

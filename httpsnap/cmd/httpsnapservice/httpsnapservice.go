@@ -38,7 +38,9 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/uber-go/tally"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -48,8 +50,9 @@ var logger = logging.NewLogger("httpsnap")
 var PeerConfigPath = ""
 
 var once sync.Once
-
 var instance *HTTPServiceImpl
+var counter tally.Counter
+var timer tally.Timer
 
 //HTTPServiceImpl used to create transaction service
 type HTTPServiceImpl struct {
@@ -65,6 +68,19 @@ type HTTPServiceInvokeRequest struct {
 	RequestBody    string
 	NamedClient    string
 	PinSet         []string
+
+	// TxID is used only for logging
+	TxID string
+}
+
+// Invoker invokes the HTTP service either synchronously or asynchronously.
+type Invoker interface {
+	// Invoke invokes the HTTP service synchronously and returns the response or error
+	Invoke() ([]byte, errors.Error)
+
+	// InvokeAsync invokes the HTTP service asynchronously and returns a response channel and error channel,
+	// one of which will return the result of the invocation
+	InvokeAsync() (chan []byte, chan errors.Error)
 }
 
 const (
@@ -92,6 +108,15 @@ func initialize(config httpsnapApi.Config) {
 
 //Invoke http service
 func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServiceInvokeRequest) ([]byte, errors.Error) {
+	invoker, err := httpServiceImpl.NewInvoker(httpServiceInvokeRequest)
+	if err != nil {
+		return nil, err
+	}
+	return invoker.Invoke()
+}
+
+// NewInvoker returns a new Invoker
+func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTPServiceInvokeRequest) (Invoker, errors.Error) {
 	if httpServiceInvokeRequest.RequestURL == "" {
 		return nil, errors.New(errors.MissingRequiredParameterError, "Missing RequestURL")
 	}
@@ -147,19 +172,12 @@ func (httpServiceImpl *HTTPServiceImpl) Invoke(httpServiceInvokeRequest HTTPServ
 		return nil, errors.WithMessage(errors.ValidationError, codedErr, "Failed to validate request body")
 	}
 
-	// URL is ok, retrieve data using http client
-	_, response, codedErr := httpServiceImpl.getData(httpServiceInvokeRequest)
-	if codedErr != nil {
-		return nil, codedErr
-	}
-
-	logger.Debugf("Successfully retrieved data from URL: %s", httpServiceInvokeRequest.RequestURL)
-
-	// Validate response body against schema
-	if codedErr := httpServiceImpl.validate(headers[contentType], schemaConfig.Response, string(response)); codedErr != nil {
-		return nil, errors.WithMessage(errors.ValidationError, codedErr, "validate return error")
-	}
-	return response, nil
+	return &invoker{
+		service:      httpServiceImpl,
+		request:      httpServiceInvokeRequest,
+		schemaConfig: schemaConfig,
+		headers:      headers,
+	}, nil
 }
 
 //newHTTPService creates new http snap service
@@ -174,6 +192,8 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	}
 
 	once.Do(func() {
+		counter = metrics.RootScope.Counter("httpsnap_calls")
+		timer = metrics.RootScope.Timer("httpsnap_time_seconds")
 		instance = &HTTPServiceImpl{}
 		initialize(config)
 		dirty = false
@@ -187,6 +207,9 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 }
 
 func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
+	stopWatch := timer.Start()
+	defer stopWatch.Stop()
+	counter.Inc(1)
 
 	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
 	if codedErr != nil {
