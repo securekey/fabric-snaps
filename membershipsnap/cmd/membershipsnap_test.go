@@ -246,13 +246,13 @@ func TestAccessControl(t *testing.T) {
 	stub := newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
 	res := stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getAllPeersFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
-	assert.True(t, strings.HasPrefix(res.Message, "\"getAllPeers\" request failed authorization check"), "Unexpected error message: %s", res.Message)
+	assert.True(t, strings.Contains(res.Message, "\"getAllPeers\" request failed authorization check"), "Unexpected error message: %s", res.Message)
 
 	// getPeersOfChannel
 	stub = newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
 	res = stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getPeersOfChannelFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
-	assert.True(t, strings.HasPrefix(res.Message, "\"getPeersOfChannel\" request failed authorization check"), "Unexpected error message: %s", res.Message)
+	assert.True(t, strings.Contains(res.Message, "\"getPeersOfChannel\" request failed authorization check"), "Unexpected error message: %s", res.Message)
 }
 
 func checkEndpoints(expected []*memserviceapi.PeerEndpoint, actual []*memserviceapi.PeerEndpoint) error {

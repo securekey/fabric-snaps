@@ -8,6 +8,8 @@ package api
 
 import (
 	"time"
+
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // SchemaConfig defines request and response schemas for content type
@@ -48,12 +50,12 @@ const (
 // Config configuration interface
 type Config interface {
 	GetConfigPath(path string) string
-	GetClientCert() (string, error)
+	GetClientCert() (string, errors.Error)
 	GetNamedClientOverride() map[string]*ClientTLS
-	GetSchemaConfig(contentType string) (*SchemaConfig, error)
-	GetCaCerts() ([]string, error)
-	GetPeerClientKey() (string, error)
-	GetCryptoProvider() (string, error)
+	GetSchemaConfig(contentType string) (*SchemaConfig, errors.Error)
+	GetCaCerts() ([]string, errors.Error)
+	GetPeerClientKey() (string, errors.Error)
+	GetCryptoProvider() (string, errors.Error)
 	IsSystemCertPoolEnabled() bool
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool

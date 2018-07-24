@@ -56,11 +56,11 @@ type CSRConfig struct {
 }
 
 // New returns a new config snap configuration for the given channel
-func New(channelID, peerConfigPathOverride string) (*Config, error) {
+func New(channelID, peerConfigPathOverride string) (*Config, errors.Error) {
 
 	peerConfig, err := newPeerViper(peerConfigPathOverride)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error reading peer config")
+		return nil, errors.WithMessage(errors.PeerConfigError, err, "Error reading peer config")
 	}
 
 	peerID := peerConfig.GetString("peer.id")
@@ -70,7 +70,7 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		PeerID: peerConfig.GetString("peer.id"), AppName: "configurationsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
+		return nil, errors.New(errors.SystemError, "Cannot create cache instance")
 
 	}
 	var refreshInterval = defaultRefreshInterval
@@ -82,32 +82,31 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 
 		dataConfig, dirty, err = cacheInstance.Get(channelID, key)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithMessage(errors.InitializeConfigError, err, fmt.Sprintf("Error getting config for channel %s and key %s", channelID, key))
 		}
 		if dataConfig == nil {
-			return nil, errors.New(errors.GeneralError, "config data is empty")
+			return nil, errors.New(errors.InitializeConfigError, fmt.Sprintf("config data for key %s is empty", key))
 		}
 		replacer := strings.NewReplacer(".", "_")
 		customConfig = viper.New()
 		customConfig.SetConfigType("YAML")
 		err = customConfig.ReadConfig(bytes.NewBuffer(dataConfig))
 		if err != nil {
-			return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+			return nil, errors.WithMessage(errors.InitializeConfigError, err, "snap_config_init_error")
 		}
 		customConfig.SetEnvPrefix(envPrefix)
 		customConfig.AutomaticEnv()
 		customConfig.SetEnvKeyReplacer(replacer)
 		refreshInterval = customConfig.GetDuration("cache.refreshInterval")
-		if err != nil {
-			logger.Debugf("Cannot convert refresh interval to int")
-			//use default value
-			if refreshInterval < minimumRefreshInterval {
-				refreshInterval = minimumRefreshInterval
-			}
+
+		//use default value if less than threshold
+		if refreshInterval < minimumRefreshInterval {
+			refreshInterval = minimumRefreshInterval
 		}
 
 	}
-	logger.Debugf("Refresh Intrval: %.0f", refreshInterval)
+
+	logger.Debugf("Refresh Interval: %.0f", refreshInterval)
 
 	// Initialize from peer config
 	config := &Config{
@@ -117,16 +116,16 @@ func New(channelID, peerConfigPathOverride string) (*Config, error) {
 		ConfigSnapConfig: customConfig,
 	}
 	if dirty {
-		err = config.initializeLogging()
-		if err != nil {
-			return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+		codedErr := config.initializeLogging()
+		if codedErr != nil {
+			return nil, codedErr
 		}
 	}
 	return config, nil
 }
 
 // initializeLogging initializes the loggerconfig
-func (c *Config) initializeLogging() error {
+func (c *Config) initializeLogging() errors.Error {
 	if c.ConfigSnapConfig == nil {
 		return nil
 	}
@@ -138,7 +137,7 @@ func (c *Config) initializeLogging() error {
 
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+		return errors.WithMessage(errors.InitializeLoggingError, err, "Error initializing log level")
 	}
 
 	logging.SetLevel("configsnap", level)
@@ -148,11 +147,11 @@ func (c *Config) initializeLogging() error {
 }
 
 //GetPeerMSPID returns peerMspID
-func GetPeerMSPID(peerConfigPathOverride string) (string, error) {
+func GetPeerMSPID(peerConfigPathOverride string) (string, errors.Error) {
 
 	peerConfig, err := newPeerViper(peerConfigPathOverride)
 	if err != nil {
-		return "", errors.New(errors.GeneralError, "Error reading peer config")
+		return "", errors.WithMessage(errors.PeerConfigError, err, "Error reading peer config for msp ID")
 	}
 
 	mspID := peerConfig.GetString("peer.localMspId")
@@ -161,35 +160,35 @@ func GetPeerMSPID(peerConfigPathOverride string) (string, error) {
 }
 
 //GetPeerID returns peerID
-func GetPeerID(peerConfigPathOverride string) (string, error) {
+func GetPeerID(peerConfigPathOverride string) (string, errors.Error) {
 	peerConfig, err := newPeerViper(peerConfigPathOverride)
 	if err != nil {
-		return "", errors.New(errors.GeneralError, "Error reading peer config:PeerID")
+		return "", errors.WithMessage(errors.PeerConfigError, err, "Error reading peer config for peer ID")
 	}
 	peerID := peerConfig.GetString("peer.id")
 	return peerID, nil
 }
 
 //GetBCCSPProvider get default BCCSP provider from the peer config
-func GetBCCSPProvider(peerConfigPathOverride string) (string, error) {
+func GetBCCSPProvider(peerConfigPathOverride string) (string, errors.Error) {
 
 	peerConfig, err := newPeerViper(peerConfigPathOverride)
 	if err != nil {
-		return "", errors.New(errors.GeneralError, "Error reading peer config:PeerID")
+		return "", errors.WithMessage(errors.PeerConfigError, err, "Error reading peer config for BCCSP")
 	}
 	bccspProvider := peerConfig.GetString("peer.BCCSP.Default")
 	logger.Debugf("Configured BCCSP provider: [%s]", bccspProvider)
 	return bccspProvider, nil
 }
 
-func getMyConfig(channelID string, peerConfigPath string) (*viper.Viper, error) {
-	peerMspID, err := GetPeerMSPID(peerConfigPath)
-	if err != nil {
-		return nil, err
+func getMyConfig(channelID string, peerConfigPath string) (*viper.Viper, errors.Error) {
+	peerMspID, codedErr := GetPeerMSPID(peerConfigPath)
+	if codedErr != nil {
+		return nil, codedErr
 	}
-	peerID, err := GetPeerID(peerConfigPath)
-	if err != nil {
-		return nil, err
+	peerID, codedErr := GetPeerID(peerConfigPath)
+	if codedErr != nil {
+		return nil, codedErr
 	}
 	configKey := configmanagerApi.ConfigKey{MspID: peerMspID, PeerID: peerID, AppName: "configurationsnap"}
 	x := configmgmtService.GetInstance()
@@ -197,12 +196,12 @@ func getMyConfig(channelID string, peerConfigPath string) (*viper.Viper, error) 
 
 	csconfig, _, err := instance.GetViper(channelID, configKey, configmanagerApi.YAML)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.InitializeConfigError, err, fmt.Sprintf("error getting config data for channel %s and key %s", channelID, configKey))
 	}
 	if csconfig == nil {
 		errMsg := fmt.Sprintf("Trying to get config for channel [%s], msp [%s], peer [%s] and app [configurationsnap]", channelID, peerMspID, peerID)
 		logger.Debugf(errMsg)
-		return nil, errors.New(errors.GeneralError, errMsg)
+		return nil, errors.New(errors.MissingConfigDataError, errMsg)
 	}
 	return csconfig, nil
 }
@@ -263,7 +262,7 @@ func newPeerViper(peerConfigPathOverride string) (*viper.Viper, error) {
 	peerViper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := peerViper.ReadInConfig(); err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+		return nil, err
 	}
 	return peerViper, nil
 

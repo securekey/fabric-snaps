@@ -36,10 +36,10 @@ func NewConfigManager(stub shim.ChaincodeStubInterface) api.ConfigManager {
 }
 
 // Save saves configuration data in the ledger
-func (cmngr *configManagerImpl) Save(configData []byte) error {
+func (cmngr *configManagerImpl) Save(configData []byte) errors.Error {
 
 	if len(configData) == 0 {
-		return errors.New(errors.GeneralError, "Configuration must be provided")
+		return errors.New(errors.MissingRequiredParameterError, "Configuration must be provided")
 	}
 	//parse configuration request
 	configMessageMap, err := ParseConfigMessage(configData, cmngr.stub.GetTxID())
@@ -51,26 +51,26 @@ func (cmngr *configManagerImpl) Save(configData []byte) error {
 
 //saveConfigs saves key&configs to the repository.
 //also it adds indexes for saved records
-func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][]byte) error {
+func (cmngr *configManagerImpl) saveConfigs(configMessageMap map[api.ConfigKey][]byte) errors.Error {
 	for key, value := range configMessageMap {
 		logger.Debugf("Saving configs %v,%s", key, string(value[:]))
 		strkey, err := ConfigKeyToString(key)
 		if err != nil {
-			return errors.Errorf(errors.GeneralError, "Cannot put state. Invalid key %s", err)
+			return err
 		}
-		if err = cmngr.stub.PutState(strkey, value); err != nil {
-			return errors.Wrap(errors.GeneralError, err, "PutState has failed")
+		if e := cmngr.stub.PutState(strkey, value); e != nil {
+			return errors.Wrap(errors.SystemError, e, "PutState has failed")
 		}
 		//add index for saved state
 		if err := cmngr.addIndexes(key); err != nil {
-			return errors.Wrapf(errors.GeneralError, err, "Got error while adding index for %v", key)
+			return err
 		}
 	}
 	return nil
 }
 
 // Get gets configuration from the ledger using config key
-func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, error) {
+func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, errors.Error) {
 	err := ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
@@ -101,17 +101,17 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 }
 
 //getConfig to get config for valid key
-func (cmngr *configManagerImpl) getConfig(configKey api.ConfigKey) ([]byte, error) {
+func (cmngr *configManagerImpl) getConfig(configKey api.ConfigKey) ([]byte, errors.Error) {
 	logger.Debugf("Getting config for %v", configKey)
 
-	key, err := ConfigKeyToString(configKey)
-	if err != nil {
-		return nil, err
+	key, codedErr := ConfigKeyToString(configKey)
+	if codedErr != nil {
+		return nil, codedErr
 	}
 	//get configuration for valid key
 	config, err := cmngr.stub.GetState(key)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "GetState failed")
+		return nil, errors.Wrap(errors.SystemError, err, "GetState failed")
 	}
 	if config == nil && len(config) == 0 {
 		logger.Debugf("Nothing there for key %s", key)
@@ -120,9 +120,9 @@ func (cmngr *configManagerImpl) getConfig(configKey api.ConfigKey) ([]byte, erro
 }
 
 //getConfigs to get configs for MspId
-func (cmngr *configManagerImpl) getConfigs(configKey api.ConfigKey) ([]*api.ConfigKV, error) {
+func (cmngr *configManagerImpl) getConfigs(configKey api.ConfigKey) ([]*api.ConfigKV, errors.Error) {
 	if configKey.MspID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Invalid config key %v. MspID is required. ", configKey)
+		return nil, errors.Errorf(errors.InvalidConfigKey, "Invalid config key %v. MspID is required. ", configKey)
 	}
 	logger.Debugf("Getting configs for %v", configKey)
 
@@ -133,9 +133,9 @@ func (cmngr *configManagerImpl) getConfigs(configKey api.ConfigKey) ([]*api.Conf
 	return configs, nil
 }
 
-func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) error {
+func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) errors.Error {
 	if configKey.MspID == "" {
-		return errors.Errorf(errors.GeneralError, "Invalid config key %+v. MspID is required.", configKey)
+		return errors.Errorf(errors.InvalidConfigKey, "Invalid config key %+v. MspID is required.", configKey)
 	}
 	configs, err := cmngr.getConfigs(configKey)
 	if err != nil {
@@ -148,14 +148,14 @@ func (cmngr *configManagerImpl) deleteConfigs(configKey api.ConfigKey) error {
 			return err
 		}
 		if err := cmngr.stub.DelState(keyStr); err != nil {
-			return errors.Wrap(errors.GeneralError, err, "DeleteState failed")
+			return errors.Wrap(errors.SystemError, err, "DeleteState failed")
 		}
 	}
 	return nil
 }
 
 //Delete deletes configuration from the ledger using config key
-func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
+func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) errors.Error {
 	err := ValidateConfigKey(configKey)
 	if err != nil {
 		//search for all configs by mspID
@@ -175,7 +175,7 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 			}
 			if value.Key.ComponentName == configKey.ComponentName && value.Key.AppName == configKey.AppName {
 				if err := cmngr.stub.DelState(keyStr); err != nil {
-					return errors.Wrap(errors.GeneralError, err, "DeleteState failed")
+					return errors.Wrap(errors.SystemError, err, "DeleteState failed")
 				}
 			}
 		}
@@ -186,16 +186,21 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) error {
 		return err
 	}
 	//delete configuration for valid key
-	return cmngr.stub.DelState(key)
+	e := cmngr.stub.DelState(key)
+	if e != nil {
+		return errors.Wrap(errors.SystemError, e, "DelState failed")
+	}
+
+	return nil
 }
 
 //ParseConfigMessage unmarshals supplied config message and returns
 //map[compositekey]configurationbytes to the caller
-func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byte, error) {
+func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byte, errors.Error) {
 	configMap := make(map[api.ConfigKey][]byte)
 	var parsedConfig api.ConfigMessage
 	if err := json.Unmarshal(configData, &parsedConfig); err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Cannot unmarshal config message %s %s", string(configData[:]), err)
+		return nil, errors.Errorf(errors.UnmarshalError, "Cannot unmarshal config message %s %s", string(configData[:]), err)
 	}
 	//validate config
 	if err := parsedConfig.IsValid(); err != nil {
@@ -212,7 +217,7 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 		}
 	}
 	var key api.ConfigKey
-	var err error
+	var err errors.Error
 	for _, app := range parsedConfig.Apps {
 		if len(app.Components) == 0 {
 			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "", "")
@@ -227,9 +232,9 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 				if err != nil {
 					return nil, err
 				}
-				bytes, err := json.Marshal(v)
-				if err != nil {
-					return nil, err
+				bytes, e := json.Marshal(v)
+				if e != nil {
+					return nil, errors.WithMessage(errors.SystemError, e, "Failed to marshal app component")
 				}
 				configMap[key] = bytes
 			}
@@ -239,22 +244,22 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 }
 
 //addIndexes for configKey
-func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) error {
+func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) errors.Error {
 	if err := ValidateConfigKey(key); err != nil {
 		return err
 	}
 	for _, index := range indexes {
 		if err := cmngr.addIndex(index, key); err != nil {
-			return errors.Errorf(errors.GeneralError, "error adding index [%s]: %s", index, err)
+			return err
 		}
 	}
 	return nil
 }
 
 //addIndex for configKey
-func (cmngr *configManagerImpl) addIndex(index string, configKey api.ConfigKey) error {
+func (cmngr *configManagerImpl) addIndex(index string, configKey api.ConfigKey) errors.Error {
 	if index == "" {
-		return errors.Errorf(errors.GeneralError, "Index is empty")
+		return errors.Errorf(errors.MissingRequiredParameterError, "Index is empty")
 	}
 	if err := ValidateConfigKey(configKey); err != nil {
 		return err
@@ -272,30 +277,35 @@ func (cmngr *configManagerImpl) addIndex(index string, configKey api.ConfigKey) 
 		return err
 	}
 	logger.Debugf("Adding index [%s]\n", indexKey)
-	return cmngr.stub.PutState(indexKey, []byte{0x00})
+	e := cmngr.stub.PutState(indexKey, []byte{0x00})
+	if e != nil {
+		return errors.WithMessage(errors.SystemError, e, "Failed to create index")
+	}
+
+	return nil
 }
 
 //getIndexKey uses CreateCompositeKey to create key using index, key and fields
-func (cmngr *configManagerImpl) getIndexKey(index string, key string, fields []string) (string, error) {
+func (cmngr *configManagerImpl) getIndexKey(index string, key string, fields []string) (string, errors.Error) {
 	if index == "" {
-		return "", errors.Errorf(errors.GeneralError, "Index is empty")
+		return "", errors.New(errors.MissingRequiredParameterError, "Index is empty")
 	}
 	if key == "" {
-		return "", errors.Errorf(errors.GeneralError, "Key is empty")
+		return "", errors.New(errors.MissingRequiredParameterError, "Key is empty")
 	}
 	if len(fields) == 0 {
-		return "", errors.Errorf(errors.GeneralError, "Field list is empty")
+		return "", errors.New(errors.MissingRequiredParameterError, "Field list is empty")
 	}
 	attributes := append(fields, key)
 	indexKey, err := cmngr.stub.CreateCompositeKey(index, attributes)
 	if err != nil {
-		return "", errors.Wrapf(errors.GeneralError, err, "Error creating comnposite key: %v", err)
+		return "", errors.Wrapf(errors.SystemError, err, "Error creating comnposite key: %v", err)
 	}
 	return indexKey, nil
 }
 
 //getFieldsForIndex returns collection of fields to be indexed
-func getFieldsForIndex(index string, key api.ConfigKey) ([]string, error) {
+func getFieldsForIndex(index string, key api.ConfigKey) ([]string, errors.Error) {
 	if err := ValidateConfigKey(key); err != nil {
 		return nil, err
 	}
@@ -303,14 +313,14 @@ func getFieldsForIndex(index string, key api.ConfigKey) ([]string, error) {
 	case indexMspID:
 		return []string{key.MspID}, nil
 	default:
-		return nil, errors.Errorf(errors.GeneralError, "unknown index [%s]", index)
+		return nil, errors.Errorf(errors.SystemError, "unknown index [%s]", index)
 	}
 }
 
-func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, error) {
+func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, errors.Error) {
 	//verify if key has MspID
 	if key.MspID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Invalid config key %+v", key)
+		return nil, errors.Errorf(errors.InvalidConfigKey, "Invalid config key %+v", key)
 	}
 	index, fields, err := getIndexAndFields(key)
 	configsMap, err := cmngr.getConfigurations(index, fields)
@@ -322,21 +332,21 @@ func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, erro
 }
 
 //getConfigurations for given index and indexed fields
-func (cmngr *configManagerImpl) getConfigurations(index string, fields []string) ([]*api.ConfigKV, error) {
+func (cmngr *configManagerImpl) getConfigurations(index string, fields []string) ([]*api.ConfigKV, errors.Error) {
 	it, err := cmngr.stub.GetStateByPartialCompositeKey(index, fields)
 	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Unexpected error retrieving message statuses with index [%s]: %s", index, err)
+		return nil, errors.Errorf(errors.SystemError, "Unexpected error retrieving message statuses with index [%s]: %s", index, err)
 	}
 	defer it.Close()
 	configKeys := []*api.ConfigKV{}
 	for it.HasNext() {
-		compositeKey, err := it.Next()
-		if err != nil {
-			return nil, err
+		compositeKey, e := it.Next()
+		if e != nil {
+			return nil, errors.WithMessage(errors.SystemError, e, "Failed to get next value from iterator")
 		}
-		_, compositeKeyParts, err := cmngr.stub.SplitCompositeKey(compositeKey.Key)
-		if err != nil {
-			return nil, errors.Wrapf(errors.GeneralError, err, "Unexpected error splitting composite key. Key: [%s], Error: %s", compositeKey, err)
+		_, compositeKeyParts, e := cmngr.stub.SplitCompositeKey(compositeKey.Key)
+		if e != nil {
+			return nil, errors.Wrapf(errors.SystemError, err, "Unexpected error splitting composite key. Key: [%s], Error: %s", compositeKey, err)
 		}
 		configID := compositeKeyParts[len(compositeKeyParts)-1]
 		ck, err := StringToConfigKey(configID)
@@ -345,28 +355,31 @@ func (cmngr *configManagerImpl) getConfigurations(index string, fields []string)
 		}
 		//get config for key
 		config, err := cmngr.getConfig(ck)
-		configKV := api.ConfigKV{Key: ck, Value: config}
-
 		if err != nil {
 			return nil, err
 		}
+
+		configKV := api.ConfigKV{Key: ck, Value: config}
 		configKeys = append(configKeys, &configKV)
 	}
 	return configKeys, nil
 }
 
 //unmarshalConfig unmarshals messages
-func unmarshalConfig(configBytes []byte) (string, error) {
+func unmarshalConfig(configBytes []byte) (string, errors.Error) {
 	var appConfig string
 	if len(configBytes) == 0 {
-		return "", errors.Errorf(errors.GeneralError, "No configuration passed to unmarshaller")
+		return "", errors.Errorf(errors.MissingRequiredParameterError, "No configuration passed to unmarshaller")
 	}
 	err := json.Unmarshal(configBytes, &appConfig)
-	return appConfig, err
+	if err != nil {
+		return "", errors.WithMessage(errors.UnmarshalError, err, "Failed to unmarshal config")
+	}
+	return appConfig, nil
 }
 
 //getIndexAndFields index and fields for search
-func getIndexAndFields(key api.ConfigKey) (string, []string, error) {
+func getIndexAndFields(key api.ConfigKey) (string, []string, errors.Error) {
 	fields, err := getIndexedFields(key)
 	if err != nil {
 		return "", nil, err
@@ -376,9 +389,9 @@ func getIndexAndFields(key api.ConfigKey) (string, []string, error) {
 }
 
 //getIndexedFields returns fields defined for search criteria
-func getIndexedFields(key api.ConfigKey) ([]string, error) {
+func getIndexedFields(key api.ConfigKey) ([]string, errors.Error) {
 	if key.MspID == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Invalid key %+v", key)
+		return nil, errors.Errorf(errors.InvalidConfigKey, "Invalid key %+v", key)
 	}
 	var fields []string
 	fields = append(fields, key.MspID)

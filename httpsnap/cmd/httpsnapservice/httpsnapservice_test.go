@@ -22,6 +22,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/viper"
 
 	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
@@ -366,14 +367,14 @@ type customHTTPConfig struct {
 	customClientCert string
 }
 
-func (c *customHTTPConfig) GetClientCert() (string, error) {
+func (c *customHTTPConfig) GetClientCert() (string, errors.Error) {
 	if len(c.customClientCert) > 0 {
 		return c.customClientCert, nil
 	}
 	return c.Config.GetClientCert()
 }
 
-func (c *customHTTPConfig) GetCaCerts() ([]string, error) {
+func (c *customHTTPConfig) GetCaCerts() ([]string, errors.Error) {
 	if len(c.customCaCerts) > 0 {
 		return c.customCaCerts, nil
 	}

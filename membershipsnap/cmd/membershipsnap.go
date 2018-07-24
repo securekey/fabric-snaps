@@ -18,6 +18,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
+	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -47,7 +48,7 @@ var initializer ccInitializer = func(mscc *MembershipSnap) error {
 	service, err := memservice.Get()
 	if err != nil {
 		logger.Errorf("Error getting membership service: %s\n", err)
-		return errors.Wrap(errors.GeneralError, err, "error getting membership service")
+		return errors.Wrap(errors.SystemError, err, "error getting membership service")
 	}
 
 	// Init policy checker for access control
@@ -71,7 +72,7 @@ func (t *MembershipSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 		logger.Info("Initializing membership snap...\n")
 		err := initializer(t)
 		if err != nil {
-			return shim.Error(fmt.Sprintf("Error initializing Membership Snap: %s", err))
+			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Membership Snap"), logger, stub)
 		}
 		logger.Info("... successfully initialized membership snap\n")
 	} else {
@@ -81,10 +82,13 @@ func (t *MembershipSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 // Invoke is the main entry point for invocations
-func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
+
+	defer util.HandlePanic(&resp, logger, stub)
+
 	args := stub.GetArgs()
 	if len(args) == 0 {
-		return shim.Error(fmt.Sprintf("Function not provided. Expecting one of %s or %s", getAllPeersFunction, getPeersOfChannelFunction))
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, fmt.Sprintf("Function not provided. Expecting one of: %s or %s", getAllPeersFunction, getPeersOfChannelFunction)), logger, stub)
 	}
 
 	functionName := string(args[0])
@@ -92,10 +96,10 @@ func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Check ACL
 	sp, err := stub.GetSignedProposal()
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Failed getting signed proposal from stub: [%s]", err))
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, err, "Failed getting signed proposal from stub"), logger, stub)
 	}
 	if err = t.policyChecker.CheckPolicyNoChannel(mspmgmt.Members, sp); err != nil {
-		return shim.Error(fmt.Sprintf("\"%s\" request failed authorization check: [%s]", functionName, err))
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.ACLCheckError, err, fmt.Sprintf("\"%s\" request failed authorization check", functionName)), logger, stub)
 	}
 
 	switch functionName {
@@ -104,15 +108,16 @@ func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	case getPeersOfChannelFunction:
 		return t.getPeersOfChannel(stub, args[1:])
 	default:
-		return shim.Error(fmt.Sprintf("Invalid function: %s. Expecting one of %s or %s", functionName, getAllPeersFunction, getPeersOfChannelFunction))
+		return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Invalid function: %s. Expecting one of: %s or %s", functionName, getAllPeersFunction, getPeersOfChannelFunction)), logger, stub)
 	}
+
 }
 
 //getAllPeers retrieves all of the peers that are currently alive
 func (t *MembershipSnap) getAllPeers(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	payload, err := t.marshalEndpoints(t.membershipService.GetAllPeers())
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.MembershipError, err, "Failed to marshal endpoints"), logger, stub)
 	}
 	return shim.Success(payload)
 }
@@ -120,22 +125,22 @@ func (t *MembershipSnap) getAllPeers(stub shim.ChaincodeStubInterface, args [][]
 //getPeersOfChannel retrieves all of the peers that are currently alive and joined to the given channel
 func (t *MembershipSnap) getPeersOfChannel(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if len(args) == 0 {
-		return shim.Error("Expecting channel ID")
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Expecting channel ID"), logger, stub)
 	}
 
 	channelID := string(args[0])
 	if channelID == "" {
-		return shim.Error("Expecting channel ID")
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Expecting channel ID"), logger, stub)
 	}
 
 	endpoints, err := t.membershipService.GetPeersOfChannel(channelID)
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.MembershipError, err, "Failed to get peers of channel"), logger, stub)
 	}
 
 	payload, err := t.marshalEndpoints(endpoints)
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, err, "Marshal endpoints failed"), logger, stub)
 	}
 
 	return shim.Success(payload)
