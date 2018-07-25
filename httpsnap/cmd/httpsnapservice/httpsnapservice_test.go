@@ -32,6 +32,8 @@ import (
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 	"github.com/stretchr/testify/assert"
+	"encoding/pem"
+	"github.com/pkg/errors"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -252,32 +254,48 @@ func TestHttpServiceRefresh(t *testing.T) {
 	assert.NotNil(t, instance.config, "config is supposed to be not nil")
 
 	xCertPool, err := instance.certPool.Get()
-	assert.Empty(t, xCertPool.Subjects(), "cert pool supposed to be empty")
+	assert.NotEmpty(t, xCertPool.Subjects(), "cert pool not supposed to be empty, since `system cert pool = true` in config")
+	baseNoOfSubjects := len(xCertPool.Subjects())
 
-	//add a cert1
-	caCert, err := ioutil.ReadFile(viper.GetString("http.tls.caCert.file"))
+
+	//TEST CERT POOL OBJECT,
+	// add a cert1 to certpool instance
+	caCert1Bytes, err := ioutil.ReadFile(viper.GetString("http.tls.caCert.file"))
 	if err != nil {
 		t.Fatal("failed to get ca cert")
 	}
-	xCertPool.AppendCertsFromPEM(caCert)
+	xCertPool.AppendCertsFromPEM(caCert1Bytes)
 
-	//add cert2
-	caCert, err = ioutil.ReadFile(viper.GetString("http.tls.cert.file"))
+	//add cert2 to certpool instance
+	caCert2Bytes, err := ioutil.ReadFile(viper.GetString("http.tls.cert.file"))
 	if err != nil {
 		t.Fatal("failed to get cert")
 	}
-	xCertPool.AppendCertsFromPEM(caCert)
+	xCertPool.AppendCertsFromPEM(caCert2Bytes)
 
-	//now pool has 2 certs
-	xCertPool, err = instance.certPool.Get()
-	assert.Equal(t, 2, len(xCertPool.Subjects()), "cert pool supposed to have 2 certs")
+	xCertPool2, err := instance.certPool.Get()
+	assert.Equal(t, len(xCertPool.Subjects())-2, len(xCertPool2.Subjects()), "any tampering to certpool returned shouldn't effect `instance.certPool`")
+
+
+	//Add 2 new certs to httpsnap cert pool
+	cert1, err := getCertFromPEMBytes(caCert1Bytes)
+	assert.Nil(t, err)
+	assert.NotNil(t, cert1)
+
+	cert2, err := getCertFromPEMBytes(caCert2Bytes)
+	assert.Nil(t, err)
+	assert.NotNil(t, cert2)
+
+	//now pool has baseNoOfSubjects + 2 certs
+	xCertPool, err = instance.certPool.Get(cert1, cert2)
+	assert.Equal(t, baseNoOfSubjects + 2, len(xCertPool.Subjects()), "cert pool supposed to have certs")
 
 	//Call init again and again
 	initialize(config)
 
-	//cert pool should reset on refresh after config update
+	//certs in cert pool will get reset, `cert1, cert2` being added previously should be gone
 	xCertPool, err = instance.certPool.Get()
-	assert.Empty(t, xCertPool.Subjects(), "cert pool supposed to be empty")
+	assert.Equal(t, 149, baseNoOfSubjects, "cert pool supposed to have certs")
 }
 
 func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
@@ -452,4 +470,26 @@ func (c *customHTTPConfig) GetCaCerts() ([]string, error) {
 		return c.customCaCerts, nil
 	}
 	return c.Config.GetCaCerts()
+}
+
+func getCertFromPEMBytes(pemCerts []byte) (*x509.Certificate, error) {
+	for len(pemCerts) > 0 {
+		var block *pem.Block
+		block, pemCerts = pem.Decode(pemCerts)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" || len(block.Headers) != 0 {
+			continue
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			continue
+		}
+
+		return cert, nil
+	}
+
+	return nil, errors.New("empty cert bytes provided")
 }

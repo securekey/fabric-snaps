@@ -105,7 +105,7 @@ client:
 # and event listener registration.
 #
 peers:
-  default.peer:
+  _default:
     grpcOptions:
       # These parameters should be set in coordination with the keepalive policy on the server,
       # as incompatible settings can result in closing of connection.
@@ -116,7 +116,6 @@ peers:
       fail-fast: false
       # allow-insecure will be taken into consideration if address has no protocol defined, if true then grpc or else grpcs
       allow-insecure: false
-
 
 orderers:
   orderer.example.com:
@@ -205,9 +204,7 @@ entityMatchers:
       urlSubstitutionExp: $1:$2
       eventUrlSubstitutionExp: $1:$2
       sslTargetOverrideUrlSubstitutionExp: $1
-      mappedHost: default.peer
     - pattern: (\w.+):(\d+)
       urlSubstitutionExp: grpcs://$1:$2
       eventUrlSubstitutionExp: grpcs://$1:$2
       sslTargetOverrideUrlSubstitutionExp: $1
-      mappedHost: default.peer
