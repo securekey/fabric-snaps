@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7e0426ad_a005380f",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-07-25T14:57:54Z",
+      "side": 1,
+      "message": "I doesn\u0027t belong to errors package since this is stub/shim specific. Probably common makes more sense than util. What do you think? We already had errors under util. Should I move it to util/common and than we would have common.CreateShimResponseFromError?",
+      "parentUuid": "bde129a2_8c3599b8",
+      "range": {
+        "startLine": 90,
+        "startChar": 10,
+        "endLine": 90,
+        "endChar": 14
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b9a6d64_27ead95e",
         "filename": "membershipsnap/cmd/membershipsnap.go",
         "patchSetId": 1
