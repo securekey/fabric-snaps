@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bde129a2_8c3599b8",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-07-25T14:40:00Z",
+      "side": 1,
+      "message": "errors package is more meaningful than util",
+      "range": {
+        "startLine": 90,
+        "startChar": 10,
+        "endLine": 90,
+        "endChar": 14
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b9a6d64_27ead95e",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-07-25T14:40:00Z",
+      "side": 1,
+      "message": "it is preferable to move the function under the \u0027errors\u0027 package as \u0027util\u0027 is too generic",
+      "range": {
+        "startLine": 91,
+        "startChar": 9,
+        "endLine": 91,
+        "endChar": 13
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
