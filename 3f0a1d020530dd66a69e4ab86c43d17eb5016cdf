@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "46ac867c_48b2283e",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-07-25T16:00:56Z",
+      "side": 1,
+      "message": "I see what you mean by not belonging to errors package.. the package name is tricky as this can be used by any snap... not sure how to create a meaningful name for common code, maybe call it \u0027shim-util\u0027 ? if we don\u0027t figure out a name.. then it\u0027s fine.",
+      "parentUuid": "c5041891_6bb27a1b",
+      "range": {
+        "startLine": 90,
+        "startChar": 10,
+        "endLine": 90,
+        "endChar": 14
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b9a6d64_27ead95e",
         "filename": "membershipsnap/cmd/membershipsnap.go",
         "patchSetId": 1
