@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f19403a1_7897bb6c",
+        "filename": "configmanager/api/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-07-25T20:14:12Z",
+      "side": 1,
+      "message": "why we need to change the interface to errors.Error we can keep error and caller can Cascade to errors.Error if need to use methods of Error",
+      "range": {
+        "startLine": 78,
+        "startChar": 28,
+        "endLine": 78,
+        "endChar": 33
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bde129a2_8c3599b8",
         "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
         "patchSetId": 1
