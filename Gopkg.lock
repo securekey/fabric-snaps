@@ -497,6 +497,7 @@
     "pkg/util/pathvar",
     "pkg/util/test",
     "test/metadata",
+    "test/performance/metrics",
     "third_party/github.com/hyperledger/fabric/common/cauthdsl",
     "third_party/github.com/hyperledger/fabric/core/common/ccprovider",
     "third_party/github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
@@ -509,7 +510,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "d489eba94c868f736015935e88da20faf9aa80d4"
+  revision = "72bc6c648abdc3baf2da05922832df8b57e52fa2"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -922,6 +923,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "db7539bd11a3d9b46f38bd936c1e8e361e810e64106fe1cb850c29557b31c402"
+  inputs-digest = "d32b52deeb5bc1f6b18505e53048bd38625f6208a248696c0a18ac65ab4298b7"
   solver-name = "gps-cdcl"
   solver-version = 1

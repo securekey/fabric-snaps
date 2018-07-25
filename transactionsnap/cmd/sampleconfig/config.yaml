@@ -170,7 +170,7 @@ channels:
 # and event listener registration.
 #
 peers:
-  default.peer:
+  _default:
     grpcOptions:
       # These parameters should be set in coordination with the keepalive policy on the server,
       # as incompatible settings can result in closing of connection.
@@ -219,7 +219,6 @@ entityMatchers:
       urlSubstitutionExp: grpc://127.0.0.1:7040
       eventUrlSubstitutionExp: grpc://127.0.0.1:7041
       sslTargetOverrideUrlSubstitutionExp: peer0.org1.example.com
-      mappedHost: default.peer
 #    - pattern: grpc.*://(\w.+):(\d+)
 #      urlSubstitutionExp: $1:$2
 #      eventUrlSubstitutionExp: $1:$2
