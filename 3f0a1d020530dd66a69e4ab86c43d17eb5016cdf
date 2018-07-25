@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c5041891_6bb27a1b",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-07-25T15:51:48Z",
+      "side": 1,
+      "message": "what I meant was golang best practice states to use \"meaningful and clear naming\", in this case util (even common) are too generic.\n\nsee this slide: https://talks.golang.org/2014/names.slide#15\n\nsince this is a utility to get a response from an errors, it would make sense to simply do error.functionName.. maybe the function name can change? like errors.NewResponse() ?",
+      "parentUuid": "7e0426ad_a005380f",
+      "range": {
+        "startLine": 90,
+        "startChar": 10,
+        "endLine": 90,
+        "endChar": 14
+      },
+      "revId": "3f0a1d020530dd66a69e4ab86c43d17eb5016cdf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b9a6d64_27ead95e",
         "filename": "membershipsnap/cmd/membershipsnap.go",
         "patchSetId": 1
