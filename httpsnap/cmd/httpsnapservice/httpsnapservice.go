@@ -184,11 +184,11 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	config, dirty, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
 	if err != nil {
-		return nil, errors.Wrap(errors.ValidationError, err, "Failed to initialize config")
+		return nil, errors.Wrap(errors.InitializeConfigError, err, "Failed to initialize config")
 	}
 
 	if config == nil {
-		return nil, errors.New(errors.ValidationError, "config from ledger is nil")
+		return nil, errors.New(errors.InitializeConfigError, "config from ledger is nil")
 	}
 
 	once.Do(func() {
@@ -272,7 +272,7 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logger.Warnf("Read contents failed. url=%s, err=%s", invokeReq.RequestURL, err)
-		return "", nil, errors.Wrapf(errors.GeneralError, err, "Read contents failed. url=%s", invokeReq.RequestURL)
+		return "", nil, errors.Wrapf(errors.SystemError, err, "Read contents failed. url=%s", invokeReq.RequestURL)
 	}
 
 	logger.Debugf("Got %s from url=%s", contents, invokeReq.RequestURL)
@@ -333,13 +333,13 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	//Get cryptosuite provider name from name from peerconfig
 	cryptoProvider, err := config.GetCryptoProvider()
 	if err != nil {
-		return nil, errors.WithMessage(errors.CryptoConfigError, err, "failed to get crypto provider for httpsnap")
+		return nil, err
 	}
 
 	//Get cryptosuite from peer bccsp pool
-	cryptoSuite, err := factory.GetBCCSP(cryptoProvider)
-	if err != nil {
-		return nil, errors.WithMessage(errors.CryptoConfigError, err, "failed to get crypto suite for httpsnap")
+	cryptoSuite, e := factory.GetBCCSP(cryptoProvider)
+	if e != nil {
+		return nil, errors.WithMessage(errors.CryptoConfigError, e, "failed to get crypto suite for httpsnap")
 	}
 
 	var clientCert string
@@ -379,10 +379,9 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	}
 
 	//Get private key using SKI
-	pk, err = cryptoSuite.GetKey(key.SKI())
-
-	if err != nil {
-		return nil, errors.Wrap(errors.GetKeyError, err, "failed to get private key from SKI")
+	pk, e = cryptoSuite.GetKey(key.SKI())
+	if e != nil {
+		return nil, errors.Wrap(errors.GetKeyError, e, "failed to get private key from SKI")
 	}
 
 	if pk != nil && pk.Private() {
@@ -398,7 +397,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, peerClientTLSKey, caCerts, config.IsSystemCertPoolEnabled())
 
 	} else {
-		return nil, errors.WithMessage(errors.GeneralError, err, " failed to get private key from client cert")
+		return nil, errors.WithMessage(errors.SystemError, err, " failed to get private key from client cert")
 	}
 }
 
@@ -411,7 +410,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 
 	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
+		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
 	}
 
 	// Setup HTTPS client
@@ -430,7 +429,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 
 	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "failed to create cert pool")
+		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
 	}
 
 	// Setup HTTPS client
@@ -513,7 +512,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 
 func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) {
 	if len(idBytes) == 0 {
-		return nil, errors.New(errors.ValidationError, "getPublicKeyFromPem error: empty pem bytes")
+		return nil, errors.New(errors.MissingConfigDataError, "getPublicKeyFromPem error: empty pem bytes")
 	}
 
 	// Decode the pem bytes

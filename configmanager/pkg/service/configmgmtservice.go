@@ -62,9 +62,9 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 }
 
 //Get items from cache
-func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, bool, error) {
+func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]byte, bool, errors.Error) {
 	if csi == nil {
-		return nil, false, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return nil, false, errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
 	}
 	if configKey.AppVersion == "" {
 		configKey.AppVersion = api.VERSION
@@ -91,9 +91,9 @@ func (csi *ConfigServiceImpl) Get(channelID string, configKey api.ConfigKey) ([]
 }
 
 //GetFromCache get items from cache
-func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.ConfigKey) ([]byte, error) {
+func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.ConfigKey) ([]byte, errors.Error) {
 	if csi == nil {
-		return nil, errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return nil, errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
 	}
 	if configKey.AppVersion == "" {
 		configKey.AppVersion = api.VERSION
@@ -101,7 +101,7 @@ func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.Confi
 
 	channelCache := csi.getCache(channelID, configKey.MspID)
 	if channelCache == nil {
-		return nil, errors.Errorf(errors.GeneralError, "Config cache is not initialized for channel [%s]", channelID)
+		return nil, errors.Errorf(errors.SystemError, "Config cache is not initialized for channel [%s]", channelID)
 	}
 
 	keyStr, err := mgmt.ConfigKeyToString(configKey)
@@ -111,13 +111,13 @@ func (csi *ConfigServiceImpl) GetFromCache(channelID string, configKey api.Confi
 
 	val := channelCache[keyStr]
 	if len(val) == 0 {
-		return nil, errors.Errorf(errors.GeneralError, "Config cache does not contain config for key [%s] on channel [%s]", keyStr, channelID)
+		return nil, errors.Errorf(errors.SystemError, "Config cache does not contain config for key [%s] on channel [%s]", keyStr, channelID)
 	}
 	return channelCache[keyStr], nil
 }
 
 //GetViper configuration as Viper
-func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, bool, error) {
+func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey, configType api.ConfigType) (*viper.Viper, bool, errors.Error) {
 	configData, dirty, err := csi.Get(channelID, configKey)
 	if err != nil {
 		return nil, false, err
@@ -129,21 +129,21 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 	v := viper.New()
 	v.SetConfigType(string(configType))
-	err = v.ReadConfig(bytes.NewBuffer(configData))
-	if err != nil {
-		return nil, false, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+	e := v.ReadConfig(bytes.NewBuffer(configData))
+	if e != nil {
+		return nil, false, errors.WithMessage(errors.InitializeConfigError, e, "snap_config_init_error")
 	}
 	return v, dirty, err
 }
 
 //Refresh adds new items into cache and refreshes existing ones
-func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) error {
+func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) errors.Error {
 	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
-		return errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
 	}
 	if stub == nil {
-		return errors.New(errors.GeneralError, "Stub is nil")
+		return errors.New(errors.SystemError, "Stub is nil")
 	}
 
 	configManager := mgmt.NewConfigManager(stub)
@@ -151,18 +151,18 @@ func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID st
 	configKey := api.ConfigKey{MspID: mspID}
 	configMessages, err := configManager.Get(configKey)
 	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Cannot create criteria for search by mspID %v", configMessages)
+		return err
 	}
 
 	if len(configMessages) == 0 {
-		return errors.Errorf(errors.GeneralError, "Cannot create criteria for search by mspID %v", configMessages)
+		return errors.Errorf(errors.SystemError, "Cannot create criteria for search by mspID %v", configMessages)
 	}
 
 	return csi.refreshCache(stub.GetChannelID(), configMessages, mspID)
 }
 
 //GetConfigFromLedger - gets snaps configs from ledger
-func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey api.ConfigKey) ([]byte, bool, error) {
+func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey api.ConfigKey) ([]byte, bool, errors.Error) {
 
 	logger.Debugf("Getting key [%#v] on channel [%s]", configKey, channelID)
 	lgr := peer.GetLedger(channelID)
@@ -173,7 +173,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
 			logger.Errorf("Cannot create transaction simulator %s", err)
-			return nil, false, errors.WithMessage(errors.GeneralError, err, "Cannot create transaction simulator")
+			return nil, false, errors.WithMessage(errors.SystemError, err, "Cannot create transaction simulator")
 		}
 		defer txsim.Done()
 
@@ -181,11 +181,11 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
 			logger.Errorf("Error getting state for app %s %s", keyStr, err)
-			return nil, false, errors.Wrap(errors.GeneralError, err, "Error getting state")
+			return nil, false, errors.Wrap(errors.SystemError, err, "Error getting state")
 		}
 		return config, csi.isConfigDirty(keyStr, config), nil
 	}
-	return nil, false, errors.Errorf(errors.GeneralError, "Cannot obtain ledger for channel %s", channelID)
+	return nil, false, errors.Errorf(errors.SystemError, "Cannot obtain ledger for channel %s", channelID)
 }
 
 //isConfigDirty checks if config retrieved for given key string is updated since its last retrieval.
@@ -224,9 +224,9 @@ func (csi *ConfigServiceImpl) generateHash(bytes []byte) string {
 	return base64.StdEncoding.EncodeToString(digest[:])
 }
 
-func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV, mspID string) error {
+func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*api.ConfigKV, mspID string) errors.Error {
 	if csi == nil {
-		return errors.New(errors.GeneralError, "ConfigServiceImpl was not initialized")
+		return errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
 	}
 
 	logger.Debugf("Updating cache for channel %s\n", channelID)
@@ -257,9 +257,9 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 		}
 	}
 	for key, comps := range compCache {
-		compsBytes, err := json.Marshal(comps)
-		if err != nil {
-			return err
+		compsBytes, e := json.Marshal(comps)
+		if e != nil {
+			return errors.WithMessage(errors.SystemError, e, "Failed to marshal component")
 		}
 		cache[key] = compsBytes
 	}

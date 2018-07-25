@@ -116,10 +116,10 @@ func (e *customError) ErrorID() string {
 
 // GenerateLogMsg returns the log msg
 func (e *customError) GenerateLogMsg() string {
-	return fmt.Sprintf("errorID:%s errorCode:%d error:%v", e.errorID, e.code, e.error)
+	return fmt.Sprintf("errorID:%s errorCode:%s error:%v", e.errorID, e.code, e.error)
 }
 
 // GenerateClientErrorMsg returns the client error msg
 func (e *customError) GenerateClientErrorMsg() string {
-	return fmt.Sprintf("errorID:%s errorCode:%d error:%v", e.errorID, e.code, e.error)
+	return fmt.Sprintf("errorID:%s errorCode:%s error:%v", e.errorID, e.code, e.error)
 }

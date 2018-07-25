@@ -56,20 +56,20 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, boo
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"), PeerID: peerConfig.GetString("peer.id"), AppName: "httpsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, false, errors.New(errors.GeneralError, "Cannot create cache instance")
+		return nil, false, errors.New(errors.SystemError, "Cannot create cache instance")
 	}
 	configData, dirty, err := cacheInstance.Get(channelID, key)
 	if err != nil {
-		return nil, false, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
+		return nil, false, errors.WithMessage(errors.SystemError, err, "Failed cacheInstance")
 	}
 	if configData == nil {
-		return nil, false, errors.New(errors.GeneralError, "config data is empty")
+		return nil, false, errors.New(errors.InitializeConfigError, "config data is empty")
 	}
 	httpSnapConfig := viper.New()
 	httpSnapConfig.SetConfigType("YAML")
 	err = httpSnapConfig.ReadConfig(bytes.NewBuffer(configData))
 	if err != nil {
-		return nil, false, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+		return nil, false, errors.WithMessage(errors.InitializeConfigError, err, "snap_config_init_error")
 	}
 	httpSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	httpSnapConfig.AutomaticEnv()
@@ -77,12 +77,12 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, boo
 	c := &config{peerConfig: peerConfig, httpSnapConfig: httpSnapConfig, peerConfigPath: peerConfigPath}
 	err = c.preloadEntities()
 	if err != nil {
-		return nil, false, errors.WithMessage(errors.GeneralError, err, "Error preloading config entities")
+		return nil, false, err
 	}
 	if dirty {
 		err = c.initializeLogging()
 		if err != nil {
-			return nil, false, errors.WithMessage(errors.GeneralError, err, "Error initializing logging")
+			return nil, false, err
 		}
 	}
 
@@ -90,7 +90,7 @@ func NewConfig(peerConfigPath string, channelID string) (httpsnapApi.Config, boo
 }
 
 // Helper function to initialize logging
-func (c *config) initializeLogging() error {
+func (c *config) initializeLogging() errors.Error {
 	logLevel := c.httpSnapConfig.GetString("logging.level")
 
 	if logLevel == "" {
@@ -99,7 +99,7 @@ func (c *config) initializeLogging() error {
 
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+		return errors.WithMessage(errors.InitializeLoggingError, err, "Error initializing log level")
 	}
 
 	logging.SetLevel("httpsnap", level)
@@ -130,7 +130,7 @@ func (c *config) IsHeaderAllowed(name string) bool {
 // GetCaCerts returns the list of ca certs
 // if not found in config and use peer tls config enabled
 // then returns peer config tls root cert
-func (c *config) GetCaCerts() ([]string, error) {
+func (c *config) GetCaCerts() ([]string, errors.Error) {
 
 	caCerts := c.httpSnapConfig.GetStringSlice("tls.caCerts")
 	absoluteCaCerts := make([]string, 0, len(caCerts))
@@ -149,7 +149,7 @@ func (c *config) GetCaCerts() ([]string, error) {
 // GetClientCert returns client cert
 // if not found in config and use peer tls config enabled
 // then returns peer config client cert
-func (c *config) GetClientCert() (string, error) {
+func (c *config) GetClientCert() (string, errors.Error) {
 	clientCert := c.httpSnapConfig.GetString("tls.clientCert")
 
 	if clientCert == "" && c.IsPeerTLSConfigEnabled() {
@@ -159,7 +159,7 @@ func (c *config) GetClientCert() (string, error) {
 }
 
 // GetPeerClientKey returns peer tls client key
-func (c *config) GetPeerClientKey() (string, error) {
+func (c *config) GetPeerClientKey() (string, errors.Error) {
 	clientKeyLocation := c.peerConfig.GetString("peer.tls.clientKey.file")
 	if clientKeyLocation == "" {
 		clientKeyLocation = c.peerConfig.GetString("peer.tls.key.file")
@@ -167,7 +167,7 @@ func (c *config) GetPeerClientKey() (string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(clientKeyLocation))
 	if err != nil {
-		return "", errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
+		return "", errors.WithMessage(errors.SystemError, err, "Failed to read peer's tls client key file")
 	}
 	return string(fileData), nil
 }
@@ -182,8 +182,8 @@ func (c *config) IsPeerTLSConfigEnabled() bool {
 	return c.httpSnapConfig.GetBool("tls.allowPeerConfig")
 }
 
-// GetPeerClientCert returns client tls cert
-func (c *config) getPeerClientCert() (string, error) {
+// getPeerClientCert returns client tls cert
+func (c *config) getPeerClientCert() (string, errors.Error) {
 
 	clientCertLocation := c.peerConfig.GetString("peer.tls.clientCert.file")
 	if clientCertLocation == "" {
@@ -192,13 +192,13 @@ func (c *config) getPeerClientCert() (string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(clientCertLocation))
 	if err != nil {
-		return "", errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
+		return "", errors.WithMessage(errors.SystemError, err, "Failed to read peer's tls client cert file")
 	}
 	return string(fileData), nil
 }
 
-// GetPeerTLSRootCert returns tls root certs from peer config
-func (c *config) getPeerTLSRootCert() ([]string, error) {
+// getPeerTLSRootCert returns tls root certs from peer config
+func (c *config) getPeerTLSRootCert() ([]string, errors.Error) {
 
 	rootCertLocation := c.peerConfig.GetString("peer.tls.rootcert.file")
 	if rootCertLocation == "" {
@@ -207,7 +207,7 @@ func (c *config) getPeerTLSRootCert() ([]string, error) {
 
 	fileData, err := ioutil.ReadFile(c.translatePeerPath(rootCertLocation))
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed ReadFile")
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to read peer's tls root cert file")
 	}
 
 	return []string{string(fileData)}, nil
@@ -227,12 +227,12 @@ func (c *config) GetNamedClientOverride() map[string]*httpsnapApi.ClientTLS {
 }
 
 // GetSchemaConfig return schema configuration based on content type
-func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig, error) {
+func (c *config) GetSchemaConfig(contentType string) (*httpsnapApi.SchemaConfig, errors.Error) {
 
 	schemaConfig := c.schemaConfigs[contentType]
 	logger.Debugf("Schema config: %s", schemaConfig)
 	if schemaConfig == nil {
-		return nil, errors.Errorf(errors.GeneralError, "Schema configuration for content-type: %s not found", contentType)
+		return nil, errors.Errorf(errors.MissingConfigDataError, "Schema configuration for content-type: %s not found", contentType)
 	}
 
 	return schemaConfig, nil
@@ -264,31 +264,32 @@ func (c *config) TimeoutOrDefault(tt httpsnapApi.HTTPClientTimeoutType) time.Dur
 	return timeout
 }
 
-func (c *config) GetCryptoProvider() (string, error) {
+func (c *config) GetCryptoProvider() (string, errors.Error) {
 	cryptoProvider := c.peerConfig.GetString("peer.BCCSP.Default")
 	if cryptoProvider == "" {
-		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
+		return "", errors.New(errors.CryptoConfigError, "BCCSP Default provider not found")
 	}
 	return cryptoProvider, nil
 }
 
-func (c *config) preloadEntities() error {
+func (c *config) preloadEntities() errors.Error {
 
 	//client TLS configs
 	err := c.httpSnapConfig.UnmarshalKey("tls.namedClientOverride", &c.clientTLS)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
+		return errors.WithMessage(errors.InitializeConfigError, err, "Failed to unmarshal tls.namedClientOverride")
 	}
 
 	// header configs
 	var allHeaders []string
 	err = c.httpSnapConfig.UnmarshalKey("headers", &allHeaders)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error getting allowed headers")
+		return errors.WithMessage(errors.InitializeConfigError, err, "Failed to unmarshal headers")
+
 	}
 
 	if allHeaders == nil || len(allHeaders) == 0 {
-		return errors.New(errors.GeneralError, "Missing http headers configuration")
+		return errors.New(errors.InitializeConfigError, "Missing http headers configuration")
 	}
 
 	c.headers = make(map[string]bool, len(allHeaders))
@@ -300,7 +301,7 @@ func (c *config) preloadEntities() error {
 	var allSchemas []httpsnapApi.SchemaConfig
 	err = c.httpSnapConfig.UnmarshalKey("schemas", &allSchemas)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Failed UnmarshalKey")
+		return errors.WithMessage(errors.InitializeConfigError, err, "Failed to unmarshal schemas")
 	}
 
 	c.schemaConfigs = make(map[string]*httpsnapApi.SchemaConfig, len(allSchemas))

@@ -63,7 +63,7 @@ func Get() (memserviceapi.Service, error) {
 	memService, err := newService()
 	if err != nil {
 		logger.Errorf("error initializing membership service: %s\n", err)
-		return nil, errors.Wrap(errors.GeneralError, err, "error initializing membership service")
+		return nil, errors.Wrap(errors.SystemError, err, "error initializing membership service")
 	}
 
 	if atomic.CompareAndSwapUint32(&initialized, 0, 1) {
@@ -77,7 +77,7 @@ func Get() (memserviceapi.Service, error) {
 func newService() (*Service, error) {
 	localMSPID, err := mspmgmt.GetLocalMSP().GetIdentifier()
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "error getting local MSP Identifier")
+		return nil, errors.Wrap(errors.SystemError, err, "error getting local MSP Identifier")
 	}
 
 	peerEndpoint, err := peer.GetPeerEndpoint()
@@ -110,7 +110,7 @@ func (s *Service) GetAllPeers() []*memserviceapi.PeerEndpoint {
 // GetPeersOfChannel returns all peers on the gossip network joined to the given channel
 func (s *Service) GetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndpoint, error) {
 	if channelID == "" {
-		return nil, errors.New(errors.GeneralError, "channel ID must be provided")
+		return nil, errors.New(errors.MissingRequiredParameterError, "channel ID must be provided")
 	}
 	localPeerJoined := false
 	for _, ch := range s.chInfoProvider.GetChannelsInfo() {

@@ -81,7 +81,7 @@ func getHTTPSnapRequest(reqBytes []byte) (*api.HTTPSnapRequest, errors.Error) {
 	var req api.HTTPSnapRequest
 	err := json.Unmarshal(reqBytes, &req)
 	if err != nil {
-		return nil, errors.Wrap(errors.UnmarshallError, err, "Failed to unmarshal http snap request")
+		return nil, errors.Wrap(errors.UnmarshalError, err, "Failed to unmarshal http snap request")
 	}
 	return &req, nil
 }

@@ -198,9 +198,9 @@ func TestTwoChannels(t *testing.T) {
 
 	}
 	cacheInstance := Initialize(stub, mspID)
-	_, err = uplaodConfigToHL(t, stub, validMsg)
-	if err != nil {
-		t.Fatalf("Cannot upload %s", err)
+	_, e := uplaodConfigToHL(t, stub, validMsg)
+	if e != nil {
+		t.Fatalf("Cannot upload %s", e)
 	}
 	//do refresh cacheRefresh
 	err = cacheInstance.Refresh(stub, mspID)
@@ -218,9 +218,9 @@ func TestTwoChannels(t *testing.T) {
 	stub1 := mockstub.NewMockStub("testConfigState", nil)
 	stub1.MockTransactionStart("testTX")
 	stub1.ChannelID = "channelIDTwo"
-	_, err = uplaodConfigToHL(t, stub1, validMsgRefresh)
-	if err != nil {
-		t.Fatalf("Cannot upload %s", err)
+	_, e = uplaodConfigToHL(t, stub1, validMsgRefresh)
+	if e != nil {
+		t.Fatalf("Cannot upload %s", e)
 	}
 	cacheInstance = Initialize(stub1, mspID)
 	b, dirty, err = cacheInstance.Get("channelIDTwo", configK)

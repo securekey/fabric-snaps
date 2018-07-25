@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/viper"
 )
 
@@ -75,15 +75,15 @@ type ConfigClient interface {
 //ConfigManager is used to manage configuration in ledger(save,get,delete)
 type ConfigManager interface {
 	//Save configuration - The submited payload should be in form of ConfigMessage
-	Save(config []byte) error
+	Save(config []byte) errors.Error
 	//Get configuration - Gets configuration based on config key.
 	//For the valid config key retuned array will have only one element.
 	//For the config key containing only MspID all configurations for that MspID will be returned
-	Get(configKey ConfigKey) ([]*ConfigKV, error)
+	Get(configKey ConfigKey) ([]*ConfigKV, errors.Error)
 	//Delete configuration -
 	//For the valid config one config message will be deleted
 	//For the config key containing only MspID all configurations for that MspID will be deleted
-	Delete(configKey ConfigKey) error
+	Delete(configKey ConfigKey) errors.Error
 }
 
 // ConfigType indicates the type (format) of the configuration
@@ -101,21 +101,21 @@ const (
 type ConfigService interface {
 	//Get returns the config bytes along with dirty flag for the given channel and config key.
 	// dirty flag bool returns true only if config is updated since its last retrieval
-	Get(channelID string, configKey ConfigKey) ([]byte, bool, error)
+	Get(channelID string, configKey ConfigKey) ([]byte, bool, errors.Error)
 	//GetViper returns a Viper instance along with dirty fla that wraps the config for the given channel and config key.
 	// If the config key doesn't exist then nil is returned.
 	//dirty flag bool returns true only if config is updated since its last retrieval
-	GetViper(channelID string, configKey ConfigKey, configType ConfigType) (*viper.Viper, bool, error)
+	GetViper(channelID string, configKey ConfigKey, configType ConfigType) (*viper.Viper, bool, errors.Error)
 }
 
 //IsValid validates config message
-func (cm ConfigMessage) IsValid() error {
+func (cm ConfigMessage) IsValid() errors.Error {
 	if cm.MspID == "" {
-		return errors.New("MSPID cannot be empty")
+		return errors.New(errors.InvalidConfigMessage, "MSPID cannot be empty")
 	}
 
 	if len(cm.Peers) == 0 && len(cm.Apps) == 0 {
-		return errors.New("Either peers or apps should be set")
+		return errors.New(errors.InvalidConfigMessage, "Either peers or apps should be set")
 	}
 
 	if len(cm.Peers) > 0 {
@@ -125,19 +125,18 @@ func (cm ConfigMessage) IsValid() error {
 			}
 		}
 
-		//	return errors.New("Collection of peers is required")
 	}
 
 	return nil
 }
 
 //IsValid validates config messagegetIndexKey
-func (pc PeerConfig) IsValid() error {
+func (pc PeerConfig) IsValid() errors.Error {
 	if pc.PeerID == "" {
-		return errors.New("PeerID cannot be empty")
+		return errors.New(errors.InvalidPeerConfig, "PeerID cannot be empty")
 	}
 	if len(pc.App) == 0 {
-		return errors.New("App cannot be empty")
+		return errors.New(errors.InvalidPeerConfig, "App cannot be empty")
 	}
 	//App is required
 	for _, appConfig := range pc.App {
@@ -150,32 +149,32 @@ func (pc PeerConfig) IsValid() error {
 }
 
 //IsValid appconfig
-func (ac AppConfig) IsValid() error {
+func (ac AppConfig) IsValid() errors.Error {
 	if ac.AppName == "" {
-		return errors.New("AppName cannot be empty")
+		return errors.New(errors.InvalidAppConfig, "AppName cannot be empty")
 	}
 	if len(ac.Config) == 0 && len(ac.Components) == 0 {
-		return errors.New("Neither AppConfig or Components is set (empty payload)")
+		return errors.New(errors.InvalidAppConfig, "Neither AppConfig or Components is set (empty payload)")
 	}
 	if len(ac.Version) == 0 {
-		return errors.New("AppVersion is not set (empty version)")
+		return errors.New(errors.InvalidAppConfig, "AppVersion is not set (empty version)")
 	}
 	return nil
 }
 
 //IsValid ComponentConfig
-func (cc ComponentConfig) IsValid() error {
+func (cc ComponentConfig) IsValid() errors.Error {
 	if cc.Name == "" {
-		return errors.New("Component Name cannot be empty")
+		return errors.New(errors.InvalidComponentConfig, "Component Name cannot be empty")
 	}
 	if cc.TxID != "" {
-		return errors.New("Tx id should be empty")
+		return errors.New(errors.InvalidComponentConfig, "Tx id should be empty")
 	}
 	if cc.Config == "" {
-		return errors.New("Component config cannot be empty")
+		return errors.New(errors.InvalidComponentConfig, "Component config cannot be empty")
 	}
 	if len(cc.Version) == 0 {
-		return errors.New("Component Version is not set (empty version)")
+		return errors.New(errors.InvalidComponentConfig, "Component Version is not set (empty version)")
 	}
 	return nil
 }

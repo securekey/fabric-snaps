@@ -446,7 +446,10 @@ func TestDeleteACLSuccess(t *testing.T) {
 	stub := getMockStub("testChannel")
 
 	configManager := mgmt.NewConfigManager(stub)
-	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	codedErr := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	if codedErr != nil {
+		t.Fatalf("Save failed: %s", codedErr)
+	}
 
 	funcName := []byte("delete")
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
@@ -510,7 +513,10 @@ func TestDeleteACLFailure(t *testing.T) {
 	stub := getMockStub("testChannel")
 
 	configManager := mgmt.NewConfigManager(stub)
-	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	codedErr := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	if codedErr != nil {
+		t.Fatalf("Save failed: %s", codedErr)
+	}
 
 	funcName := []byte("delete")
 	configKey := mgmtapi.ConfigKey{MspID: "Org1MSP", PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: api.VERSION}
@@ -556,9 +562,9 @@ func TestGetKey(t *testing.T) {
 		t.Fatal("Expected error:Got error unmarshalling config key")
 	}
 	ch := make(chan int)
-	_, err = json.Marshal(ch)
-	if err != nil {
-		errStr := fmt.Sprintf("Got error while marshalling config %s", err)
+	_, e := json.Marshal(ch)
+	if e != nil {
+		errStr := fmt.Sprintf("Got error while marshalling config %s", e)
 		logger.Error(errStr)
 
 	}
@@ -567,7 +573,10 @@ func TestGetKey(t *testing.T) {
 func TestGetConfigUsingInvalidKey(t *testing.T) {
 	stub := getMockStub("testChannel")
 	configManager := mgmt.NewConfigManager(stub)
-	err := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	codedErr := configManager.Save([]byte(strings.Replace(validMsgMultiplePeersAndApps, "$v", api.VERSION, -1)))
+	if codedErr != nil {
+		t.Fatalf("Save failed: %s", codedErr)
+	}
 
 	funcName := []byte("get")
 	configKey := mgmtapi.ConfigKey{MspID: "", PeerID: "", AppName: "", AppVersion: ""}

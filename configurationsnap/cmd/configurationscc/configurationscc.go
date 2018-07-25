@@ -37,6 +37,7 @@ import (
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
+	"github.com/securekey/fabric-snaps/util"
 	errors "github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -86,11 +87,11 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
 		}
 		peerID, err := config.GetPeerID(peerConfigPath)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
 		}
 		interval := config.GetDefaultRefreshInterval()
 		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
@@ -104,13 +105,13 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 func (configSnap *ConfigurationSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	args := stub.GetArgs()
 	if len(args) == 0 {
-		return shim.Error(fmt.Sprintf("Function not provided. Expecting one of (%s)", availableFunctions))
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, fmt.Sprintf("Function not provided. Expecting one of (%s)", availableFunctions)), logger, stub)
 	}
 
 	functionName := string(args[0])
 	function, ok := functionRegistry[functionName]
 	if !ok {
-		return shim.Error(fmt.Sprintf("Invalid function: %s. Expecting one of (%s)", functionName, availableFunctions))
+		return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Invalid function: %s. Expecting one of (%s)", functionName, availableFunctions)), logger, stub)
 	}
 
 	functionArgs := args[1:]
@@ -140,9 +141,9 @@ func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 //checkACLforKey - checks acl for the given config key
-func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigKey, aclResourcePrefix string) error {
+func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigKey, aclResourcePrefix string) errors.Error {
 	if configKey.MspID == "" {
-		return fmt.Errorf("ACL check failed, config has empty msp")
+		return errors.New(errors.MissingRequiredParameterError, "ACL check failed, config has empty msp")
 	}
 
 	resourceName := aclResourcePrefix + configKey.MspID
@@ -151,32 +152,32 @@ func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigK
 
 	sp, err := stub.GetSignedProposal()
 	if err != nil {
-		return fmt.Errorf("ACL check failed, error getting signed proposal: %v", err)
+		return errors.WithMessage(errors.SystemError, err, "ACL check failed, error getting signed proposal")
 	}
 
-	mspID, err := getMspID(stub)
-	if err != nil {
-		return fmt.Errorf("ACL check failed, error getting mspID from signed proposal: %v", err)
+	mspID, codedErr := getMspID(stub)
+	if codedErr != nil {
+		return codedErr
 	}
 
 	err = getACLProvider().CheckACL(resourceName, stub.GetChannelID(), sp)
 	if err != nil {
 		logger.Debugf("ACL check failed for resource: %s, with signing mspID: %s", resourceName, mspID)
-		return fmt.Errorf("ACL check failed, error: %v", err)
+		return errors.WithMessage(errors.ACLCheckError, err, fmt.Sprintf("ACL check failed for resource %s and mspID %s", resourceName, mspID))
 	}
 
 	return nil
 }
 
 //getMspID as a string from the creator of signed proposal
-func getMspID(stub shim.ChaincodeStubInterface) (string, error) {
+func getMspID(stub shim.ChaincodeStubInterface) (string, errors.Error) {
 	creator, err := stub.GetCreator()
 	if err != nil {
-		return "", fmt.Errorf("cannot get creatorBytes error %s", err)
+		return "", errors.WithMessage(errors.SystemError, err, "failed to get creator bytes")
 	}
 	sid := &protosMSP.SerializedIdentity{}
 	if err := proto.Unmarshal(creator, sid); err != nil {
-		return "", fmt.Errorf("unmarshal creatorBytes error %s", err)
+		return "", errors.WithMessage(errors.UnmarshalError, err, "failed to unmarshal creator")
 	}
 	return sid.Mspid, nil
 }
@@ -185,18 +186,18 @@ func getMspID(stub shim.ChaincodeStubInterface) (string, error) {
 func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	configMsg := args[0]
 	if len(configMsg) == 0 {
-		return shim.Error("Config is empty-cannot be saved")
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Config is empty-cannot be saved"), logger, stub)
 	}
 
 	// parse config message for ACL check
 	configMessageMap, err := mgmt.ParseConfigMessage(configMsg, stub.GetTxID())
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	for key := range configMessageMap {
 		if err := checkACLforKey(stub, &key, configDataWriteACLPrefix); err != nil {
-			return shim.Error(err.Error())
+			return util.CreateShimResponseFromError(err, logger, stub)
 		}
 	}
 
@@ -204,7 +205,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	err = cmngr.Save(configMsg)
 	if err != nil {
 		logger.Errorf("Got error while saving config %s", err)
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	return shim.Success(nil)
@@ -213,28 +214,30 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 //get - gets configuration using configkey as criteria
 func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
-	configKey, err := getKey(args)
-	if err != nil {
-		return shim.Error(err.Error())
+	configKey, codedErr := getKey(args)
+	if codedErr != nil {
+		return util.CreateShimResponseFromError(codedErr, logger, stub)
 	}
 
-	if err := checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
-		return shim.Error(err.Error())
+	if codedErr := checkACLforKey(stub, configKey, configDataReadACLPrefix); codedErr != nil {
+		return util.CreateShimResponseFromError(codedErr, logger, stub)
 	}
 
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
-	config, err := cmngr.Get(*configKey)
-	if err != nil {
-		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
-		return shim.Error(err.Error())
+	config, codedErr := cmngr.Get(*configKey)
+	if codedErr != nil {
+		logger.Errorf("Get for key %+v returns error: %s", configKey, codedErr)
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.GetConfigError, codedErr, fmt.Sprintf("Failed to retrieve config for config key %+v", configKey)), logger, stub)
 	}
 
 	payload, err := json.Marshal(config)
 	if err != nil {
 		logger.Errorf("Got error while marshalling config: %s", err)
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, err, "Failed to marshal config"), logger, stub)
+
 	}
+
 	return shim.Success(payload)
 }
 
@@ -243,18 +246,18 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	configKey, err := getKey(args)
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	if err := checkACLforKey(stub, configKey, configDataWriteACLPrefix); err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	if err := cmngr.Delete(*configKey); err != nil {
 		logger.Errorf("Got error while deleting config: %s", err)
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 
 	}
 	return shim.Success(nil)
@@ -262,23 +265,23 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	if len(args) < 1 {
-		return shim.Error("expecting first arg to be a JSON array of MSP IDs")
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "expecting first arg to be a JSON array of MSP IDs"), logger, stub)
 	}
 
 	var msps []string
 	err := json.Unmarshal(args[0], &msps)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("error unmarshaling MSP IDs argument: %s", err))
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.UnmarshalError, err, "Failed to unmarshal msp IDs"), logger, stub)
 	}
 
 	peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("error getting peer's msp id %s", err))
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.UnmarshalError, err, "Failed to get peer msp ID"), logger, stub)
 	}
 
 	// ACL check
 	if err := checkACLforKey(stub, &mgmtapi.ConfigKey{MspID: peerMspID}, configDataReadACLPrefix); err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	x := configmgmtService.GetInstance()
@@ -298,11 +301,11 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 	configKey, err := getKey(args)
 	if err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
 	if err := checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 	//valid key
 	x := configmgmtService.GetInstance()
@@ -310,7 +313,7 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	config, err := instance.GetFromCache(stub.GetChannelID(), *configKey)
 	if err != nil {
 		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
-		return shim.Error(err.Error())
+		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 	return shim.Success(config)
 }
@@ -717,21 +720,21 @@ func createTransactionSnapRequest(chaincodeID string, chnlID string,
 }
 
 //getKey gets config key from args
-func getKey(args [][]byte) (*mgmtapi.ConfigKey, error) {
+func getKey(args [][]byte) (*mgmtapi.ConfigKey, errors.Error) {
 	configKey := &mgmtapi.ConfigKey{}
 	if len(args) == 0 {
 		logger.Error("Config is empty (no args)")
-		return configKey, errors.New(errors.GeneralError, "Config is empty (no args)")
+		return configKey, errors.New(errors.MissingRequiredParameterError, "Config is empty (no args)")
 	}
 
 	configBytes := args[0]
 	if len(configBytes) == 0 {
 		logger.Error("Config is empty (no key)")
-		return configKey, errors.New(errors.GeneralError, "Config is empty (no key)")
+		return configKey, errors.New(errors.MissingRequiredParameterError, "Config is empty (no key)")
 	}
 	if err := json.Unmarshal(configBytes, &configKey); err != nil {
 		logger.Errorf("Got error %s unmarshalling config key %s", err, string(configBytes[:]))
-		return configKey, errors.Errorf(errors.GeneralError, "Got error %s unmarshalling config key %s", err, string(configBytes[:]))
+		return configKey, errors.Errorf(errors.UnmarshalError, "Got error %s unmarshalling config key %s", err, string(configBytes[:]))
 	}
 
 	return configKey, nil
