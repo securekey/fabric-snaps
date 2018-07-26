@@ -42,7 +42,7 @@ func GetStateDB(channelID string) (privacyenabledstate.DB, error) {
 
 func getStateDBProviderInstance() (privacyenabledstate.DBProvider, error) {
 	if !ledgerconfig.IsCouchDBEnabled() {
-		return nil, errors.Errorf(errors.GeneralError, "Local query is only supported on CouchDB")
+		return nil, errors.Errorf(errors.SystemError, "Local query is only supported on CouchDB")
 	}
 
 	once.Do(func() {

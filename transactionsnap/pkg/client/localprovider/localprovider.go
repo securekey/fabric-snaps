@@ -58,7 +58,7 @@ func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
 	url := fmt.Sprintf("%s:%d", s.localPeer.Host, s.localPeer.Port)
 	peerConfig, ok := s.clientConfig.PeerConfig(url)
 	if !ok {
-		return nil, errors.Errorf(errors.GeneralError, "unable to find peer config for url [%s]", url)
+		return nil, errors.Errorf(errors.MissingConfigDataError, "unable to find peer config for url [%s]", url)
 	}
 
 	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(s.localPeer.MSPid), s.localPeerTLSCertPem)

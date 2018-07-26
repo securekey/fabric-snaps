@@ -25,6 +25,6 @@ func New(opts *api.PeerFilterOpts) (api.PeerFilter, error) {
 	case api.MinBlockHeightPeerFilterType:
 		return minblockheight.New(opts.Args)
 	default:
-		return nil, errors.Errorf(errors.GeneralError, "invalid peer filter type [%s]", opts.Type)
+		return nil, errors.Errorf(errors.SystemError, "invalid peer filter type [%s]", opts.Type)
 	}
 }

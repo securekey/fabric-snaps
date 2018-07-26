@@ -48,32 +48,32 @@ type Config struct {
 }
 
 //NewConfig returns config struct
-func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Config, error) {
+func NewConfig(peerConfigPath string, channelID string) (transactionsnapApi.Config, errors.Error) {
 
 	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.InitializeConfigError, err, "Failed to get peer config from cache")
 	}
 	//txSnapConfig
 	key := configmanagerApi.ConfigKey{MspID: peerConfig.GetString("peer.localMspId"),
 		PeerID: peerConfig.GetString("peer.id"), AppName: "txnsnap"}
 	cacheInstance := configmgmtService.GetInstance()
 	if cacheInstance == nil {
-		return nil, errors.New(errors.GeneralError, "Cannot create cache instance")
+		return nil, errors.New(errors.SystemError, "Cannot create cache instance")
 	}
 	//txn snap has its own cache and config hash checks, no need of dirty flag from config cache
 	dataConfig, _, err := cacheInstance.Get(channelID, key)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed cacheInstance")
+		return nil, errors.WithMessage(errors.InitializeConfigError, err, fmt.Sprintf("Failed to get config cache for channel %s and key %s", channelID, key))
 	}
 	if dataConfig == nil {
-		return nil, errors.New(errors.GeneralError, "config data is empty")
+		return nil, errors.New(errors.MissingConfigDataError, fmt.Sprintf("config data is empty for channel %s and key %s", channelID, key))
 	}
 	txnSnapConfig := viper.New()
 	txnSnapConfig.SetConfigType("YAML")
 	err = txnSnapConfig.ReadConfig(bytes.NewBuffer(dataConfig))
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "snap_config_init_error")
+		return nil, errors.WithMessage(errors.InitializeConfigError, err, "snap_config_init_error")
 	}
 	txnSnapConfig.SetEnvPrefix(cmdRootPrefix)
 	txnSnapConfig.AutomaticEnv()
@@ -91,34 +91,34 @@ func (c *Config) GetConfigBytes() []byte {
 
 // GetLocalPeer returns address and ports for the peer running inside the
 // txn snap container
-func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, error) {
+func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, errors.Error) {
 	var peer = &transactionsnapApi.PeerConfig{}
 	var err error
 
 	peerAddress := c.peerConfig.GetString("peer.address")
 	if peerAddress == "" {
-		return nil, errors.New(errors.GeneralError, "Peer address not found in config")
+		return nil, errors.New(errors.PeerConfigError, "Peer address not found in config")
 	}
 	eventAddress := c.peerConfig.GetString("peer.events.address")
 	if eventAddress == "" {
-		return nil, errors.New(errors.GeneralError, "Peer event address not found in config")
+		return nil, errors.New(errors.PeerConfigError, "Peer event address not found in config")
 	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
 	peer.Host = splitPeerAddress[0]
 	peer.Port, err = strconv.Atoi(splitPeerAddress[1])
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
+		return nil, errors.WithMessage(errors.PeerConfigError, err, "Failed strconv.Atoi")
 	}
 	splitEventAddress := strings.Split(eventAddress, ":")
 	// Event host should be set to the peer host as that is the advertised address
 	peer.EventHost = splitPeerAddress[0]
 	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed strconv.Atoi")
+		return nil, errors.WithMessage(errors.PeerConfigError, err, "Failed strconv.Atoi")
 	}
 	peer.MSPid = []byte(c.GetMspID())
 	if peer.MSPid == nil || string(peer.MSPid) == "" {
-		return nil, errors.New(errors.GeneralError, "Peer localMspId not found in config")
+		return nil, errors.New(errors.PeerConfigError, "Peer localMspId not found in config")
 	}
 
 	return peer, nil
@@ -231,10 +231,10 @@ func (c *Config) GetTxnSnapConfig() *viper.Viper {
 }
 
 //GetCryptoProvider returns crypto provider name from peer config
-func (c *Config) GetCryptoProvider() (string, error) {
+func (c *Config) GetCryptoProvider() (string, errors.Error) {
 	cryptoProvider := c.peerConfig.GetString("peer.BCCSP.Default")
 	if cryptoProvider == "" {
-		return "", errors.New(errors.GeneralError, "BCCSP Default provider not found")
+		return "", errors.New(errors.CryptoConfigError, "BCCSP Default provider not found")
 	}
 	return cryptoProvider, nil
 }
@@ -298,14 +298,14 @@ func (c *Config) RetryOpts() retry.Opts {
 }
 
 // CCErrorRetryableCodes configuration for chaincode errors to retry
-func (c *Config) CCErrorRetryableCodes() ([]int32, error) {
+func (c *Config) CCErrorRetryableCodes() ([]int32, errors.Error) {
 	var codes []int32
 
 	codeStrings := c.txnSnapConfig.GetStringSlice("txnsnap.retry.ccErrorCodes")
 	for _, codeString := range codeStrings {
 		code, err := strconv.Atoi(codeString)
 		if err != nil {
-			return nil, errors.WithMessage(errors.GeneralError, err, fmt.Sprintf("could not parse cc error retry codes %s", codeStrings))
+			return nil, errors.WithMessage(errors.InvalidConfigDataError, err, fmt.Sprintf("could not parse cc error retry codes %s", codeStrings))
 		}
 		codes = append(codes, int32(code))
 	}

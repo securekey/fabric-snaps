@@ -18,6 +18,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
+	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -56,18 +57,18 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 		tpResponses, err := es.endorseTransaction(stub.GetArgs())
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(err, logger, stub)
 		}
-		payload, err := json.Marshal(tpResponses)
-		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+		payload, e := json.Marshal(tpResponses)
+		if e != nil {
+			return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, e, "Error marshalling endorsment responses"), logger, stub)
 		}
 		return pb.Response{Payload: payload, Status: shim.OK}
 	case "commitTransaction":
 
 		err := es.commitTransaction(stub.GetArgs())
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(err, logger, stub)
 		}
 		//TODO QQQ Check the response code
 		return pb.Response{Payload: nil, Status: shim.OK}
@@ -76,11 +77,11 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 		args := stub.GetArgs()
 		if len(args) < 3 {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: "Not enough arguments in call to verify transaction proposal signature"}
+			return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify transaction proposal signature"), logger, stub)
 		}
 
 		if err := es.verifyTxnProposalSignature(args); err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(err, logger, stub)
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
 
@@ -89,21 +90,22 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		logger.Debugf("Function unsafeGetState invoked with args %v", args)
 		resp, err := es.unsafeGetState(args)
 		if err != nil {
-			return pb.Response{Payload: nil, Status: shim.ERROR, Message: err.Error()}
+			return util.CreateShimResponseFromError(err, logger, stub)
+
 		}
 		return pb.Response{Payload: resp, Status: shim.OK}
 
 	default:
-		return pb.Response{Payload: nil, Status: shim.ERROR, Message: fmt.Sprintf("Function %s is not supported", function)}
+		return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Function %s is not supported", function)), logger, stub)
 	}
 
 }
 
-func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) {
+func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, errors.Error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
-		return nil, errors.New(errors.GeneralError, "Not enough arguments in call to endorse transaction")
+		return nil, errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to endorse transaction")
 	}
 	//second argument is SnapTransactionRequest
 	snapTxRequest, err := getSnapTransactionRequest(args[1])
@@ -111,7 +113,7 @@ func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) 
 		return nil, err
 	}
 	if snapTxRequest.ChannelID == "" {
-		return nil, errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
+		return nil, errors.New(errors.MissingRequiredParameterError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 
 	//cc code args
@@ -122,9 +124,9 @@ func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) 
 
 	}
 	logger.Debugf("Endorser args: %s", ccargs)
-	srvc, err := es.getTxService(snapTxRequest.ChannelID)
-	if err != nil {
-		return nil, err
+	srvc, e := es.getTxService(snapTxRequest.ChannelID)
+	if e != nil {
+		return nil, errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", snapTxRequest.ChannelID))
 	}
 
 	response, err := srvc.EndorseTransaction(snapTxRequest, nil)
@@ -135,11 +137,11 @@ func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, error) 
 	return response, nil
 }
 
-func (es *TxnSnap) commitTransaction(args [][]byte) error {
+func (es *TxnSnap) commitTransaction(args [][]byte) errors.Error {
 
 	//first arg is function name; the second one is SnapTransactionRequest
 	if len(args) < 2 {
-		return errors.New(errors.GeneralError, "Not enough arguments in call to commit transaction")
+		return errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to commit transaction")
 	}
 	//second argument is SnapTransactionRequest
 	snapTxRequest, err := getSnapTransactionRequest(args[1])
@@ -147,7 +149,7 @@ func (es *TxnSnap) commitTransaction(args [][]byte) error {
 		return err
 	}
 	if snapTxRequest.ChannelID == "" {
-		return errors.New(errors.GeneralError, "ChannelID is mandatory field of the SnapTransactionRequest")
+		return errors.New(errors.MissingRequiredParameterError, "ChannelID is mandatory field of the SnapTransactionRequest")
 	}
 
 	//cc code args
@@ -158,9 +160,9 @@ func (es *TxnSnap) commitTransaction(args [][]byte) error {
 
 	}
 	logger.Debugf("Endorser args: %s", ccargs)
-	srvc, err := es.getTxService(snapTxRequest.ChannelID)
-	if err != nil {
-		return err
+	srvc, e := es.getTxService(snapTxRequest.ChannelID)
+	if e != nil {
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", snapTxRequest.ChannelID))
 	}
 
 	_, err = srvc.CommitTransaction(snapTxRequest, nil)
@@ -171,23 +173,24 @@ func (es *TxnSnap) commitTransaction(args [][]byte) error {
 	return nil
 }
 
-func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) error {
+func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) errors.Error {
 	if len(args) < 1 {
-		return errors.New(errors.GeneralError, "Expected arg here containing channelID")
+		return errors.New(errors.MissingRequiredParameterError, "Expected arg here containing channelID")
 	}
 	channelID := string(args[1])
 
 	signedProposal := &pb.SignedProposal{}
 	if err := proto.Unmarshal(args[2], signedProposal); err != nil {
-		return errors.Wrap(errors.GeneralError, err, "Failed Unmarshal signedProposal")
+		return errors.Wrap(errors.UnmarshalError, err, "Failed Unmarshal signedProposal")
 	}
-	srvc, err := es.getTxService(channelID)
+	srvc, e := es.getTxService(channelID)
+	if e != nil {
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", channelID))
+	}
+
+	err := srvc.VerifyTxnProposalSignature(signedProposal)
 	if err != nil {
 		return err
-	}
-	err = srvc.VerifyTxnProposalSignature(signedProposal)
-	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "VerifyTxnProposalSignature returned error")
 	}
 	return nil
 }
@@ -195,9 +198,9 @@ func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) error {
 // unsafeGetState allows the caller to read a given key from the stateDB without
 // producing a read set.
 // Function name: unsafeGetState, Arguments: channelID, ccID, key
-func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
+func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, errors.Error) {
 	if len(args) < 4 {
-		return nil, errors.New(errors.GeneralError,
+		return nil, errors.New(errors.MissingRequiredParameterError,
 			"unsafeGetState requires function and three args: channelID, ccID, key")
 	}
 
@@ -207,12 +210,12 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
 
 	db, err := dbprovider.GetStateDB(channelID)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Failed to get State DB")
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get State DB")
 	}
 
 	err = db.Open()
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to open State DB")
 	}
 	defer db.Close()
 	defer logger.Debug("DB handle closed")
@@ -221,7 +224,7 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
 
 	vv, err := db.GetState(ccNamespace, key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get state")
 	}
 
 	if vv == nil {
@@ -235,11 +238,11 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, error) {
 }
 
 // getSnapTransactionRequest
-func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTransactionRequest, error) {
+func getSnapTransactionRequest(snapTransactionRequestbBytes []byte) (*api.SnapTransactionRequest, errors.Error) {
 	var snapTxRequest api.SnapTransactionRequest
 	err := json.Unmarshal(snapTransactionRequestbBytes, &snapTxRequest)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Cannot decode parameters from request to Snap Transaction Request")
+		return nil, errors.WithMessage(errors.UnmarshalError, err, "Cannot decode parameters from request to Snap Transaction Request")
 	}
 	return &snapTxRequest, nil
 }

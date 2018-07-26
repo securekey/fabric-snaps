@@ -87,9 +87,10 @@ func TestNotSupportedFunction(t *testing.T) {
 	}
 
 	errorMsg := "Function notSupportedFunction is not supported"
-	if response.Message != errorMsg {
+	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
+
 }
 
 func TestNotSpecifiedChannel(t *testing.T) {
@@ -139,7 +140,7 @@ func TestNotSpecifiedChaincodeID(t *testing.T) {
 		t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 	}
 	errorMsg := "ChaincodeID is mandatory field of the SnapTransactionRequest"
-	if response.Message != errorMsg {
+	if !strings.Contains(response.Message, errorMsg) {
 		t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 	}
 }
@@ -193,7 +194,7 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 			t.Fatalf("Expected response status %d but got %d", shim.ERROR, response.Status)
 		}
 		errorMsg := "Cannot decode parameters from request to Snap Transaction Request: unexpected end of JSON input"
-		if response.Message != errorMsg {
+		if !strings.Contains(response.Message, errorMsg) {
 			t.Fatalf("Expecting error message(%s) but got %s", errorMsg, response.Message)
 		}
 	}

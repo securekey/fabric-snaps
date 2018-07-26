@@ -12,6 +12,7 @@ import (
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // EndorsedCallback is a function that is invoked after the endorsement
@@ -77,7 +78,7 @@ type Client interface {
 	// @param {EndorseTxRequest} request identifies the chaincode to invoke
 	// @returns {Response} responses from endorsers
 	// @returns {error} error, if any
-	EndorseTransaction(endorseRequest *EndorseTxRequest) (*channel.Response, error)
+	EndorseTransaction(endorseRequest *EndorseTxRequest) (*channel.Response, errors.Error)
 
 	// CommitTransaction request commit from the peers on this channel
 	// for a transaction with the given parameters
@@ -86,12 +87,12 @@ type Client interface {
 	// @param {EndorsedCallback} is a function that is invoked after the endorsement
 	// @returns {Response} responses from endorsers
 	// @returns {error} error, if any
-	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, error)
+	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, errors.Error)
 
 	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
 	// @param {[]byte} Txn Proposal
 	// @returns {error} error, if any
-	VerifyTxnProposalSignature([]byte) error
+	VerifyTxnProposalSignature([]byte) errors.Error
 
 	// GetTargetPeer gets fab api peer for given peer config or opts
 	// @returns {fabApi.Peer} fab api peer

@@ -36,6 +36,9 @@ const (
 	// MissingConfigDataError ...
 	MissingConfigDataError ErrorCode = "missing-config-data-error"
 
+	// InvalidConfigDataError ...
+	InvalidConfigDataError ErrorCode = "invalid-config-data-error"
+
 	// CryptoConfigError ...
 	CryptoConfigError ErrorCode = "crypto-config-error"
 
@@ -111,4 +114,29 @@ const (
 
 	// InvalidConfigKey ...
 	InvalidConfigKey = "invalid-config-key"
+
+	// *** Start Tx Snap *** //
+
+	// EndorseTxError ...
+	EndorseTxError = "endorse-tx-error"
+
+	// CommitTxError ...
+	CommitTxError = "commit-tx-error"
+
+	// InvalidCreatorError ...
+	InvalidCreatorError = "invalid-creator-error"
+
+	// InvalidSignatureError ...
+	InvalidSignatureError = "invalid-signature-error"
+
+	// GetTxServiceError ...
+	GetTxServiceError = "get-tx-service-error"
+
+	// TxClientInitError ...
+	TxClientInitError = "tx-client-init-error"
+
+	// *** End Tx Snap *** //
+
+	// CacheError ...
+	CacheError = "cache-error"
 )
