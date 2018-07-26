@@ -238,8 +238,18 @@ func (d *CommonSteps) InvokeCConOrg(ccID, args, orgIDs, channelID string) error 
 	return nil
 }
 
-// InvokeCCWithArgs ...
+//InvokeCCWithArgsAsAdmin invoke cc with args as admin user type
+func (d *CommonSteps) InvokeCCWithArgsAsAdmin(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte) (channel.Response, error) {
+	return d.invokeCCWithArgs(ccID, channelID, targets, args, transientData, ADMIN)
+}
+
+//InvokeCCWithArgs invoke cc with args as regular user
 func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte) (channel.Response, error) {
+	return d.invokeCCWithArgs(ccID, channelID, targets, args, transientData, USER)
+}
+
+// invokeCCWithArgs ...
+func (d *CommonSteps) invokeCCWithArgs(ccID, channelID string, targets []*PeerConfig, args []string, transientData map[string][]byte, userType string) (channel.Response, error) {
 	if len(targets) == 0 {
 		return channel.Response{}, fmt.Errorf("no target peer specified")
 	}
@@ -257,7 +267,7 @@ func (d *CommonSteps) InvokeCCWithArgs(ccID, channelID string, targets []*PeerCo
 		peers = append(peers, targetPeer)
 	}
 
-	chClient, err := d.BDDContext.OrgChannelClient(targets[0].OrgID, USER, channelID)
+	chClient, err := d.BDDContext.OrgChannelClient(targets[0].OrgID, userType, channelID)
 	if err != nil {
 		return channel.Response{}, fmt.Errorf("Failed to create new channel client: %s", err)
 	}
