@@ -31,7 +31,6 @@ import (
 
 	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
@@ -491,5 +490,5 @@ func getCertFromPEMBytes(pemCerts []byte) (*x509.Certificate, error) {
 		return cert, nil
 	}
 
-	return nil, errors.New("empty cert bytes provided")
+	return nil, fmt.Errorf("Empty cert bytes")
 }
