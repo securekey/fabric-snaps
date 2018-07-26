@@ -27,12 +27,12 @@ func New(args []string) (transactionsnapApi.PeerFilter, error) {
 
 func newWithOpts(args []string, bcInfoProvider blockchainInfoProvider) (*peerFilter, error) {
 	if len(args) == 0 {
-		return nil, errors.New(errors.GeneralError, "expecting channel ID arg")
+		return nil, errors.New(errors.MissingRequiredParameterError, "expecting channel ID arg")
 	}
 
 	bcInfo, err := bcInfoProvider.GetBlockchainInfo(args[0])
 	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Error getting ledger height for channel [%s] on local peer: %s.\n", args[0], err)
+		return nil, errors.Errorf(errors.SystemError, "Error getting ledger height for channel [%s] on local peer: %s.\n", args[0], err)
 	}
 	// Need to subtract 1 from the block height since the block height (LedgerHeight) that's included
 	// in the Gossip Network Member is really the block number (i.e. they subtract 1 also)

@@ -25,7 +25,7 @@ type CustomCorePkg struct {
 func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.CryptoSuiteConfig) (core.CryptoSuite, error) {
 	bccspSuite, err := factory.GetBCCSP(f.ProviderName)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "Error creating new cryptosuite provider")
+		return nil, errors.WithMessage(errors.CryptoConfigError, err, "Error creating new cryptosuite provider")
 	}
 	return GetSuite(bccspSuite), nil
 }

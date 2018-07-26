@@ -279,12 +279,12 @@ func NewCustomConfig(config fabApi.EndpointConfig, localPeer *api.PeerConfig, lo
 	return &CustomConfig{EndpointConfig: config, localPeer: localPeer, localPeerTLSCertPem: localPeerTLSCertPem}
 }
 
-func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, error) {
+func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
-		return nil, errors.New(errors.GeneralError, "function arg is required")
+		return nil, errors.New(errors.MissingRequiredParameterError, "function arg is required")
 	}
 	args := make([][]byte, 0)
 	if len(endorseRequest.Args) > 1 {
@@ -312,7 +312,7 @@ func (c *clientImpl) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		}))
 
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler Query failed")
+		return nil, errors.WithMessage(errors.EndorseTxError, err, "InvokeHandler Query failed")
 	}
 	return &response, nil
 }
@@ -335,11 +335,11 @@ func getDisplayableEndorseRequest(endorseRequest *api.EndorseTxRequest) api.Endo
 	return newMessage
 }
 
-func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, error) {
+func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
-		return nil, errors.New(errors.GeneralError, "function arg is required")
+		return nil, errors.New(errors.MissingRequiredParameterError, "function arg is required")
 	}
 	args := make([][]byte, 0)
 	if len(endorseRequest.Args) > 1 {
@@ -371,21 +371,21 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		}))
 
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "InvokeHandler execute failed")
+		return nil, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
 	}
 	return &resp, nil
 }
 
-func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
+func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) errors.Error {
 
 	signedProposal := &pb.SignedProposal{}
 	if err := proto.Unmarshal(proposalBytes, signedProposal); err != nil {
-		return errors.Wrap(errors.GeneralError, err, "Unmarshal clientProposalBytes error")
+		return errors.Wrap(errors.UnmarshalError, err, "Unmarshal clientProposalBytes error")
 	}
 
 	creatorBytes, err := util.GetCreatorFromSignedProposal(signedProposal)
 	if err != nil {
-		return errors.Wrap(errors.GeneralError, err, "GetCreatorFromSignedProposal return error")
+		return errors.Wrap(errors.SystemError, err, "GetCreatorFromSignedProposal return error")
 	}
 
 	logger.Debugf("checkSignatureFromCreator info: creator is %s", creatorBytes)
@@ -395,13 +395,13 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 
 	membership, err := c.context.ChannelService().Membership()
 	if err != nil {
-		return errors.Wrap(errors.GeneralError, err, "Failed to get Membership from channelService")
+		return errors.Wrap(errors.SystemError, err, "Failed to get Membership from channelService")
 	}
 
 	// ensure that creator is a valid certificate
 	err = membership.Validate(creatorBytes)
 	if err != nil {
-		return errors.Wrap(errors.GeneralError, err, "The creator certificate is not valid")
+		return errors.Wrap(errors.InvalidCreatorError, err, "The creator certificate is not valid")
 	}
 
 	logger.Debug("verifyTPSignature info: creator is valid")
@@ -409,7 +409,7 @@ func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) error {
 	// validate the signature
 	err = membership.Verify(creatorBytes, signedProposal.ProposalBytes, signedProposal.Signature)
 	if err != nil {
-		return errors.Wrap(errors.GeneralError, err, "The creator's signature over the proposal is not valid")
+		return errors.Wrap(errors.InvalidSignatureError, err, "The creator's signature over the proposal is not valid")
 	}
 
 	logger.Debug("VerifyTxnProposalSignature exits successfully")
@@ -427,7 +427,7 @@ func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option)
 		peerConfig, ok := c.clientConfig.PeerConfig(fmt.Sprintf("%s:%d", peerCfg.Host,
 			peerCfg.Port))
 		if !ok {
-			return nil, errors.Errorf(errors.GeneralError, "Failed to get peer config by url")
+			return nil, errors.Errorf(errors.MissingConfigDataError, "Failed to get peer config by url")
 		}
 		opts = append(opts, peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *peerConfig, MSPID: string(peerCfg.MSPid)}),
 			peer.WithTLSCert(c.txnSnapConfig.GetTLSRootCert()))
@@ -435,7 +435,7 @@ func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option)
 
 	targetPeer, err := peer.New(c.clientConfig, opts...)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "Failed create peer by peer config")
+		return nil, errors.Wrap(errors.SystemError, err, "Failed create peer by peer config")
 	}
 
 	return targetPeer, nil
@@ -471,7 +471,7 @@ func (c *clientImpl) GetContext() contextApi.Channel {
 	return c.context
 }
 
-func (c *clientImpl) updateLogLevel(configBacked core.ConfigBackend) error {
+func (c *clientImpl) updateLogLevel(configBacked core.ConfigBackend) errors.Error {
 	logLevel := lookup.New(configBacked).GetString("txnsnap.loglevel")
 	if logLevel == "" {
 		logLevel = defaultLogLevel
@@ -479,7 +479,7 @@ func (c *clientImpl) updateLogLevel(configBacked core.ConfigBackend) error {
 
 	level, err := logging.LogLevel(logLevel)
 	if err != nil {
-		return errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+		return errors.WithMessage(errors.InitializeLoggingError, err, "Error initializing log level")
 	}
 
 	logging.SetLevel("txnsnap", level)

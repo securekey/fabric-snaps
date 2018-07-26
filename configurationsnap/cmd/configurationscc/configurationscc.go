@@ -669,9 +669,11 @@ func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
 }
 
 func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
-	localPeer, err := txService.Config.GetLocalPeer()
-	if err != nil {
-		logger.Errorf("Error getting local peer config when sending refresh request: %s", err)
+	// TODO: Errors (evaluate logging for this method)
+	localPeer, codedErr := txService.Config.GetLocalPeer()
+	if codedErr != nil {
+		logger.Errorf("Error getting local peer config when sending refresh request: %s", codedErr)
+		return
 	}
 
 	targetPeer, err := txService.GetTargetPeer(localPeer)
@@ -704,6 +706,7 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 
 	args := [][]byte{[]byte("refresh"), mspIDsBytes}
 	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil)
+	// TODO: Errors
 	txService.EndorseTransaction(txSnapReq, []fabApi.Peer{targetPeer})
 }
 
