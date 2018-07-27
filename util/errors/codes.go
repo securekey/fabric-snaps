@@ -51,9 +51,6 @@ const (
 	// ImportKeyError ...
 	ImportKeyError ErrorCode = "import-key-error"
 
-	// DecodePemError ...
-	DecodePemError ErrorCode = "decode-pem-error"
-
 	// GetKeyError ...
 	GetKeyError ErrorCode = "get-key-error"
 
@@ -66,39 +63,16 @@ const (
 	// InitializeSnapError ...
 	InitializeSnapError ErrorCode = "initialize-snap-error"
 
-	// *** Start HTTP Snap *** //
-
-	// HTTPClientError ...
-	HTTPClientError ErrorCode = "http-client-error"
-
-	// InvalidCertPinError ...
-	InvalidCertPinError ErrorCode = "invalid-cert-pin-error"
-
-	// *** End HTTP Snap *** //
-
-	// InitMembershipServiceError ...
-	InitMembershipServiceError = "init-membership-service-error"
-
-	// MembershipError ... (errors from getAllPeers and getPeersOfChannel)
-	MembershipError = "membership-error"
-
 	// PeerConfigError ...
 	PeerConfigError = "peer-config-error"
-
-	// MissingChannelConfigError ...
-	MissingChannelConfigError = "missing-channel-config-error"
 
 	// ACLCheckError ...
 	ACLCheckError = "acl-check-error"
 
+	// MembershipError ... (errors from getAllPeers and getPeersOfChannel)
+	MembershipError = "membership-error"
+
 	// *** Start Configuration Snap *** //
-
-	// GetConfigError ...
-	GetConfigError = "get-config-error"
-
-	// *** End Configuration Snap *** //
-
-	// *** Start Config Manager ***//
 
 	// InvalidConfigMessage ...
 	InvalidConfigMessage = "invalid-config-message"
@@ -114,6 +88,21 @@ const (
 
 	// InvalidConfigKey ...
 	InvalidConfigKey = "invalid-config-key"
+
+	// GetConfigError ...
+	GetConfigError = "get-config-error"
+
+	// *** End Configuration Snap *** //
+
+	// *** Start HTTP Snap *** //
+
+	// HTTPClientError ...
+	HTTPClientError ErrorCode = "http-client-error"
+
+	// InvalidCertPinError ...
+	InvalidCertPinError ErrorCode = "invalid-cert-pin-error"
+
+	// *** End HTTP Snap *** //
 
 	// *** Start Tx Snap *** //
 
@@ -137,6 +126,4 @@ const (
 
 	// *** End Tx Snap *** //
 
-	// CacheError ...
-	CacheError = "cache-error"
 )

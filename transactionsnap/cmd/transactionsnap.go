@@ -48,7 +48,10 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 //Invoke transaction snap
 //required args are function name and SnapTransactionRequest
-func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
+
+	defer util.HandlePanic(&resp, logger, stub)
+
 	//service will be used to endorse and commit transaction
 	function, _ := stub.GetFunctionAndParameters()
 

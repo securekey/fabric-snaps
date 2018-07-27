@@ -787,3 +787,16 @@ func uploadTestMessagesToHL(msgName string) (api.ConfigManager, error) {
 	stub.MockTransactionEnd("saveConfiguration")
 	return configManager, nil
 }
+
+//unmarshalConfig unmarshals messages
+func unmarshalConfig(configBytes []byte) (string, error) {
+	var appConfig string
+	if len(configBytes) == 0 {
+		return "", errors.New("No configuration passed to unmarshaller")
+	}
+	err := json.Unmarshal(configBytes, &appConfig)
+	if err != nil {
+		return "", err
+	}
+	return appConfig, nil
+}

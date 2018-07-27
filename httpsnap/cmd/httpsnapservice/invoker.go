@@ -27,16 +27,15 @@ type service interface {
 func (inv *invoker) Invoke() ([]byte, errors.Error) {
 	_, response, err := inv.service.getData(inv.request)
 	if err != nil {
-		errorObj := errors.WithMessage(errors.GeneralError, err, "getData returned an error")
-		logger.Errorf("[txID %s] %s", inv.request.TxID, errorObj.GenerateLogMsg())
-		return nil, errorObj
+		logger.Errorf("[txID %s] %s", inv.request.TxID, err.GenerateLogMsg())
+		return nil, err
 	}
 
 	logger.Debugf("Successfully retrieved data from URL: %s", inv.request.RequestURL)
 
 	// Validate response body against schema
 	if err := inv.service.validate(inv.headers[contentType], inv.schemaConfig.Response, string(response)); err != nil {
-		errorObj := errors.WithMessage(errors.GeneralError, err, "validate returned an error")
+		errorObj := errors.WithMessage(errors.ValidationError, err, "failed to validate response body against schema")
 		logger.Errorf("[txID %s] %s", inv.request.TxID, errorObj.GenerateLogMsg())
 		return nil, errorObj
 	}
@@ -54,9 +53,8 @@ func (inv *invoker) InvokeAsync() (chan []byte, chan errors.Error) {
 		// URL is ok, retrieve data using http client
 		_, response, err := inv.service.getData(inv.request)
 		if err != nil {
-			errorObj := errors.WithMessage(errors.GeneralError, err, "getData returned an error")
-			logger.Errorf("[txID %s] %s", inv.request.TxID, errorObj.GenerateLogMsg())
-			errChan <- errorObj
+			logger.Errorf("[txID %s] %s", inv.request.TxID, err.GenerateLogMsg())
+			errChan <- err
 			return
 		}
 
@@ -64,7 +62,7 @@ func (inv *invoker) InvokeAsync() (chan []byte, chan errors.Error) {
 
 		// Validate response body against schema
 		if err := inv.service.validate(inv.headers[contentType], inv.schemaConfig.Response, string(response)); err != nil {
-			errorObj := errors.WithMessage(errors.GeneralError, err, "validate returned an error")
+			errorObj := errors.WithMessage(errors.ValidationError, err, "failed to validate response body against schema")
 			logger.Errorf("[txID %s] %s", inv.request.TxID, errorObj.GenerateLogMsg())
 			errChan <- errorObj
 			return

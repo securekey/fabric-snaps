@@ -77,31 +77,31 @@ func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventS
 	existingLocalEventService := localservice.Get(channelID)
 	if existingLocalEventService != nil {
 		logger.Errorf("Event service already initialized for channel [%s]", channelID)
-		return errors.Errorf(errors.GeneralError, "Event service already initialized for channel [%s]", channelID)
+		return errors.Errorf(errors.SystemError, "Event service already initialized for channel [%s]", channelID)
 	}
-	txnsnapser, err := txsnapservice.Get(channelID)
-	if err != nil {
-		logger.Errorf("Error getting txsnapservice: %s", err)
-		return errors.WithMessage(errors.GeneralError, err, "Error getting txsnapservice")
+	txnsnapser, e := txsnapservice.Get(channelID)
+	if e != nil {
+		logger.Errorf("Error getting txsnapservice: %s", e)
+		return e
 	}
 
 	client, err := txnSnapClient.GetInstanceWithLocalDiscovery(channelID, txnsnapser.Config)
 	if err != nil {
 		logger.Errorf("Error getting txsnap client: %s", err)
-		return errors.WithMessage(errors.GeneralError, err, "GetInstanceWithLocalDiscovery return error")
+		return errors.WithMessage(errors.SystemError, err, "GetInstanceWithLocalDiscovery return error")
 	}
 
 	// Create a new channel event service which gets its events from the event relay
 	eventClient, err := s.connectEventClient(client.GetContext(), esconfig)
 	if err != nil {
 		logger.Errorf("Error connecting event client: %s", err)
-		return errors.WithMessage(errors.GeneralError, err, "Error connecting event client")
+		return errors.WithMessage(errors.SystemError, err, "Error connecting event client")
 	}
 
 	// Register the local event service for the channel
 	if err := localservice.Register(channelID, eventClient); err != nil {
 		logger.Errorf("Error registering local event service: %s", err)
-		return errors.WithMessage(errors.GeneralError, err, "Error registering local event service")
+		return errors.WithMessage(errors.SystemError, err, "Error registering local event service")
 	}
 
 	logger.Infof("Registered local event service for channel [%s]", channelID)

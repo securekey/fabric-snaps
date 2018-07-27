@@ -42,7 +42,7 @@ type TxServiceImpl struct {
 }
 
 //Get will return txService to caller
-func Get(channelID string) (*TxServiceImpl, error) {
+func Get(channelID string) (*TxServiceImpl, errors.Error) {
 	return newTxService(channelID)
 }
 
