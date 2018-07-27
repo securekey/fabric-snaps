@@ -76,32 +76,36 @@ func (s *eventSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func (s *eventSnap) startChannelEvents(channelID string, esconfig *config.EventSnapConfig) error {
 	existingLocalEventService := localservice.Get(channelID)
 	if existingLocalEventService != nil {
-		logger.Errorf("Event service already initialized for channel [%s]", channelID)
-		return errors.Errorf(errors.SystemError, "Event service already initialized for channel [%s]", channelID)
+		errObj := errors.Errorf(errors.SystemError, "Event service already initialized for channel [%s]", channelID)
+		logger.Errorf("Failed to start channel events: %s", errObj.GenerateLogMsg())
+		return errObj
 	}
 	txnsnapser, e := txsnapservice.Get(channelID)
 	if e != nil {
-		logger.Errorf("Error getting txsnapservice: %s", e)
+		logger.Errorf("Error getting txsnapservice: %s", e.GenerateLogMsg())
 		return e
 	}
 
 	client, err := txnSnapClient.GetInstanceWithLocalDiscovery(channelID, txnsnapser.Config)
 	if err != nil {
-		logger.Errorf("Error getting txsnap client: %s", err)
-		return errors.WithMessage(errors.SystemError, err, "GetInstanceWithLocalDiscovery return error")
+		errObj := errors.WithMessage(errors.SystemError, err, "GetInstanceWithLocalDiscovery return error")
+		logger.Errorf("Error getting txsnap client: %s", errObj.GenerateLogMsg())
+		return errObj
 	}
 
 	// Create a new channel event service which gets its events from the event relay
 	eventClient, err := s.connectEventClient(client.GetContext(), esconfig)
 	if err != nil {
-		logger.Errorf("Error connecting event client: %s", err)
-		return errors.WithMessage(errors.SystemError, err, "Error connecting event client")
+		errObj := errors.WithMessage(errors.SystemError, err, "Error connecting event client")
+		logger.Errorf(errObj.GenerateLogMsg())
+		return errObj
 	}
 
 	// Register the local event service for the channel
 	if err := localservice.Register(channelID, eventClient); err != nil {
-		logger.Errorf("Error registering local event service: %s", err)
-		return errors.WithMessage(errors.SystemError, err, "Error registering local event service")
+		errObj := errors.WithMessage(errors.SystemError, err, "Error registering local event service")
+		logger.Errorf(errObj.GenerateLogMsg())
+		return errObj
 	}
 
 	logger.Infof("Registered local event service for channel [%s]", channelID)

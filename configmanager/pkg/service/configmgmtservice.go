@@ -8,6 +8,7 @@ package service
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/spf13/viper"
 
@@ -172,16 +173,18 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		r := generateRandomAlphaOnlyString(12)
 		txsim, err := lgr.NewTxSimulator(r)
 		if err != nil {
-			logger.Errorf("Cannot create transaction simulator %s", err)
-			return nil, false, errors.WithMessage(errors.SystemError, err, "Cannot create transaction simulator")
+			errObj := errors.WithMessage(errors.SystemError, err, "Cannot create transaction simulator")
+			logger.Errorf("Get config from ledger failed: %s", errObj.GenerateLogMsg())
+			return nil, false, errObj
 		}
 		defer txsim.Done()
 
 		keyStr, err := mgmt.ConfigKeyToString(configKey)
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
-			logger.Errorf("Error getting state for app %s %s", keyStr, err)
-			return nil, false, errors.Wrap(errors.SystemError, err, "Error getting state")
+			errObj := errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error getting state for app %s %s", keyStr, err))
+			logger.Errorf("Get config from ledger failed: %s", errObj.GenerateLogMsg())
+			return nil, false, errObj
 		}
 		return config, csi.isConfigDirty(keyStr, config), nil
 	}

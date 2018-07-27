@@ -13,6 +13,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	memberapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("membershipsnap/channelpeer")
@@ -56,7 +57,7 @@ func (p *ChannelPeer) GetBlockHeight(channelID string) uint64 {
 
 	endpoints, err := p.service.GetPeersOfChannel(channelID)
 	if err != nil {
-		logger.Errorf("Error querying for peers of channel [%s]: %s\n", channelID, err)
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error querying for peers of channel [%s]", channelID)).GenerateLogMsg())
 		return 0
 	}
 

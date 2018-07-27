@@ -136,9 +136,9 @@ func functionSet() string {
 func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	response := healthcheck.SmokeTest(healthcheck.ConfigurationScc, stub, args)
 	if response.Status != shim.OK {
-		es := fmt.Sprintf("%s healthcheck failed: %s", healthcheck.ConfigurationScc, response.Message)
-		logger.Errorf("%s", es)
-		return shim.Error(es)
+		errObj := errors.New(errors.SystemError, fmt.Sprintf("%s healthcheck failed: %s", healthcheck.ConfigurationScc, response.Message))
+		logger.Error(errObj.GenerateLogMsg())
+		return util.CreateShimResponseFromError(errObj, logger, stub)
 	}
 	return shim.Success(response.Payload)
 }
@@ -207,7 +207,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	cmngr := mgmt.NewConfigManager(stub)
 	err = cmngr.Save(configMsg)
 	if err != nil {
-		logger.Errorf("Got error while saving config %s", err)
+		logger.Errorf("Got error while saving config: %s", err.GenerateLogMsg())
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
@@ -230,14 +230,15 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	cmngr := mgmt.NewConfigManager(stub)
 	config, codedErr := cmngr.Get(*configKey)
 	if codedErr != nil {
-		logger.Errorf("Get for key %+v returns error: %s", configKey, codedErr)
+		logger.Errorf("Get for key %+v returns error: %s", configKey, codedErr.GenerateLogMsg())
 		return util.CreateShimResponseFromError(errors.WithMessage(errors.GetConfigError, codedErr, fmt.Sprintf("Failed to retrieve config for config key %+v", configKey)), logger, stub)
 	}
 
 	payload, err := json.Marshal(config)
 	if err != nil {
-		logger.Errorf("Got error while marshalling config: %s", err)
-		return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, err, "Failed to marshal config"), logger, stub)
+		errObj := errors.WithMessage(errors.SystemError, err, "Failed to marshal config")
+		logger.Errorf(errObj.GenerateLogMsg())
+		return util.CreateShimResponseFromError(errObj, logger, stub)
 
 	}
 
@@ -259,7 +260,7 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	if err := cmngr.Delete(*configKey); err != nil {
-		logger.Errorf("Got error while deleting config: %s", err)
+		logger.Errorf("Got error while deleting config: %s", err.GenerateLogMsg())
 		return util.CreateShimResponseFromError(err, logger, stub)
 
 	}
@@ -315,7 +316,7 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	config, err := instance.GetFromCache(stub.GetChannelID(), *configKey)
 	if err != nil {
-		logger.Errorf("Get for key %+v returns error: %s", configKey, err)
+		logger.Errorf("Get for key %+v returns error: %s", configKey, err.GenerateLogMsg())
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 	return shim.Success(config)
@@ -672,22 +673,22 @@ func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
 }
 
 func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
-	// TODO: Errors (evaluate logging for this method)
+
 	localPeer, codedErr := txService.Config.GetLocalPeer()
 	if codedErr != nil {
-		logger.Errorf("Error getting local peer config when sending refresh request: %s", codedErr)
+		logger.Errorf("Error getting local peer config when sending refresh request: %s", codedErr.GenerateLogMsg())
 		return
 	}
 
 	targetPeer, err := txService.GetTargetPeer(localPeer)
 	if err != nil {
-		logger.Errorf("Error creating target peer when sending refresh request: %s", err)
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error creating target peer when sending refresh request").GenerateLogMsg())
 		return
 	}
 
 	chConfig, err := txService.FcClient.GetContext().ChannelService().ChannelConfig()
 	if err != nil {
-		logger.Errorf("Error getting channel config: %s", err)
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error getting channel config").GenerateLogMsg())
 		return
 	}
 
@@ -696,21 +697,25 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 		fabricMSPConfig := &protosMSP.FabricMSPConfig{}
 		err := proto.Unmarshal(mspConfig.Config, fabricMSPConfig)
 		if err != nil {
-			logger.Errorf("Error unmarshalling MSP config: %s", err)
+			logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error unmarshalling MSP config").GenerateLogMsg())
 		}
 		mspIDs = append(mspIDs, fabricMSPConfig.Name)
 	}
 
 	mspIDsBytes, err := json.Marshal(mspIDs)
 	if err != nil {
-		logger.Errorf("Error marshalling JSON args: %s", err)
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error marshalling JSON args").GenerateLogMsg())
 		return
 	}
 
 	args := [][]byte{[]byte("refresh"), mspIDsBytes}
 	txSnapReq := createTransactionSnapRequest("configurationsnap", channelID, args, nil, nil)
-	// TODO: Errors
-	txService.EndorseTransaction(txSnapReq, []fabApi.Peer{targetPeer})
+
+	_, err = txService.EndorseTransaction(txSnapReq, []fabApi.Peer{targetPeer})
+	if err != nil {
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, "configuration snap 'referesh' failed").GenerateLogMsg())
+		return
+	}
 }
 
 func createTransactionSnapRequest(chaincodeID string, chnlID string,
@@ -729,18 +734,17 @@ func createTransactionSnapRequest(chaincodeID string, chnlID string,
 func getKey(args [][]byte) (*mgmtapi.ConfigKey, errors.Error) {
 	configKey := &mgmtapi.ConfigKey{}
 	if len(args) == 0 {
-		logger.Error("Config is empty (no args)")
 		return configKey, errors.New(errors.MissingRequiredParameterError, "Config is empty (no args)")
 	}
 
 	configBytes := args[0]
 	if len(configBytes) == 0 {
-		logger.Error("Config is empty (no key)")
 		return configKey, errors.New(errors.MissingRequiredParameterError, "Config is empty (no key)")
 	}
 	if err := json.Unmarshal(configBytes, &configKey); err != nil {
-		logger.Errorf("Got error %s unmarshalling config key %s", err, string(configBytes[:]))
-		return configKey, errors.Errorf(errors.UnmarshalError, "Got error %s unmarshalling config key %s", err, string(configBytes[:]))
+		errObj := errors.WithMessage(errors.UnmarshalError, err, fmt.Sprintf("Got an error unmarshalling config key %s", string(configBytes[:])))
+		logger.Errorf(errObj.GenerateLogMsg())
+		return configKey, errObj
 	}
 
 	return configKey, nil
