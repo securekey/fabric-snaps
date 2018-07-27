@@ -59,12 +59,12 @@ type EventSnapConfig struct {
 // New returns a new EventSnapConfig for the given channel
 func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	if channelID == "" {
-		return nil, errors.New(errors.GeneralError, "channel ID is required")
+		return nil, errors.New(errors.InitializeConfigError, "channel ID is required")
 	}
 
 	peerConfig, err := peerConfigCache.Get(peerConfigPath)
 	if err != nil {
-		return nil, errors.Wrapf(errors.GeneralError, err, "error reading peer config")
+		return nil, errors.Wrapf(errors.PeerConfigError, err, "error reading peer config")
 	}
 
 	peerID := peerConfig.GetString("peer.id")
@@ -80,20 +80,20 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	configKey := configapi.ConfigKey{MspID: mspID, PeerID: peerID, AppName: EventSnapAppName}
 	config, dirty, err := configservice.GetInstance().GetViper(channelID, configKey, configapi.YAML)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "error getting event snap configuration Viper")
+		return nil, errors.Wrap(errors.InitializeConfigError, err, "error getting event snap configuration Viper")
 	}
 	if config == nil {
-		return nil, errors.New(errors.GeneralError, "config data is empty")
+		return nil, errors.New(errors.MissingConfigDataError, "config data is empty")
 	}
 
 	bytes, _, err := configservice.GetInstance().Get(channelID, configKey)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "error getting event snap configuration bytes")
+		return nil, errors.Wrap(errors.GetConfigError, err, "error getting event snap configuration bytes")
 	}
 
 	_, err = txsnapservice.Get(channelID)
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "error getting txn snap service")
+		return nil, err
 	}
 
 	eventSnapConfig.Bytes = bytes
@@ -109,7 +109,7 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 		}
 		level, err := logging.LogLevel(logLevel)
 		if err != nil {
-			return nil, errors.WithMessage(errors.GeneralError, err, "Error initializing log level")
+			return nil, errors.WithMessage(errors.InitializeLoggingError, err, "Error initializing log level")
 		}
 		logging.SetLevel(EventSnapAppName, level)
 		logger.Debugf("Eventsnap logging initialized. Log level: %s", logLevel)

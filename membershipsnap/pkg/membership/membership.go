@@ -82,7 +82,7 @@ func newService() (*Service, error) {
 
 	peerEndpoint, err := peer.GetPeerEndpoint()
 	if err != nil {
-		return nil, errors.Wrap(errors.GeneralError, err, "error reading peer endpoint")
+		return nil, errors.Wrap(errors.SystemError, err, "error reading peer endpoint")
 	}
 
 	gossipService := service.GetGossipService()

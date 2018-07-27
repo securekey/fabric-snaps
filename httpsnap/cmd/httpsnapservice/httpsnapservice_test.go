@@ -189,7 +189,7 @@ func TestJsonValidation(t *testing.T) {
 
 	// Failed path: Response fails schema validation
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/invalidJSONResponse", RequestHeaders: headers,
-		RequestBody: jsonStr}, "validate returned an error: description is required")
+		RequestBody: jsonStr}, "failed to validate response body against schema: description is required")
 
 	// Failed path: Request content type doesn't match response content type
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/textResponse", RequestHeaders: headers,

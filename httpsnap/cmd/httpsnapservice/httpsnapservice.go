@@ -518,7 +518,7 @@ func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryp
 	// Decode the pem bytes
 	pemCert, _ := pem.Decode(idBytes)
 	if pemCert == nil {
-		return nil, errors.Errorf(errors.DecodePemError, "getPublicKeyFromPem error: could not decode pem bytes [%v]", idBytes)
+		return nil, errors.Errorf(errors.ParseCertError, "getPublicKeyFromPem error: could not decode pem bytes [%v]", idBytes)
 	}
 
 	// get a cert from pem bytes

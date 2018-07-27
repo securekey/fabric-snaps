@@ -259,7 +259,7 @@ func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) errors.Error {
 //addIndex for configKey
 func (cmngr *configManagerImpl) addIndex(index string, configKey api.ConfigKey) errors.Error {
 	if index == "" {
-		return errors.Errorf(errors.MissingRequiredParameterError, "Index is empty")
+		return errors.Errorf(errors.SystemError, "Index is empty")
 	}
 	if err := ValidateConfigKey(configKey); err != nil {
 		return err
@@ -363,19 +363,6 @@ func (cmngr *configManagerImpl) getConfigurations(index string, fields []string)
 		configKeys = append(configKeys, &configKV)
 	}
 	return configKeys, nil
-}
-
-//unmarshalConfig unmarshals messages
-func unmarshalConfig(configBytes []byte) (string, errors.Error) {
-	var appConfig string
-	if len(configBytes) == 0 {
-		return "", errors.Errorf(errors.MissingRequiredParameterError, "No configuration passed to unmarshaller")
-	}
-	err := json.Unmarshal(configBytes, &appConfig)
-	if err != nil {
-		return "", errors.WithMessage(errors.UnmarshalError, err, "Failed to unmarshal config")
-	}
-	return appConfig, nil
 }
 
 //getIndexAndFields index and fields for search

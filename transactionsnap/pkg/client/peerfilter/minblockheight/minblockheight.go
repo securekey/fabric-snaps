@@ -27,7 +27,7 @@ func New(args []string) (transactionsnapApi.PeerFilter, error) {
 
 func newWithOpts(args []string, bcInfoProvider blockchainInfoProvider) (*peerFilter, error) {
 	if len(args) == 0 {
-		return nil, errors.New(errors.MissingRequiredParameterError, "expecting channel ID arg")
+		return nil, errors.New(errors.SystemError, "expecting channel ID arg")
 	}
 
 	bcInfo, err := bcInfoProvider.GetBlockchainInfo(args[0])

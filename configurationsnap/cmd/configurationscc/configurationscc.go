@@ -102,7 +102,10 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 }
 
 // Invoke is the main entry point for invocations
-func (configSnap *ConfigurationSnap) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (configSnap *ConfigurationSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
+
+	defer util.HandlePanic(&resp, logger, stub)
+
 	args := stub.GetArgs()
 	if len(args) == 0 {
 		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, fmt.Sprintf("Function not provided. Expecting one of (%s)", availableFunctions)), logger, stub)
@@ -143,7 +146,7 @@ func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 //checkACLforKey - checks acl for the given config key
 func checkACLforKey(stub shim.ChaincodeStubInterface, configKey *mgmtapi.ConfigKey, aclResourcePrefix string) errors.Error {
 	if configKey.MspID == "" {
-		return errors.New(errors.MissingRequiredParameterError, "ACL check failed, config has empty msp")
+		return errors.New(errors.SystemError, "ACL check failed, config has empty msp")
 	}
 
 	resourceName := aclResourcePrefix + configKey.MspID
