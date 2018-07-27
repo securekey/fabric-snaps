@@ -213,7 +213,7 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
 	if codedErr != nil {
-		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, codedErr)
+		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, codedErr.GenerateLogMsg())
 		return "", nil, codedErr
 	}
 
@@ -253,8 +253,9 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Errorf("POST failed. url=%s, err=%s", invokeReq.RequestURL, err)
-		return "", nil, errors.Wrapf(errors.HTTPClientError, err, "POST failed. url=%s", invokeReq.RequestURL)
+		errObj := errors.Wrapf(errors.HTTPClientError, err, "POST failed. url=%s", invokeReq.RequestURL)
+		logger.Errorf(errObj.GenerateLogMsg())
+		return "", nil, errObj
 	}
 
 	defer resp.Body.Close()

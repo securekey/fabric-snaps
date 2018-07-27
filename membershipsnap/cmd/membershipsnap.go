@@ -47,8 +47,9 @@ type ccInitializer func(*MembershipSnap) error
 var initializer ccInitializer = func(mscc *MembershipSnap) error {
 	service, err := memservice.Get()
 	if err != nil {
-		logger.Errorf("Error getting membership service: %s\n", err)
-		return errors.Wrap(errors.SystemError, err, "error getting membership service")
+		errObj := errors.Wrap(errors.SystemError, err, "error getting membership service")
+		logger.Errorf(errObj.GenerateLogMsg())
+		return errObj
 	}
 
 	// Init policy checker for access control

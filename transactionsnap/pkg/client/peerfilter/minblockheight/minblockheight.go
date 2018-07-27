@@ -61,7 +61,7 @@ func (f *peerFilter) Accept(p fabApi.Peer) bool {
 	chanPeer, ok := p.(api.ChannelPeer)
 	if !ok {
 		// This shouldn't happen since all peers should implement ChannelPeer
-		logger.Error("Peer is not a ChannelPeer")
+		logger.Error(errors.New(errors.SystemError, "Peer is not a ChannelPeer").GenerateLogMsg())
 		return false
 	}
 

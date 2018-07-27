@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package membership
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -62,8 +63,9 @@ func Get() (memserviceapi.Service, error) {
 
 	memService, err := newService()
 	if err != nil {
-		logger.Errorf("error initializing membership service: %s\n", err)
-		return nil, errors.Wrap(errors.SystemError, err, "error initializing membership service")
+		errObj := errors.Wrap(errors.SystemError, err, "error initializing membership service")
+		logger.Errorf(errObj.GenerateLogMsg())
+		return nil, errObj
 	}
 
 	if atomic.CompareAndSwapUint32(&initialized, 0, 1) {
@@ -153,7 +155,7 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 		if channelID != "" {
 			bcInfo, err := s.bciProvider.GetBlockchainInfo(channelID)
 			if err != nil {
-				logger.Errorf("Error getting ledger height for channel [%s] on local peer. Ledger height will be set to 0.\n", channelID)
+				logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error getting ledger height for channel [%s] on local peer. Ledger height will be set to 0.\n", channelID)).GenerateLogMsg())
 			} else {
 				// Need to subtract 1 from the block height since the LedgerHeight in the
 				// Gossip NetworkMember is really the block number (i.e. they subtract 1 also)

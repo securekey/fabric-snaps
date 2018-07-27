@@ -53,11 +53,12 @@ func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, er
 func HandlePanic(resp *pb.Response, log *logging.Logger, stub shim.ChaincodeStubInterface) {
 	if r := recover(); r != nil {
 
-		// TODO: Figure out what to log
-		log.Errorf("Recovering from panic: %s", string(debug.Stack()))
-		codedErr := errors.New(errors.PanicError, "Check server logs")
+		errObj := errors.Errorf(errors.PanicError, "Check server logs")
 
-		errResp := CreateShimResponseFromError(codedErr, log, stub)
+		// TODO: Figure out what to log
+		log.Errorf("Recovering from panic '%s': %s", errObj.GenerateClientErrorMsg(), string(debug.Stack()))
+
+		errResp := CreateShimResponseFromError(errObj, log, stub)
 		resp.Reset()
 		resp.Status = errResp.Status
 		resp.Message = errResp.Message

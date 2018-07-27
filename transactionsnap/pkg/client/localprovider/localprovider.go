@@ -63,8 +63,9 @@ func (s *localDiscoveryService) GetPeers() ([]fabApi.Peer, error) {
 
 	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(s.localPeer.MSPid), s.localPeerTLSCertPem)
 	if err != nil {
-		logger.Errorf("Error creating network peer for [%s]", url)
-		return nil, err
+		errObj := errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error creating network peer for [%s]", url))
+		logger.Errorf(errObj.GenerateLogMsg())
+		return nil, errObj
 	}
 
 	peer, err := peer.New(s.clientConfig, peer.FromPeerConfig(networkPeer))

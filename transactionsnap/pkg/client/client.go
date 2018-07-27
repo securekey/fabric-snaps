@@ -96,7 +96,7 @@ func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, bool) {
 	}
 	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(c.localPeer.MSPid), c.localPeerTLSCertPem)
 	if err != nil {
-		logger.Errorf("Error creating network peer for [%s]", url)
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error creating network peer for [%s]", url)).GenerateLogMsg())
 		return nil, false
 	}
 
