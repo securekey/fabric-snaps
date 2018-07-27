@@ -83,6 +83,14 @@
   name = "github.com/uber-go/tally"
   version = "=3.3.2"
 
+[[constraint]]
+  name = "github.com/uber/jaeger-client-go"
+  version = "2.14.0"
+
+[[constraint]]
+  name = "github.com/opentracing/opentracing-go"
+  version = "^1"
+
 [[override]]
   name = "github.com/pkg/errors"
   revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"

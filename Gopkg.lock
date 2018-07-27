@@ -617,6 +617,16 @@
   revision = "68e00e906b27f92454736fe010ddcfa1181868e4"
 
 [[projects]]
+  name = "github.com/opentracing/opentracing-go"
+  packages = [
+    ".",
+    "ext",
+    "log"
+  ]
+  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
@@ -923,6 +933,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d32b52deeb5bc1f6b18505e53048bd38625f6208a248696c0a18ac65ab4298b7"
+  inputs-digest = "c5a99451d7e1fefecc08f46929141aec676af5532e66da59ad0e1f09e60ffb20"
   solver-name = "gps-cdcl"
   solver-version = 1
