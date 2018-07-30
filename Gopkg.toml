@@ -39,7 +39,7 @@
   revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[constraint]]
-  revision = "72bc6c648abdc3baf2da05922832df8b57e52fa2"
+  revision = "0d623776d8150eb109c730a712b6fa06b130468f"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
