@@ -2,7 +2,8 @@
   "Deadline": "5m",
   "EnableGC": true,
   "Exclude": [
-    "bddtests/..."
+    "bddtests/...",
+    "^(.*_test.go.*$)$"
   ],
   "WarnUnmatchedDirective": true,
   "Vendor": true,

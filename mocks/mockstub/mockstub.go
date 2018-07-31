@@ -13,11 +13,9 @@ package mocks
 
 import (
 	"container/list"
-	"unicode/utf8"
 
 	"github.com/golang/protobuf/proto"
-
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/op/go-logging"
@@ -25,13 +23,6 @@ import (
 
 // Logger for the shim package.
 var mockLogger = logging.MustGetLogger("mock")
-
-const (
-	minUnicodeRuneValue   = 0            //U+0000
-	maxUnicodeRuneValue   = utf8.MaxRune //U+10FFFF - maximum (and unallocated) code point
-	compositeKeyNamespace = "\x00"
-	emptyKeySubstitute    = "\x01"
-)
 
 //MspID peers mspid
 var MspID string
