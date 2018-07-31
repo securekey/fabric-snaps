@@ -273,8 +273,10 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "error initializing logging")
 	}
 
+
 	return nil
 }
+
 
 //NewCustomConfig return custom endpoint config
 func NewCustomConfig(config fabApi.EndpointConfig, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) fabApi.EndpointConfig {
@@ -457,7 +459,7 @@ func (c *clientImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 			return peer, nil
 		}
 	}
-	return nil, nil
+	return nil, errors.Errorf(errors.SystemError, "Peer [%s] not found", url)
 }
 
 func (c *clientImpl) retryOpts() retry.Opts {

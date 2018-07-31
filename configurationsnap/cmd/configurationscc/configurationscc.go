@@ -18,27 +18,26 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/bccsp"
-	factory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
 	acl "github.com/hyperledger/fabric/core/aclmgmt"
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
-	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
+	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/healthcheck"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util"
-	errors "github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 //GeneralMspID msp id generic config
@@ -69,8 +68,8 @@ var peerConfigPath = ""
 // aclProvider is used to check ACL
 var aclProvider acl.ACLProvider
 
-// membershipService is used to get peers of channel
-var membershipService memserviceapi.Service
+// membershipService is used to get peers of channel . This is used in configurationscc_test class
+var membershipService memserviceapi.Service //nolint:deadcode
 
 const (
 	// configDataReadACLPrefix is the prefix for read-only (get) policy resource names
@@ -758,16 +757,6 @@ func getACLProvider() acl.ACLProvider {
 	}
 
 	return acl.NewACLProvider(peer.GetStableChannelConfig)
-}
-
-// getMembershipService gets the membership service
-func getMembershipService() (memserviceapi.Service, error) {
-	// always nil except for unit tests
-	if membershipService != nil {
-		return membershipService, nil
-	}
-
-	return membership.Get()
 }
 
 // New chaincode implementation

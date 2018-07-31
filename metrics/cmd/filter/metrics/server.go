@@ -137,12 +137,6 @@ func Shutdown() error {
 	return nil
 }
 
-func isRunning() bool {
-	rootScopeMutex.Lock()
-	defer rootScopeMutex.Unlock()
-	return running
-}
-
 func create(opts Opts) (rootScope tally.Scope, e error) {
 	if !opts.Enabled {
 		rootScope = tally.NoopScope

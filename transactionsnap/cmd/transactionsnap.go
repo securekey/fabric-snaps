@@ -61,6 +61,7 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 		tpResponses, err := es.endorseTransaction(stub.GetArgs())
 		if err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
+
 		}
 		payload, e := json.Marshal(tpResponses)
 		if e != nil {
@@ -72,17 +73,14 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 		err := es.commitTransaction(stub.GetArgs())
 		if err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
+
 		}
 		//TODO QQQ Check the response code
 		return pb.Response{Payload: nil, Status: shim.OK}
 
 	case "verifyTransactionProposalSignature":
-
 		args := stub.GetArgs()
-		if len(args) < 3 {
-			return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify transaction proposal signature"), logger, stub)
-		}
-
+		es.ValidateTransactionProposalLength(args, stub)
 		if err := es.verifyTxnProposalSignature(args); err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
 		}
@@ -103,7 +101,13 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 	}
 
 }
-
+// ValidateTransactionProposalLength - To Validate if the Transaction Proposal Length is less than 3
+func (es *TxnSnap) ValidateTransactionProposalLength(args [][]byte, stub shim.ChaincodeStubInterface) (resp pb.Response) {
+	if len(args) < 3 {
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify transaction proposal signature"), logger, stub)
+	}
+	return
+}
 func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, errors.Error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest

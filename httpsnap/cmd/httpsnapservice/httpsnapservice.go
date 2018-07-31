@@ -127,6 +127,8 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 		return nil, errors.New(errors.MissingRequiredParameterError, "Missing request headers")
 	}
 
+	//httpServiceImpl.validateRequest(httpServiceInvokeRequest)
+
 	headers := make(map[string]string)
 
 	// Converting header names to lowercase
@@ -181,7 +183,18 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 		headers:      headers,
 	}, nil
 }
+func (httpServiceImpl *HTTPServiceImpl) validateRequest(httpServiceInvokeRequest HTTPServiceInvokeRequest)(Invoker, errors.Error){
+	if httpServiceInvokeRequest.RequestURL == "" {
+		return nil, errors.New(errors.MissingRequiredParameterError, "Missing RequestURL")
+	}
 
+	if len(httpServiceInvokeRequest.RequestHeaders) == 0 {
+		return nil, errors.New(errors.MissingRequiredParameterError, "Missing request headers")
+	}
+	return &invoker{
+		request:      httpServiceInvokeRequest,
+	},nil
+}
 //newHTTPService creates new http snap service
 func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	config, dirty, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
@@ -525,7 +538,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 	return nil
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) {
+func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) { //nolint: interfacer
 	if len(idBytes) == 0 {
 		return nil, errors.New(errors.MissingConfigDataError, "getPublicKeyFromPem error: empty pem bytes")
 	}

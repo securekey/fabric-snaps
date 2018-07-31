@@ -28,7 +28,6 @@ var logger = logging.NewLogger("membershipsnap")
 const (
 	getAllPeersFunction       = "getAllPeers"
 	getPeersOfChannelFunction = "getPeersOfChannel"
-	registerGossipFunction    = "registerGossip"
 )
 
 // MembershipSnap is the System Chaincode that provides information about peer membership

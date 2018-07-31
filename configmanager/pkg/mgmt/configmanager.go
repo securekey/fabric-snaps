@@ -96,7 +96,7 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	if err != nil {
 		return nil, err
 	}
-	configKeys := []*api.ConfigKV{&api.ConfigKV{Key: configKey, Value: config}}
+	configKeys := []*api.ConfigKV{{Key: configKey, Value: config}}
 	return configKeys, nil
 }
 
@@ -162,6 +162,21 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) errors.Error {
 		return cmngr.deleteConfigs(configKey)
 	}
 
+    cmngr.deleteState(configKey)
+	key, err := ConfigKeyToString(configKey)
+	if err != nil {
+		return err
+	}
+	//delete configuration for valid key
+	e := cmngr.stub.DelState(key)
+	if e != nil {
+		return errors.Wrap(errors.SystemError, e, "DelState failed")
+	}
+
+	return nil
+}
+
+func (cmngr *configManagerImpl)  deleteState (configKey api.ConfigKey) errors.Error{
 	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
 		configs, err := cmngr.getConfigs(configKey)
 		if err != nil {
@@ -180,18 +195,7 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) errors.Error {
 			}
 		}
 	}
-
-	key, err := ConfigKeyToString(configKey)
-	if err != nil {
-		return err
-	}
-	//delete configuration for valid key
-	e := cmngr.stub.DelState(key)
-	if e != nil {
-		return errors.Wrap(errors.SystemError, e, "DelState failed")
-	}
-
-	return nil
+return nil
 }
 
 //ParseConfigMessage unmarshals supplied config message and returns
@@ -216,9 +220,16 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 			configMap[key] = []byte(appConfig.Config)
 		}
 	}
+	parseConfigComponent(parsedConfig,configMap,txID)
+	return configMap, nil
+}
+
+func parseConfigComponent(parsedConfig api.ConfigMessage,configMap map[api.ConfigKey][]byte, txID string) (map[api.ConfigKey][]byte, errors.Error){
 	var key api.ConfigKey
 	var err errors.Error
+	mspID := parsedConfig.MspID
 	for _, app := range parsedConfig.Apps {
+
 		if len(app.Components) == 0 {
 			key, err = CreateConfigKey(mspID, "", app.AppName, app.Version, "", "")
 			if err != nil {
@@ -242,6 +253,9 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 	}
 	return configMap, nil
 }
+
+
+
 
 //addIndexes for configKey
 func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) errors.Error {
@@ -323,6 +337,9 @@ func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, erro
 		return nil, errors.Errorf(errors.InvalidConfigKey, "Invalid config key %+v", key)
 	}
 	index, fields, err := getIndexAndFields(key)
+	if err != nil {
+		return nil, err
+	}
 	configsMap, err := cmngr.getConfigurations(index, fields)
 	if err != nil {
 		return nil, err
