@@ -179,7 +179,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		}
 		defer txsim.Done()
 
-		keyStr, err := mgmt.ConfigKeyToString(configKey)
+		keyStr, _ := mgmt.ConfigKeyToString(configKey)
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
 			errObj := errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error getting state for app %s %s", keyStr, err))

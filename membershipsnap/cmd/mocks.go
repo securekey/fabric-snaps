@@ -7,9 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"fmt"
-
-	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/policy"
@@ -71,12 +68,4 @@ func newMockSignedProposal(identity []byte) (*pb.SignedProposal, msp.IdentityDes
 		Msg:      sProp.ProposalBytes,
 	}
 	return sProp, identityDeserializer
-}
-
-func marshal(pb proto.Message) []byte {
-	bytes, err := proto.Marshal(pb)
-	if err != nil {
-		panic(fmt.Sprintf("error marshalling gossip message: %s", err))
-	}
-	return bytes
 }

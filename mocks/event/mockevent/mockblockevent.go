@@ -11,7 +11,10 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	cb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"github.com/op/go-logging"
 )
+
+var logger *logging.Logger
 
 // NewBlockEvent returns a new mock block event initialized with the given channel
 func NewBlockEvent(channelID string) *pb.Event {
@@ -29,7 +32,10 @@ func NewBlock(channelID string) *cb.Block {
 	channelHeader := &cb.ChannelHeader{
 		ChannelId: channelID,
 	}
-	channelHeaderBytes, _ := proto.Marshal(channelHeader)
+	channelHeaderBytes, err := proto.Marshal(channelHeader)
+	if err != nil {
+		logger.Panicf("Error creating new mock block: %s", err)
+	}
 	payload := &cb.Payload{
 		Header: &cb.Header{
 			ChannelHeader: channelHeaderBytes,
@@ -85,7 +91,7 @@ func NewFilteredTxWithCCEvent(txID, ccID, event string) *pb.FilteredTransaction 
 		Data: &pb.FilteredTransaction_TransactionActions{
 			TransactionActions: &pb.FilteredTransactionActions{
 				ChaincodeActions: []*pb.FilteredChaincodeAction{
-					&pb.FilteredChaincodeAction{
+					{
 						ChaincodeEvent: &pb.ChaincodeEvent{
 							ChaincodeId: ccID,
 							EventName:   event,

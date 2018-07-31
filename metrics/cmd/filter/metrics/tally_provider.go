@@ -16,15 +16,12 @@ import (
 	"sort"
 
 	"github.com/cactus/go-statsd-client/statsd"
-	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uber-go/tally"
 	promreporter "github.com/uber-go/tally/prometheus"
 	statsdreporter "github.com/uber-go/tally/statsd"
 )
-
-var logger = flogging.MustGetLogger("common/metrics/tally")
 
 func newRootScope(opts tally.ScopeOptions, interval time.Duration) tally.Scope {
 	s, _ := tally.NewRootScope(opts, interval)

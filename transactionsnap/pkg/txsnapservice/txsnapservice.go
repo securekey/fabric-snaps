@@ -29,8 +29,6 @@ var PeerConfigPath = ""
 type clientServiceImpl struct {
 }
 
-var clientService = newClientService()
-
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
 	Config   api.Config
@@ -175,11 +173,6 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 		return err
 	}
 	return nil
-}
-
-//utility methods
-func newClientService() api.ClientService {
-	return &clientServiceImpl{}
 }
 
 // GetFabricClient return fabric client

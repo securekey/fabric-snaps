@@ -218,6 +218,7 @@ func NewMSPNetworkMembers(mspID []byte, networkMembers ...discovery.NetworkMembe
 	}
 }
 
+//mspidmgr_test.go is using this function
 func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) gossip.ReceivedMessage {
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
@@ -227,6 +228,7 @@ func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) goss
 		}))
 }
 
+//mspidmgr_test.go is using this function
 func newAliveMsg() gossip.ReceivedMessage {
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
