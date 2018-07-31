@@ -126,4 +126,9 @@ const (
 
 	// *** End Tx Snap *** //
 
+	// DataNotFoundError ...
+	DataNotFoundError = "data-not-found-error"
+
+	// AccessDeniedError ...
+	AccessDeniedError = "access-denied-error"
 )
