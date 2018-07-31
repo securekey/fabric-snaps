@@ -242,7 +242,7 @@ func (a *action) initTargetPeers() error {
 				includePeer = (selectedOrgID == orgID || cliconfig.Config().GetMspID() == orgConfig.MSPID)
 			}
 
-			if includePeer {
+			if (includePeer == true){
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %s\n", orgID, p.URL)
 
 				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: orgConfig.MSPID}))

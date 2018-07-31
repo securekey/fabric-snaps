@@ -96,7 +96,7 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	if err != nil {
 		return nil, err
 	}
-	configKeys := []*api.ConfigKV{&api.ConfigKV{Key: configKey, Value: config}}
+	configKeys := []*api.ConfigKV{{Key: configKey, Value: config}}
 	return configKeys, nil
 }
 
@@ -323,6 +323,9 @@ func (cmngr *configManagerImpl) search(key api.ConfigKey) ([]*api.ConfigKV, erro
 		return nil, errors.Errorf(errors.InvalidConfigKey, "Invalid config key %+v", key)
 	}
 	index, fields, err := getIndexAndFields(key)
+	if err != nil {
+		return nil, err
+	}
 	configsMap, err := cmngr.getConfigurations(index, fields)
 	if err != nil {
 		return nil, err

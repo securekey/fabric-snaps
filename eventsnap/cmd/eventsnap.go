@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"sync"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -33,7 +32,6 @@ const (
 	channelConfigCheckDuration = 3 * time.Second
 )
 
-var mutex sync.RWMutex
 
 // eventSnap starts the Channel Event Server which allows clients to register
 // for channel events. It also registers a local event service on the peer so that other
