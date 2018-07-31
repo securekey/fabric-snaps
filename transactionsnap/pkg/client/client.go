@@ -163,21 +163,19 @@ func (c *clientImpl) generateHash(bytes []byte) string {
 
 func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.ServiceProviderFactory) error {
 
-	currentCfgHash := c.generateHash(c.txnSnapConfig.GetConfigBytes())
-
 	//compare config hash
+	currentCfgHash := c.generateHash(c.txnSnapConfig.GetConfigBytes())
 	if c.configHash.Load() == currentCfgHash {
 		return nil
 	}
-
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	//close existing sdk instance if any
-	if c.sdk != nil {
-		c.sdk.Close()
+	err := c.closeExistingSDK()
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "Error while closing SDK ")
 	}
-
 	// Get client config
 	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
@@ -204,18 +202,11 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
 
-	//lookup for orgname
-	var orgname string
-	for name, org := range nconfig.Organizations {
-		if org.MSPID == string(localPeer.MSPid) {
-			orgname = name
-			break
-		}
+	//lookup for orgName
+	orgName, err := c.orgNameLookup(nconfig, localPeer)
+	if err != nil {
+		return err
 	}
-	if orgname == "" {
-		return errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
-	}
-
 	//Get cryptosuite provider name from name from peerconfig
 	cryptoProvider, err := c.txnSnapConfig.GetCryptoProvider()
 	if err != nil {
@@ -239,31 +230,23 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// new channel context prov
-	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
-
-	chContext, err := chContextProv()
-	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
-	}
-
+	c.channelClients(channelID, orgName) //nolint : gas
 	// Channel client is used to query and execute transactions
-	chClient, err := channel.New(func() (contextApi.Channel, error) {
-		return chContext, nil
-	})
-	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
-	}
-	if chClient == nil {
-		return errors.New(errors.GeneralError, "channel client is nil")
-	}
-
-	c.channelClient = chClient
 	c.channelID = channelID
 	c.clientConfig = customEndpointConfig
-	c.context = chContext
 	c.configHash.Store(currentCfgHash)
-
 	//update log level
+	c.updateLogLevels() //nolint : gas
+	return nil
+}
+
+func (c *clientImpl) closeExistingSDK() error {
+	if c.sdk != nil {
+		c.sdk.Close()
+	}
+	return nil
+}
+func (c *clientImpl) updateLogLevels() error {
 	cfgBackend, err := c.sdk.Config()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
@@ -273,6 +256,44 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "error initializing logging")
 	}
 
+	return nil
+}
+func (c *clientImpl) orgNameLookup(nconfig *fabApi.NetworkConfig, localPeer *api.PeerConfig) (string, error) {
+	var orgName string
+	for name, org := range nconfig.Organizations {
+		if org.MSPID == string(localPeer.MSPid) {
+			orgName = name
+			break
+		}
+	}
+	if orgName == "" {
+		return orgName, errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
+	}
+
+	return orgName, nil
+}
+
+func (c *clientImpl) channelClients(channelID string, orgName string) error {
+
+	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgName))
+
+	chContext, err := chContextProv()
+	if err != nil {
+		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
+	}
+	chClient, err := channel.New(func() (contextApi.Channel, error) {
+		return chContext, nil
+	})
+	if err != nil {
+		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
+	}
+	if chClient == nil {
+		return errors.New(errors.GeneralError, "channel client is nil")
+	}
+	// Channel client is used to query and execute transactions
+	c.channelClient = chClient
+	c.channelID = channelID
+	c.context = chContext
 	return nil
 }
 
@@ -457,7 +478,7 @@ func (c *clientImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 			return peer, nil
 		}
 	}
-	return nil, nil
+	return nil, errors.Errorf(errors.SystemError, "Peer [%s] not found", url)
 }
 
 func (c *clientImpl) retryOpts() retry.Opts {

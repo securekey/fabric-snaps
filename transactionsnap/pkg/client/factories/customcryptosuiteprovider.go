@@ -144,49 +144,27 @@ func getBCCSPHashOpts(opts coreApi.HashOpts) bccsp.HashOpts {
 //getBCCSPKeyGenOpts converts KeyGenOpts to fabric bccsp KeyGenOpts
 //Reason: Reflect check on opts type in bccsp implementation types other than bccsp.KeyGenOpts
 func getBCCSPKeyGenOpts(opts coreApi.KeyGenOpts) bccsp.KeyGenOpts {
-
 	keyGenOpts := reflect.TypeOf(opts).String()
 
-	switch keyGenOpts {
+	m := make(map[string]bccsp.KeyGenOpts)
+	m["*bccsp.ECDSAKeyGenOpts"] = &bccsp.ECDSAKeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.ECDSAP256KeyGenOpts"] = &bccsp.ECDSAP256KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.ECDSAP384KeyGenOpts"] = &bccsp.ECDSAP384KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.AESKeyGenOpts"] = &bccsp.AESKeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.AES256KeyGenOpts"] = &bccsp.AES256KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.AES192KeyGenOpts"] = &bccsp.AES192KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.AES128KeyGenOpts"] = &bccsp.AES128KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.RSAKeyGenOpts"] = &bccsp.RSAKeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.RSA1024KeyGenOpts"] = &bccsp.RSA1024KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.RSA2048KeyGenOpts"] = &bccsp.RSA2048KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.RSA3072KeyGenOpts"] = &bccsp.RSA3072KeyGenOpts{Temporary: opts.Ephemeral()}
+	m["*bccsp.RSA4096KeyGenOpts"] = &bccsp.RSA4096KeyGenOpts{Temporary: opts.Ephemeral()}
 
-	case "*bccsp.ECDSAKeyGenOpts":
-		return &bccsp.ECDSAKeyGenOpts{Temporary: opts.Ephemeral()}
+	value, ok := m[keyGenOpts]
 
-	case "*bccsp.ECDSAP256KeyGenOpts":
-		return &bccsp.ECDSAP256KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.ECDSAP384KeyGenOpts":
-		return &bccsp.ECDSAP384KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.AESKeyGenOpts":
-		return &bccsp.AESKeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.AES256KeyGenOpts":
-		return &bccsp.AES256KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.AES192KeyGenOpts":
-		return &bccsp.AES192KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.AES128KeyGenOpts":
-		return &bccsp.AES128KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.RSAKeyGenOpts":
-		return &bccsp.RSAKeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.RSA1024KeyGenOpts":
-		return &bccsp.RSA1024KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.RSA2048KeyGenOpts":
-		return &bccsp.RSA2048KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.RSA3072KeyGenOpts":
-		return &bccsp.RSA3072KeyGenOpts{Temporary: opts.Ephemeral()}
-
-	case "*bccsp.RSA4096KeyGenOpts":
-		return &bccsp.RSA4096KeyGenOpts{Temporary: opts.Ephemeral()}
-
+	if ok {
+		return value
 	}
-
 	panic(fmt.Sprintf("Unknown KeyGenOpts type provided : %s", keyGenOpts))
 }
 

@@ -32,23 +32,8 @@ type CheckForCommitHandler struct {
 func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 
 	txID := string(requestContext.Response.TransactionID)
-	if c.callback != nil {
-		if err := c.callback(requestContext.Response); err != nil {
-			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
-			return
-		}
-	}
 
-	if c.commitType == api.NoCommit {
-		logger.Debugf("[txID %s] No commit is necessary since commit type is [%s]", txID, c.commitType)
-		return
-	}
-
-	if c.commitType == api.Commit {
-		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s]", txID, c.commitType)
-		c.next.Handle(requestContext, clientContext)
-		return
-	}
+	c.handleCallBack(txID, requestContext, clientContext)
 
 	var err error
 
@@ -91,6 +76,25 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		c.next.Handle(requestContext, clientContext)
 	} else {
 		logger.Debugf("[txID %s] Commit is NOT necessary since commit type is [%s] and NO write set exists in proposal response", txID, api.CommitOnWrite)
+	}
+}
+func (c *CheckForCommitHandler) handleCallBack(txID string, requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+	if c.callback != nil {
+		if err := c.callback(requestContext.Response); err != nil {
+			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
+			return
+		}
+	}
+
+	if c.commitType == api.NoCommit {
+		logger.Debugf("[txID %s] No commit is necessary since commit type is [%s]", txID, c.commitType)
+		return
+	}
+
+	if c.commitType == api.Commit {
+		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s]", txID, c.commitType)
+		c.next.Handle(requestContext, clientContext)
+		return
 	}
 }
 
