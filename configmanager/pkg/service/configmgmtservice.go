@@ -179,7 +179,7 @@ func (csi *ConfigServiceImpl) GetConfigFromLedger(channelID string, configKey ap
 		}
 		defer txsim.Done()
 
-		keyStr, err := mgmt.ConfigKeyToString(configKey)
+		keyStr, _ := mgmt.ConfigKeyToString(configKey)
 		config, err := txsim.GetState("configurationsnap", keyStr)
 		if err != nil {
 			errObj := errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error getting state for app %s %s", keyStr, err))
@@ -252,7 +252,10 @@ func (csi *ConfigServiceImpl) refreshCache(channelID string, configMessages []*a
 				return err
 			}
 			compConfig := api.ComponentConfig{}
-			json.Unmarshal(val.Value, &compConfig)
+			err := json.Unmarshal(val.Value, &compConfig)
+			if err != nil {
+				logger.Error("Error occurred while un-marshalling")
+			}
 			if _, ok := compCache[keyStr]; !ok {
 				compCache[keyStr] = make([]*api.ComponentConfig, 0)
 			}

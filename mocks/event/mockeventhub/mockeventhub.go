@@ -7,10 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package mockeventhub
 
 import (
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/events/consumer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 )
+
+var logger *logging.Logger
 
 // MockEventHub mocks out the Event Hub
 type MockEventHub struct {
@@ -42,7 +45,10 @@ func (m *MockEventHub) Start() error {
 // ProduceEvent produces a new event, which is sent to the adapter
 func (m *MockEventHub) ProduceEvent(event *pb.Event) {
 	go func() {
-		m.Adapter.Recv(event)
+		_, err := m.Adapter.Recv(event)
+		if err != nil {
+			logger.Error("Error occurred in producing new events to be sent to adaptor")
+		}
 	}()
 }
 

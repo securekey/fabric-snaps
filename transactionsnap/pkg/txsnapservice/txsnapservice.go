@@ -25,11 +25,9 @@ var logger = logging.NewLogger("txnsnap")
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
 
-// clientServiceImpl implements client service
-type clientServiceImpl struct {
+// clientServiceImpl implements client service.
+type clientServiceImpl struct { //nolint: deadcode
 }
-
-var clientService = newClientService()
 
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
@@ -166,7 +164,7 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature
-func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error {
+func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error { //nolint: interfacer
 
 	if signedProposal == nil {
 		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
@@ -181,11 +179,6 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 		return err
 	}
 	return nil
-}
-
-//utility methods
-func newClientService() api.ClientService {
-	return &clientServiceImpl{}
 }
 
 // GetFabricClient return fabric client
