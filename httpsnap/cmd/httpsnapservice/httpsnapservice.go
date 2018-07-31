@@ -96,14 +96,16 @@ func Get(channelID string) (*HTTPServiceImpl, error) {
 }
 
 //updateConfig http service updates http service config if provided config has any updates
-func initialize(config httpsnapApi.Config) {
+func initialize(config httpsnapApi.Config) error {
 
 	//Update config in httpServiceImpl if any config update found in new config
 	instance.Lock()
 	defer instance.Unlock()
 
+	var err error
 	instance.config = config
-	instance.certPool = commtls.NewCertPool(config.IsSystemCertPoolEnabled())
+	instance.certPool, err = commtls.NewCertPool(config.IsSystemCertPoolEnabled())
+	return err
 }
 
 //Invoke http service
@@ -195,13 +197,23 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 		counter = metrics.RootScope.Counter("httpsnap_calls")
 		timer = metrics.RootScope.Timer("httpsnap_time_seconds")
 		instance = &HTTPServiceImpl{}
-		initialize(config)
+		err = initialize(config)
+		if err != nil {
+			return
+		}
 		dirty = false
 		logger.Infof("Created HTTPServiceImpl instance %v", time.Unix(time.Now().Unix(), 0))
 	})
 
+	if err != nil {
+		return nil, errors.Wrap(errors.InitializeConfigError, err, "failed to initialize httpservice with new config")
+	}
+
 	if dirty {
-		initialize(config)
+		err = initialize(config)
+		if err != nil {
+			return nil, errors.Wrap(errors.InitializeConfigError, err, "failed to update httpservice with new config")
+		}
 	}
 	return instance, nil
 }
@@ -409,7 +421,8 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 		return nil, errors.Wrap(errors.CryptoError, err, "Failed to parse X509KeyPair")
 	}
 
-	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
+	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)
+	pool, err := httpServiceImpl.certPool.Get()
 	if err != nil {
 		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
 	}
@@ -428,7 +441,8 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuit
 		return nil, codedErr
 	}
 
-	pool, err := httpServiceImpl.certPool.Get(decodeCerts(caCerts)...)
+	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)
+	pool, err := httpServiceImpl.certPool.Get()
 	if err != nil {
 		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
 	}

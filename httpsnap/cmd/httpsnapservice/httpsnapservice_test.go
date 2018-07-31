@@ -225,8 +225,10 @@ func TestPost(t *testing.T) {
 	currenCertPool := instance.certPool
 
 	// Failed path: invalid ca
+	var err error
 	instance.config = &customHTTPConfig{Config: currentConfig, customCaCerts: []string{"cert1,cert2"}}
-	instance.certPool = commtls.NewCertPool(currentConfig.IsSystemCertPoolEnabled())
+	instance.certPool, err = commtls.NewCertPool(currentConfig.IsSystemCertPoolEnabled())
+	assert.Nil(t, err)
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "certificate signed by unknown authority")
 
@@ -274,7 +276,7 @@ func TestHttpServiceRefresh(t *testing.T) {
 	xCertPool.AppendCertsFromPEM(caCert2Bytes)
 
 	xCertPool2, err := instance.certPool.Get()
-	assert.Equal(t, len(xCertPool.Subjects())-2, len(xCertPool2.Subjects()), "any tampering to certpool returned shouldn't effect `instance.certPool`")
+	assert.Equal(t, len(xCertPool.Subjects()), len(xCertPool2.Subjects()), "any tampering to certpool returned will effect `instance.certPool`")
 
 	//Add 2 new certs to httpsnap cert pool
 	cert1, err := getCertFromPEMBytes(caCert1Bytes)
@@ -286,7 +288,8 @@ func TestHttpServiceRefresh(t *testing.T) {
 	assert.NotNil(t, cert2)
 
 	//now pool has baseNoOfSubjects + 2 certs
-	xCertPool, err = instance.certPool.Get(cert1, cert2)
+	instance.certPool.Add(cert1, cert2)
+	xCertPool, err = instance.certPool.Get()
 	assert.Equal(t, baseNoOfSubjects+2, len(xCertPool.Subjects()), "cert pool supposed to have certs")
 
 	//Call init again and again
