@@ -29,9 +29,6 @@ type ledger interface {
 	GetBlockchainInfo() (*cb.BlockchainInfo, error)
 }
 
-// ledgerProvider returns a ledger
-type ledgerProvider func(channelID string) ledger
-
 // Singleton provider
 var provider = createProvider()
 

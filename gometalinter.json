@@ -2,7 +2,9 @@
   "Deadline": "5m",
   "EnableGC": true,
   "Exclude": [
-    "bddtests/..."
+    "bddtests/...",
+    "^(.*_test.go.*$)$",
+    "scripts/fabric-sdk-go/..."
   ],
   "WarnUnmatchedDirective": true,
   "Vendor": true,

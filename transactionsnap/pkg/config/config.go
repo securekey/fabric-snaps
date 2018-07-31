@@ -37,7 +37,6 @@ const (
 )
 
 var logger = logging.NewLogger("txnsnap")
-var defaultLogLevel = "info"
 var peerConfigCache = configcache.New(peerConfigFileName, cmdRootPrefix, "/etc/hyperledger/fabric")
 
 //Config implements Config interface
@@ -155,7 +154,7 @@ func (c *Config) GetTLSRootCert() *x509.Certificate {
 }
 
 func getCertPemFromPath(certPath string) []byte {
-	pemBuffer, err := ioutil.ReadFile(certPath)
+	pemBuffer, err := ioutil.ReadFile(certPath) // nolint: gas
 	if err != nil {
 		logger.Warnf("cert fixture missing at path '%s', err: %s", certPath, err)
 		return nil
@@ -164,7 +163,7 @@ func getCertPemFromPath(certPath string) []byte {
 }
 
 func getCertFromPath(certPath string) *x509.Certificate {
-	pemBuffer, err := ioutil.ReadFile(certPath)
+	pemBuffer, err := ioutil.ReadFile(certPath) // nolint: gas
 	if err != nil {
 		logger.Warnf("cert fixture missing at path '%s', err: %s", certPath, err)
 		return nil

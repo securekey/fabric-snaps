@@ -75,14 +75,13 @@ var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
-	channelID              string
-	txnSnapConfig          api.Config
-	clientConfig           fabApi.EndpointConfig
-	channelClient          *channel.Client
-	context                contextApi.Channel
-	configHash             string
-	sdk                    *fabsdk.FabricSDK
-	serviceProviderFactory *DynamicProviderFactory
+	channelID     string
+	txnSnapConfig api.Config
+	clientConfig  fabApi.EndpointConfig
+	channelClient *channel.Client
+	context       contextApi.Channel
+	configHash    string
+	sdk           *fabsdk.FabricSDK
 }
 
 // DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
@@ -90,10 +89,6 @@ type clientImpl struct {
 type DynamicProviderFactory struct {
 	defsvc.ProviderFactory
 	chProvider *chprovider.Provider
-}
-
-func newServiceProvider() *DynamicProviderFactory {
-	return &DynamicProviderFactory{}
 }
 
 // CreateChannelProvider returns a new default implementation of channel provider
@@ -210,16 +205,10 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
 
-	//lookup for orgname
-	var orgname string
-	for name, org := range nconfig.Organizations {
-		if org.MSPID == string(localPeer.MSPid) {
-			orgname = name
-			break
-		}
-	}
-	if orgname == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
+	//lookup for orgName
+	orgName, e := orgNameLookup(nconfig, localPeer)
+	if e != nil {
+		return nil, e
 	}
 
 	//Get cryptosuite provider name from name from peerconfig
@@ -228,12 +217,9 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, errors.Errorf(errors.GeneralError, "error getting crypto provider on channel [%s]: %s", channelID)
 	}
 
-	var spFactory *DynamicProviderFactory
 	if serviceProviderFactory == nil {
-		spFactory = newServiceProvider()
-		serviceProviderFactory = spFactory
+		serviceProviderFactory = &DynamicProviderFactory{}
 	}
-
 	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, cfg.GetTLSCertPem())
 
 	//create sdk
@@ -247,7 +233,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	}
 
 	// new channel context prov
-	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
+	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgName))
 
 	chContext, err := chContextProv()
 	if err != nil {
@@ -262,26 +248,25 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
 	}
 
-	//update log level
+	client := &clientImpl{
+		channelID:     channelID,
+		sdk:           sdk,
+		channelClient: chClient,
+		txnSnapConfig: cfg,
+		clientConfig:  customEndpointConfig,
+		context:       chContext,
+		configHash:    generateHash(cfg.GetConfigBytes()),
+	}
+	// close will be called when the client is closed and the last reference is released.
+	client.ReferenceCounter = refcount.New(client.close)
+
+	//update Backend Config
 	cfgBackend, err := sdk.Config()
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
 	}
 
-	client := &clientImpl{
-		channelID:              channelID,
-		sdk:                    sdk,
-		channelClient:          chClient,
-		txnSnapConfig:          cfg,
-		clientConfig:           customEndpointConfig,
-		context:                chContext,
-		configHash:             generateHash(cfg.GetConfigBytes()),
-		serviceProviderFactory: spFactory,
-	}
-	// close will be called when the client is closed and the last reference is released.
-	client.ReferenceCounter = refcount.New(client.close)
-
-	client.updateLogLevel(cfgBackend)
+	err = client.updateLogLevel(cfgBackend)
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "error initializing logging")
 	}
@@ -289,6 +274,21 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	logger.Infof("Successfully initialized client on channel [%s] with config hash [%s]", channelID, client.configHash)
 
 	return client, nil
+}
+func orgNameLookup(nconfig *fabApi.NetworkConfig, localPeer *api.PeerConfig) (string, errors.Error) {
+	var orgName string
+	var err errors.Error
+	for name, org := range nconfig.Organizations {
+		if org.MSPID == string(localPeer.MSPid) {
+			orgName = name
+			break
+		}
+	}
+	if orgName == "" {
+		return orgName, errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
+	}
+
+	return orgName, err
 }
 
 //NewCustomConfig return custom endpoint config
@@ -367,28 +367,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
-		creator, err := c.context.Serialize()
-		if err != nil {
-			return nil, false, errors.New(errors.SystemError, "get creator failed")
-		}
-		logger.Debugf("Get peer creator %s", creator)
-		if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
-			logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
-			ho := cryptosuite.GetSHA256Opts()
-			h, err := c.context.CryptoSuite().GetHash(ho)
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "hash function creation failed")
-			}
-			txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "computeTxnID failed")
-			}
-			logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
-			if txnID == endorseRequest.TransactionID {
-				validTxnID = true
-			}
-		}
+		validTxnID, creator, _ := c.checkTxnID(endorseRequest)
 		if !validTxnID {
 			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
 			if err != nil {
@@ -441,7 +420,33 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
 }
+func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []byte, errors.Error) {
+	validTxnID := false
+	logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
+	creator, err := c.context.Serialize()
+	if err != nil {
+		return false, nil, errors.New(errors.SystemError, "get creator failed")
+	}
+	logger.Debugf("Get peer creator %s", creator)
+	if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
+		logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
+		ho := cryptosuite.GetSHA256Opts()
+		h, err := c.context.CryptoSuite().GetHash(ho)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "hash function creation failed")
+		}
+		txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "computeTxnID failed")
+		}
+		logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
+		if txnID == endorseRequest.TransactionID {
+			validTxnID = true
+		}
+	}
 
+	return validTxnID, creator, nil
+}
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {
 
 	signedProposal := &peerpb.SignedProposal{}

@@ -11,6 +11,6 @@ type Service interface {
 	// GetAllPeers returns all peers in the Gossip network
 	GetAllPeers() []*PeerEndpoint
 
-	// GetPeersOfChannel returns all peers on the Gossip netowrk that are joined to the given channel
+	// GetPeersOfChannel returns all peers on the Gossip network that are joined to the given channel
 	GetPeersOfChannel(channelID string) ([]*PeerEndpoint, error)
 }

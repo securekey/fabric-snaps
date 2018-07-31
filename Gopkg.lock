@@ -293,7 +293,7 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:102a014f8160a61b6dbb994aa582219cde0bcdfa1fdddc0104314edbb3351341"
+  digest = "1:1bb4de3e1491dade65996e963a12f8177b8cefc29c5ec485ff9bb36b567108d4"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -355,7 +355,6 @@
     "core/container/util",
     "core/deliverservice",
     "core/deliverservice/blocksprovider",
-    "core/handlers/auth",
     "core/handlers/validation/api",
     "core/handlers/validation/api/capabilities",
     "core/handlers/validation/api/identities",
@@ -1144,13 +1143,11 @@
     "github.com/hyperledger/fabric/bccsp/pkcs11",
     "github.com/hyperledger/fabric/bccsp/signer",
     "github.com/hyperledger/fabric/bccsp/utils",
-    "github.com/hyperledger/fabric/common/flogging",
     "github.com/hyperledger/fabric/common/policies",
     "github.com/hyperledger/fabric/common/util",
     "github.com/hyperledger/fabric/common/viperutil",
     "github.com/hyperledger/fabric/core/aclmgmt",
     "github.com/hyperledger/fabric/core/chaincode/shim",
-    "github.com/hyperledger/fabric/core/handlers/auth",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
     "github.com/hyperledger/fabric/core/ledger/ledgerconfig",

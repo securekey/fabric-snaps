@@ -60,24 +60,6 @@ func (k *cacheKey) ConfigProvider() ConfigProvider {
 	return k.configProvider
 }
 
-// localCacheKey holds a cache key for clients
-// with local providers
-type localCacheKey struct {
-	*cacheKey
-}
-
-func newLocalCacheKey(channelID string, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory) *localCacheKey {
-	return &localCacheKey{
-		cacheKey: newCacheKey(channelID, configProvider, serviceProviderFactory),
-	}
-}
-
-// String returns the channel ID prefixed with a string
-// to indicate we want to retrieve the client with local provider
-func (k *localCacheKey) String() string {
-	return "lc" + k.channelID
-}
-
 func newRefCache(refresh time.Duration) *lazycache.Cache {
 	initializer := func(key lazycache.Key) (interface{}, error) {
 		ck, ok := key.(CacheKey)
