@@ -12,7 +12,6 @@ import (
 )
 
 type eventClientProvider func() (fab.EventClient, error)
-type eventClientCloser func(client fab.EventClient)
 
 // EventClientRef holds a reference to the event client and manages its lifecycle.
 // The EventClientRef implements all of the functions of fab.EventService, so the
