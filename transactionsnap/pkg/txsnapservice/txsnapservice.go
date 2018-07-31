@@ -23,12 +23,6 @@ var logger = logging.NewLogger("txnsnap")
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
 
-// clientServiceImpl implements client service
-type clientServiceImpl struct {
-}
-
-var clientService = newClientService()
-
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
 	FcClient api.Client
@@ -41,10 +35,6 @@ type TxServiceImpl struct {
 //Get will return txService to caller
 func Get(channelID string) (*TxServiceImpl, errors.Error) {
 	return newTxService(channelID)
-}
-
-type apiConfig struct {
-	api.Config
 }
 
 //GetLocalPeer to returns target peer for given peer config
@@ -148,7 +138,7 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature
-func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error {
+func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error { //nolint: interfacer
 
 	if signedProposal == nil {
 		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
@@ -165,12 +155,7 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 	return nil
 }
 
-//utility methods
-func newClientService() api.ClientService {
-	return &clientServiceImpl{}
-}
-
 // GetFabricClient return fabric client
-func (cs *clientServiceImpl) GetFabricClient(channelID string) (api.Client, error) {
+func GetFabricClient(channelID string) (api.Client, error) {
 	return txnSnapClient.GetInstance(channelID)
 }

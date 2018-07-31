@@ -135,8 +135,9 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 			}
 
 			logger.Debugf("Initializing event service for channel [%s]", chConfig.ID())
-			ref.get()
+			ref.get() //nolint:gas
 		}()
+
 	}
 
 	return ref

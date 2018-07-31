@@ -378,28 +378,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
-		creator, err := c.context.Serialize()
-		if err != nil {
-			return nil, false, errors.New(errors.SystemError, "get creator failed")
-		}
-		logger.Debugf("Get peer creator %s", creator)
-		if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
-			logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
-			ho := cryptosuite.GetSHA256Opts()
-			h, err := c.context.CryptoSuite().GetHash(ho)
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "hash function creation failed")
-			}
-			txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "computeTxnID failed")
-			}
-			logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
-			if txnID == endorseRequest.TransactionID {
-				validTxnID = true
-			}
-		}
+		validTxnID, creator, _ := c.checkTxnID(endorseRequest)
 		if !validTxnID {
 			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
 			if err != nil {
@@ -452,7 +431,33 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
 }
+func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []byte, errors.Error) {
+	validTxnID := false
+	logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
+	creator, err := c.context.Serialize()
+	if err != nil {
+		return false, nil, errors.New(errors.SystemError, "get creator failed")
+	}
+	logger.Debugf("Get peer creator %s", creator)
+	if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
+		logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
+		ho := cryptosuite.GetSHA256Opts()
+		h, err := c.context.CryptoSuite().GetHash(ho)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "hash function creation failed")
+		}
+		txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "computeTxnID failed")
+		}
+		logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
+		if txnID == endorseRequest.TransactionID {
+			validTxnID = true
+		}
+	}
 
+	return validTxnID, creator, nil
+}
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {
 
 	signedProposal := &peerpb.SignedProposal{}
