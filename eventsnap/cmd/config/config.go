@@ -7,12 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package config
 
 import (
-	"go/build"
-	"path/filepath"
-	"strings"
 	"time"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
@@ -116,13 +113,4 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	}
 
 	return eventSnapConfig, nil
-}
-
-// substGoPath replaces instances of '$GOPATH' with the GOPATH. If the system
-// has multiple GOPATHs then the first is used.
-func substGoPath(s string) string {
-	gpDefault := build.Default.GOPATH
-	gps := filepath.SplitList(gpDefault)
-
-	return strings.Replace(s, "$GOPATH", gps[0], -1)
 }

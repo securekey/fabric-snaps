@@ -51,44 +51,37 @@ func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 
 	defer util.HandlePanic(&resp, logger, stub)
-
 	//service will be used to endorse and commit transaction
 	function, _ := stub.GetFunctionAndParameters()
 
-	switch function {
-	case "endorseTransaction":
-
+	if function == "endorseTransaction" {
 		tpResponses, err := es.endorseTransaction(stub.GetArgs())
 		if err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
+
 		}
 		payload, e := json.Marshal(tpResponses)
 		if e != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, e, "Error marshalling endorsment responses"), logger, stub)
 		}
 		return pb.Response{Payload: payload, Status: shim.OK}
-	case "commitTransaction":
-
+	}
+	if function == "commitTransaction" {
 		err := es.commitTransaction(stub.GetArgs())
 		if err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
-		}
-		//TODO QQQ Check the response code
+		} //TODO QQQ Check the response code
 		return pb.Response{Payload: nil, Status: shim.OK}
-
-	case "verifyTransactionProposalSignature":
-
+	}
+	if function == "verifyTransactionProposalSignature" {
 		args := stub.GetArgs()
-		if len(args) < 3 {
-			return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify transaction proposal signature"), logger, stub)
-		}
-
+		es.ValidateTransactionProposalLength(args, stub)
 		if err := es.verifyTxnProposalSignature(args); err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
 		}
 		return pb.Response{Payload: nil, Status: shim.OK}
-
-	case "unsafeGetState":
+	}
+	if function == "unsafeGetState" {
 		args := stub.GetArgs()
 		logger.Debugf("Function unsafeGetState invoked with args %v", args)
 		resp, err := es.unsafeGetState(args)
@@ -97,13 +90,33 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 
 		}
 		return pb.Response{Payload: resp, Status: shim.OK}
-
-	default:
-		return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Function %s is not supported", function)), logger, stub)
 	}
+	return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Function %s is not supported", function)), logger, stub)
 
 }
 
+// ValidateTransactionProposalLength - To Validate if the Transaction Proposal Length is less than 3
+func (es *TxnSnap) ValidateTransactionProposalLength(args [][]byte, stub shim.ChaincodeStubInterface) (resp pb.Response) {
+	if len(args) < 3 {
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify transaction proposal signature"), logger, stub)
+	}
+	return
+}
+func (es *TxnSnap) verifyTransactionProposalSignature(stub shim.ChaincodeStubInterface) (resp pb.Response) {
+	args := stub.GetArgs()
+	es.ValidateTransactionProposalLength(args, stub)
+	if err := es.verifyTxnProposalSignature(args); err != nil {
+		return util.CreateShimResponseFromError(err, logger, stub)
+	}
+	return pb.Response{Payload: nil, Status: shim.OK}
+}
+func (es *TxnSnap) transactionCommit(stub shim.ChaincodeStubInterface) (resp pb.Response) {
+	err := es.commitTransaction(stub.GetArgs())
+	if err != nil {
+		return util.CreateShimResponseFromError(err, logger, stub)
+	} //TODO QQQ Check the response code
+	return pb.Response{Payload: nil, Status: shim.OK}
+}
 func (es *TxnSnap) endorseTransaction(args [][]byte) (*channel.Response, errors.Error) {
 
 	//first arg is function name; the second one is SnapTransactionRequest
