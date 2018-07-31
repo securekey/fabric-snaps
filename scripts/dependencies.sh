@@ -1,3 +1,4 @@
+
 #!/bin/bash
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
@@ -6,39 +7,88 @@
 #
 # This script installs dependencies for testing tools
 # Environment variables that affect this script:
-# FABRIC_SNAPS_DEPEND_INSTALL: Installs dependencies
-# GO_DEP_COMMIT: Tag or commit level of the go dep tool to install (if FABRIC_SNAPS_DEPEND_INSTALL=true)
+# GO_DEP_COMMIT: Tag or commit level of the go dep tool to install
 
-# Automatically install go tools (particularly for CI)
+set -e
+
+GO_CMD="${GO_CMD:-go}"
+GO_DEP_CMD="${GO_DEP_CMD:-dep}"
+GO_DEP_REPO="github.com/golang/dep"
+GO_METALINTER_CMD="${GO_METALINTER_CMD:-gometalinter}"
+GOPATH="${GOPATH:-${HOME}/go}"
+
+function installGoDep {
+    declare repo=$1
+    declare revision=$2
+
+    installGoPkg "${repo}" "${revision}" "/cmd/dep" "dep"
+}
+
+function installGoMetalinter {
+    declare repo="github.com/alecthomas/gometalinter"
+    declare revision="v2"
+
+    declare pkg="github.com/alecthomas/gometalinter"
+
+    installGoPkg "${repo}" "${revision}" "" "gometalinter"
+
+    rm -Rf ${GOPATH}/src/${pkg}
+    mkdir -p ${GOPATH}/src/${pkg}
+    cp -Rf ${BUILD_TMP}/src/${repo}/* ${GOPATH}/src/${pkg}/
+    ${GO_METALINTER_CMD} --install --force
+}
+
+function installGoGas {
+    declare repo="github.com/GoASTScanner/gas"
+    declare revision="4ae8c95"
+
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/kisielk/gotool
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/nbutton23/zxcvbn-go
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/ryanuber/go-glob
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u gopkg.in/yaml.v2
+
+    installGoPkg "${repo}" "${revision}" "/cmd/gas/..." "gas"
+}
+
+function installGoPkg {
+    declare repo=$1
+    declare revision=$2
+    declare pkgPath=$3
+    shift 3
+    declare -a cmds=$@
+
+    echo "Installing ${repo}@${revision} to $GOPATH/bin ..."
+
+    GOPATH=${BUILD_TMP} go get -d ${repo}
+    tag=$(cd ${BUILD_TMP}/src/${repo} && git tag -l --sort=-version:refname | head -n 1 | grep "${revision}" || true)
+    if [ ! -z "${tag}" ]; then
+        revision=${tag}
+        echo "  using tag ${revision}"
+    fi
+    (cd ${BUILD_TMP}/src/${repo} && git reset --hard ${revision})
+    GOPATH=${BUILD_TMP} go install -i ${repo}/${pkgPath}
+
+}
+
+function installDependencies {
     echo "Installing dependencies ..."
-    go get -u github.com/axw/gocov/...
-    go get -u github.com/AlekSi/gocov-xml
-    go get -u github.com/client9/misspell/cmd/misspell
-    go get -u github.com/golang/lint/golint
-    go get -u golang.org/x/tools/cmd/goimports
 
-# Install specific version of go dep (particularly for CI)
-    echo "Installing dep@$GO_DEP_COMMIT to $GOPATH/bin ..."
-    TMP=`mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir'`
+    BUILD_TMP=`mktemp -d 2>/dev/null || mktemp -d -t 'fabricsnaps'`
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/axw/gocov/...
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/AlekSi/gocov-xml
+    GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/golang/mock/mockgen
 
-    GOPATH=$TMP go get -d github.com/golang/dep
-    cd $TMP/src/github.com/golang/dep
-    git reset --hard $GO_DEP_COMMIT
-    GOPATH=$TMP go install github.com/golang/dep/cmd/dep
-    cp $TMP/bin/dep $GOPATH/bin
+    installGoMetalinter
 
-    rm -Rf $TMP
+    # gas in gometalinter is out of date.
+    installGoGas
 
+    # Install specific version of go dep (particularly for CI)
+    if [ -n "${GO_DEP_COMMIT}" ]; then
+        installGoDep ${GO_DEP_REPO} ${GO_DEP_COMMIT}
+    fi
+    rm -Rf ${BUILD_TMP}
 
-# Check that Go tools are installed and help the user if they are missing
-type gocov >/dev/null 2>&1 || { echo >& 2 "gocov is not installed (go get -u github.com/axw/gocov/...)"; ABORT=1; }
-type gocov-xml >/dev/null 2>&1 || { echo >& 2 "gocov-xml is not installed (go get -u github.com/AlekSi/gocov-xml)"; ABORT=1; }
-type misspell >/dev/null 2>&1 || { echo >& 2 "misspell is not installed (go get -u github.com/client9/misspell/cmd/misspell)"; ABORT=1; }
-type golint >/dev/null 2>&1 || { echo >& 2 "golint is not installed (go get -u github.com/golang/lint/golint)"; ABORT=1; }
-type goimports >/dev/null 2>&1 || { echo >& 2 "goimports is not installed (go get -u golang.org/x/tools/cmd/goimports)"; ABORT=1; }
-type dep >/dev/null 2>&1 || { echo >& 2 "dep is not installed (go get -u github.com/golang/dep/cmd/dep)"; ABORT=1; }
+}
 
-if [ -n "$ABORT" ]; then
-    echo "Missing dependency. Aborting. You can fix by installing the tool listed above."
-    exit 1
-fi
+installDependencies
