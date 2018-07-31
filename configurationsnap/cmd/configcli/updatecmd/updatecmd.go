@@ -246,6 +246,16 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 		newConfigMsg.Peers = append(newConfigMsg.Peers, newPeerConfig)
 	}
 
+	_, err = updateAppConfigInfo(configMsg, baseFilePath, newConfigMsg)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error while updating the new app config info")
+	}
+
+	return newConfigMsg, nil
+}
+
+func updateAppConfigInfo(configMsg *mgmtapi.ConfigMessage, baseFilePath string, newConfigMsg *mgmtapi.ConfigMessage) (*mgmtapi.ConfigMessage, error) {
+
 	for _, appConfig := range configMsg.Apps {
 		newAppConfig := mgmtapi.AppConfig{
 			AppName: appConfig.AppName,
@@ -277,13 +287,12 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 		}
 		newConfigMsg.Apps = append(newConfigMsg.Apps, newAppConfig)
 	}
-
 	return newConfigMsg, nil
 }
+
 func readFile(filePath string) (string, error) {
 	cliconfig.Config().Logger().Debugf("Reading file [%s]\n", filePath)
-
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint: gas
 	if err != nil {
 		return "", errors.Wrapf(err, "error opening file [%s]", filePath)
 	}
