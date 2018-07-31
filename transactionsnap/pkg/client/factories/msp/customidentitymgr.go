@@ -198,7 +198,9 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 
 	// get the public key in the right format
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
-
+	if err != nil {
+		return nil, err
+	}
 	return certPubK, nil
 }
 

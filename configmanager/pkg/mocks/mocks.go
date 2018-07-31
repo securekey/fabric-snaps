@@ -29,7 +29,7 @@ func NewMockStub(channelID string) *mockstub.MockStub {
 // SaveConfig saves the config data to the configuration snap using the given stub
 // and caches the data in the configuration service
 func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName, ver string, configData []byte) error {
-	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{api.PeerConfig{PeerID: peerID, App: []api.AppConfig{api.AppConfig{AppName: appName,
+	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{{PeerID: peerID, App: []api.AppConfig{{AppName: appName,
 		Version: ver, Config: string(configData)}}}}}
 	configBytes, err := json.Marshal(config)
 	if err != nil {
