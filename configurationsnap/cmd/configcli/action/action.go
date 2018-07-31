@@ -233,10 +233,10 @@ func (a *action) initTargetPeers() error {
 
 		for _, p := range peersConfig {
 
-			includePeer := false
+			var includePeer bool
 			if cliconfig.Config().PeerURL() != "" {
 				// A single peer URL was specified. Only include the peer that matches.
-				includePeer = cliconfig.Config().PeerURL() == p.URL
+				includePeer = (cliconfig.Config().PeerURL() == p.URL)
 			} else {
 				// An org ID and/or MSP ID was specified. Include if the peer's org/MSP matches
 				includePeer = (selectedOrgID == orgID || cliconfig.Config().GetMspID() == orgConfig.MSPID)

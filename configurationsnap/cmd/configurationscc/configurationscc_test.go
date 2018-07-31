@@ -30,6 +30,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+// membershipService is used to get peers of channel .
+var membershipService membership.Service
 
 const (
 	validMsgMultiplePeersAndApps = `{"MspID":"Org1MSP","Peers":[{"PeerID":"peer.one.one.example.com","App":[{"AppName":"appNameR","Version":"$v","Config":"configstringgoeshere"},{"AppName":"appNameB","Version":"$v","Config":"config for appNametwo"},{"AppName":"appNameC","Version":"$v","Config":"mnopq"}]},{"PeerID":"peer.two.two.example.com","App":[{"AppName":"appNameHH","Version":"1","Config":"config for appNameTwoOnPeerOne goes here"},{"AppName":"appNameMM","Version":"$v","Config":"config for appNameOneTwo goes here"},{"AppName":"appNameQQ","Version":"$v","Config":"BLTwo"}]}]}`

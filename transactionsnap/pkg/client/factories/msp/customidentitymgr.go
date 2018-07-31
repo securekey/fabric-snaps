@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
@@ -137,9 +137,7 @@ func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, erro
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "find enrollment cert path failed")
 		}
-
-		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath)
-
+		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath) //nolint: gas
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "reading enrollment cert path failed")
 		}
@@ -198,7 +196,9 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 
 	// get the public key in the right format
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
-
+	if err != nil {
+		return nil, errors.Wrap(errors.GeneralError, err, "getCryptoSuiteKeyFromPem error: failed to get public key in right format ")
+	}
 	return certPubK, nil
 }
 

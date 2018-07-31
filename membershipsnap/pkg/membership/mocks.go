@@ -189,7 +189,7 @@ func (s *mockGossip) LeaveChan(chainID gcommon.ChainID) {
 	panic("not implemented")
 }
 
-func newMockIdentity() []byte {
+func newMockIdentity() []byte { //nolint: deadcode
 	return []byte("Some Identity")
 }
 
@@ -218,7 +218,7 @@ func NewMSPNetworkMembers(mspID []byte, networkMembers ...discovery.NetworkMembe
 	}
 }
 
-func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) gossip.ReceivedMessage {
+func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) gossip.ReceivedMessage { //nolint: deadcode , interfacer
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
 			Channel: []byte("testchannel"),
@@ -227,7 +227,7 @@ func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) goss
 		}))
 }
 
-func newAliveMsg() gossip.ReceivedMessage {
+func newAliveMsg() gossip.ReceivedMessage { //nolint: deadcode
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
 			Channel: []byte("testchannel"),
@@ -258,7 +258,7 @@ func newEnvelope(payload []byte) *gossip.Envelope {
 	return &gossip.Envelope{Payload: payload}
 }
 
-func newPeerIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) *gossip.GossipMessage_PeerIdentity {
+func newPeerIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) *gossip.GossipMessage_PeerIdentity { //nolint: interfacer
 	return &gossip.GossipMessage_PeerIdentity{
 		PeerIdentity: &gossip.PeerIdentity{
 			PkiId:    pkiID,

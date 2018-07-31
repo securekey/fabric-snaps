@@ -33,7 +33,7 @@ type mockChannelProvider struct {
 	fabApi.ChannelProvider
 }
 
-func (cp *mockChannelProvider) Initialize(providers contextApi.Providers) error {
+func (cp *mockChannelProvider) Initialize(providers contextApi.Providers) error { //nolint: interfacer
 	chProvider, err := fcmocks.NewMockChannelProvider(providers)
 	if err != nil {
 		return err
