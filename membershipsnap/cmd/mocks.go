@@ -7,9 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
-	"fmt"
-
-	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/policy"
@@ -29,7 +26,8 @@ import (
 // - localMSPID is the ID of the peer's local MSP
 // - localPeerAddress is the address (host:port) of the local peer
 // - members contains zero or more MSP network members
-func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer, localMSPID api.OrgIdentityType, localPeerAddress string, bcInfo []*mockbcinfo.ChannelBCInfo, members ...memservice.MspNetworkMembers) *shim.MockStub {
+//used in the membershipsnap_test.go file.
+func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer, localMSPID api.OrgIdentityType, localPeerAddress string, bcInfo []*mockbcinfo.ChannelBCInfo, members ...memservice.MspNetworkMembers) *shim.MockStub { //nolint: deadcode
 	// Override the MSCC initializer in order to inject our mocks
 	initializer = func(mscc *MembershipSnap) error {
 		policyChecker := policy.NewPolicyChecker(
@@ -59,11 +57,12 @@ func newMockStub(identity []byte, identityDeserializer msp.IdentityDeserializer,
 	return stub
 }
 
-func newMockIdentity() []byte {
+func newMockIdentity() []byte { //nolint: deadcode
 	return []byte("Some Identity")
 }
 
-func newMockSignedProposal(identity []byte) (*pb.SignedProposal, msp.IdentityDeserializer) {
+//used in the membershipsnap_test.go file.
+func newMockSignedProposal(identity []byte) (*pb.SignedProposal, msp.IdentityDeserializer) { //nolint: deadcode
 	sProp, _ := utils.MockSignedEndorserProposalOrPanic("", &pb.ChaincodeSpec{}, identity, nil)
 	sProp.Signature = sProp.ProposalBytes
 	identityDeserializer := &policymocks.MockIdentityDeserializer{
@@ -71,12 +70,4 @@ func newMockSignedProposal(identity []byte) (*pb.SignedProposal, msp.IdentityDes
 		Msg:      sProp.ProposalBytes,
 	}
 	return sProp, identityDeserializer
-}
-
-func marshal(pb proto.Message) []byte {
-	bytes, err := proto.Marshal(pb)
-	if err != nil {
-		panic(fmt.Sprintf("error marshalling gossip message: %s", err))
-	}
-	return bytes
 }

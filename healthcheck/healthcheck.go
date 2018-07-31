@@ -49,8 +49,10 @@ func SmokeTest(extScc string, stub shim.ChaincodeStubInterface, args [][]byte) p
 			fmt.Sprintf("%s Healthcheck had nothing to run. Returning empty success response..", extScc),
 			shim.OK,
 		}
-
-		payload, _ := json.Marshal(defaultResult)
+		payload, err := json.Marshal(defaultResult)
+		if err != nil {
+			logger.Error("Error occurred while marshalling the default result.")
+		}
 		return shim.Success(payload)
 	}
 

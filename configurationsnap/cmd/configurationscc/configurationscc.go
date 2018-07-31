@@ -18,27 +18,26 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/bccsp"
-	factory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
 	acl "github.com/hyperledger/fabric/core/aclmgmt"
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/peer"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
-	mgmt "github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	config "github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
+	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/healthcheck"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util"
-	errors "github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 //GeneralMspID msp id generic config
@@ -69,8 +68,8 @@ var peerConfigPath = ""
 // aclProvider is used to check ACL
 var aclProvider acl.ACLProvider
 
-// membershipService is used to get peers of channel
-var membershipService memserviceapi.Service
+// membershipService is used to get peers of channel . This is used in configurationscc_test class
+var membershipService memserviceapi.Service //nolint:deadcode
 
 const (
 	// configDataReadACLPrefix is the prefix for read-only (get) policy resource names
@@ -540,42 +539,32 @@ func getPublicKeyAlg(algorithm string) (x509.PublicKeyAlgorithm, error) {
 	}
 }
 func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
-	var sigAlg x509.SignatureAlgorithm
-	switch algorithm {
-	case "ECDSAWithSHA1":
-		return x509.ECDSAWithSHA1, nil
-	case "ECDSAWithSHA256":
-		return x509.ECDSAWithSHA256, nil
-	case "ECDSAWithSHA384":
-		return x509.ECDSAWithSHA384, nil
-	case "ECDSAWithSHA512":
-		return x509.ECDSAWithSHA512, nil
-	case "SHA256WithRSAPSS":
-		return x509.SHA256WithRSAPSS, nil
-	case "SHA384WithRSAPSS":
-		return x509.SHA384WithRSAPSS, nil
-	case "SHA512WithRSAPSS":
-		return x509.SHA512WithRSAPSS, nil
-	case "DSAWithSHA256":
-		return x509.DSAWithSHA256, nil
-	case "DSAWithSHA1":
-		return x509.DSAWithSHA1, nil
-	case "SHA512WithRSA":
-		return x509.SHA512WithRSA, nil
-	case "SHA384WithRSA":
-		return x509.SHA384WithRSA, nil
-	case "SHA256WithRSA":
-		return x509.SHA256WithRSA, nil
-	case "SHA1WithRSA":
-		return x509.SHA1WithRSA, nil
-	case "MD5WithRSA":
-		return x509.MD5WithRSA, nil
-	case "MD2WithRSA":
-		return x509.MD2WithRSA, nil
-	default:
-		return sigAlg, errors.New(errors.GeneralError, "Alg is not supported.")
+	var signatureAlgorithm x509.SignatureAlgorithm
 
+	m := make(map[string]x509.SignatureAlgorithm)
+	m["ECDSAWithSHA1"] = x509.ECDSAWithSHA1
+	m["ECDSAWithSHA256"] = x509.ECDSAWithSHA256
+	m["ECDSAWithSHA384"] = x509.ECDSAWithSHA384
+	m["ECDSAWithSHA512"] = x509.ECDSAWithSHA512
+	m["SHA256WithRSAPSS"] = x509.SHA256WithRSAPSS
+	m["SHA384WithRSAPSS"] = x509.SHA384WithRSAPSS
+	m["SHA512WithRSAPSS"] = x509.SHA512WithRSAPSS
+	m["DSAWithSHA256"] = x509.DSAWithSHA256
+	m["DSAWithSHA1"] = x509.DSAWithSHA1
+	m["SHA512WithRSA"] = x509.SHA512WithRSA
+	m["SHA384WithRSA"] = x509.SHA384WithRSA
+	m["SHA256WithRSA"] = x509.SHA256WithRSA
+	m["SHA1WithRSA"] = x509.SHA1WithRSA
+	m["MD5WithRSA"] = x509.MD5WithRSA
+	m["MD2WithRSA"] = x509.MD2WithRSA
+
+	value, ok := m[algorithm]
+
+	if ok {
+		return value, nil
 	}
+	err := errors.New(errors.GeneralError, "Alg is not supported.")
+	return signatureAlgorithm, err
 }
 
 func getKeyOpts(keyType string, ephemeral bool) (bccsp.KeyGenOpts, error) {
@@ -758,16 +747,6 @@ func getACLProvider() acl.ACLProvider {
 	}
 
 	return acl.NewACLProvider(peer.GetStableChannelConfig)
-}
-
-// getMembershipService gets the membership service
-func getMembershipService() (memserviceapi.Service, error) {
-	// always nil except for unit tests
-	if membershipService != nil {
-		return membershipService, nil
-	}
-
-	return membership.Get()
 }
 
 // New chaincode implementation

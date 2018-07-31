@@ -149,11 +149,11 @@ func (p *MockPeer) createProposalResponsePayload() ([]byte, error) {
 	txRwSet := &rwsetutil.TxRwSet{}
 	var kvWrite []*kvrwset.KVWrite
 	if p.KVWrite {
-		kvWrite = []*kvrwset.KVWrite{&kvrwset.KVWrite{Key: "key2", IsDelete: false, Value: []byte("value2")}}
+		kvWrite = []*kvrwset.KVWrite{{Key: "key2", IsDelete: false, Value: []byte("value2")}}
 	}
 	txRwSet.NsRwSets = []*rwsetutil.NsRwSet{
-		&rwsetutil.NsRwSet{NameSpace: "ns1", KvRwSet: &kvrwset.KVRWSet{
-			Reads:  []*kvrwset.KVRead{&kvrwset.KVRead{Key: "key1", Version: &kvrwset.Version{BlockNum: 1, TxNum: 1}}},
+		{NameSpace: "ns1", KvRwSet: &kvrwset.KVRWSet{
+			Reads:  []*kvrwset.KVRead{{Key: "key1", Version: &kvrwset.Version{BlockNum: 1, TxNum: 1}}},
 			Writes: kvWrite,
 		}}}
 
@@ -178,8 +178,10 @@ func (p *MockPeer) createProposalResponsePayload() ([]byte, error) {
 // SignECDSA sign with ec key
 func SignECDSA(k *ecdsa.PrivateKey, digest []byte) (signature []byte, err error) {
 	hash := sha256.New()
-	hash.Write(digest)
-
+	_, err = hash.Write(digest)
+	if err != nil {
+		return nil, err
+	}
 	r, s, err := ecdsa.Sign(rand.Reader, k, hash.Sum(nil))
 	if err != nil {
 		return nil, err

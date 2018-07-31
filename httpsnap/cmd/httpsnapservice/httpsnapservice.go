@@ -127,7 +127,6 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 	if len(httpServiceInvokeRequest.RequestHeaders) == 0 {
 		return nil, errors.New(errors.MissingRequiredParameterError, "Missing request headers")
 	}
-
 	headers := make(map[string]string)
 
 	// Converting header names to lowercase
@@ -150,18 +149,7 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 	}
 
 	// Validate URL
-	uri, err := url.ParseRequestURI(httpServiceInvokeRequest.RequestURL)
-	if err != nil {
-		return nil, errors.Wrap(errors.ValidationError, err, "Invalid URL")
-	}
-
-	// Security controls should be added by the chaincode that calls the HTTP snap
-
-	// Scheme has to be https
-	if uri.Scheme != "https" {
-		return nil, errors.Errorf(errors.ValidationError, "Unsupported scheme: %s", uri.Scheme)
-	}
-
+	httpServiceImpl.validateURL(httpServiceInvokeRequest)
 	httpServiceImpl.RLock()
 	defer httpServiceImpl.RUnlock()
 
@@ -181,6 +169,21 @@ func (httpServiceImpl *HTTPServiceImpl) NewInvoker(httpServiceInvokeRequest HTTP
 		schemaConfig: schemaConfig,
 		headers:      headers,
 	}, nil
+}
+func (httpServiceImpl *HTTPServiceImpl) validateURL(httpServiceInvokeRequest HTTPServiceInvokeRequest) (Invoker, errors.Error) {
+	// Validate URL
+	uri, err := url.ParseRequestURI(httpServiceInvokeRequest.RequestURL)
+	if err != nil {
+		return nil, errors.Wrap(errors.ValidationError, err, "Invalid URL")
+	}
+
+	// Security controls should be added by the chaincode that calls the HTTP snap
+
+	// Scheme has to be https
+	if uri.Scheme != "https" {
+		return nil, errors.Errorf(errors.ValidationError, "Unsupported scheme: %s", uri.Scheme)
+	}
+	return nil, nil
 }
 
 //newHTTPService creates new http snap service
@@ -374,15 +377,9 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	} else {
 
 		// Use default TLS config in https snap config
-		clientCert, err = config.GetClientCert()
-		if err != nil {
-			return nil, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get client cert from httpsnap config")
-		}
+		clientCert, _ = httpServiceImpl.validateClientCertConfig(config, clientCert)
 
-		caCerts, err = config.GetCaCerts()
-		if err != nil {
-			return nil, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get ca certs from httpsnap config")
-		}
+		caCerts, _ = httpServiceImpl.validateCertConfig(config, caCerts)
 
 	}
 
@@ -404,17 +401,39 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	} else if config.IsPeerTLSConfigEnabled() {
 		// If private key not found and allowPeerConfig enabled, then use peer tls client key
-		peerClientTLSKey, err := config.GetPeerClientKey()
-		if err != nil {
-			return nil, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get peer tls client key")
-		}
+		peerClientTLSKey, _ := httpServiceImpl.validatePeerTLSClientKey(config)
 		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, peerClientTLSKey, caCerts, config.IsSystemCertPoolEnabled())
 
 	} else {
 		return nil, errors.WithMessage(errors.SystemError, err, " failed to get private key from client cert")
 	}
 }
-
+func (httpServiceImpl *HTTPServiceImpl) validatePeerTLSClientKey(config httpsnapApi.Config) (string, errors.Error) {
+	// If private key not found and allowPeerConfig enabled, then use peer tls client key
+	peerClientTLSKey, err := config.GetPeerClientKey()
+	if err != nil {
+		return peerClientTLSKey, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get peer tls client key")
+	}
+	return peerClientTLSKey, nil
+}
+func (httpServiceImpl *HTTPServiceImpl) validateCertConfig(config httpsnapApi.Config, caCerts []string) ([]string, errors.Error) {
+	// If private key not found and allowPeerConfig enabled, then use peer tls client key
+	var err errors.Error
+	caCerts, err = config.GetCaCerts()
+	if err != nil {
+		return caCerts, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get ca certs from httpsnap config")
+	}
+	return caCerts, nil
+}
+func (httpServiceImpl *HTTPServiceImpl) validateClientCertConfig(config httpsnapApi.Config, clientCert string) (string, errors.Error) {
+	// If private key not found and allowPeerConfig enabled, then use peer tls client key
+	var err errors.Error
+	clientCert, err = config.GetClientCert()
+	if err != nil {
+		return clientCert, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get client cert from httpsnap config")
+	}
+	return clientCert, nil
+}
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, errors.Error) {
 	// Load client cert
 	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
@@ -529,7 +548,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 	return nil
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) {
+func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) { //nolint: interfacer
 	if len(idBytes) == 0 {
 		return nil, errors.New(errors.MissingConfigDataError, "getPublicKeyFromPem error: empty pem bytes")
 	}
@@ -545,7 +564,6 @@ func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryp
 	if err != nil {
 		return nil, errors.Wrap(errors.ParseCertError, err, "getPublicKeyFromPem error: failed to parse x509 cert")
 	}
-
 	// get the public key in the right format
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 	if err != nil {
