@@ -14,13 +14,14 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	pb_msp "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/bccsp"
+	"github.com/securekey/fabric-snaps/sanitize-master"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -137,9 +138,8 @@ func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, erro
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "find enrollment cert path failed")
 		}
-
-		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath)
-
+		sanitize.Path(enrollmentCertPath)
+		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath) //nolint: gas
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "reading enrollment cert path failed")
 		}
@@ -198,7 +198,9 @@ func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (
 
 	// get the public key in the right format
 	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
-
+	if err != nil {
+		return nil, err
+	}
 	return certPubK, nil
 }
 

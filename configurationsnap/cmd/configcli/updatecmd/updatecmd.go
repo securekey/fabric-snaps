@@ -19,6 +19,7 @@ import (
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/action"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
+	"github.com/securekey/fabric-snaps/sanitize-master"
 	"github.com/spf13/cobra"
 )
 
@@ -282,8 +283,8 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 }
 func readFile(filePath string) (string, error) {
 	cliconfig.Config().Logger().Debugf("Reading file [%s]\n", filePath)
-
-	file, err := os.Open(filePath)
+	sanitize.Name(filePath)
+	file, err := os.Open(filePath) //nolint: gas
 	if err != nil {
 		return "", errors.Wrapf(err, "error opening file [%s]", filePath)
 	}

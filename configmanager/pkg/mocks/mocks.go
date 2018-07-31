@@ -15,6 +15,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
+	"github.com/securekey/fabric-snaps/sanitize-master"
 )
 
 // NewMockStub creates a mock configuration snap stub
@@ -29,7 +30,7 @@ func NewMockStub(channelID string) *mockstub.MockStub {
 // SaveConfig saves the config data to the configuration snap using the given stub
 // and caches the data in the configuration service
 func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName, ver string, configData []byte) error {
-	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{api.PeerConfig{PeerID: peerID, App: []api.AppConfig{api.AppConfig{AppName: appName,
+	config := &api.ConfigMessage{MspID: mspID, Peers: []api.PeerConfig{{PeerID: peerID, App: []api.AppConfig{{AppName: appName,
 		Version: ver, Config: string(configData)}}}}}
 	configBytes, err := json.Marshal(config)
 	if err != nil {
@@ -45,7 +46,8 @@ func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName, ver string, con
 // SaveConfigFromFile reads the config data from the given file and saves it to the configuration snap
 // using the given stub and caches the data in the configuration service
 func SaveConfigFromFile(stub *mockstub.MockStub, mspID, peerID, appName, ver, configFile string) error {
-	configData, err := ioutil.ReadFile(configFile)
+	sanitize.Path(configFile)
+	configData, err := ioutil.ReadFile(configFile) // nolint: gas
 	if err != nil {
 		return errors.Wrap(err, "error reading config file")
 	}
