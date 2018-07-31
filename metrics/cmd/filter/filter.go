@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/hyperledger/fabric/core/handlers/auth"
 	"github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/uber-go/tally"
@@ -19,16 +18,11 @@ import (
 
 var logger = logging.NewLogger("metricsfilter")
 
-type filter struct {
+type filter struct { //nolint: deadcode
 	next                 peer.EndorserServer
 	proposalCounter      tally.Counter
 	proposalErrorCounter tally.Counter
 	proposalTimer        tally.Timer
-}
-
-// NewFilter creates a new Filter
-func NewFilter() auth.Filter {
-	return &filter{}
 }
 
 // Init initializes the Filter with the next EndorserServer

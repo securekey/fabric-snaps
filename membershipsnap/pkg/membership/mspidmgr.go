@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	gcommon "github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/gossip/service"
-	gossip "github.com/hyperledger/fabric/protos/gossip"
+	"github.com/hyperledger/fabric/protos/gossip"
 	"github.com/hyperledger/fabric/protos/msp"
 )
 
@@ -75,11 +75,16 @@ func (m *mspIDMgr) receive(msgch <-chan gossip.ReceivedMessage) {
 }
 
 func (m *mspIDMgr) handleUpdate(envelope *gossip.Envelope) {
-	msg, _ := envelope.ToGossipMessage()
-
+	msg, err := envelope.ToGossipMessage()
+	if err != nil {
+		logger.Error("Error occurred while getting gossip messages : %s", err)
+	}
 	pIdentity := msg.GetPeerIdentity()
 	sID := &msp.SerializedIdentity{}
-	proto.Unmarshal(pIdentity.Cert, sID)
+	err = proto.Unmarshal(pIdentity.Cert, sID)
+	if err != nil {
+		logger.Error("Error occurred while un-marshalling : %s", err)
+	}
 	pkiID := string(pIdentity.PkiId)
 
 	// Only update if not already in map

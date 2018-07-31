@@ -32,6 +32,7 @@ type CheckForCommitHandler struct {
 func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 
 	txID := string(requestContext.Response.TransactionID)
+
 	if c.callback != nil {
 		if err := c.callback(requestContext.Response); err != nil {
 			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
@@ -50,6 +51,9 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		return
 	}
 
+	c.commitIfHasWriteSet(txID, requestContext, clientContext)
+}
+func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
 	var err error
 
 	// let's unmarshall one of the proposal responses to see if commit is needed
