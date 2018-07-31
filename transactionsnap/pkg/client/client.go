@@ -168,21 +168,16 @@ func (c *clientImpl) generateHash(bytes []byte) string {
 
 func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.ServiceProviderFactory) error {
 
-	currentCfgHash := c.generateHash(c.txnSnapConfig.GetConfigBytes())
-
 	//compare config hash
+	currentCfgHash := c.generateHash(c.txnSnapConfig.GetConfigBytes())
 	if c.configHash.Load() == currentCfgHash {
 		return nil
 	}
-
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	//close existing sdk instance if any
-	if c.sdk != nil {
-		c.sdk.Close()
-	}
-
+	c.closeExistingSDK()
 	// Get client config
 	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
@@ -209,27 +204,18 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
 	}
 
-	//lookup for orgname
-	var orgname string
-	for name, org := range nconfig.Organizations {
-		if org.MSPID == string(localPeer.MSPid) {
-			orgname = name
-			break
-		}
+	//lookup for orgName
+	orgName, err := c.orgNameLookup(nconfig, localPeer)
+	if err != nil {
+		return err
 	}
-	if orgname == "" {
-		return errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
-	}
-
 	//Get cryptosuite provider name from name from peerconfig
 	cryptoProvider, err := c.txnSnapConfig.GetCryptoProvider()
 	if err != nil {
 		return err
 	}
 
-	if serviceProviderFactory == nil {
-		serviceProviderFactory = &DynamicProviderFactory{}
-	}
+	serviceProviderFactory = c.serviceProviderFactoryInit(serviceProviderFactory)
 
 	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, c.txnSnapConfig.GetTLSCertPem())
 
@@ -244,31 +230,31 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	}
 
 	// new channel context prov
-	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
-
-	chContext, err := chContextProv()
+	err = c.channelClients(channelID, orgName)
 	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
+		return err
 	}
-
-	// Channel client is used to query and execute transactions
-	chClient, err := channel.New(func() (contextApi.Channel, error) {
-		return chContext, nil
-	})
-	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
-	}
-	if chClient == nil {
-		return errors.New(errors.GeneralError, "channel client is nil")
-	}
-
-	c.channelClient = chClient
-	c.channelID = channelID
 	c.clientConfig = customEndpointConfig
-	c.context = chContext
 	c.configHash.Store(currentCfgHash)
-
 	//update log level
+	err = c.updateBackendConfig()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (c *clientImpl) serviceProviderFactoryInit(serviceProviderFactory apisdk.ServiceProviderFactory) apisdk.ServiceProviderFactory {
+	if serviceProviderFactory == nil {
+		serviceProviderFactory = &DynamicProviderFactory{}
+	}
+	return serviceProviderFactory
+}
+func (c *clientImpl) closeExistingSDK() {
+	if c.sdk != nil {
+		c.sdk.Close()
+	}
+}
+func (c *clientImpl) updateBackendConfig() error {
 	cfgBackend, err := c.sdk.Config()
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
@@ -278,6 +264,44 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 		return errors.WithMessage(errors.GeneralError, err, "error initializing logging")
 	}
 
+	return nil
+}
+func (c *clientImpl) orgNameLookup(nconfig *fabApi.NetworkConfig, localPeer *api.PeerConfig) (string, error) {
+	var orgName string
+	for name, org := range nconfig.Organizations {
+		if org.MSPID == string(localPeer.MSPid) {
+			orgName = name
+			break
+		}
+	}
+	if orgName == "" {
+		return orgName, errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
+	}
+
+	return orgName, nil
+}
+
+func (c *clientImpl) channelClients(channelID string, orgName string) error {
+
+	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgName))
+
+	chContext, err := chContextProv()
+	if err != nil {
+		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
+	}
+	chClient, err := channel.New(func() (contextApi.Channel, error) {
+		return chContext, nil
+	})
+	if err != nil {
+		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
+	}
+	if chClient == nil {
+		return errors.New(errors.GeneralError, "channel client is nil")
+	}
+	// Channel client is used to query and execute transactions
+	c.channelClient = chClient
+	c.channelID = channelID
+	c.context = chContext
 	return nil
 }
 
@@ -360,28 +384,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
-		creator, err := c.context.Serialize()
-		if err != nil {
-			return nil, errors.New(errors.SystemError, "get creator failed")
-		}
-		logger.Debugf("Get peer creator %s", creator)
-		if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
-			logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
-			ho := cryptosuite.GetSHA256Opts()
-			h, err := c.context.CryptoSuite().GetHash(ho)
-			if err != nil {
-				return nil, errors.New(errors.SystemError, "hash function creation failed")
-			}
-			txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
-			if err != nil {
-				return nil, errors.New(errors.SystemError, "computeTxnID failed")
-			}
-			logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
-			if txnID == endorseRequest.TransactionID {
-				validTxnID = true
-			}
-		}
+		validTxnID, creator, _ := c.checkTxnID(endorseRequest)
 		if !validTxnID {
 			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: creator}, nil
 		}
@@ -432,6 +435,34 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		return nil, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
 	}
 	return &resp, nil
+}
+
+func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []byte, errors.Error) {
+	validTxnID := false
+	logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
+	creator, err := c.context.Serialize()
+	if err != nil {
+		return false, nil, errors.New(errors.SystemError, "get creator failed")
+	}
+	logger.Debugf("Get peer creator %s", creator)
+	if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
+		logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
+		ho := cryptosuite.GetSHA256Opts()
+		h, err := c.context.CryptoSuite().GetHash(ho)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "hash function creation failed")
+		}
+		txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
+		if err != nil {
+			return false, nil, errors.New(errors.SystemError, "computeTxnID failed")
+		}
+		logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
+		if txnID == endorseRequest.TransactionID {
+			validTxnID = true
+		}
+	}
+
+	return validTxnID, creator, nil
 }
 
 func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) errors.Error {
