@@ -8,29 +8,11 @@
 
 set -e
 
+set -e
 
-echo "Running linters..."
 
-   echo "Checking golint"
-   OUTPUT="$(golint $(go list ./... | grep -v /vendor/))"
-   if [[ $OUTPUT ]]; then
-      echo "YOU MUST FIX THE FOLLOWING THE FOLLOWING GOLINT SUGGESTIONS:"
-      printf "$OUTPUT\n"
-      exit 1
-   fi
+GOMETALINT_CMD=gometalinter
 
-   echo "Checking govet"
-   OUTPUT="$(go vet -tags pkcs11  $(go list ./... | grep -v /vendor/))"
-   if [[ $OUTPUT ]]; then
-      echo "YOU MUST FIX THE FOLLOWING THE FOLLOWING GOVET SUGGESTIONS:"
-      printf "$OUTPUT\n"
-      exit 1
-   fi
 
-   echo "Checking gofmt"
-    OUTPUT="$(gofmt -l $(find ./ -name *.go |grep -v ./vendor))"
-   if [[ $OUTPUT ]]; then
-      echo "The following files need reformatting with 'gofmt -w <file>':"
-      printf "$OUTPUT\n"
-      exit 1
-   fi
+echo "Running metalinters..."
+$GOMETALINT_CMD --config=./gometalinter.json ./...
