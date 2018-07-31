@@ -16,15 +16,12 @@ import (
 	"sort"
 
 	"github.com/cactus/go-statsd-client/statsd"
-	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uber-go/tally"
 	promreporter "github.com/uber-go/tally/prometheus"
 	statsdreporter "github.com/uber-go/tally/statsd"
 )
-
-var logger = flogging.MustGetLogger("common/metrics/tally")
 
 func newRootScope(opts tally.ScopeOptions, interval time.Duration) tally.Scope {
 	s, _ := tally.NewRootScope(opts, interval)
@@ -148,8 +145,9 @@ func (r *statsdReporter) Tagging() bool {
 func (r *promReporter) Close() error {
 	//TODO: Shutdown server gracefully?
 	// Close() is not a graceful way since it closes server immediately
-	err := r.server.Close()
-	r.listener.Close()
+	var err error
+	err = r.server.Close() //nolint: ineffassign
+	err = r.listener.Close()
 	return err
 }
 
@@ -157,7 +155,7 @@ func (r *promReporter) HTTPHandler() http.Handler {
 	return promReporterHTTPHandler(r.registry)
 }
 
-func promReporterHTTPHandler(registry *prometheus.Registry) http.Handler {
+func promReporterHTTPHandler(registry *prometheus.Registry) http.Handler { //nolint: interfacer
 	return promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 }
 
