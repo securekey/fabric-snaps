@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba5f74cc_7d3f9615",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-08-01T13:32:38Z",
+      "side": 1,
+      "message": "remove the -",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 2
+      },
+      "revId": "249c9cf4f58a24eb8d630c8e8d2dd97d55763a62",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3db0dc85_9f897177",
+        "filename": "scripts/dependencies.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-08-01T13:32:38Z",
+      "side": 1,
+      "message": "replace the command with git tag -l | sort -V --reverse | head -n 1 | grep \"${revision}\"",
+      "range": {
+        "startLine": 62,
+        "startChar": 52,
+        "endLine": 62,
+        "endChar": 75
+      },
+      "revId": "249c9cf4f58a24eb8d630c8e8d2dd97d55763a62",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
