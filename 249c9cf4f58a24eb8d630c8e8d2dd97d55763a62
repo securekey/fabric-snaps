@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "6e29e115_7ad1bb1a",
+        "filename": "scripts/check_lint.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-08-01T13:32:56Z",
+      "side": 1,
+      "message": "remove this line",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 9
+      },
+      "revId": "249c9cf4f58a24eb8d630c8e8d2dd97d55763a62",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3db0dc85_9f897177",
         "filename": "scripts/dependencies.sh",
         "patchSetId": 1
