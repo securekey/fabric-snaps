@@ -149,11 +149,11 @@ func (p *MockPeer) createProposalResponsePayload() ([]byte, error) {
 	txRwSet := &rwsetutil.TxRwSet{}
 	var kvWrite []*kvrwset.KVWrite
 	if p.KVWrite {
-		kvWrite = []*kvrwset.KVWrite{&kvrwset.KVWrite{Key: "key2", IsDelete: false, Value: []byte("value2")}}
+		kvWrite = []*kvrwset.KVWrite{{Key: "key2", IsDelete: false, Value: []byte("value2")}}
 	}
 	txRwSet.NsRwSets = []*rwsetutil.NsRwSet{
-		&rwsetutil.NsRwSet{NameSpace: "ns1", KvRwSet: &kvrwset.KVRWSet{
-			Reads:  []*kvrwset.KVRead{&kvrwset.KVRead{Key: "key1", Version: &kvrwset.Version{BlockNum: 1, TxNum: 1}}},
+		{NameSpace: "ns1", KvRwSet: &kvrwset.KVRWSet{
+			Reads:  []*kvrwset.KVRead{{Key: "key1", Version: &kvrwset.Version{BlockNum: 1, TxNum: 1}}},
 			Writes: kvWrite,
 		}}}
 
