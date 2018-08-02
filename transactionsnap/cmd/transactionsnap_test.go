@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
@@ -36,7 +37,6 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -575,20 +575,20 @@ func TestMain(m *testing.M) {
 	payloadMap["default"] = []byte("value")
 	mockEndorserServer.SetMockPeer(&mocks.MockPeer{MockName: "Peer1", MockURL: "http://peer1.com", MockRoles: []string{}, MockCert: nil, MockMSP: "Org1MSP", Status: 200,
 		Payload: payloadMap})
-	client.ServiceProviderFactory = &mocks.MockProviderFactory{}
-	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
-	if err != nil {
-		panic(fmt.Sprintf("Client GetInstance return error %s", err))
-	}
 
+	var eventService fab.EventService
 	if eventProducer == nil {
-		eventService, producer, err := eventserviceMocks.NewServiceWithMockProducer([]options.Opt{}, eventserviceMocks.WithFilteredBlockLedger())
+		var err error
+		eventService, eventProducer, err = eventserviceMocks.NewServiceWithMockProducer([]options.Opt{}, eventserviceMocks.WithFilteredBlockLedger())
 		if err != nil {
 			panic(fmt.Sprintf("error creating channel event client: %s", err))
 		}
-		localservice.Register(channelID, eventService)
-		eventProducer = producer
+	}
 
+	client.ServiceProviderFactory = &mocks.MockProviderFactory{EventService: eventService}
+	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
+	if err != nil {
+		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
 
 	os.Exit(m.Run())
