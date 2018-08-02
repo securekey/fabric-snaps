@@ -353,7 +353,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(
 					handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
-						handler.NewLocalEventCommitHandler(registerTxEvent, c.channelID),
+						handler.NewCommitTxHandler(registerTxEvent, c.channelID),
 					),
 				),
 			),
