@@ -9,8 +9,6 @@ package chprovider
 import (
 	reqContext "context"
 
-	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -19,6 +17,9 @@ import (
 	channelImpl "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/eventhubclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/pkg/errors"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
@@ -40,13 +41,14 @@ type Provider struct {
 	selectionServiceCache cache
 	chCfgCache            cache
 	membershipCache       cache
+	eventServiceCache     cache
 }
 
 // New creates a new Provider
 func New(config fab.EndpointConfig) (*Provider, error) {
+	eventIdleTime := config.Timeout(fab.EventServiceIdle)
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
 	membershipRefresh := config.Timeout(fab.ChannelMembershipRefresh)
-
 	cp := Provider{
 		chCfgCache:      chconfig.NewRefCache(chConfigRefresh),
 		membershipCache: membership.NewRefCache(membershipRefresh),
@@ -68,6 +70,19 @@ func New(config fab.EndpointConfig) (*Provider, error) {
 		},
 	)
 
+	cp.eventServiceCache = lazycache.New(
+		"TxSnap_Event_Service_Cache",
+		func(key lazycache.Key) (interface{}, error) {
+			ck := key.(*eventCacheKey)
+			return chpvdr.NewEventClientRef(
+				eventIdleTime,
+				func() (fab.EventClient, error) {
+					return cp.createEventClient(ck.context, ck.channelConfig, ck.opts...)
+				},
+			), nil
+		},
+	)
+
 	return &cp, nil
 }
 
@@ -79,6 +94,9 @@ func (cp *Provider) Initialize(providers context.Providers) error {
 
 // Close frees resources and caches.
 func (cp *Provider) Close() {
+	logger.Debug("Closing event service cache...")
+	cp.eventServiceCache.Close()
+
 	logger.Debug("Closing membership cache...")
 	cp.membershipCache.Close()
 
@@ -99,6 +117,26 @@ func (cp *Provider) ChannelService(ctx fab.ClientContext, channelID string) (fab
 		context:   ctx,
 		channelID: channelID,
 	}, nil
+}
+
+func (cp *Provider) createEventClient(ctx context.Client, chConfig fab.ChannelCfg, opts ...options.Opt) (fab.EventClient, error) {
+	useDeliver, err := useDeliverEvents(ctx, chConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	discovery, err := cp.getDiscoveryService(ctx, chConfig.ID())
+	if err != nil {
+		return nil, errors.WithMessage(err, "could not get discovery service")
+	}
+
+	if useDeliver {
+		logger.Debugf("Using deliver events for channel [%s]", chConfig.ID())
+		return deliverclient.New(ctx, chConfig, discovery, opts...)
+	}
+
+	logger.Debugf("Using event hub events for channel [%s]", chConfig.ID())
+	return eventhubclient.New(ctx, chConfig, discovery, opts...)
 }
 
 func (cp *Provider) createDiscoveryService(ctx context.Client, channelID string) (fab.DiscoveryService, error) {
@@ -190,9 +228,19 @@ func (cs *ChannelService) Config() (fab.ChannelConfig, error) {
 
 // EventService returns the local Event Service.
 func (cs *ChannelService) EventService(opts ...options.Opt) (fab.EventService, error) {
-	eventService := localservice.Get(cs.channelID)
-	logger.Debugf("Returning local event service for channel [%s]: %#v", cs.channelID, eventService)
-	return eventService, nil
+	chnlCfg, err := cs.ChannelConfig()
+	if err != nil {
+		return nil, err
+	}
+	key, err := newEventCacheKey(cs.context, chnlCfg, opts...)
+	if err != nil {
+		return nil, err
+	}
+	eventService, err := cs.provider.eventServiceCache.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	return eventService.(fab.EventService), nil
 }
 
 // Membership returns and caches a channel member identifier
@@ -241,4 +289,18 @@ func (cs *ChannelService) Selection() (fab.SelectionService, error) {
 
 func (cs *ChannelService) loadChannelCfgRef() (*chconfig.Ref, error) {
 	return cs.provider.loadChannelCfgRef(cs.context, cs.channelID)
+}
+
+func useDeliverEvents(ctx context.Client, chConfig fab.ChannelCfg) (bool, error) {
+	switch ctx.EndpointConfig().EventServiceType() {
+	case fab.DeliverEventServiceType:
+		return true, nil
+	case fab.EventHubEventServiceType:
+		return false, nil
+	case fab.AutoDetectEventServiceType:
+		logger.Debug("Determining event service type from channel capabilities...")
+		return chConfig.HasCapability(fab.ApplicationGroupKey, fab.V1_1Capability), nil
+	default:
+		return false, errors.Errorf("unsupported event service type: %d", ctx.EndpointConfig().EventServiceType())
+	}
 }

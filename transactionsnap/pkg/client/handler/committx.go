@@ -14,40 +14,33 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
-	eventservice "github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
 )
 
-//NewLocalEventCommitHandler returns a handler that commit txn
-func NewLocalEventCommitHandler(registerTxEvent bool, channelID string, next ...invoke.Handler) *LocalEventCommitHandler {
-	return &LocalEventCommitHandler{registerTxEvent: registerTxEvent, channelID: channelID, next: getNext(next)}
+//NewCommitTxHandler returns a handler that commit txn
+func NewCommitTxHandler(registerTxEvent bool, channelID string, next ...invoke.Handler) *CommitTxHandler {
+	return &CommitTxHandler{registerTxEvent: registerTxEvent, channelID: channelID, next: getNext(next)}
 }
 
-//LocalEventCommitHandler for commit txn
-type LocalEventCommitHandler struct {
+//CommitTxHandler for commit txn
+type CommitTxHandler struct {
 	next            invoke.Handler
 	registerTxEvent bool
 	channelID       string
 }
 
 //Handle for endorsing transactions
-func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
-	txnID := string(requestContext.Response.TransactionID)
-	var txStatusEventCh <-chan *fabApi.TxStatusEvent
-	if l.registerTxEvent {
-		events := eventservice.Get(l.channelID)
-		if events == nil {
-			requestContext.Error = errors.Errorf("unable to register for TxStatus event for TxID [%s] on channel [%s], local event service not found", txnID, l.channelID)
-			return
-		}
-		reg, eventch, err := events.RegisterTxStatusEvent(txnID)
-		if err != nil {
-			requestContext.Error = errors.Wrapf(err, "unable to register for TxStatus event for TxID [%s] on channel [%s]", txnID, l.channelID)
-			return
-		}
-		defer events.Unregister(reg)
-		txStatusEventCh = eventch
+func (l *CommitTxHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+	txnID := requestContext.Response.TransactionID
+
+	//Register Tx event
+	reg, statusNotifier, err := clientContext.EventService.RegisterTxStatusEvent(string(txnID)) // TODO: Change func to use TransactionID instead of string
+	if err != nil {
+		requestContext.Error = errors.Wrap(err, "error registering for TxStatus event")
+		return
 	}
-	_, err := createAndSendTransaction(clientContext.Transactor, requestContext.Response.Proposal, requestContext.Response.Responses)
+	defer clientContext.EventService.Unregister(reg)
+
+	_, err = createAndSendTransaction(clientContext.Transactor, requestContext.Response.Proposal, requestContext.Response.Responses)
 	if err != nil {
 		requestContext.Error = errors.Wrap(err, "CreateAndSendTransaction failed")
 		return
@@ -55,7 +48,7 @@ func (l *LocalEventCommitHandler) Handle(requestContext *invoke.RequestContext, 
 	if l.registerTxEvent {
 
 		select {
-		case txStatusEvent := <-txStatusEventCh:
+		case txStatusEvent := <-statusNotifier:
 
 			requestContext.Response.TxValidationCode = pb.TxValidationCode(txStatusEvent.TxValidationCode)
 			if requestContext.Response.TxValidationCode != pb.TxValidationCode_VALID {
