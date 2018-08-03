@@ -14,7 +14,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	membershipMocks "github.com/securekey/fabric-snaps/membershipsnap/pkg/mocks"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 )
 
 const (
@@ -30,9 +29,9 @@ func TestPeerFilter(t *testing.T) {
 	}
 
 	channelID := "testchannel"
-	localBlockHeight := blockHeight2
+	minBlockHeight := blockHeight2
 
-	f, err := newWithOpts([]string{channelID}, mockbcinfo.NewProvider(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))))
+	f, err := New([]string{channelID, fmt.Sprintf("%d", minBlockHeight)})
 	if err != nil {
 		t.Fatal("Got error when creating peer filter")
 	}
@@ -41,13 +40,13 @@ func TestPeerFilter(t *testing.T) {
 		t.Fatal("Expecting that peer will NOT be accepted since the given peer is not a ChannelPeer so it doesn't contain the block height")
 	}
 	if f.Accept(membershipMocks.New("p1", "Org1MSP", channelID, blockHeight1)) {
-		t.Fatalf("Expecting that peer will NOT be accepted since its block height [%d] is less than the block height of the local peer [%d]", blockHeight1, localBlockHeight)
+		t.Fatalf("Expecting that peer will NOT be accepted since its block height [%d] is less than the block height of the local peer [%d]", blockHeight1, minBlockHeight)
 	}
 	if !f.Accept(membershipMocks.New("p2", "Org1MSP", channelID, blockHeight2)) {
-		t.Fatalf("Expecting that peer will be accepted since its block height [%d] is equal to the block height of the local peer [%d]", blockHeight2, localBlockHeight)
+		t.Fatalf("Expecting that peer will be accepted since its block height [%d] is equal to the block height of the local peer [%d]", blockHeight2, minBlockHeight)
 	}
 	if !f.Accept(membershipMocks.New("p3", "Org1MSP", channelID, blockHeight3)) {
-		t.Fatalf("Expecting that peer will be accepted since its block height [%d] is greater than the block height of the local peer [%d]", blockHeight3, localBlockHeight)
+		t.Fatalf("Expecting that peer will be accepted since its block height [%d] is greater than the block height of the local peer [%d]", blockHeight3, minBlockHeight)
 	}
 }
 

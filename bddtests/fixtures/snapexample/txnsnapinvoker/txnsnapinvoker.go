@@ -56,15 +56,19 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Error("Snap func is required")
 	}
 
+	function := string(args[1])
+	channelID := string(args[2])
+	ccID := string(args[3])
+
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = args[1:]
 	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" {
 		peerFilter := &api.PeerFilterOpts{
 			Type: api.MinBlockHeightPeerFilterType,
-			Args: []string{string(args[2])},
+			Args: []string{channelID, fmt.Sprintf("%d", 3)},
 		}
-		ccArgs = createTransactionSnapRequest(string(args[1]), string(args[3]), string(args[2]), args[4:], true, peerFilter)
+		ccArgs = createTransactionSnapRequest(function, ccID, channelID, args[4:], true, peerFilter)
 	}
 
 	if snapFunc == "verifyTransactionProposalSignature" {
