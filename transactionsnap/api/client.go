@@ -101,4 +101,8 @@ type Client interface {
 	// GetContext get channel context
 	// @returns {Channel} channel
 	GetContext() contextApi.Channel
+
+	// GetDiscoveredPeer returns the peer from the Discovery service that matches the given URL
+	// Returns nil, nil if no matching peer is found
+	GetDiscoveredPeer(url string) (fabApi.Peer, error)
 }

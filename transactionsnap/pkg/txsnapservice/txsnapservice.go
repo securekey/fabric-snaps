@@ -55,6 +55,12 @@ func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Op
 	return txs.FcClient.GetTargetPeer(peerCfg, opts...)
 }
 
+//GetDiscoveredPeer the peer from the Discovery service that matches the given URL
+//Returns nil,nil if no matching peer is found
+func (txs *TxServiceImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
+	return txs.FcClient.GetDiscoveredPeer(url)
+}
+
 //New creates new transaction snap service
 func newTxService(channelID string) (*TxServiceImpl, errors.Error) {
 	txService := &TxServiceImpl{}

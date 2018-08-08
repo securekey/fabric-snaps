@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"github.com/securekey/fabric-snaps/util/bcinfo"
+
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/gossip/common"
@@ -88,7 +90,7 @@ func newService() (*Service, error) {
 	}
 
 	gossipService := service.GetGossipService()
-	return newServiceWithOpts(peerEndpoint.Address, []byte(localMSPID), gossipService, newMSPIDMgr(gossipService), &peerChInfoProvider{}, &peerBCInfoProvider{}), nil
+	return newServiceWithOpts(peerEndpoint.Address, []byte(localMSPID), gossipService, newMSPIDMgr(gossipService), &peerChInfoProvider{}, bcinfo.NewProvider()), nil
 }
 
 // newServiceWithOpts returns a new Membership Service using the given options
@@ -184,13 +186,4 @@ type peerChInfoProvider struct {
 // information about all channels for this peer
 func (p *peerChInfoProvider) GetChannelsInfo() []*pb.ChannelInfo {
 	return peer.GetChannelsInfo()
-}
-
-type peerBCInfoProvider struct {
-	bcInfo map[string]*cb.BlockchainInfo
-}
-
-// GetBlockchainInfo delegates to the peer to return basic info about the blockchain
-func (l *peerBCInfoProvider) GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error) {
-	return peer.GetLedger(channelID).GetBlockchainInfo()
 }

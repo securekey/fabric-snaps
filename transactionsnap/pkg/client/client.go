@@ -241,18 +241,20 @@ func (c *clientImpl) initialize(channelID string, serviceProviderFactory apisdk.
 	// new channel context prov
 	chContextProv := c.sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
 
+	chContext, err := chContextProv()
+	if err != nil {
+		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
+	}
+
 	// Channel client is used to query and execute transactions
-	chClient, err := channel.New(chContextProv)
+	chClient, err := channel.New(func() (contextApi.Channel, error) {
+		return chContext, nil
+	})
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
 	}
 	if chClient == nil {
 		return errors.New(errors.GeneralError, "channel client is nil")
-	}
-
-	chContext, err := chContextProv()
-	if err != nil {
-		return errors.Errorf(errors.GeneralError, "Failed to call func channel(%v) context: %v", channelID, err)
 	}
 
 	c.channelClient = chClient
@@ -439,6 +441,23 @@ func (c *clientImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option)
 	}
 
 	return targetPeer, nil
+}
+
+func (c *clientImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
+	discovery, err := c.GetContext().ChannelService().Discovery()
+	if err != nil {
+		return nil, errors.Wrapf(errors.SystemError, err, "Failed to get discovery service for channel [%s]", c.channelID)
+	}
+	peers, err := discovery.GetPeers()
+	if err != nil {
+		return nil, errors.Wrap(errors.SystemError, err, "Failed to get peers for discovery service")
+	}
+	for _, peer := range peers {
+		if peer.URL() == url {
+			return peer, nil
+		}
+	}
+	return nil, nil
 }
 
 func (c *clientImpl) retryOpts() retry.Opts {
