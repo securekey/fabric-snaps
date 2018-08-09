@@ -511,7 +511,7 @@
     "third_party/github.com/hyperledger/fabric/protos/peer",
     "third_party/github.com/hyperledger/fabric/protos/utils"
   ]
-  revision = "04245219f7bfed096d917dc2001aecaf85e8ee18"
+  revision = "9ad49ab98e34c737a2f72c2e85e7f435b7b32ce4"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -924,6 +924,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4bedef5081bd5a01055d260d43898623aecaa7e11712dc5c660cc2496fc2a807"
+  inputs-digest = "656ade97345656fe7a3036b8fc06e3b2c0c9f54d2594aa03f67c74923f7ecfa7"
   solver-name = "gps-cdcl"
   solver-version = 1
