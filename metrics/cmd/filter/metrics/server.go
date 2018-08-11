@@ -137,7 +137,7 @@ func Shutdown() error {
 	return nil
 }
 
-func isRunning() bool {
+func IsRunning() bool {
 	rootScopeMutex.Lock()
 	defer rootScopeMutex.Unlock()
 	return running
