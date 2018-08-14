@@ -56,7 +56,7 @@ FABRIC_SNAPS_POPULATE_VENDOR ?= true
 DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
-export GO_DEP_COMMIT=v0.4.1 # the version of dep that will be installed by depend-install (or in the CI)
+export GO_DEP_COMMIT=v0.5.0 # the version of dep that will be installed by depend-install (or in the CI)
 
 snaps: clean populate
 	@echo "Building snap plugins"
@@ -85,7 +85,7 @@ docker: all
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
-checks: depend license lint spelling
+checks: depend license lint spelling check-dep
 
 .PHONY: license
 license:
@@ -96,6 +96,10 @@ lint: populate
 
 spelling:
 	@scripts/check_spelling.sh
+
+.PHONY: check-dep
+check-dep:
+	@dep check -skip-vendor
 
 unit-test: depend populate
 	@scripts/unit.sh
