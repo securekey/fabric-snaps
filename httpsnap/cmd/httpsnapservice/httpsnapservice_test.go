@@ -300,6 +300,33 @@ func TestHttpServiceRefresh(t *testing.T) {
 	assert.Equal(t, baseNoOfSubjects, len(xCertPool.Subjects()), "cert pool supposed to have certs")
 }
 
+func TestExpiredServerCert(t *testing.T) {
+
+	initExpiredHTTPServerConfig()
+
+	// Start server with expired certs
+	go startHTTPServer()
+
+	// Allow HTTP server to start
+	time.Sleep(2 * time.Second)
+
+	// Failure path - With Dialer (for checking pins)
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
+		RequestBody: jsonStr, PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="}}, "x509: certificate has expired or is not yet valid")
+
+	// Failure path (no pins)
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
+		RequestBody: jsonStr}, "x509: certificate has expired or is not yet valid")
+
+}
+
+func initExpiredHTTPServerConfig() {
+	viper.Set("http.listen.address", "127.0.0.1:8449")
+	viper.Set("http.tls.caCert.file", "../test-data/httpserver/expired/test-client.crt")
+	viper.Set("http.tls.cert.file", "../test-data/httpserver/expired/server.crt")
+	viper.Set("http.tls.key.file", "../test-data/httpserver/expired/server.key")
+}
+
 func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
 	httpService, err := Get(channelID)
 	if err != nil {
@@ -331,14 +358,6 @@ func verifyFailure(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 
 func startHTTPServer() {
 
-	initHTTPServerConfig()
-
-	// Register request handlers
-	http.HandleFunc("/hello", HelloServer)
-	http.HandleFunc("/test/invalidJSONResponse", InvalidJSONResponseServer)
-	http.HandleFunc("/test/textResponse", TextServer)
-	http.HandleFunc("/test/statusNotOK", StatusNotOKServer)
-
 	caCert, err := ioutil.ReadFile(viper.GetString("http.tls.caCert.file"))
 	if err != nil {
 		fmt.Println("HTTP Server: Failed to read ca-cert. " + err.Error())
@@ -353,6 +372,8 @@ func startHTTPServer() {
 		ClientAuth: tls.RequireAndVerifyClientCert,
 	}
 	tlsConfig.BuildNameToCertificate()
+
+	fmt.Printf("Starting HTTP Server at %s\n", viper.GetString("http.listen.address"))
 
 	server := &http.Server{
 		Addr:      viper.GetString("http.listen.address"),
@@ -426,6 +447,14 @@ func TestMain(m *testing.M) {
 	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../sampleconfig")
 
 	factory.InitFactories(opts)
+
+	initHTTPServerConfig()
+
+	// Register request handlers
+	http.HandleFunc("/hello", HelloServer)
+	http.HandleFunc("/test/invalidJSONResponse", InvalidJSONResponseServer)
+	http.HandleFunc("/test/textResponse", TextServer)
+	http.HandleFunc("/test/statusNotOK", StatusNotOKServer)
 
 	go startHTTPServer()
 
