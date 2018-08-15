@@ -457,7 +457,7 @@ func (c *clientImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 			return peer, nil
 		}
 	}
-	return nil, nil
+	return nil, errors.Errorf(errors.SystemError, "Peer [%s] not found", url)
 }
 
 func (c *clientImpl) retryOpts() retry.Opts {

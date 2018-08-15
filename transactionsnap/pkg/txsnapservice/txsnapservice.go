@@ -56,7 +56,7 @@ func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Op
 }
 
 //GetDiscoveredPeer the peer from the Discovery service that matches the given URL
-//Returns nil,nil if no matching peer is found
+//Returns error if no matching peer is found
 func (txs *TxServiceImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 	return txs.FcClient.GetDiscoveredPeer(url)
 }
