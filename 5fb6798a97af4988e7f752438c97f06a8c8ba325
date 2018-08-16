@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5e4a9c0_ede1f7e6",
+        "filename": "util/bcinfo/bcinfo.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-08-16T16:00:16Z",
+      "side": 1,
+      "message": "maybe 500 ms ... we\u0027ll see.",
+      "range": {
+        "startLine": 19,
+        "startChar": 26,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "5fb6798a97af4988e7f752438c97f06a8c8ba325",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
