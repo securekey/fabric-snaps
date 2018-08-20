@@ -1,0 +1,280 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56eba447_4927260e",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "no need to mention that",
+      "range": {
+        "startLine": 71,
+        "startChar": 55,
+        "endLine": 71,
+        "endChar": 98
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59294aa8_33c03229",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "move it to constants",
+      "range": {
+        "startLine": 544,
+        "startChar": 0,
+        "endLine": 559,
+        "endChar": 34
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abf564de_350e8cb9",
+        "filename": "httpsnap/cmd/mocks.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "no need of this comment",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 58
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95fcb138_a66f3e3d",
+        "filename": "membershipsnap/cmd/mocks.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "delete this",
+      "range": {
+        "startLine": 29,
+        "startChar": 14,
+        "endLine": 29,
+        "endChar": 33
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e99f9da5_f8ddb548",
+        "filename": "membershipsnap/cmd/mocks.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "delete this",
+      "range": {
+        "startLine": 64,
+        "startChar": 14,
+        "endLine": 64,
+        "endChar": 33
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04576c48_ee1ef55e",
+        "filename": "membershipsnap/pkg/membership/mocks.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "delete this",
+      "range": {
+        "startLine": 231,
+        "startChar": 18,
+        "endLine": 231,
+        "endChar": 19
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0197dcc_f7c24e9e",
+        "filename": "metrics/cmd/filter/filter.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "delete it",
+      "range": {
+        "startLine": 21,
+        "startChar": 24,
+        "endLine": 21,
+        "endChar": 33
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc3bb80a_ad4c8c40",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "try to stick to switch",
+      "range": {
+        "startLine": 57,
+        "startChar": 12,
+        "endLine": 57,
+        "endChar": 13
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e1695a5_81748d29",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "no error while closing sdk.",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 178,
+        "endChar": 2
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e713a70_9e3bcdd2",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "why this function needs to return error???",
+      "range": {
+        "startLine": 243,
+        "startChar": 40,
+        "endLine": 243,
+        "endChar": 45
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "216a093b_64c9d9e0",
+        "filename": "transactionsnap/pkg/client/factories/customcryptosuiteprovider.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "moved to constant",
+      "range": {
+        "startLine": 149,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 86
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c136928b_a07cc4a0",
+        "filename": "transactionsnap/pkg/txsnapservice/txsnapservice.go",
+        "patchSetId": 11
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T18:10:25Z",
+      "side": 1,
+      "message": "delete this",
+      "range": {
+        "startLine": 28,
+        "startChar": 48,
+        "endLine": 28,
+        "endChar": 78
+      },
+      "revId": "0314afb97732329cf7327bcab8ea29b4756732ba",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
