@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f57cd14e_2501ef9c",
+        "filename": "mocks/event/mockevent/mockblockevent.go",
+        "patchSetId": 10
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-08-20T15:25:59Z",
+      "side": 1,
+      "message": "use logging from SDK",
+      "range": {
+        "startLine": 14,
+        "startChar": 15,
+        "endLine": 14,
+        "endChar": 16
+      },
+      "revId": "125d310fc1295c5d8298b1ee20c6071f62016424",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
