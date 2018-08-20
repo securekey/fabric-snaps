@@ -31,6 +31,7 @@ import (
 
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
@@ -440,37 +441,40 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 		return nil, errors.Wrap(errors.CryptoError, err, "Failed to parse X509KeyPair")
 	}
 
+	return httpServiceImpl.prepareTLSConfigFromCert(cert, caCerts, systemCertPoolEnabled)
+}
+func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromCert(cert tls.Certificate, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, errors.Error) {
+
 	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)
 	pool, err := httpServiceImpl.certPool.Get()
 	if err != nil {
 		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
 	}
 
+	verifyPeerCerts := func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+		if err := verifier.VerifyPeerCertificate(rawCerts, verifiedChains); err != nil {
+			errObj := errors.WithMessage(errors.AccessDeniedError, err, "VerifyPeerCertificate failed")
+			logger.Error(errObj.GenerateLogMsg())
+			return err
+		}
+		return nil
+	}
+
 	// Setup HTTPS client
 	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      pool,
+		Certificates:          []tls.Certificate{cert},
+		RootCAs:               pool,
+		VerifyPeerCertificate: verifyPeerCerts,
 	}, nil
 }
-
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromPrivateKey(bccspSuite bccsp.BCCSP, clientKey bccsp.Key, clientCert string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, errors.Error) {
 	// Load client cert
-	tlscert, codedErr := x509KeyPair([]byte(clientCert), clientKey, bccspSuite)
+	cert, codedErr := x509KeyPair([]byte(clientCert), clientKey, bccspSuite)
 	if codedErr != nil {
 		return nil, codedErr
 	}
 
-	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)
-	pool, err := httpServiceImpl.certPool.Get()
-	if err != nil {
-		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
-	}
-
-	// Setup HTTPS client
-	return &tls.Config{
-		Certificates: []tls.Certificate{tlscert},
-		RootCAs:      pool,
-	}, nil
+	return httpServiceImpl.prepareTLSConfigFromCert(cert, caCerts, systemCertPoolEnabled)
 }
 
 func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCSP) (tls.Certificate, errors.Error) {
