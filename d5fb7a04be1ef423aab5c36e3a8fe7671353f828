@@ -94,6 +94,74 @@
     },
     {
       "key": {
+        "uuid": "e5cdfc64_aaa1d302",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "Check for error here? Also check https test.",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c755a836_c6a4efa1",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "Check for error here",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10e888b2_ae275c5a",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "Check for error here",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d50120e_c1e7479d",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "Check for errors",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8fbd6eb_e5e1d4e8",
         "filename": "membershipsnap/pkg/membership/mspidmgr.go",
         "patchSetId": 12
@@ -183,6 +251,40 @@
       "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "134f5bac_c872a39c",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "already initialized in channelClients()",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbbb1eec_a64d70a8",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:07:34Z",
+      "side": 1,
+      "message": "Check for error, function is returning an error.",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     },
     {
       "key": {
