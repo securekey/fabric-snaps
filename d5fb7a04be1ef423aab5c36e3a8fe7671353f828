@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9373f289_61c95e94",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "probably wrap err with a more specific message, ie \"searching key failed\" as returning err alone will be difficult to debug",
+      "range": {
+        "startLine": 338,
+        "startChar": 1,
+        "endLine": 342,
+        "endChar": 17
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc4fcfb3_4b58461c",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "wrap err around this error message",
+      "range": {
+        "startLine": 257,
+        "startChar": 4,
+        "endLine": 257,
+        "endChar": 55
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3bb2ed8_542ea250",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "if membershipService is not used anymore, delete it",
+      "range": {
+        "startLine": 91,
+        "startChar": 44,
+        "endLine": 91,
+        "endChar": 61
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d506b577_23a8db25",
+        "filename": "healthcheck/healthcheck.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "wrap this message around err object",
+      "range": {
+        "startLine": 54,
+        "startChar": 17,
+        "endLine": 54,
+        "endChar": 69
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8fbd6eb_e5e1d4e8",
+        "filename": "membershipsnap/pkg/membership/mspidmgr.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "wrap message around err",
+      "range": {
+        "startLine": 83,
+        "startChar": 16,
+        "endLine": 83,
+        "endChar": 51
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed55ebc0_0184ed67",
+        "filename": "mocks/event/mockevent/mockblockevent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 46,
+        "startChar": 16,
+        "endLine": 46,
+        "endChar": 66
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50f02a90_c20252a8",
+        "filename": "mocks/event/mockevent/mockblockevent.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 54,
+        "startChar": 16,
+        "endLine": 54,
+        "endChar": 68
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be354f88_3377d29a",
+        "filename": "mocks/event/mockeventhub/mockeventhub.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 50,
+        "startChar": 17,
+        "endLine": 50,
+        "endChar": 77
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fd9d661_f01335af",
+        "filename": "transactionsnap/pkg/client/factories/msp/customidentitymgr.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "same here, add a specific message for keyImport error and wrap it around err.",
+      "range": {
+        "startLine": 200,
+        "startChar": 13,
+        "endLine": 200,
+        "endChar": 17
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82334d4f_e0e9ae4e",
+        "filename": "transactionsnap/pkg/txsnapservice/txsnapservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-08-22T17:06:21Z",
+      "side": 1,
+      "message": "it\u0027s probably better if we remove dead code",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 1
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
