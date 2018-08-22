@@ -48,6 +48,47 @@
     },
     {
       "key": {
+        "uuid": "0b298549_35edf702",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "return error here",
+      "parentUuid": "dc4fcfb3_4b58461c",
+      "range": {
+        "startLine": 257,
+        "startChar": 4,
+        "endLine": 257,
+        "endChar": 55
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58e6b9b8_ab766d71",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "Name should start with verb like updateApps",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3bb2ed8_542ea250",
         "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
         "patchSetId": 12
@@ -82,6 +123,30 @@
       "writtenOn": "2018-08-22T17:06:21Z",
       "side": 1,
       "message": "wrap this message around err object",
+      "range": {
+        "startLine": 54,
+        "startChar": 17,
+        "endLine": 54,
+        "endChar": 69
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25f6f7d2_0c98b9e9",
+        "filename": "healthcheck/healthcheck.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "return error",
+      "parentUuid": "d506b577_23a8db25",
       "range": {
         "startLine": 54,
         "startChar": 17,
@@ -156,6 +221,23 @@
       "writtenOn": "2018-08-22T17:07:34Z",
       "side": 1,
       "message": "Check for errors",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e53afc40_7fdd1c34",
+        "filename": "membershipsnap/pkg/membership/mspidmgr.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "Return error",
       "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
@@ -254,6 +336,23 @@
     },
     {
       "key": {
+        "uuid": "9112a36c_7ab4ca20",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "check for error",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "134f5bac_c872a39c",
         "filename": "transactionsnap/pkg/client/client.go",
         "patchSetId": 12
@@ -308,6 +407,23 @@
       "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dec10239_c85003f6",
+        "filename": "transactionsnap/pkg/client/handler/checkforcommit.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-22T17:32:31Z",
+      "side": 1,
+      "message": "Move this back and create new function CommitIfHasWriteSet() for code bellow.",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     },
     {
       "key": {
