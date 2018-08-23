@@ -15,10 +15,14 @@ import (
 	"testing"
 	"time"
 
+	"encoding/hex"
+	"hash"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
@@ -55,7 +59,7 @@ type sampleConfig struct {
 }
 
 func TestEndorseTransaction(t *testing.T) {
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nil, "")
 	txService := newMockTxService(nil)
 
 	response, err := txService.EndorseTransaction(&snapTxReq, nil)
@@ -80,7 +84,7 @@ func TestEndorseTransaction(t *testing.T) {
 
 func TestCommitTransaction(t *testing.T) {
 	// commit with kvwrite false
-	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil)
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, nil, "")
 	txService := newMockTxService(nil)
 	mockEndorserServer.GetMockPeer().KVWrite = false
 
@@ -108,6 +112,67 @@ func TestCommitTransaction(t *testing.T) {
 		t.Fatalf("Error commit transaction %s", err)
 	}
 
+}
+
+func TestCommitTransactionWithTxID(t *testing.T) {
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, []byte("nonce"), "")
+	txService := newMockTxService(nil)
+	mockEndorserServer.GetMockPeer().KVWrite = false
+
+	resp, err := txService.CommitTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if resp.TxValidationCode != pb.TxValidationCode_BAD_PROPOSAL_TXID {
+		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_BAD_PROPOSAL_TXID)
+	}
+
+	// test with wrong txID
+	snapTxReq.TransactionID = "test"
+	resp, err = txService.CommitTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if resp.TxValidationCode != pb.TxValidationCode_BAD_PROPOSAL_TXID {
+		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_BAD_PROPOSAL_TXID)
+	}
+
+	// test with correct txID
+	creator, err1 := fcClient.GetContext().Serialize()
+	if err1 != nil {
+		t.Fatalf("Error fcClient.GetContext().Serialize() %v", err1)
+	}
+	ho := cryptosuite.GetSHA256Opts()
+	h, err1 := fcClient.GetContext().CryptoSuite().GetHash(ho)
+	if err1 != nil {
+		t.Fatalf("Error fcClient.GetContext().CryptoSuite().GetHash %v", err1)
+	}
+
+	snapTxReq.TransactionID, err1 = computeTxnID(snapTxReq.Nonce, creator, h)
+	if err1 != nil {
+		t.Fatalf("Error computeTxnID %v", err1)
+	}
+	resp, err = txService.CommitTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if resp.TxValidationCode != pb.TxValidationCode_VALID {
+		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_VALID)
+	}
+}
+
+func computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {
+	logger.Debugf("computeTxnID nonce %s creator %s", nonce, creator)
+	b := append(nonce, creator...)
+
+	_, err := h.Write(b)
+	if err != nil {
+		return "", err
+	}
+	digest := h.Sum(nil)
+	id := hex.EncodeToString(digest)
+
+	return id, nil
 }
 
 func TestVerifyProposalSignature(t *testing.T) {
@@ -233,7 +298,7 @@ func getConfigBlockPayload() []byte {
 	return payload
 }
 
-func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, registerTxEvent bool, peerFilter *api.PeerFilterOpts) api.SnapTransactionRequest {
+func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, registerTxEvent bool, peerFilter *api.PeerFilterOpts, nonce []byte, txID string) api.SnapTransactionRequest {
 
 	transientMap := make(map[string][]byte)
 	transientMap["key"] = []byte("transientvalue")
@@ -250,6 +315,8 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 		CCIDsForEndorsement: nil,
 		RegisterTxEvent:     registerTxEvent,
 		PeerFilter:          peerFilter,
+		Nonce:               nonce,
+		TransactionID:       txID,
 	}
 
 	return snapTxReq

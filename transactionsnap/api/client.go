@@ -68,6 +68,10 @@ type EndorseTxRequest struct {
 	CommitType CommitType
 	// RWSetIgnoreNameSpace rw set ignore list
 	RWSetIgnoreNameSpace []Namespace
+	//TransactionID txn id
+	TransactionID string
+	//Nonce nonce
+	Nonce []byte
 }
 
 // Client is a wrapper interface around the fabric client

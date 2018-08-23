@@ -9,8 +9,9 @@ package util
 import (
 	"runtime/debug"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 
+	sdkpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	protos_utils "github.com/hyperledger/fabric/protos/utils"
@@ -18,7 +19,7 @@ import (
 )
 
 // GetCreatorFromSignedProposal ...
-func GetCreatorFromSignedProposal(signedProposal *pb.SignedProposal) ([]byte, error) {
+func GetCreatorFromSignedProposal(signedProposal *sdkpb.SignedProposal) ([]byte, error) {
 
 	// check ProposalBytes if nil
 	if signedProposal.ProposalBytes == nil {

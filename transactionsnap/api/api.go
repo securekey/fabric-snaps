@@ -26,6 +26,9 @@ type SnapTransactionRequest struct {
 	PeerFilter           *PeerFilterOpts   // optional peer filter
 	CommitType           CommitType        // optional specifies how commits should be handled (default CommitOnWrite)
 	RWSetIgnoreNameSpace []Namespace       // RWSetIgnoreNameSpace rw set ignore list
+	TransactionID        string            // TransactionID txn id
+	Nonce                []byte            // Nonce nonce
+
 }
 
 // ClientService interface
