@@ -1102,6 +1102,7 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/lookup",
+    "github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel",
