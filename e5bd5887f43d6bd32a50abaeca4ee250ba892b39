@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34518d97_1cc9ceff",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-23T21:48:23Z",
+      "side": 1,
+      "message": "validateURL should return error only",
+      "revId": "e5bd5887f43d6bd32a50abaeca4ee250ba892b39",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "548e83ef_3698d693",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-23T21:48:23Z",
+      "side": 1,
+      "message": "return nil, err",
+      "revId": "e5bd5887f43d6bd32a50abaeca4ee250ba892b39",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11f29714_7612ce04",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-23T21:48:23Z",
+      "side": 1,
+      "message": "not sure why return Invoker?",
+      "revId": "e5bd5887f43d6bd32a50abaeca4ee250ba892b39",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fed6af30_12ca0824",
+        "filename": "httpsnap/cmd/httpsnapservice/httpsnapservice.go",
+        "patchSetId": 13
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-23T21:48:23Z",
+      "side": 1,
+      "message": "return nil, err",
+      "revId": "e5bd5887f43d6bd32a50abaeca4ee250ba892b39",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
