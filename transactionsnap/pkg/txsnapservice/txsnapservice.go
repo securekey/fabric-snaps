@@ -132,6 +132,8 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 		PeerFilter:           peerFilter,
 		CommitType:           snapTxRequest.CommitType,
 		RWSetIgnoreNameSpace: snapTxRequest.RWSetIgnoreNameSpace,
+		Nonce:                snapTxRequest.Nonce,
+		TransactionID:        snapTxRequest.TransactionID,
 	}
 	return request, nil
 }
