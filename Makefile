@@ -77,7 +77,7 @@ channel-artifacts:
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
 depend:
-	@scripts/dependencies.sh
+	#@scripts/dependencies.sh
 
 docker: all
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \

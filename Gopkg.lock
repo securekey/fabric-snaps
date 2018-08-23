@@ -229,7 +229,7 @@
   revision = "22bbf0ddf08105dfa364d0a2fa619dfa71014af5"
 
 [[projects]]
-  digest = "1:96d3d3b4054bccc937b833e0ec098c414f0710f230a3c827b1446cdb374e59a8"
+  digest = "1:9f8b0aa88fd9a475fb20e24895e2ae6475a30d2e5711fe4ff8c87ec3ed23317e"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -242,7 +242,8 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NUT"
-  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:416507c39a949f8da9c273d11c0426fdc7c8fc9abbed5cdb4391e332a3b12fa0"
@@ -442,7 +443,7 @@
   revision = "600b0c45a024131b326a41096da0559a9a7461fd"
 
 [[projects]]
-  digest = "1:e046f31dfe7921dfb3197d010644396329d959d589de8b240021f77c3c00a4a1"
+  digest = "1:39d8f585b9c9182d60d5af2241b0976d6f8cb7ff0497b8137800bc9c733f489c"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -480,6 +481,7 @@
     "pkg/client/common/discovery/greylist",
     "pkg/client/common/discovery/staticdiscovery",
     "pkg/client/common/filter",
+    "pkg/client/common/random",
     "pkg/client/common/selection/dynamicselection",
     "pkg/client/common/selection/dynamicselection/pgresolver",
     "pkg/client/common/selection/fabricselection",
@@ -527,9 +529,6 @@
     "pkg/fab/events/deliverclient/dispatcher",
     "pkg/fab/events/deliverclient/seek",
     "pkg/fab/events/endpoint",
-    "pkg/fab/events/eventhubclient",
-    "pkg/fab/events/eventhubclient/connection",
-    "pkg/fab/events/eventhubclient/dispatcher",
     "pkg/fab/events/service",
     "pkg/fab/events/service/blockfilter",
     "pkg/fab/events/service/dispatcher",
@@ -573,7 +572,7 @@
     "third_party/github.com/hyperledger/fabric/protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "9ad49ab98e34c737a2f72c2e85e7f435b7b32ce4"
+  revision = "72066f710a45b2084be212dd0cec5230d57564cf"
 
 [[projects]]
   digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
