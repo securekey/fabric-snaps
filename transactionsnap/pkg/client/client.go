@@ -27,18 +27,23 @@ import (
 	"encoding/base64"
 	"sync/atomic"
 
+	"encoding/hex"
+	"hash"
+
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/lookup"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	peerpb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
@@ -337,8 +342,51 @@ func getDisplayableEndorseRequest(endorseRequest *api.EndorseTxRequest) api.Endo
 	return newMessage
 }
 
+func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {
+	logger.Debugf("computeTxnID nonce %s creator %s", nonce, creator)
+	b := append(nonce, creator...)
+
+	_, err := h.Write(b)
+	if err != nil {
+		return "", err
+	}
+	digest := h.Sum(nil)
+	id := hex.EncodeToString(digest)
+
+	return id, nil
+}
+
 func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
+	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
+		validTxnID := false
+		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
+		creator, err := c.context.Serialize()
+		if err != nil {
+			return nil, errors.New(errors.SystemError, "get creator failed")
+		}
+		logger.Debugf("Get peer creator %s", creator)
+		if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
+			logger.Debugf("CommitTransaction endorseRequest.TransactionID is not empty")
+			ho := cryptosuite.GetSHA256Opts()
+			h, err := c.context.CryptoSuite().GetHash(ho)
+			if err != nil {
+				return nil, errors.New(errors.SystemError, "hash function creation failed")
+			}
+			txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
+			if err != nil {
+				return nil, errors.New(errors.SystemError, "computeTxnID failed")
+			}
+			logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
+			if txnID == endorseRequest.TransactionID {
+				validTxnID = true
+			}
+		}
+		if !validTxnID {
+			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: creator}, nil
+		}
+	}
+
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, errors.New(errors.MissingRequiredParameterError, "function arg is required")
@@ -380,7 +428,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 
 func (c *clientImpl) VerifyTxnProposalSignature(proposalBytes []byte) errors.Error {
 
-	signedProposal := &pb.SignedProposal{}
+	signedProposal := &peerpb.SignedProposal{}
 	if err := proto.Unmarshal(proposalBytes, signedProposal); err != nil {
 		return errors.Wrap(errors.UnmarshalError, err, "Unmarshal clientProposalBytes error")
 	}
