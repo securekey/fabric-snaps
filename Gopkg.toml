@@ -20,6 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 
 [[constraint]]
@@ -39,7 +40,7 @@
   revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[constraint]]
-  revision = "9ad49ab98e34c737a2f72c2e85e7f435b7b32ce4"
+  revision = "72066f710a45b2084be212dd0cec5230d57564cf"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
@@ -73,7 +74,7 @@
 
 [[override]]
   name = "github.com/golang/protobuf"
-  revision = "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4"
+  version = "1.1.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"

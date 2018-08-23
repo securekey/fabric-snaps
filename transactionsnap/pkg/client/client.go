@@ -358,8 +358,8 @@ func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, e
 
 func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
+	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		validTxnID := false
 		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
 		creator, err := c.context.Serialize()
 		if err != nil {
@@ -397,9 +397,17 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			args = append(args, []byte(value))
 		}
 	}
+	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
+	if validTxnID {
+		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
+			var opts []fabApi.TxnHeaderOpt
+			opts = append(opts, fabApi.WithNonce(endorseRequest.Nonce))
+			return opts
+		}
+	}
 
 	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
-		invoke.NewEndorsementHandler(
+		invoke.NewEndorsementHandlerWithOpts(
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(
 					handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
@@ -407,7 +415,7 @@ func (c *clientImpl) CommitTransaction(endorseRequest *api.EndorseTxRequest, reg
 					),
 				),
 			),
-		),
+			txnHeaderOptsProvider),
 	)
 
 	c.mutex.RLock()
