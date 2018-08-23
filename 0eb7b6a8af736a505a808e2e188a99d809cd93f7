@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6060c056_9e57278e",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-08-23T17:56:33Z",
+      "side": 1,
+      "message": "this is also true if TxID was provided but not nonce. i.e., Line 360 only checks if nonce is provided but I think it should be OR txID is provided for completeness.",
+      "range": {
+        "startLine": 385,
+        "startChar": 3,
+        "endLine": 385,
+        "endChar": 107
+      },
+      "revId": "0eb7b6a8af736a505a808e2e188a99d809cd93f7",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
