@@ -112,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "f2bd436a_bcd0cd5d",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000117
+      },
+      "writtenOn": "2018-08-23T16:15:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3bb2ed8_542ea250",
+      "range": {
+        "startLine": 91,
+        "startChar": 44,
+        "endLine": 91,
+        "endChar": 61
+      },
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d506b577_23a8db25",
         "filename": "healthcheck/healthcheck.go",
         "patchSetId": 12
@@ -353,6 +377,24 @@
     },
     {
       "key": {
+        "uuid": "7e8c98c3_8bd3cc57",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1000117
+      },
+      "writtenOn": "2018-08-23T16:15:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9112a36c_7ab4ca20",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "134f5bac_c872a39c",
         "filename": "transactionsnap/pkg/client/client.go",
         "patchSetId": 12
@@ -370,6 +412,24 @@
     },
     {
       "key": {
+        "uuid": "26003fd9_c6122909",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000117
+      },
+      "writtenOn": "2018-08-23T16:15:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "134f5bac_c872a39c",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dbbb1eec_a64d70a8",
         "filename": "transactionsnap/pkg/client/client.go",
         "patchSetId": 12
@@ -381,6 +441,24 @@
       "writtenOn": "2018-08-22T17:07:34Z",
       "side": 1,
       "message": "Check for error, function is returning an error.",
+      "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3636295_f9838455",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 12
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1000117
+      },
+      "writtenOn": "2018-08-23T16:15:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbbb1eec_a64d70a8",
       "revId": "d5fb7a04be1ef423aab5c36e3a8fe7671353f828",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
