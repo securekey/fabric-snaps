@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4eebdfaa_fd647fff",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-08-23T22:13:22Z",
+      "side": 1,
+      "message": "I don\u0027t think you actually need to pass in the creator since it will use the one from the context by default.",
+      "revId": "6d28cfe9891c9f6bdfaaa29bd4263b4d49f8decf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
