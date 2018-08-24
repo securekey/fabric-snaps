@@ -11,12 +11,10 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter"
-	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -33,7 +31,6 @@ var clientService = newClientService()
 
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
-	Config   api.Config
 	FcClient api.Client
 	// Callback is invoked after the endorsement
 	// phase of EndorseAndCommitTransaction
@@ -50,9 +47,9 @@ type apiConfig struct {
 	api.Config
 }
 
-//GetTargetPeer to returns target peer for given peer config
-func (txs *TxServiceImpl) GetTargetPeer(peerCfg *api.PeerConfig, opts ...peer.Option) (fabApi.Peer, error) {
-	return txs.FcClient.GetTargetPeer(peerCfg, opts...)
+//GetLocalPeer to returns target peer for given peer config
+func (txs *TxServiceImpl) GetLocalPeer() (fabApi.Peer, error) {
+	return txs.FcClient.GetLocalPeer()
 }
 
 //GetDiscoveredPeer the peer from the Discovery service that matches the given URL
@@ -63,25 +60,13 @@ func (txs *TxServiceImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 
 //New creates new transaction snap service
 func newTxService(channelID string) (*TxServiceImpl, errors.Error) {
-	txService := &TxServiceImpl{}
-	config, err := txsnapconfig.NewConfig(PeerConfigPath, channelID)
+	client, err := txnSnapClient.GetInstance(channelID)
 	if err != nil {
-		return txService, errors.WithMessage(errors.InitializeConfigError, err, "Failed to initialize config")
+		return nil, errors.WithMessage(errors.TxClientInitError, err, "Cannot initialize client")
 	}
-
-	if config == nil || config.GetConfigBytes() == nil {
-		return nil, errors.New(errors.InitializeConfigError, "config from ledger is nil")
-	}
-
-	fcClient, e := txnSnapClient.GetInstance(channelID, &apiConfig{config})
-	if e != nil {
-		return nil, errors.WithMessage(errors.TxClientInitError, e, "Cannot initialize client")
-	}
-
-	txService.Config = config
-	txService.FcClient = fcClient
-	return txService, nil
-
+	return &TxServiceImpl{
+		FcClient: client,
+	}, nil
 }
 
 func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) (*api.EndorseTxRequest, errors.Error) {
@@ -158,13 +143,8 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 	if err != nil {
 		return nil, err
 	}
-	tpr, err := txs.FcClient.CommitTransaction(request, snapTxRequest.RegisterTxEvent, txs.Callback)
-	if err != nil {
-		return nil, err
-	}
 
-	return tpr, nil
-
+	return txs.FcClient.CommitTransaction(request, snapTxRequest.RegisterTxEvent, txs.Callback)
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature
@@ -191,10 +171,6 @@ func newClientService() api.ClientService {
 }
 
 // GetFabricClient return fabric client
-func (cs *clientServiceImpl) GetFabricClient(channelID string, config api.Config) (api.Client, errors.Error) {
-	fcClient, err := txnSnapClient.GetInstance(channelID, config)
-	if err != nil {
-		return nil, errors.WithMessage(errors.TxClientInitError, err, "Cannot initialize client")
-	}
-	return fcClient, nil
+func (cs *clientServiceImpl) GetFabricClient(channelID string) (api.Client, error) {
+	return txnSnapClient.GetInstance(channelID)
 }

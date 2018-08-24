@@ -15,7 +15,6 @@ import (
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	configapi "github.com/securekey/fabric-snaps/configmanager/api"
 	configservice "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util/configcache"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -89,11 +88,6 @@ func New(channelID, peerConfigPath string) (*EventSnapConfig, error) {
 	bytes, _, err := configservice.GetInstance().Get(channelID, configKey)
 	if err != nil {
 		return nil, errors.Wrap(errors.GetConfigError, err, "error getting event snap configuration bytes")
-	}
-
-	_, err = txsnapservice.Get(channelID)
-	if err != nil {
-		return nil, err
 	}
 
 	eventSnapConfig.Bytes = bytes

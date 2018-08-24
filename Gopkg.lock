@@ -1114,7 +1114,6 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/comm",
-    "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/dispatcher",

@@ -5,7 +5,8 @@
 
 # Configurations for txn snap
 txnsnap:
-  loglevel: debug
+  # Updated log level from debug to info - should trigger TxSnap client refresh
+  loglevel: info
 
   cache:
     refreshInterval: 5s
@@ -24,7 +25,8 @@ client:
   organization: peerorg1
 
   logging:
-    level: debug
+  # Updated log level from debug to info - should trigger TxSnap client refresh
+    level: info
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific

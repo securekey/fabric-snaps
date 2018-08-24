@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"encoding/hex"
 	"hash"
 
@@ -22,9 +24,11 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	sdkconfig "github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -148,13 +152,20 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_BAD_PROPOSAL_TXID)
 	}
 
+	sdk, e := fabsdk.New(sdkconfig.FromFile("../../cmd/sampleconfig/config.yaml"))
+	require.NoError(t, e)
+	defer sdk.Close()
+
+	ctx, e := sdk.Context(fabsdk.WithUser("Txn-Snap-User"), fabsdk.WithOrg("peerorg1"))()
+	require.NoError(t, e)
+
 	// test with correct txID
-	creator, err1 := fcClient.GetContext().Serialize()
+	creator, err1 := ctx.Serialize()
 	if err1 != nil {
 		t.Fatalf("Error fcClient.GetContext().Serialize() %v", err1)
 	}
 	ho := cryptosuite.GetSHA256Opts()
-	h, err1 := fcClient.GetContext().CryptoSuite().GetHash(ho)
+	h, err1 := ctx.CryptoSuite().GetHash(ho)
 	if err1 != nil {
 		t.Fatalf("Error fcClient.GetContext().CryptoSuite().GetHash %v", err1)
 	}
@@ -163,6 +174,8 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	if err1 != nil {
 		t.Fatalf("Error computeTxnID %v", err1)
 	}
+	fmt.Printf("****** Creator [%s], TxnID: [%s]\n", creator, snapTxReq.TransactionID)
+
 	resp, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
@@ -196,7 +209,6 @@ func TestVerifyProposalSignature(t *testing.T) {
 
 func newMockTxService(callback api.EndorsedCallback) *TxServiceImpl {
 	return &TxServiceImpl{
-		Config:   txSnapConfig,
 		FcClient: fcClient,
 		Callback: callback,
 	}
@@ -276,7 +288,8 @@ func TestMain(m *testing.M) {
 	}
 
 	client.ServiceProviderFactory = &mocks.MockProviderFactory{EventService: eventService}
-	fcClient, err = client.GetInstance(channelID, &sampleConfig{txSnapConfig})
+	client.CfgProvider = func(channelID string) (api.Config, error) { return &sampleConfig{txSnapConfig}, nil }
+	fcClient, err = client.GetInstance(channelID)
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}

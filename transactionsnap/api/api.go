@@ -6,8 +6,6 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
-import "github.com/securekey/fabric-snaps/util/errors"
-
 // Namespace contains a chaincode name and an optional set of private data collections to ignore
 type Namespace struct {
 	Name        string
@@ -33,5 +31,5 @@ type SnapTransactionRequest struct {
 
 // ClientService interface
 type ClientService interface {
-	GetFabricClient(channelID string, config Config) (Client, errors.Error)
+	GetFabricClient(channelID string) (Client, error)
 }
