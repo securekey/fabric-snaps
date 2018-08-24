@@ -118,26 +118,17 @@ func TestInitializer(t *testing.T) {
 	//Now call init factories using opts you got
 	bccspFactory.InitFactories(opts)
 
-	//create client
-	client := &clientImpl{
-		txnSnapConfig: createConfig(t, txnCfgPath, peerCfgPath),
+	configProvider := func(channelID string) (api.Config, error) {
+		return createConfig(t, txnCfgPath, peerCfgPath), nil
 	}
 
-	//make sure everything is nil/empty before initialize
-	assert.Nil(t, client.channelClient)
-	assert.Empty(t, client.channelID)
-	assert.Empty(t, client.configHash.Load())
-	assert.Nil(t, client.context)
-	assert.Nil(t, client.sdk)
-
-	//initialize on test channel ID
-	err := client.initialize(testChannelID, &mockprovider.Factory{})
+	client, err := checkClient(testChannelID, nil, configProvider, &mockprovider.Factory{})
 	require.NoError(t, err)
 
 	//sdk, channel client, context are loaded and config hash updated
 	assert.NotNil(t, client.channelClient)
 	assert.NotEmpty(t, client.channelID)
-	assert.NotEmpty(t, client.configHash.Load())
+	assert.NotEmpty(t, client.configHash)
 	assert.NotNil(t, client.context)
 	assert.NotNil(t, client.sdk)
 
@@ -145,46 +136,46 @@ func TestInitializer(t *testing.T) {
 	oldSdk := client.sdk
 	oldCtx := client.context
 	oldChannelClient := client.channelClient
-	oldHash := client.configHash.Load()
+	oldHash := client.configHash
 
-	err = client.initialize(testChannelID, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
 	assert.NoError(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
 	assert.True(t, oldSdk == client.sdk)
 	assert.True(t, oldCtx == client.context)
 	assert.True(t, oldChannelClient == client.channelClient)
-	assert.True(t, oldHash == client.configHash.Load())
+	assert.True(t, oldHash == client.configHash)
 
 	//Do it again, initialize,it shouldnt take any effect
 	oldSdk = client.sdk
 	oldCtx = client.context
 	oldChannelClient = client.channelClient
-	oldHash = client.configHash.Load()
+	oldHash = client.configHash
 
-	err = client.initialize(testChannelID, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
 	assert.Nil(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
 	assert.True(t, oldSdk == client.sdk)
 	assert.True(t, oldCtx == client.context)
 	assert.True(t, oldChannelClient == client.channelClient)
-	assert.True(t, oldHash == client.configHash.Load())
+	assert.True(t, oldHash == client.configHash)
 
 	//now tamper config hash to imitate config update behavior
-	client.configHash.Store("XYZ")
+	client.configHash = "XYZ"
 
 	//initialze, it should update all the values
 	oldSdk = client.sdk
 	oldCtx = client.context
 	oldChannelClient = client.channelClient
-	oldHash = client.configHash.Load()
+	oldHash = client.configHash
 
-	err = client.initialize(testChannelID, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
 	assert.NoError(t, err)
 	//pointer negative compare should pass on sdk, context , channel client and config hash
 	assert.False(t, oldSdk == client.sdk)
 	assert.False(t, oldCtx == client.context)
 	assert.False(t, oldChannelClient == client.channelClient)
-	assert.False(t, oldHash == client.configHash.Load())
+	assert.False(t, oldHash == client.configHash)
 }

@@ -64,6 +64,17 @@ client:
   cryptoconfig:
     path: $GOPATH/src/github.com/securekey/fabric-snaps/transactionsnap/cmd
 
+  # BCCSP config for the client. Used by GO SDK.
+  # NOTE: This config only required by the txnsnapservice unit test.
+  BCCSP:
+    security:
+     enabled: true
+     default:
+      provider: "SW"
+     hashAlgorithm: "SHA2"
+     softVerify: true
+     level: 256
+
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"
   # are implementation specific
   credentialStore:
@@ -75,7 +86,8 @@ client:
     # requiring a key store. PKCS#11 based implementations does not.
     cryptoStore:
       # Specific to the underlying KeyValueStore that backs the crypto key store.
-      path: /tmp/msp
+      # NOTE: This config only required by the txnsnapservice unit test.
+      path: ${GOPATH}/src/github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig/msp
 
   tlsCerts:
     # [Optional]. Use system certificate pool when connecting to peers, orderers (for negotiating TLS) Default: false

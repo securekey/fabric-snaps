@@ -1,0 +1,15 @@
+{
+  "MspID": "Org1MSP",
+  "Peers": [
+    {
+      "PeerID": "peer0.org1.example.com",
+      "App": [
+        {
+          "AppName": "txnsnap",
+          "Version": "2",
+          "Config": "file://./txnsnap/config_updated.yaml"
+        }
+      ]
+    }
+  ]
+}

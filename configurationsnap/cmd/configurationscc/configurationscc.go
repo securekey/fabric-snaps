@@ -666,27 +666,17 @@ func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
 		logger.Debugf("Cannot get txService: %v", err)
 		return
 	}
-	if txService.Config != nil {
-		sendEndorseRequest(channelID, txService)
-	}
-
+	sendEndorseRequest(channelID, txService)
 }
 
 func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl) {
-
-	localPeer, codedErr := txService.Config.GetLocalPeer()
-	if codedErr != nil {
-		logger.Errorf("Error getting local peer config when sending refresh request: %s", codedErr.GenerateLogMsg())
-		return
-	}
-
-	targetPeer, err := txService.GetTargetPeer(localPeer)
+	targetPeer, err := txService.GetLocalPeer()
 	if err != nil {
 		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error creating target peer when sending refresh request").GenerateLogMsg())
 		return
 	}
 
-	chConfig, err := txService.FcClient.GetContext().ChannelService().ChannelConfig()
+	chConfig, err := txService.FcClient.ChannelConfig()
 	if err != nil {
 		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error getting channel config").GenerateLogMsg())
 		return

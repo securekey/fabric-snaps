@@ -586,18 +586,17 @@ func TestMain(m *testing.M) {
 	}
 
 	client.ServiceProviderFactory = &mocks.MockProviderFactory{EventService: eventService}
-	fcClient, err = client.GetInstance("testChannel", &sampleConfig{txSnapConfig})
+	client.CfgProvider = func(channelID string) (api.Config, error) { return &sampleConfig{txSnapConfig}, nil }
+	fcClient, err = client.GetInstance("testChannel")
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
-
 	os.Exit(m.Run())
 
 }
 
 func newMockTxService(callback api.EndorsedCallback) *txsnapservice.TxServiceImpl {
 	return &txsnapservice.TxServiceImpl{
-		Config:   txSnapConfig,
 		FcClient: fcClient,
 		Callback: callback,
 	}
