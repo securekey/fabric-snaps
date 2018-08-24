@@ -9,9 +9,7 @@ package api
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -98,13 +96,15 @@ type Client interface {
 	// @returns {error} error, if any
 	VerifyTxnProposalSignature([]byte) errors.Error
 
-	// GetTargetPeer gets fab api peer for given peer config or opts
+	// GetLocalPeer gets the local fab api peer
 	// @returns {fabApi.Peer} fab api peer
-	GetTargetPeer(peerCfg *PeerConfig, opts ...peer.Option) (fabApi.Peer, error)
+	GetLocalPeer() (fabApi.Peer, error)
 
-	// GetContext get channel context
-	// @returns {Channel} channel
-	GetContext() contextApi.Channel
+	// ChannelConfig returns the channel configuration
+	ChannelConfig() (fabApi.ChannelCfg, error)
+
+	// EventService returns the event service
+	EventService() (fabApi.EventService, error)
 
 	// GetDiscoveredPeer returns the peer from the Discovery service that matches the given URL
 	// Returns error if no matching peer is found
