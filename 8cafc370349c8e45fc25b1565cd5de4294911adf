@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a97d095a_825c02ad",
+        "filename": "util/refcount/refcount.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2018-08-25T16:45:50Z",
+      "side": 1,
+      "message": "debug?",
+      "range": {
+        "startLine": 102,
+        "startChar": 9,
+        "endLine": 102,
+        "endChar": 14
+      },
+      "revId": "8cafc370349c8e45fc25b1565cd5de4294911adf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bc60d63_3be0fd24",
+        "filename": "util/refcount/refcount.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000023
+      },
+      "writtenOn": "2018-08-25T16:45:50Z",
+      "side": 1,
+      "message": "debug?",
+      "range": {
+        "startLine": 104,
+        "startChar": 9,
+        "endLine": 104,
+        "endChar": 14
+      },
+      "revId": "8cafc370349c8e45fc25b1565cd5de4294911adf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
