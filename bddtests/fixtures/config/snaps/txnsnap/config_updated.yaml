@@ -9,7 +9,7 @@ txnsnap:
   loglevel: info
 
   cache:
-    refreshInterval: 5s
+    refreshInterval: 3s
 
   # Endorser selection attempts
   selection:
@@ -25,7 +25,7 @@ client:
   organization: peerorg1
 
   logging:
-  # Updated log level from debug to info - should trigger TxSnap client refresh
+    # Updated log level from debug to info - should trigger TxSnap client refresh
     level: info
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore"

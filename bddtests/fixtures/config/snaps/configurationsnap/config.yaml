@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 cache:
-    refreshInterval: 5s
+    refreshInterval: 3s
 
 #Certificate Request Parameters - all names are required
 #Alternative names are optional
