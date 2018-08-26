@@ -29,6 +29,14 @@ type SnapTransactionRequest struct {
 
 }
 
+// Creator is received from the delegate when its identity
+// doesn't match the TxID pre-calculated by this handler.
+// It is received as JSON in the proposal response payload.
+type Creator struct {
+	// base64 encoded identity of the delegate
+	Identity string `json:"identity,omitempty"`
+}
+
 // ClientService interface
 type ClientService interface {
 	GetFabricClient(channelID string) (Client, error)

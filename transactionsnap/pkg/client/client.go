@@ -21,6 +21,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 
+	"encoding/json"
+
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -388,7 +390,11 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			}
 		}
 		if !validTxnID {
-			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: creator}, nil
+			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
+			if err != nil {
+				return nil, errors.New(errors.SystemError, "Error marshaling creator")
+			}
+			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, nil
 		}
 	}
 
