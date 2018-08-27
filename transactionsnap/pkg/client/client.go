@@ -363,14 +363,14 @@ func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, e
 	return id, nil
 }
 
-func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, errors.Error) {
+func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
 		logger.Debugf("CommitTransaction endorseRequest.Nonce is not empty")
 		creator, err := c.context.Serialize()
 		if err != nil {
-			return nil, errors.New(errors.SystemError, "get creator failed")
+			return nil, false, errors.New(errors.SystemError, "get creator failed")
 		}
 		logger.Debugf("Get peer creator %s", creator)
 		if len(endorseRequest.Nonce) != 0 && endorseRequest.TransactionID != "" {
@@ -378,11 +378,11 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			ho := cryptosuite.GetSHA256Opts()
 			h, err := c.context.CryptoSuite().GetHash(ho)
 			if err != nil {
-				return nil, errors.New(errors.SystemError, "hash function creation failed")
+				return nil, false, errors.New(errors.SystemError, "hash function creation failed")
 			}
 			txnID, err := c.computeTxnID(endorseRequest.Nonce, creator, h)
 			if err != nil {
-				return nil, errors.New(errors.SystemError, "computeTxnID failed")
+				return nil, false, errors.New(errors.SystemError, "computeTxnID failed")
 			}
 			logger.Debugf("compare computeTxnID txID %s with endorseRequest.TransactionID %s", txnID, endorseRequest.TransactionID)
 			if txnID == endorseRequest.TransactionID {
@@ -392,15 +392,15 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		if !validTxnID {
 			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
 			if err != nil {
-				return nil, errors.New(errors.SystemError, "Error marshaling creator")
+				return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
 			}
-			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, nil
+			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
 		}
 	}
 
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
-		return nil, errors.New(errors.MissingRequiredParameterError, "function arg is required")
+		return nil, false, errors.New(errors.MissingRequiredParameterError, "function arg is required")
 	}
 	args := make([][]byte, 0)
 	if len(endorseRequest.Args) > 1 {
@@ -416,14 +416,14 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			return opts
 		}
 	}
-
+	checkForCommit := handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
+		handler.NewCommitTxHandler(registerTxEvent, c.channelID),
+	)
 	customExecuteHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
 		invoke.NewEndorsementHandlerWithOpts(
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(
-					handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
-						handler.NewCommitTxHandler(registerTxEvent, c.channelID),
-					),
+					checkForCommit,
 				),
 			),
 			txnHeaderOptsProvider),
@@ -437,9 +437,9 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		}))
 
 	if err != nil {
-		return nil, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
+		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
 	}
-	return &resp, nil
+	return &resp, checkForCommit.ShouldCommit, nil
 }
 
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {

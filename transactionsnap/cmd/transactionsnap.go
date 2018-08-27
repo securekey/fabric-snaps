@@ -168,7 +168,7 @@ func (es *TxnSnap) commitTransaction(args [][]byte) errors.Error {
 		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", snapTxRequest.ChannelID))
 	}
 
-	_, err = srvc.CommitTransaction(snapTxRequest, nil)
+	_, _, err = srvc.CommitTransaction(snapTxRequest, nil)
 	if err != nil {
 		return err
 	}

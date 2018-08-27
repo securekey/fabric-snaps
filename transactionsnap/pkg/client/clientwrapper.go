@@ -37,10 +37,10 @@ func (c *clientWrapper) EndorseTransaction(endorseRequest *api.EndorseTxRequest)
 	return client.endorseTransaction(endorseRequest)
 }
 
-func (c *clientWrapper) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, errors.Error) {
+func (c *clientWrapper) CommitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	client, err := c.get()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer client.Release()
 

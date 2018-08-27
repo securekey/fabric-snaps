@@ -138,10 +138,10 @@ func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionR
 }
 
 //CommitTransaction use to comit the transaction
-func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) (*channel.Response, errors.Error) {
+func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) (*channel.Response, bool, errors.Error) {
 	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	return txs.FcClient.CommitTransaction(request, snapTxRequest.RegisterTxEvent, txs.Callback)

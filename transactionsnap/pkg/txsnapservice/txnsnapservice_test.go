@@ -92,9 +92,12 @@ func TestCommitTransaction(t *testing.T) {
 	txService := newMockTxService(nil)
 	mockEndorserServer.GetMockPeer().KVWrite = false
 
-	_, err := txService.CommitTransaction(&snapTxReq, nil)
+	_, commit, err := txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
+	}
+	if commit {
+		t.Fatalf("commit value should be false")
 	}
 
 	// commit with kvwrite true
@@ -111,9 +114,12 @@ func TestCommitTransaction(t *testing.T) {
 		return nil
 	})
 
-	_, err = txService.CommitTransaction(&snapTxReq, nil)
+	_, commit, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %s", err)
+	}
+	if !commit {
+		t.Fatalf("commit value should be true")
 	}
 
 }
@@ -123,7 +129,7 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	txService := newMockTxService(nil)
 	mockEndorserServer.GetMockPeer().KVWrite = false
 
-	resp, err := txService.CommitTransaction(&snapTxReq, nil)
+	resp, _, err := txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
 	}
@@ -133,7 +139,7 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 
 	snapTxReq.Nonce = []byte("")
 	snapTxReq.TransactionID = "test"
-	resp, err = txService.CommitTransaction(&snapTxReq, nil)
+	resp, _, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
 	}
@@ -144,7 +150,7 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	// test with wrong txID
 	snapTxReq.TransactionID = "test"
 	snapTxReq.Nonce = []byte("nonce")
-	resp, err = txService.CommitTransaction(&snapTxReq, nil)
+	resp, _, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
 	}
@@ -176,7 +182,7 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	}
 	fmt.Printf("****** Creator [%s], TxnID: [%s]\n", creator, snapTxReq.TransactionID)
 
-	resp, err = txService.CommitTransaction(&snapTxReq, nil)
+	resp, _, err = txService.CommitTransaction(&snapTxReq, nil)
 	if err != nil {
 		t.Fatalf("Error commit transaction %v", err)
 	}

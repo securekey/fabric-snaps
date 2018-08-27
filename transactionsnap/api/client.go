@@ -88,8 +88,9 @@ type Client interface {
 	// @param {registerTxEvent} is bool to register tx event
 	// @param {EndorsedCallback} is a function that is invoked after the endorsement
 	// @returns {Response} responses from endorsers
+	// @returns {bool} commit flag
 	// @returns {error} error, if any
-	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, errors.Error)
+	CommitTransaction(endorseRequest *EndorseTxRequest, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, bool, errors.Error)
 
 	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
 	// @param {[]byte} Txn Proposal

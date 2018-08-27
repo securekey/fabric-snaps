@@ -26,6 +26,7 @@ type CheckForCommitHandler struct {
 	rwSetIgnoreNameSpace []api.Namespace
 	callback             api.EndorsedCallback
 	commitType           api.CommitType
+	ShouldCommit         bool
 }
 
 //Handle for endorsing transactions
@@ -71,10 +72,9 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		return
 	}
 
-	shouldCommit := false
 	if len(ccAction.Events) > 0 {
 		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and chaincode event exists in proposal response", txID, api.CommitOnWrite)
-		shouldCommit = true
+		c.ShouldCommit = true
 	} else {
 		txRWSet := &rwsetutil.TxRwSet{}
 		if err = txRWSet.FromProtoBytes(ccAction.Results); err != nil {
@@ -83,11 +83,11 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		}
 		if c.hasWriteSet(txRWSet, txID) {
 			logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and write set exists in proposal response", txID, api.CommitOnWrite)
-			shouldCommit = true
+			c.ShouldCommit = true
 		}
 	}
 
-	if shouldCommit {
+	if c.ShouldCommit {
 		c.next.Handle(requestContext, clientContext)
 	} else {
 		logger.Debugf("[txID %s] Commit is NOT necessary since commit type is [%s] and NO write set exists in proposal response", txID, api.CommitOnWrite)
