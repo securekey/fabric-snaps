@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1c2e568_7f94e2d5",
+        "filename": "transactionsnap/pkg/client/chprovider/eventserviceref.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-27T19:36:38Z",
+      "side": 1,
+      "message": "Can you use SystemError code and generate proper error message?",
+      "revId": "cee0637accd2ef4f730fd23ebc236099894b04cf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ac0c99e_c18930d9",
+        "filename": "transactionsnap/pkg/client/chprovider/eventserviceref.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-08-27T19:36:38Z",
+      "side": 1,
+      "message": "Can you use SystemError code and generate proper error message?",
+      "revId": "cee0637accd2ef4f730fd23ebc236099894b04cf",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
