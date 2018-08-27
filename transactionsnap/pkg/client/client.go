@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"time"
@@ -20,8 +21,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
-	"encoding/json"
 
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
@@ -75,25 +74,27 @@ var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
-	channelID              string
-	txnSnapConfig          api.Config
-	clientConfig           fabApi.EndpointConfig
-	channelClient          *channel.Client
-	context                contextApi.Channel
-	configHash             string
-	sdk                    *fabsdk.FabricSDK
-	serviceProviderFactory *DynamicProviderFactory
+	channelID     string
+	txnSnapConfig api.Config
+	clientConfig  fabApi.EndpointConfig
+	channelClient *channel.Client
+	context       contextApi.Channel
+	configHash    string
+	sdk           *fabsdk.FabricSDK
 }
 
 // DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
 // based on the local Membership Snap, dynamic selection provider, and the local Event Snap
 type DynamicProviderFactory struct {
 	defsvc.ProviderFactory
+	opts       []chprovider.Opt
 	chProvider *chprovider.Provider
 }
 
-func newServiceProvider() *DynamicProviderFactory {
-	return &DynamicProviderFactory{}
+func newServiceProvider(opts ...chprovider.Opt) *DynamicProviderFactory {
+	return &DynamicProviderFactory{
+		opts: opts,
+	}
 }
 
 // CreateChannelProvider returns a new default implementation of channel provider
@@ -102,16 +103,12 @@ func (f *DynamicProviderFactory) CreateChannelProvider(config fabApi.EndpointCon
 		return f.chProvider, nil
 	}
 
-	chProvider, err := chprovider.New(config)
+	chProvider, err := chprovider.New(config, f.opts...)
 	if err != nil {
 		return nil, err
 	}
 	f.chProvider = chProvider
 	return chProvider, nil
-}
-
-func (f *DynamicProviderFactory) channelProvider() *chprovider.Provider {
-	return f.chProvider
 }
 
 // CustomConfig override client config
@@ -183,8 +180,98 @@ func (c *clientImpl) channelConfig() (fabApi.ChannelCfg, error) {
 	return c.context.ChannelService().ChannelConfig()
 }
 
-func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory) (*clientImpl, errors.Error) {
-	// Get client config
+func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory, currentClient *clientImpl) (*clientImpl, errors.Error) {
+	configProvider, endpointConfig, err := getEndpointConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	localPeer, err := cfg.GetLocalPeer()
+	if err != nil {
+		return nil, err
+	}
+
+	orgName, err := getOrgName(cfg, endpointConfig, string(localPeer.MSPid))
+	if err != nil {
+		return nil, err
+	}
+
+	eventSnapshot := takeEventSnapshot(currentClient)
+	// If an error occurs after taking a snapshot then all of the event registrations that were transferred
+	// into the snapshot must be closed so that the listeners will be notified.
+	defer eventSnapshot.close()
+
+	if serviceProviderFactory == nil {
+		var opts []chprovider.Opt
+		if eventSnapshot.get() != nil {
+			opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot.get()}))
+		}
+		serviceProviderFactory = newServiceProvider(opts...)
+	}
+
+	customEndpointConfig := &CustomConfig{EndpointConfig: endpointConfig, localPeer: localPeer, localPeerTLSCertPem: cfg.GetTLSCertPem()}
+
+	sdk, err := newSDK(channelID, configProvider, customEndpointConfig, serviceProviderFactory, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	chContext, e := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgName))()
+	if e != nil {
+		return nil, errors.Wrapf(errors.GeneralError, e, "Failed to call func channel(%v) context", channelID)
+	}
+
+	// Channel client is used to query and execute transactions
+	chClient, e := channel.New(func() (contextApi.Channel, error) {
+		return chContext, nil
+	})
+	if e != nil {
+		return nil, errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, e)
+	}
+
+	client := &clientImpl{
+		channelID:     channelID,
+		sdk:           sdk,
+		channelClient: chClient,
+		txnSnapConfig: cfg,
+		clientConfig:  customEndpointConfig,
+		context:       chContext,
+		configHash:    generateHash(cfg.GetConfigBytes()),
+	}
+	// close will be called when the client is closed and the last reference is released.
+	client.ReferenceCounter = refcount.New(client.close)
+
+	// The snapshot was successfully transferred into the new SDK.
+	// Release the snapshot from the holder so that it isn't closed.
+	eventSnapshot.done()
+
+	if err = client.updateLogLevel(); err != nil {
+		// Don't return an error - just log it
+		logger.Errorf(err.GenerateLogMsg())
+	}
+
+	logger.Infof("Successfully initialized client on channel [%s] with config hash [%s]", channelID, client.configHash)
+
+	return client, nil
+}
+
+func getOrgName(cfg api.Config, endpointConfig fabApi.EndpointConfig, localMSPID string) (string, errors.Error) {
+	var orgname string
+	for name, org := range endpointConfig.NetworkConfig().Organizations {
+		if org.MSPID == localMSPID {
+			orgname = name
+			break
+		}
+	}
+
+	if orgname == "" {
+		return "", errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localMSPID)
+	}
+
+	return orgname, nil
+}
+
+func getEndpointConfig(cfg api.Config) (core.ConfigProvider, fabApi.EndpointConfig, errors.Error) {
 	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
 		// there will be no data left in the buffer the second time it's called
@@ -193,107 +280,31 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 
 	configBackends, err := configProvider()
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "get client config return error")
+		return nil, nil, errors.WithMessage(errors.GeneralError, err, "get client config return error")
 	}
 
 	endpointConfig, err := fab.ConfigFromBackend(configBackends...)
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "from backend returned error")
+		return nil, nil, errors.WithMessage(errors.GeneralError, err, "from backend returned error")
 	}
+	return configProvider, endpointConfig, nil
+}
 
-	// Get org name
-	nconfig := endpointConfig.NetworkConfig()
-
-	// Get local peer
-	localPeer, err := cfg.GetLocalPeer()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "GetLocalPeer return error")
-	}
-
-	//lookup for orgname
-	var orgname string
-	for name, org := range nconfig.Organizations {
-		if org.MSPID == string(localPeer.MSPid) {
-			orgname = name
-			break
-		}
-	}
-	if orgname == "" {
-		return nil, errors.Errorf(errors.GeneralError, "Failed to get %s from client config", localPeer.MSPid)
-	}
-
-	//Get cryptosuite provider name from name from peerconfig
+func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.EndpointConfig, serviceProviderFactory apisdk.ServiceProviderFactory, cfg api.Config) (*fabsdk.FabricSDK, errors.Error) {
 	cryptoProvider, err := cfg.GetCryptoProvider()
 	if err != nil {
 		return nil, errors.Errorf(errors.GeneralError, "error getting crypto provider on channel [%s]: %s", channelID)
 	}
 
-	var spFactory *DynamicProviderFactory
-	if serviceProviderFactory == nil {
-		spFactory = newServiceProvider()
-		serviceProviderFactory = spFactory
-	}
-
-	customEndpointConfig := NewCustomConfig(endpointConfig, localPeer, cfg.GetTLSCertPem())
-
-	//create sdk
-	sdk, err := fabsdk.New(configProvider,
-		fabsdk.WithEndpointConfig(customEndpointConfig),
+	sdk, e := fabsdk.New(configProvider,
+		fabsdk.WithEndpointConfig(config),
 		fabsdk.WithCorePkg(&factories.CustomCorePkg{ProviderName: cryptoProvider}),
 		fabsdk.WithServicePkg(serviceProviderFactory),
 		fabsdk.WithMSPPkg(&factoriesMsp.CustomMspPkg{CryptoPath: cfg.GetMspConfigPath()}))
-	if err != nil {
-		return nil, errors.Wrapf(errors.GeneralError, err, "Error creating SDK on channel [%s]", channelID)
+	if e != nil {
+		return nil, errors.Wrapf(errors.GeneralError, e, "Error creating SDK on channel [%s]", channelID)
 	}
-
-	// new channel context prov
-	chContextProv := sdk.ChannelContext(channelID, fabsdk.WithUser(txnSnapUser), fabsdk.WithOrg(orgname))
-
-	chContext, err := chContextProv()
-	if err != nil {
-		return nil, errors.Wrapf(errors.GeneralError, err, "Failed to call func channel(%v) context", channelID)
-	}
-
-	// Channel client is used to query and execute transactions
-	chClient, err := channel.New(func() (contextApi.Channel, error) {
-		return chContext, nil
-	})
-	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
-	}
-
-	//update log level
-	cfgBackend, err := sdk.Config()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
-	}
-
-	client := &clientImpl{
-		channelID:              channelID,
-		sdk:                    sdk,
-		channelClient:          chClient,
-		txnSnapConfig:          cfg,
-		clientConfig:           customEndpointConfig,
-		context:                chContext,
-		configHash:             generateHash(cfg.GetConfigBytes()),
-		serviceProviderFactory: spFactory,
-	}
-	// close will be called when the client is closed and the last reference is released.
-	client.ReferenceCounter = refcount.New(client.close)
-
-	client.updateLogLevel(cfgBackend)
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "error initializing logging")
-	}
-
-	logger.Infof("Successfully initialized client on channel [%s] with config hash [%s]", channelID, client.configHash)
-
-	return client, nil
-}
-
-//NewCustomConfig return custom endpoint config
-func NewCustomConfig(config fabApi.EndpointConfig, localPeer *api.PeerConfig, localPeerTLSCertPem []byte) fabApi.EndpointConfig {
-	return &CustomConfig{EndpointConfig: config, localPeer: localPeer, localPeerTLSCertPem: localPeerTLSCertPem}
+	return sdk, nil
 }
 
 func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
@@ -544,8 +555,13 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	return opts
 }
 
-func (c *clientImpl) updateLogLevel(configBacked core.ConfigBackend) errors.Error {
-	logLevel := lookup.New(configBacked).GetString("txnsnap.loglevel")
+func (c *clientImpl) updateLogLevel() errors.Error {
+	cfgBackend, err := c.sdk.Config()
+	if err != nil {
+		return errors.WithMessage(errors.InitializeLoggingError, err, "error getting config backend")
+	}
+
+	logLevel := lookup.New(cfgBackend).GetString("txnsnap.loglevel")
 	if logLevel == "" {
 		logLevel = defaultLogLevel
 	}
@@ -568,4 +584,46 @@ func addRetryCode(codes map[status.Group][]status.Code, group status.Group, code
 		g = []status.Code{}
 	}
 	codes[group] = append(g, code)
+}
+
+func takeEventSnapshot(client *clientImpl) *snapshotHolder {
+	var holder snapshotHolder
+	if client != nil {
+		channelService, ok := client.context.ChannelService().(*chprovider.ChannelService)
+		if ok {
+			logger.Infof("Getting event snapshots from old service provider and transferring them to the new one")
+			snapshot, err := channelService.TransferEventRegistrations()
+			if err != nil {
+				logger.Warnf("Unable to transfer event registrations from old event client. Some events may be lost.")
+			} else {
+				holder.set(client.channelID, snapshot)
+			}
+		}
+	}
+	return &holder
+}
+
+type snapshotHolder struct {
+	channelID string
+	snapshot  fabApi.EventSnapshot
+}
+
+func (h *snapshotHolder) set(channelID string, snapshot fabApi.EventSnapshot) {
+	h.channelID = channelID
+	h.snapshot = snapshot
+}
+
+func (h *snapshotHolder) get() fabApi.EventSnapshot {
+	return h.snapshot
+}
+
+func (h *snapshotHolder) done() {
+	h.snapshot = nil
+}
+
+func (h *snapshotHolder) close() {
+	if h.snapshot != nil {
+		logger.Warnf("Closing all event registrations for channel [%s]...", h.channelID)
+		h.snapshot.Close()
+	}
 }

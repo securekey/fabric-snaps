@@ -443,7 +443,7 @@
   revision = "600b0c45a024131b326a41096da0559a9a7461fd"
 
 [[projects]]
-  digest = "1:39d8f585b9c9182d60d5af2241b0976d6f8cb7ff0497b8137800bc9c733f489c"
+  digest = "1:fd2c77500d7db8d9368a3996de19cf9db419a10a3dfecbd5b915082549c976c2"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -572,7 +572,7 @@
     "third_party/github.com/hyperledger/fabric/protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "72066f710a45b2084be212dd0cec5230d57564cf"
+  revision = "0628c3fe720c45a500f25fd99f7b8875f58e3906"
 
 [[projects]]
   digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
@@ -1114,6 +1114,7 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/comm",
+    "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/dispatcher",
@@ -1126,7 +1127,6 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore",
     "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defmsp",
     "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc",
-    "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/chpvdr",
     "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/fabpvdr",
     "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/msppvdr",
     "github.com/hyperledger/fabric-sdk-go/pkg/msp",
