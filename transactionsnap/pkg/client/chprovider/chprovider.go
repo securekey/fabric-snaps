@@ -17,8 +17,9 @@ import (
 	channelImpl "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
+	evtclient "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/chpvdr"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/dispatcher"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/pkg/errors"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
@@ -32,6 +33,10 @@ type cache interface {
 	Close()
 }
 
+type params struct {
+	eventSnapshots map[string]fab.EventSnapshot
+}
+
 // Provider implements a ChannelProvider that uses a dynamic discovery provider based on
 // the local Membership Snap, dynamic selection provider, and the local Event Snap
 type Provider struct {
@@ -43,14 +48,29 @@ type Provider struct {
 	eventServiceCache     cache
 }
 
+// Opt is a provider option
+type Opt func(*params)
+
+// WithEventSnapshots initializes the event service with the given event snapshots
+func WithEventSnapshots(snapshots map[string]fab.EventSnapshot) Opt {
+	return func(p *params) {
+		p.eventSnapshots = snapshots
+	}
+}
+
 // New creates a new Provider
-func New(config fab.EndpointConfig) (*Provider, error) {
-	eventIdleTime := config.Timeout(fab.EventServiceIdle)
+func New(config fab.EndpointConfig, opts ...Opt) (*Provider, error) {
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
 	membershipRefresh := config.Timeout(fab.ChannelMembershipRefresh)
 	cp := Provider{
 		chCfgCache:      chconfig.NewRefCache(chConfigRefresh),
 		membershipCache: membership.NewRefCache(membershipRefresh),
+	}
+
+	// Apply options
+	params := &params{eventSnapshots: make(map[string]fab.EventSnapshot)}
+	for _, opt := range opts {
+		opt(params)
 	}
 
 	cp.discoveryServiceCache = lazycache.New(
@@ -72,17 +92,54 @@ func New(config fab.EndpointConfig) (*Provider, error) {
 	cp.eventServiceCache = lazycache.New(
 		"TxSnap_Event_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
-			ck := key.(*eventCacheKey)
-			return chpvdr.NewEventClientRef(
-				eventIdleTime,
-				func() (fab.EventClient, error) {
-					return cp.createEventClient(ck.context, ck.channelConfig, ck.opts...)
-				},
-			), nil
+			ck := key.(*cacheKey)
+			return cp.newEventClientRef(params, ck.context, ck.channelConfig), nil
 		},
 	)
 
 	return &cp, nil
+}
+
+func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chConfig fab.ChannelCfg) *EventClientRef {
+	preInitialize := false
+
+	var opts []options.Opt
+
+	// Keep retrying to connect to the event client forever
+	opts = append(opts, evtclient.WithMaxConnectAttempts(0))
+
+	if snapshot, ok := params.eventSnapshots[chConfig.ID()]; ok {
+		logger.Infof("Creating event client with snapshot for channel [%s]: %s", chConfig.ID(), snapshot)
+		opts = append(opts, dispatcher.WithSnapshot(snapshot))
+
+		// Must initialize the event client right away since there will be outstanding
+		// registrations that are waiting for events
+		preInitialize = true
+	}
+
+	logger.Infof("Creating new event service ref for channel [%s]", chConfig.ID())
+
+	ref := NewEventClientRef(
+		func() (fab.EventClient, error) {
+			return cp.createEventClient(ctx, chConfig, opts...)
+		},
+	)
+
+	if preInitialize {
+		go func() {
+			// The membership cache needs to be pre-populated since we'll be connecting to other peers.
+			logger.Debugf("Initializing membership cache for channel [%s]", chConfig.ID())
+			err := cp.initMembership(chConfig.ID(), ctx)
+			if err != nil {
+				logger.Warnf("Error occurred while initializing membership cache for channel [%s]", chConfig.ID(), err)
+			}
+
+			logger.Debugf("Initializing event service for channel [%s]", chConfig.ID())
+			ref.get()
+		}()
+	}
+
+	return ref
 }
 
 // Initialize sets the provider context
@@ -123,7 +180,7 @@ func (cp *Provider) createEventClient(ctx context.Client, chConfig fab.ChannelCf
 	if err != nil {
 		return nil, errors.WithMessage(err, "could not get discovery service")
 	}
-	logger.Debugf("Using deliver events for channel [%s]", chConfig.ID())
+	logger.Debugf("Creating new deliver event client for channel [%s]", chConfig.ID())
 	return deliverclient.New(ctx, chConfig, discovery, opts...)
 }
 
@@ -214,21 +271,34 @@ func (cs *ChannelService) Config() (fab.ChannelConfig, error) {
 	return chconfig.New(cs.channelID)
 }
 
-// EventService returns the local Event Service.
+// EventService returns the Event Service.
 func (cs *ChannelService) EventService(opts ...options.Opt) (fab.EventService, error) {
 	chnlCfg, err := cs.ChannelConfig()
 	if err != nil {
 		return nil, err
 	}
-	key, err := newEventCacheKey(cs.context, chnlCfg, opts...)
-	if err != nil {
-		return nil, err
-	}
-	eventService, err := cs.provider.eventServiceCache.Get(key)
+
+	eventService, err := cs.provider.eventServiceCache.Get(newEventCacheKey(cs.context, chnlCfg))
 	if err != nil {
 		return nil, err
 	}
 	return eventService.(fab.EventService), nil
+}
+
+// TransferEventRegistrations transfers all event registrations into the returned snapshot
+func (cs *ChannelService) TransferEventRegistrations() (fab.EventSnapshot, error) {
+	eventService, err := cs.EventService()
+	if err != nil {
+		return nil, err
+	}
+
+	eventRef := eventService.(*EventClientRef)
+	service, err := eventRef.get()
+	if err != nil {
+		return nil, err
+	}
+
+	return service.(fab.EventClient).TransferRegistrations(false)
 }
 
 // Membership returns and caches a channel member identifier
@@ -277,4 +347,32 @@ func (cs *ChannelService) Selection() (fab.SelectionService, error) {
 
 func (cs *ChannelService) loadChannelCfgRef() (*chconfig.Ref, error) {
 	return cs.provider.loadChannelCfgRef(cs.context, cs.channelID)
+}
+
+func (cp *Provider) initMembership(channelID string, ctx fab.ClientContext) error {
+	chCfgRef, err := cp.loadChannelCfgRef(ctx, channelID)
+	if err != nil {
+		return err
+	}
+
+	key, err := membership.NewCacheKey(
+		membership.Context{
+			Providers:      cp.providerContext,
+			EndpointConfig: ctx.EndpointConfig(),
+		},
+		chCfgRef.Reference, channelID,
+	)
+	if err != nil {
+		return err
+	}
+
+	ref, err := cp.membershipCache.Get(key)
+	if err != nil {
+		return err
+	}
+
+	// Invoke any function so that the ref is initialized
+	ref.(*membership.Ref).ContainsMSP("")
+
+	return nil
 }
