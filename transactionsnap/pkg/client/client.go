@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"time"
@@ -20,8 +21,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
-	"encoding/json"
 
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
@@ -75,25 +74,27 @@ var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
-	channelID              string
-	txnSnapConfig          api.Config
-	clientConfig           fabApi.EndpointConfig
-	channelClient          *channel.Client
-	context                contextApi.Channel
-	configHash             string
-	sdk                    *fabsdk.FabricSDK
-	serviceProviderFactory *DynamicProviderFactory
+	channelID     string
+	txnSnapConfig api.Config
+	clientConfig  fabApi.EndpointConfig
+	channelClient *channel.Client
+	context       contextApi.Channel
+	configHash    string
+	sdk           *fabsdk.FabricSDK
 }
 
 // DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
 // based on the local Membership Snap, dynamic selection provider, and the local Event Snap
 type DynamicProviderFactory struct {
 	defsvc.ProviderFactory
+	opts       []chprovider.Opt
 	chProvider *chprovider.Provider
 }
 
-func newServiceProvider() *DynamicProviderFactory {
-	return &DynamicProviderFactory{}
+func newServiceProvider(opts ...chprovider.Opt) *DynamicProviderFactory {
+	return &DynamicProviderFactory{
+		opts: opts,
+	}
 }
 
 // CreateChannelProvider returns a new default implementation of channel provider
@@ -102,16 +103,12 @@ func (f *DynamicProviderFactory) CreateChannelProvider(config fabApi.EndpointCon
 		return f.chProvider, nil
 	}
 
-	chProvider, err := chprovider.New(config)
+	chProvider, err := chprovider.New(config, f.opts...)
 	if err != nil {
 		return nil, err
 	}
 	f.chProvider = chProvider
 	return chProvider, nil
-}
-
-func (f *DynamicProviderFactory) channelProvider() *chprovider.Provider {
-	return f.chProvider
 }
 
 // CustomConfig override client config
@@ -183,7 +180,7 @@ func (c *clientImpl) channelConfig() (fabApi.ChannelCfg, error) {
 	return c.context.ChannelService().ChannelConfig()
 }
 
-func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory) (*clientImpl, errors.Error) {
+func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory, currentClient *clientImpl) (*clientImpl, errors.Error) {
 	// Get client config
 	configProvider := func() ([]core.ConfigBackend, error) {
 		// Make sure the buffer is created each time it is called, otherwise
@@ -228,9 +225,18 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, errors.Errorf(errors.GeneralError, "error getting crypto provider on channel [%s]: %s", channelID)
 	}
 
+	eventSnapshot := takeEventSnapshot(currentClient)
+	// If an error occurs after taking a snapshot then all of the event registrations that were transferred
+	// into the snapshot must be closed so that the listeners will be notified.
+	defer eventSnapshot.close()
+
 	var spFactory *DynamicProviderFactory
 	if serviceProviderFactory == nil {
-		spFactory = newServiceProvider()
+		var opts []chprovider.Opt
+		if eventSnapshot.get() != nil {
+			opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot.get()}))
+		}
+		spFactory = newServiceProvider(opts...)
 		serviceProviderFactory = spFactory
 	}
 
@@ -262,31 +268,35 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, errors.Errorf(errors.GeneralError, "Failed to create new channel(%v) client: %v", channelID, err)
 	}
 
-	//update log level
-	cfgBackend, err := sdk.Config()
-	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "failed to get config backend from sdk")
-	}
-
 	client := &clientImpl{
-		channelID:              channelID,
-		sdk:                    sdk,
-		channelClient:          chClient,
-		txnSnapConfig:          cfg,
-		clientConfig:           customEndpointConfig,
-		context:                chContext,
-		configHash:             generateHash(cfg.GetConfigBytes()),
-		serviceProviderFactory: spFactory,
+		channelID:     channelID,
+		sdk:           sdk,
+		channelClient: chClient,
+		txnSnapConfig: cfg,
+		clientConfig:  customEndpointConfig,
+		context:       chContext,
+		configHash:    generateHash(cfg.GetConfigBytes()),
 	}
 	// close will be called when the client is closed and the last reference is released.
 	client.ReferenceCounter = refcount.New(client.close)
 
-	client.updateLogLevel(cfgBackend)
+	//update log level
+	cfgBackend, err := sdk.Config()
 	if err != nil {
-		return nil, errors.WithMessage(errors.GeneralError, err, "error initializing logging")
+		// Don't return an error - just log it
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Failed to get config backend for channel [%s]: %s", channelID, err)).GenerateLogMsg())
+	}
+
+	if err = client.updateLogLevel(cfgBackend); err != nil {
+		// Don't return an error - just log it
+		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Unable to initialize logger with updated config for channel [%s]: %s", channelID, err)).GenerateLogMsg())
 	}
 
 	logger.Infof("Successfully initialized client on channel [%s] with config hash [%s]", channelID, client.configHash)
+
+	// The snapshot was successfully transferred into the new SDK.
+	// Release the snapshot from the holder so that it isn't closed.
+	eventSnapshot.done()
 
 	return client, nil
 }
@@ -568,4 +578,46 @@ func addRetryCode(codes map[status.Group][]status.Code, group status.Group, code
 		g = []status.Code{}
 	}
 	codes[group] = append(g, code)
+}
+
+func takeEventSnapshot(client *clientImpl) *snapshotHolder {
+	var holder snapshotHolder
+	if client != nil {
+		channelService, ok := client.context.ChannelService().(*chprovider.ChannelService)
+		if ok {
+			logger.Infof("Getting event snapshots from old service provider and transferring them to the new one")
+			snapshot, err := channelService.TransferEventRegistrations()
+			if err != nil {
+				logger.Warnf("Unable to transfer event registrations from old event client. Some events may be lost.")
+			} else {
+				holder.set(client.channelID, snapshot)
+			}
+		}
+	}
+	return &holder
+}
+
+type snapshotHolder struct {
+	channelID string
+	snapshot  fabApi.EventSnapshot
+}
+
+func (h *snapshotHolder) set(channelID string, snapshot fabApi.EventSnapshot) {
+	h.channelID = channelID
+	h.snapshot = snapshot
+}
+
+func (h *snapshotHolder) get() fabApi.EventSnapshot {
+	return h.snapshot
+}
+
+func (h *snapshotHolder) done() {
+	h.snapshot = nil
+}
+
+func (h *snapshotHolder) close() {
+	if h.snapshot != nil {
+		logger.Warnf("Closing all event registrations for channel [%s]...", h.channelID)
+		h.snapshot.Close()
+	}
 }

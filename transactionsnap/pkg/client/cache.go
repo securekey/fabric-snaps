@@ -126,7 +126,7 @@ func checkClient(channelID string, currentClient *clientImpl, configProvider Con
 
 	logger.Infof("The client config was updated for channel [%s]. Existing hash [%s] new hash [%s]. Initializing new SDK ...", channelID, currentHash, cfgHash)
 
-	newClient, e := newClient(channelID, cfg, serviceProviderFactory)
+	newClient, e := newClient(channelID, cfg, serviceProviderFactory, currentClient)
 	if err != nil {
 		return nil, e
 	}
