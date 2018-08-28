@@ -1076,11 +1076,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/DATA-DOG/godog",
-    "github.com/DATA-DOG/godog/gherkin",
     "github.com/cactus/go-statsd-client/statsd",
     "github.com/fsouza/go-dockerclient",
     "github.com/gogo/protobuf/proto",
-    "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/util",
