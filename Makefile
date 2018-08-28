@@ -27,10 +27,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 4066a9b12012d78571dde5ee49e9c0ff6ba3c9a2
+FABRIC_NEXT_VERSION = 33e2e3a840515bfa3ea411e07bdb75bdd7590b8a
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.5-snapshot-4066a9b
+export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.5-snapshot-33e2e3a
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
