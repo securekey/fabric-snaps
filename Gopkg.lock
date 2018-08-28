@@ -293,7 +293,8 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:1bb4de3e1491dade65996e963a12f8177b8cefc29c5ec485ff9bb36b567108d4"
+  branch = "release-1.2"
+  digest = "1:699ad3dc8e70ad8d9dc352d295fe1d3ffa3b4e791171bc8d2380a357e82946b0"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -428,7 +429,7 @@
     "protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "d7656e2bff0a368cda09d9e2b190ed8702938219"
+  revision = "a58896e4b1b5ed071d76e6244174aeac853a7ba1"
 
 [[projects]]
   branch = "master"
