@@ -18,7 +18,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/channelutil"
 	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/common"
-	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	"github.com/securekey/fabric-snaps/mocks/event/mockservice/local"
 )
 
 var logger = shim.NewLogger("EventConsumerSnap")
@@ -135,7 +135,7 @@ func (s *eventConsumerSnap) registerBlockEvents(stub shim.ChaincodeStubInterface
 		return shim.Error(fmt.Sprintf("Block registration already exists for channel: %s", channelID))
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -191,7 +191,7 @@ func (s *eventConsumerSnap) unregisterBlockEvents(stub shim.ChaincodeStubInterfa
 		return shim.Success(nil)
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -252,7 +252,7 @@ func (s *eventConsumerSnap) registerFilteredBlockEvents(stub shim.ChaincodeStubI
 		return shim.Error(fmt.Sprintf("Filtered block registration already exists for channel: %s", channelID))
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -305,7 +305,7 @@ func (s *eventConsumerSnap) unregisterFilteredBlockEvents(stub shim.ChaincodeStu
 		return shim.Success(nil)
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -369,7 +369,7 @@ func (s *eventConsumerSnap) registerCCEvents(stub shim.ChaincodeStubInterface, a
 		return shim.Error(fmt.Sprintf("CC registration already exists for channel %s, CC %s, and event filter %s", channelID, ccID, eventFilter))
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -419,7 +419,7 @@ func (s *eventConsumerSnap) unregisterCCEvents(stub shim.ChaincodeStubInterface,
 		return shim.Success(nil)
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -482,7 +482,7 @@ func (s *eventConsumerSnap) registerTxEvents(stub shim.ChaincodeStubInterface, a
 		return shim.Error(fmt.Sprintf("Tx Status registration already exists for channel %s and TxID %s", channelID, txID))
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
@@ -530,7 +530,7 @@ func (s *eventConsumerSnap) unregisterTxEvents(stub shim.ChaincodeStubInterface,
 		return shim.Success(nil)
 	}
 
-	eventService := localservice.Get(channelID)
+	eventService := local.Get(channelID)
 	if eventService == nil {
 		return shim.Error(fmt.Sprintf("No local event service for channel: %s", channelID))
 	}
