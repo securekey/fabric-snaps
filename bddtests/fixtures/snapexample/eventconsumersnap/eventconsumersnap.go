@@ -18,7 +18,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/channelutil"
 	"github.com/securekey/fabric-snaps/bddtests/fixtures/snapexample/eventconsumersnap/common"
-	"github.com/securekey/fabric-snaps/eventservice/pkg/localservice"
+	"github.com/securekey/fabric-snaps/mocks/mockservice/pkg/localservice"
 )
 
 var logger = shim.NewLogger("EventConsumerSnap")

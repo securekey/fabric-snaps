@@ -19,7 +19,7 @@ import (
 
 var logger = logging.NewLogger("metricsfilter")
 
-type filter struct { //nolint: deadcode
+type filter struct {
 	next                 peer.EndorserServer
 	proposalCounter      tally.Counter
 	proposalErrorCounter tally.Counter
@@ -27,7 +27,7 @@ type filter struct { //nolint: deadcode
 }
 
 // NewFilter creates a new Filter
-func NewFilter() auth.Filter {
+func NewFilter() auth.Filter { //nolint: deadcode
 	return &filter{}
 }
 
