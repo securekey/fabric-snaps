@@ -92,7 +92,7 @@ license:
 	@scripts/check_license.sh
 
 lint: populate
-	 -@scripts/check_lint.sh
+	 @scripts/check_lint.sh
 
 spelling:
 	@scripts/check_spelling.sh

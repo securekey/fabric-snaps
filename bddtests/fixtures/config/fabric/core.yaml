@@ -617,11 +617,7 @@ chaincode:
         path: /opt/extsysccs/membership.so
         invokableExternal: true
         invokableCC2CC: true
-      - enabled: true
-        name: eventsnap
-        path: /opt/extsysccs/eventsnap.so
-        invokableExternal: false
-        invokableCC2CC: false
+
 
       # Snaps used in BDD tests
       - enabled: true
