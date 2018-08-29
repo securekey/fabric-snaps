@@ -97,7 +97,6 @@ services:
         - ../../build/test/txnsnapinvoker.so:/opt/extsysccs/txnsnapinvoker.so
         - ../../build/snaps/membershipsnap.so:/opt/extsysccs/membership.so
         - ../../build/snaps/configurationscc.so:/opt/extsysccs/configurationscc.so
-        - ../../build/snaps/eventsnap.so:/opt/extsysccs/eventsnap.so
         - ../../build/test/eventconsumersnap.so:/opt/extsysccs/eventconsumersnap.so
         - ../../build/test/bootstrapsnap.so:/opt/extsysccs/bootstrapsnap.so
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer

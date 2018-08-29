@@ -37,7 +37,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
+	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/pkg/mocks"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
