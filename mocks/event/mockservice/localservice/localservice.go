@@ -22,14 +22,14 @@ var channelServices map[string]fab.EventService
 var initonce sync.Once
 var mutex sync.RWMutex
 
-// Register sets the local event service instance on the peer for the given channel.
+// Register sets the localservice eventservice service instance on the peer for the given channel.
 func Register(channelID string, service fab.EventService) error {
 	initonce.Do(func() {
 		channelServices = make(map[string]fab.EventService)
 	})
 
 	if service == nil {
-		return errors.Errorf("invalid event service being registered for channel [%s]", channelID)
+		return errors.Errorf("invalid eventservice service being registered for channel [%s]", channelID)
 	}
 
 	mutex.Lock()
@@ -37,14 +37,14 @@ func Register(channelID string, service fab.EventService) error {
 
 	if _, ok := channelServices[strings.ToLower(channelID)]; ok {
 		logger.Warnf("Event service already registered for channel [%s]\n", channelID)
-		return errors.Errorf("event service already registered for channel [%s]", channelID)
+		return errors.Errorf("eventservice service already registered for channel [%s]", channelID)
 	}
 
 	channelServices[strings.ToLower(channelID)] = service
 	return nil
 }
 
-// Get returns the local event service for the given channel.
+// Get returns the localservice eventservice service for the given channel.
 func Get(channelID string) fab.EventService {
 	mutex.RLock()
 	defer mutex.RUnlock()
