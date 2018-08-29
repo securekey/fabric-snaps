@@ -37,7 +37,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	eventserviceMocks "github.com/securekey/fabric-snaps/eventservice/pkg/mocks"
+	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -581,7 +581,7 @@ func TestMain(m *testing.M) {
 		var err error
 		eventService, eventProducer, err = eventserviceMocks.NewServiceWithMockProducer([]options.Opt{}, eventserviceMocks.WithFilteredBlockLedger())
 		if err != nil {
-			panic(fmt.Sprintf("error creating channel event client: %s", err))
+			panic(fmt.Sprintf("error creating channel eventservice client: %s", err))
 		}
 	}
 
