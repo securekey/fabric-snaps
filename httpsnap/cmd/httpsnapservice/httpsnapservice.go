@@ -451,36 +451,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clien
 
 	return httpServiceImpl.prepareTLSConfigFromCert(cert, caCerts, systemCertPoolEnabled)
 }
-func (httpServiceImpl *HTTPServiceImpl) updateConfigData(client string, config httpsnapApi.Config) (string, []string, errors.Error) {
-	var clientCert string
-	var caCerts []string
 
-	if client != "" {
-		//Use client TLS config override in https snap config
-		clientOverrideCrtMap := config.GetNamedClientOverride()
-		clientOverrideCrt := clientOverrideCrtMap[client]
-		if clientOverrideCrt == nil {
-			return client, nil, errors.Errorf(errors.MissingConfigDataError, "client[%s] crt not found", client)
-		}
-
-		clientCert = clientOverrideCrt.Crt
-		caCerts = []string{clientOverrideCrt.Ca}
-
-	} else {
-		var err errors.Error
-		// Use default TLS config in https snap config
-		clientCert, err = config.GetClientCert()
-		if err != nil {
-			return clientCert, nil, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get client cert from httpsnap config")
-		}
-		caCerts, err = config.GetCaCerts()
-		if err != nil {
-			return clientCert, caCerts, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get ca certs from httpsnap config")
-		}
-
-	}
-	return clientCert, caCerts, nil
-}
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromCert(cert tls.Certificate, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, errors.Error) {
 
 	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)

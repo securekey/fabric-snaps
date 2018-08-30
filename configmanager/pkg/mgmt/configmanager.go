@@ -162,7 +162,10 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) errors.Error {
 		return cmngr.deleteConfigs(configKey)
 	}
 
-	cmngr.deleteState(configKey)
+	if err := cmngr.deleteState(configKey); err != nil {
+		return err
+	}
+
 	key, err := ConfigKeyToString(configKey)
 	if err != nil {
 		return err
@@ -220,7 +223,11 @@ func ParseConfigMessage(configData []byte, txID string) (map[api.ConfigKey][]byt
 			configMap[key] = []byte(appConfig.Config)
 		}
 	}
-	parseConfigComponent(parsedConfig, configMap, txID)
+	configMap, err := parseConfigComponent(parsedConfig, configMap, txID)
+	if err != nil {
+		return nil, err
+	}
+
 	return configMap, nil
 }
 

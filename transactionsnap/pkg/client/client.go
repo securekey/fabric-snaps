@@ -379,7 +379,10 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
 		var creator []byte
-		validTxnID, creator, _ = c.checkTxnID(endorseRequest)
+		validTxnID, creator, err := c.checkTxnID(endorseRequest)
+		if err != nil {
+			return nil, false, err
+		}
 		if !validTxnID {
 			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
 			if err != nil {

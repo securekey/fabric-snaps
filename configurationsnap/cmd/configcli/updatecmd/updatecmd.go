@@ -246,12 +246,8 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 		newConfigMsg.Peers = append(newConfigMsg.Peers, newPeerConfig)
 	}
 
-	_, err = updateAppConfigInfo(configMsg, baseFilePath, newConfigMsg)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error while updating the new app config info")
-	}
+	return updateAppConfigInfo(configMsg, baseFilePath, newConfigMsg)
 
-	return newConfigMsg, nil
 }
 
 func updateAppConfigInfo(configMsg *mgmtapi.ConfigMessage, baseFilePath string, newConfigMsg *mgmtapi.ConfigMessage) (*mgmtapi.ConfigMessage, error) {
