@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "825f135b_0a70bd58",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-08-31T11:56:43Z",
+      "side": 1,
+      "message": "this function signature is misleading. it manipulates the configMap argument and also returns it.\n\nfrom this signature, you wouldn\u0027t think the argument is changed (since it returns a map).",
+      "range": {
+        "startLine": 234,
+        "startChar": 5,
+        "endLine": 234,
+        "endChar": 25
+      },
+      "revId": "670b4675ccb95e8e904d8a96f805aa51a7274b7c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1290f4cd_7af74d73",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-08-31T11:56:43Z",
+      "side": 1,
+      "message": "this function signature is misleading. it manipulates the newConfigMsg argument and also returns it.\n\nfrom this signature, you wouldn\u0027t think the argument is changed (since it returns a pointer).",
+      "range": {
+        "startLine": 253,
+        "startChar": 5,
+        "endLine": 253,
+        "endChar": 24
+      },
+      "revId": "670b4675ccb95e8e904d8a96f805aa51a7274b7c",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
