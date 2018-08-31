@@ -379,7 +379,8 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	validTxnID := false
 	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
 		var creator []byte
-		validTxnID, creator, err := c.checkTxnID(endorseRequest)
+		var err errors.Error
+		validTxnID, creator, err = c.checkTxnID(endorseRequest)
 		if err != nil {
 			return nil, false, err
 		}
