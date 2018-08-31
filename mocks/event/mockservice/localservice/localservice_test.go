@@ -20,16 +20,16 @@ func TestLocalService(t *testing.T) {
 	service2 := fabmocks.NewMockEventService()
 
 	if err := Register(channelID1, service1); err != nil {
-		t.Fatalf("error registering local event service for channel %s: %s", channelID1, err)
+		t.Fatalf("error registering localservice eventservice service for channel %s: %s", channelID1, err)
 	}
 
 	if err := Register(channelID2, service2); err != nil {
-		t.Fatalf("error registering local event service for channel %s: %s", channelID2, err)
+		t.Fatalf("error registering localservice eventservice service for channel %s: %s", channelID2, err)
 	}
 
 	// Register twice
 	if err := Register(channelID2, service2); err == nil {
-		t.Fatalf("expecting error registering local event service twice for channel %s but got none", channelID2)
+		t.Fatalf("expecting error registering localservice eventservice service twice for channel %s but got none", channelID2)
 	}
 
 	if s := Get(channelID1); s != service1 {

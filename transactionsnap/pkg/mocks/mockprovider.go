@@ -20,7 +20,7 @@ import (
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 )
 
-// MockProviderFactory mocks out the CHannel Provider
+// MockProviderFactory event out the CHannel Provider
 type MockProviderFactory struct {
 	defsvc.ProviderFactory
 	EventService fabApi.EventService

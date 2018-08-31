@@ -397,12 +397,8 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	if len(endorseRequest.Args) < 1 {
 		return nil, false, errors.New(errors.MissingRequiredParameterError, "function arg is required")
 	}
-	args := make([][]byte, 0)
-	if len(endorseRequest.Args) > 1 {
-		for _, value := range endorseRequest.Args[1:] {
-			args = append(args, []byte(value))
-		}
-	}
+	args := c.endorseRequestArgs(endorseRequest)
+
 	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
 	if validTxnID {
 		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
@@ -435,6 +431,15 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
+}
+func (c *clientImpl) endorseRequestArgs(endorseRequest *api.EndorseTxRequest) [][]byte {
+	args := make([][]byte, 0)
+	if len(endorseRequest.Args) > 1 {
+		for _, value := range endorseRequest.Args[1:] {
+			args = append(args, []byte(value))
+		}
+	}
+	return args
 }
 func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []byte, errors.Error) {
 	validTxnID := false
