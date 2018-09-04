@@ -3,6 +3,7 @@
   "EnableGC": true,
   "Exclude": [
     "bddtests/...",
+    "vendor/...",
     "^(.*_test.go.*$)$",
     "scripts/fabric-sdk-go/..."
   ],
