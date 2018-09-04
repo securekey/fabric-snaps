@@ -258,7 +258,7 @@ func newEnvelope(payload []byte) *gossip.Envelope {
 	return &gossip.Envelope{Payload: payload}
 }
 
-func newPeerIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) *gossip.GossipMessage_PeerIdentity { //nolint: interfacer
+func newPeerIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) *gossip.GossipMessage_PeerIdentity {
 	return &gossip.GossipMessage_PeerIdentity{
 		PeerIdentity: &gossip.PeerIdentity{
 			PkiId:    pkiID,

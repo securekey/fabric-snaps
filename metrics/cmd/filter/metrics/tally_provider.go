@@ -160,7 +160,7 @@ func (r *promReporter) HTTPHandler() http.Handler {
 	return promReporterHTTPHandler(r.registry)
 }
 
-func promReporterHTTPHandler(registry *prometheus.Registry) http.Handler { //nolint: interfacer
+func promReporterHTTPHandler(registry *prometheus.Registry) http.Handler {
 	return promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 }
 

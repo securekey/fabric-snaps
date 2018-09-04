@@ -138,7 +138,7 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature
-func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error { //nolint: interfacer
+func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error {
 
 	if signedProposal == nil {
 		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
