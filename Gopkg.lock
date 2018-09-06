@@ -444,7 +444,7 @@
   revision = "600b0c45a024131b326a41096da0559a9a7461fd"
 
 [[projects]]
-  digest = "1:bc98ec4a9186a33d2d423048828b4d8f757ac7cc7f06a0daad6c88c75ba2d450"
+  digest = "1:000f3afa308bdef0eb84def4f6da8ff7af862d88ad382428c9940af5f0397438"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -483,10 +483,13 @@
     "pkg/client/common/discovery/staticdiscovery",
     "pkg/client/common/filter",
     "pkg/client/common/random",
+    "pkg/client/common/selection/balancer",
     "pkg/client/common/selection/dynamicselection",
     "pkg/client/common/selection/dynamicselection/pgresolver",
     "pkg/client/common/selection/fabricselection",
     "pkg/client/common/selection/options",
+    "pkg/client/common/selection/sorter/balancedsorter",
+    "pkg/client/common/selection/sorter/blockheightsorter",
     "pkg/client/common/selection/staticselection",
     "pkg/client/common/verifier",
     "pkg/client/resmgmt",
@@ -573,7 +576,7 @@
     "third_party/github.com/hyperledger/fabric/protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "ff64cd6199920987d4249ae07ac7d0a587975f3a"
+  revision = "915a93246c07b8a30fa13f1218c17acb34a86692"
 
 [[projects]]
   digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
