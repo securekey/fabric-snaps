@@ -16,8 +16,8 @@
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # Release Parameters
-BASE_VERSION = 0.2.8
-IS_RELEASE = false
+BASE_VERSION = 0.2.8-metrics
+IS_RELEASE = true
 
 ifneq ($(IS_RELEASE),true)
 EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short=7 HEAD)
@@ -27,7 +27,7 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 009c86e7fd38753ad58fe642db0fe14c61822087
+FABRIC_NEXT_VERSION = 4fb8bd8c805133bbe2e432dab18c11720e6aecb8
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
 export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.8-snapshot-009c86e
