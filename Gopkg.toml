@@ -40,7 +40,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[constraint]]
-  revision = "33034df7807ab33a50d088e9188b5f6d4c864520"
+  revision = "ff64cd6199920987d4249ae07ac7d0a587975f3a"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
