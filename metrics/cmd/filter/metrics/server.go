@@ -81,6 +81,9 @@ func NewOpts(peerConfig *viper.Viper) Opts {
 		statsdOpts := StatsdReporterOpts{}
 		statsdOpts.Address = peerConfig.GetString("metrics.statsdReporter.address")
 		statsdOpts.Prefix = peerConfig.GetString("metrics.statsdReporter.prefix")
+		if statsdOpts.Prefix == "" {
+			peerConfig.GetString("peer.address")
+		}
 		if flushInterval := peerConfig.GetDuration("metrics.statsdReporter.flushInterval"); flushInterval > 0 {
 			statsdOpts.FlushInterval = flushInterval
 		} else {
