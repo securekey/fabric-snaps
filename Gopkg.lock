@@ -444,7 +444,7 @@
   revision = "600b0c45a024131b326a41096da0559a9a7461fd"
 
 [[projects]]
-  digest = "1:57458e543cc597c05d3a756a3f4428e140620f506e3d9709b152ba494a522309"
+  digest = "1:8f563fda13b83715820cad26031422c830e0a801e81df03d8d49811ff17cdf45"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -458,7 +458,9 @@
     "internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge",
     "internal/github.com/hyperledger/fabric-ca/util",
     "internal/github.com/hyperledger/fabric/bccsp",
+    "internal/github.com/hyperledger/fabric/bccsp/factory/pkcs11",
     "internal/github.com/hyperledger/fabric/bccsp/factory/sw",
+    "internal/github.com/hyperledger/fabric/bccsp/pkcs11",
     "internal/github.com/hyperledger/fabric/bccsp/signer",
     "internal/github.com/hyperledger/fabric/bccsp/sw",
     "internal/github.com/hyperledger/fabric/bccsp/utils",
@@ -473,6 +475,7 @@
     "internal/github.com/hyperledger/fabric/protos/discovery",
     "internal/github.com/hyperledger/fabric/protos/gossip",
     "internal/github.com/hyperledger/fabric/protos/orderer",
+    "internal/github.com/hyperledger/fabric/sdkpatch/cachebridge",
     "internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge",
     "internal/github.com/hyperledger/fabric/sdkpatch/logbridge",
     "pkg/client/channel",
@@ -511,8 +514,11 @@
     "pkg/core/config/endpoint",
     "pkg/core/config/lookup",
     "pkg/core/cryptosuite",
+    "pkg/core/cryptosuite/bccsp/multisuite",
+    "pkg/core/cryptosuite/bccsp/pkcs11",
     "pkg/core/cryptosuite/bccsp/sw",
     "pkg/core/cryptosuite/bccsp/wrapper",
+    "pkg/core/cryptosuite/common/pkcs11",
     "pkg/core/logging/api",
     "pkg/core/logging/metadata",
     "pkg/core/logging/modlog",
@@ -1112,6 +1118,7 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/lookup",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite",
+    "github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel",

@@ -16,10 +16,12 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"
@@ -51,10 +53,10 @@ func New() Action {
 
 // Initialize initializes the action
 func (a *action) Initialize() error {
+
 	if err := cliconfig.InitConfig(); err != nil {
 		return err
 	}
-
 	if err := a.initSDK(); err != nil {
 		return err
 	}
@@ -194,8 +196,11 @@ func (a *action) initSDK() error {
 		return errors.New(errors.GeneralError, "user must be specified")
 	}
 
-	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ClientConfigFile()),
+	sdk, err := fabsdk.New(nil,
 		fabsdk.WithEndpointConfig(cliconfig.Config()),
+		fabsdk.WithIdentityConfig(cliconfig.Config()),
+		fabsdk.WithCryptoSuiteConfig(cliconfig.Config()),
+		fabsdk.WithCorePkg(&customCorePkg{}),
 	)
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Error initializing SDK: %s", err)
@@ -283,4 +288,15 @@ func levelFromName(levelName string) logging.Level {
 	default:
 		return logging.ERROR
 	}
+}
+
+//customCorePkg to use mutlisuite cryptosuite impl to support both SW and PKCS11 on demand
+type customCorePkg struct {
+	defcore.ProviderFactory
+}
+
+// CreateCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
+func (f *customCorePkg) CreateCryptoSuiteProvider(config core.CryptoSuiteConfig) (core.CryptoSuite, error) {
+	cryptoSuiteProvider, err := multisuite.GetSuiteByConfig(config)
+	return cryptoSuiteProvider, err
 }
