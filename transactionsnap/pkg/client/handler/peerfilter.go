@@ -9,6 +9,8 @@ package handler
 import (
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -19,6 +21,8 @@ import (
 )
 
 var logger = logging.NewLogger("txnsnap")
+
+var peerSorter = blockheightsorter.New() // TODO: Configurable options
 
 //NewPeerFilterHandler returns a handler that filter peers
 func NewPeerFilterHandler(chaincodeIDs []string, config api.Config, next ...invoke.Handler) *PeerFilterHandler {
@@ -43,6 +47,12 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 			var selectionOpts []options.Opt
 			if requestContext.SelectionFilter != nil {
 				selectionOpts = append(selectionOpts, selectopts.WithPeerFilter(requestContext.SelectionFilter))
+			}
+			if requestContext.PeerSorter != nil {
+				selectionOpts = append(selectionOpts, selectopts.WithPeerSorter(requestContext.PeerSorter))
+			} else {
+				logger.Debugf("Using block height sorter")
+				selectionOpts = append(selectionOpts, selectopts.WithPeerSorter(peerSorter))
 			}
 			if len(p.chaincodeIDs) == 0 {
 				p.chaincodeIDs = make([]string, 1)
