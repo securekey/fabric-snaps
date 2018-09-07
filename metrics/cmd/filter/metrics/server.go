@@ -40,6 +40,7 @@ var running bool
 // StatsdReporterOpts ...
 type StatsdReporterOpts struct {
 	Address       string
+	Prefix        string
 	FlushInterval time.Duration
 	FlushBytes    int
 }
@@ -79,6 +80,7 @@ func NewOpts(peerConfig *viper.Viper) Opts {
 	if opts.Reporter == statsdReporterType {
 		statsdOpts := StatsdReporterOpts{}
 		statsdOpts.Address = peerConfig.GetString("metrics.statsdReporter.address")
+		statsdOpts.Prefix = peerConfig.GetString("metrics.statsdReporter.prefix")
 		if flushInterval := peerConfig.GetDuration("metrics.statsdReporter.flushInterval"); flushInterval > 0 {
 			statsdOpts.FlushInterval = flushInterval
 		} else {

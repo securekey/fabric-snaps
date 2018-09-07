@@ -33,6 +33,10 @@ func newStatsdReporter(statsdReporterOpts StatsdReporterOpts) (tally.StatsReport
 		return nil, errors.New("missing statsd server Address option")
 	}
 
+	if statsdReporterOpts.Prefix == "" {
+		return nil, errors.New("missing statsd client Prefix option")
+	}
+
 	if statsdReporterOpts.FlushInterval <= 0 {
 		return nil, errors.New("missing statsd FlushInterval option")
 	}
@@ -42,7 +46,7 @@ func newStatsdReporter(statsdReporterOpts StatsdReporterOpts) (tally.StatsReport
 	}
 
 	statter, err := statsd.NewBufferedClient(statsdReporterOpts.Address,
-		"", statsdReporterOpts.FlushInterval, statsdReporterOpts.FlushBytes)
+		statsdReporterOpts.Prefix, statsdReporterOpts.FlushInterval, statsdReporterOpts.FlushBytes)
 	if err != nil {
 		return nil, err
 	}
