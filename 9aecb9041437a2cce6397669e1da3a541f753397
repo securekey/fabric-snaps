@@ -22,6 +22,30 @@
       "revId": "9aecb9041437a2cce6397669e1da3a541f753397",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4f93a0e_3d2e10ae",
+        "filename": "configurationsnap/cmd/configcli/action/action.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-09-07T18:05:32Z",
+      "side": 1,
+      "message": "configs are already loaded in Initialize() function, previously we were just passing endpointconfig and config file for rest of the configs. That was ugly.",
+      "parentUuid": "bb15a162_dc93ab1e",
+      "range": {
+        "startLine": 199,
+        "startChar": 24,
+        "endLine": 199,
+        "endChar": 27
+      },
+      "revId": "9aecb9041437a2cce6397669e1da3a541f753397",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
