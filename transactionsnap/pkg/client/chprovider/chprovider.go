@@ -9,7 +9,7 @@ package chprovider
 import (
 	reqContext "context"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/dynamicselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -212,7 +212,8 @@ func (cp *Provider) createSelectionService(ctx context.Client, channelID string)
 	if err != nil {
 		return nil, err
 	}
-	return fabricselection.New(ctx, channelID, discovery)
+
+	return dynamicselection.NewService(ctx, channelID, discovery)
 }
 
 func (cp *Provider) getSelectionService(context fab.ClientContext, channelID string) (fab.SelectionService, error) {
