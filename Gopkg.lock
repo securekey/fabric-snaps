@@ -1094,6 +1094,7 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options",
+    "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt",

@@ -9,6 +9,8 @@ package handler
 import (
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -19,6 +21,8 @@ import (
 )
 
 var logger = logging.NewLogger("txnsnap")
+
+var peerSorter = blockheightsorter.New() // TODO: Configurable options
 
 //NewPeerFilterHandler returns a handler that filter peers
 func NewPeerFilterHandler(chaincodeIDs []string, config api.Config, next ...invoke.Handler) *PeerFilterHandler {
@@ -40,20 +44,7 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 		logger.Debugf("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
 		var endorsers []fabApi.Peer
 		for len(endorsers) == 0 && remainingAttempts > 0 {
-			var selectionOpts []options.Opt
-			if requestContext.SelectionFilter != nil {
-				selectionOpts = append(selectionOpts, selectopts.WithPeerFilter(requestContext.SelectionFilter))
-			}
-			if len(p.chaincodeIDs) == 0 {
-				p.chaincodeIDs = make([]string, 1)
-				p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
-			}
-			var err error
-			ccCalls := make([]*fabApi.ChaincodeCall, len(p.chaincodeIDs))
-			for i, cid := range p.chaincodeIDs {
-				ccCalls[i] = &fabApi.ChaincodeCall{ID: cid}
-			}
-			endorsers, err = clientContext.Selection.GetEndorsersForChaincode(ccCalls, selectionOpts...)
+			endorsers, err := p.getEndorsers(requestContext, clientContext)
 			if err != nil {
 				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
 				return
@@ -71,6 +62,29 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 	if p.next != nil {
 		p.next.Handle(requestContext, clientContext)
 	}
+}
+
+func (p *PeerFilterHandler) getEndorsers(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) ([]fabApi.Peer, error) {
+	var selectionOpts []options.Opt
+	if requestContext.SelectionFilter != nil {
+		selectionOpts = append(selectionOpts, selectopts.WithPeerFilter(requestContext.SelectionFilter))
+	}
+	if requestContext.PeerSorter != nil {
+		selectionOpts = append(selectionOpts, selectopts.WithPeerSorter(requestContext.PeerSorter))
+	} else {
+		logger.Debugf("Using block height sorter")
+		selectionOpts = append(selectionOpts, selectopts.WithPeerSorter(peerSorter))
+	}
+	if len(p.chaincodeIDs) == 0 {
+		p.chaincodeIDs = make([]string, 1)
+		p.chaincodeIDs[0] = requestContext.Request.ChaincodeID
+	}
+
+	ccCalls := make([]*fabApi.ChaincodeCall, len(p.chaincodeIDs))
+	for i, cid := range p.chaincodeIDs {
+		ccCalls[i] = &fabApi.ChaincodeCall{ID: cid}
+	}
+	return clientContext.Selection.GetEndorsersForChaincode(ccCalls, selectionOpts...)
 }
 
 // filterTargets is helper method to filter peers
