@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eada587d_bdca948e",
+        "filename": "metrics/cmd/filter/metrics/tally_provider.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-09-07T20:33:29Z",
+      "side": 1,
+      "message": "this should not be there.",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 2
+      },
+      "revId": "fa10b9a9519fb3e1a3aa4e108197ca79d5b73f22",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
