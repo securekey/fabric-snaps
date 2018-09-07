@@ -42,7 +42,7 @@ func newStatsdReporter(statsdReporterOpts StatsdReporterOpts) (tally.StatsReport
 	}
 
 	statter, err := statsd.NewBufferedClient(statsdReporterOpts.Address,
-		"", statsdReporterOpts.FlushInterval, statsdReporterOpts.FlushBytes)
+		statsdReporterOpts.Prefix, statsdReporterOpts.FlushInterval, statsdReporterOpts.FlushBytes)
 	if err != nil {
 		return nil, err
 	}
