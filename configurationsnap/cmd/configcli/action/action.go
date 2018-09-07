@@ -16,10 +16,13 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/cliconfig"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configcli/configkeyutil"
@@ -54,7 +57,6 @@ func (a *action) Initialize() error {
 	if err := cliconfig.InitConfig(); err != nil {
 		return err
 	}
-
 	if err := a.initSDK(); err != nil {
 		return err
 	}
@@ -196,6 +198,7 @@ func (a *action) initSDK() error {
 
 	sdk, err := fabsdk.New(config.FromFile(cliconfig.Config().ClientConfigFile()),
 		fabsdk.WithEndpointConfig(cliconfig.Config()),
+		fabsdk.WithCorePkg(&CustomCorePkg{}),
 	)
 	if err != nil {
 		return errors.Errorf(errors.GeneralError, "Error initializing SDK: %s", err)
@@ -283,4 +286,14 @@ func levelFromName(levelName string) logging.Level {
 	default:
 		return logging.ERROR
 	}
+}
+
+type CustomCorePkg struct {
+	defcore.ProviderFactory
+}
+
+// CreateCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
+func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.CryptoSuiteConfig) (core.CryptoSuite, error) {
+	cryptoSuiteProvider, err := multisuite.GetSuiteByConfig(config)
+	return cryptoSuiteProvider, err
 }

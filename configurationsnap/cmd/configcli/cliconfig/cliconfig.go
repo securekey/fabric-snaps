@@ -18,6 +18,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/spf13/pflag"
 )
@@ -173,6 +175,15 @@ func InitConfig() error {
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "error loading the configs")
 	}
+
+	cryptoConfig := cryptosuite.ConfigFromBackend(cnfg...)
+
+	cryptoSuiteProvider, err := multisuite.GetSuiteByConfig(cryptoConfig)
+	if err != nil {
+		return errors.WithMessage(errors.GeneralError, err, "error getting cryptosuite")
+	}
+
+	cryptosuite.SetDefault(cryptoSuiteProvider)
 
 	endpointConfig, err := fab.ConfigFromBackend(cnfg...)
 	if err != nil {
