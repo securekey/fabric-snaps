@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60992d47_c7af45cb",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-09-07T00:49:35Z",
+      "side": 1,
+      "message": "is it okay that this version already got used in the last build?",
+      "range": {
+        "startLine": 19,
+        "startChar": 15,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "e85f164d379a59bd4824370bb585013d55b2a0fb",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
