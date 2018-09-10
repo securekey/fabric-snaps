@@ -91,7 +91,19 @@ type DynamicProviderFactory struct {
 	chProvider *chprovider.Provider
 }
 
-func newServiceProvider(opts ...chprovider.Opt) *DynamicProviderFactory {
+func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, channelID string) *DynamicProviderFactory {
+	var opts []chprovider.Opt
+	localPeerCfg, err := cfg.GetLocalPeer()
+	if err != nil {
+		logger.Warnf("Unable to get local peer: %s", err)
+	} else {
+		url := fmt.Sprintf("%s:%d", localPeerCfg.Host, localPeerCfg.Port)
+		opts = append(opts, chprovider.WithLocalPeerURL(url))
+	}
+	if eventSnapshot != nil {
+		opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot}))
+	}
+
 	return &DynamicProviderFactory{
 		opts: opts,
 	}
@@ -202,11 +214,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	defer eventSnapshot.close()
 
 	if serviceProviderFactory == nil {
-		var opts []chprovider.Opt
-		if eventSnapshot.get() != nil {
-			opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot.get()}))
-		}
-		serviceProviderFactory = newServiceProvider(opts...)
+		serviceProviderFactory = newServiceProvider(cfg, eventSnapshot.get(), channelID)
 	}
 
 	customEndpointConfig := &CustomConfig{EndpointConfig: endpointConfig, localPeer: localPeer, localPeerTLSCertPem: cfg.GetTLSCertPem()}
