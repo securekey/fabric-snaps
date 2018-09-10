@@ -110,11 +110,11 @@ func TestGetAllPeers(t *testing.T) {
 		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
 		memservice.NewMSPNetworkMembers(
 			msp2,
-			memservice.NewNetworkMember(pkiID2, address2, 0),
+			memservice.NewNetworkMember(pkiID2, address2),
 		),
 		memservice.NewMSPNetworkMembers(
 			msp3,
-			memservice.NewNetworkMember(pkiID3, address3, 0),
+			memservice.NewNetworkMember(pkiID3, address3),
 		),
 	)
 
@@ -163,11 +163,11 @@ func TestGetPeersOfChannel(t *testing.T) {
 		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
 		memservice.NewMSPNetworkMembers(
 			msp2,
-			memservice.NewNetworkMember(pkiID2, address2, blockHeight1),
+			memservice.NewNetworkChannelMember(pkiID2, address2, blockHeight1-1), // Gossip uses block number so need to subtract 1
 		),
 		memservice.NewMSPNetworkMembers(
 			msp3,
-			memservice.NewNetworkMember(pkiID3, address3, blockHeight2),
+			memservice.NewNetworkChannelMember(pkiID3, address3, blockHeight2-1),
 		),
 	)
 

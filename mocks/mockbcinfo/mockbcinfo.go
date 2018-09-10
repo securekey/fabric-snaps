@@ -30,9 +30,6 @@ func NewChannelBCInfo(channelID string, bcInfo *cb.BlockchainInfo) *ChannelBCInf
 func NewProvider(bcInfo ...*ChannelBCInfo) *MockBlockchainInfoProvider {
 	bcInfoMap := make(map[string]*cb.BlockchainInfo)
 	for _, info := range bcInfo {
-		// Need to add 1 to the block height since the LedgerHeight in the
-		// Gossip NetworkMember is really the block number
-		info.BCInfo.Height++
 		bcInfoMap[info.ChannelID] = info.BCInfo
 	}
 	return &MockBlockchainInfoProvider{bcInfo: bcInfoMap}
