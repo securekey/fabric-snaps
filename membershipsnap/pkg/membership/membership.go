@@ -8,7 +8,11 @@ package membership
 
 import (
 	"fmt"
-	"sync/atomic"
+	"time"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
 
 	"github.com/securekey/fabric-snaps/util/bcinfo"
 
@@ -26,8 +30,13 @@ import (
 
 var logger = logging.NewLogger("membershipsnap")
 
-var initialized uint32
-var membershipService memserviceapi.Service
+const (
+	cacheExpiration = 500 * time.Millisecond // TODO: Make configurable
+)
+
+var membershipService = lazyref.New(func() (interface{}, error) {
+	return createMembershipService()
+})
 
 // mspMap manages a map of PKI IDs to MSP IDs
 type mspIDProvider interface {
@@ -53,29 +62,29 @@ type Service struct {
 	bciProvider      blockchainInfoProvider
 	localMSPID       []byte
 	localPeerAddress string
+	peers            *lazyref.Reference
+	peersOfChannel   *lazycache.Cache
 }
 
 // Get returns the Membership Service instance.
 // If the service hasn't been initialized yet then
 // it will be initialized.
 func Get() (memserviceapi.Service, error) {
-	if atomic.LoadUint32(&initialized) == 1 {
-		return membershipService, nil
+	service, err := membershipService.Get()
+	if err != nil {
+		return nil, err
 	}
+	return service.(memserviceapi.Service), nil
+}
 
+func createMembershipService() (*Service, error) {
 	memService, err := newService()
 	if err != nil {
 		errObj := errors.Wrap(errors.SystemError, err, "error initializing membership service")
 		logger.Errorf(errObj.GenerateLogMsg())
 		return nil, errObj
 	}
-
-	if atomic.CompareAndSwapUint32(&initialized, 0, 1) {
-		membershipService = memService
-		logger.Info("... successfully initialized membership service\n")
-	}
-
-	return membershipService, nil
+	return memService, nil
 }
 
 func newService() (*Service, error) {
@@ -96,7 +105,8 @@ func newService() (*Service, error) {
 // newServiceWithOpts returns a new Membership Service using the given options
 func newServiceWithOpts(localPeerAddress string, localMSPID []byte, gossipService service.GossipService,
 	mspProvider mspIDProvider, chInfoProvider channelsInfoProvider, bciProvider blockchainInfoProvider) *Service {
-	return &Service{
+
+	service := &Service{
 		localPeerAddress: localPeerAddress,
 		localMSPID:       localMSPID,
 		gossipService:    gossipService,
@@ -104,15 +114,48 @@ func newServiceWithOpts(localPeerAddress string, localMSPID []byte, gossipServic
 		chInfoProvider:   chInfoProvider,
 		bciProvider:      bciProvider,
 	}
+
+	service.peers = lazyref.New(
+		func() (interface{}, error) {
+			return service.doGetAllPeers(), nil
+		},
+		lazyref.WithAbsoluteExpiration(cacheExpiration),
+	)
+
+	service.peersOfChannel = lazycache.New(
+		"membership_cache",
+		func(key lazycache.Key) (interface{}, error) {
+			return service.doGetPeersOfChannel(key.String())
+		},
+		lazyref.WithAbsoluteExpiration(cacheExpiration),
+	)
+
+	return service
 }
 
 // GetAllPeers returns all peers on the gossip network
 func (s *Service) GetAllPeers() []*memserviceapi.PeerEndpoint {
-	return s.getEndpoints("", s.gossipService.Peers(), true)
+	peers, err := s.peers.Get()
+	if err != nil {
+		return nil
+	}
+	return peers.([]*memserviceapi.PeerEndpoint)
 }
 
 // GetPeersOfChannel returns all peers on the gossip network joined to the given channel
 func (s *Service) GetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndpoint, error) {
+	peersOfChannel, err := s.peersOfChannel.Get(lazycache.NewStringKey(channelID))
+	if err != nil {
+		return nil, err
+	}
+	return peersOfChannel.([]*memserviceapi.PeerEndpoint), nil
+}
+
+func (s *Service) doGetAllPeers() []*memserviceapi.PeerEndpoint {
+	return s.getEndpoints("", s.gossipService.Peers(), true)
+}
+
+func (s *Service) doGetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndpoint, error) {
 	if channelID == "" {
 		return nil, errors.New(errors.MissingRequiredParameterError, "channel ID must be provided")
 	}

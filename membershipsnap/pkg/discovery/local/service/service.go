@@ -70,7 +70,7 @@ func (s *MemSnapService) parsePeerEndpoints(endpoints []*protosPeer.PeerEndpoint
 		if err != nil {
 			return nil, fmt.Errorf("error creating new peer: %s", err)
 		}
-		channelPeer, err := channelpeer.New(peer, s.channelID, endpoint.LedgerHeight, s.service)
+		channelPeer, err := channelpeer.New(peer, s.channelID, endpoint.LedgerHeight)
 		if err != nil {
 			return nil, err
 		}
