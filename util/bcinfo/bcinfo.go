@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultRefreshInterval = time.Second
+	defaultRefreshInterval = 500 * time.Millisecond
 )
 
 // Provider implements a caching Blockchain Info Provider
