@@ -8,34 +8,23 @@ package channelpeer
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	memberapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/util/errors"
 )
-
-var logger = logging.NewLogger("membershipsnap/channelpeer")
 
 // ChannelPeer extends Peer and adds channel ID and block height
 type ChannelPeer struct {
 	fabApi.Peer
 	channelID   string
 	blockHeight uint64
-	service     memberapi.Service
 }
 
 // New creates a new ChannelPeer
-func New(peer fabApi.Peer, channelID string, blockHeight uint64, memService memberapi.Service) (*ChannelPeer, error) {
-	if memService == nil {
-		panic("membership service is nil")
-	}
+func New(peer fabApi.Peer, channelID string, blockHeight uint64) (*ChannelPeer, error) {
 	return &ChannelPeer{
 		Peer:        peer,
 		channelID:   channelID,
 		blockHeight: blockHeight,
-		service:     memService,
 	}, nil
 }
 
@@ -47,31 +36,6 @@ func (p *ChannelPeer) ChannelID() string {
 // BlockHeight returns the block height of the peer in the channel
 func (p *ChannelPeer) BlockHeight() uint64 {
 	return p.blockHeight
-}
-
-// GetBlockHeight returns the block height of the peer in the specified channel
-func (p *ChannelPeer) GetBlockHeight(channelID string) uint64 {
-	if channelID == p.channelID {
-		return p.blockHeight
-	}
-
-	endpoints, err := p.service.GetPeersOfChannel(channelID)
-	if err != nil {
-		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error querying for peers of channel [%s]", channelID)).GenerateLogMsg())
-		return 0
-	}
-
-	for _, endpoint := range endpoints {
-		// p.Url() will be in the for grpc://host:port whereas
-		// the endpoint will be in the form host:port
-		if strings.Contains(p.URL(), endpoint.Endpoint) {
-			return endpoint.LedgerHeight
-		}
-	}
-
-	logger.Warnf("Peer [%s] not found for channel [%s]\n", p.URL(), channelID)
-
-	return 0
 }
 
 // String returns the string representation of the ChannelPeer
