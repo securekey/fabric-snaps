@@ -9,6 +9,8 @@ package chprovider
 import (
 	reqContext "context"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient/seek"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -37,8 +39,9 @@ type cache interface {
 }
 
 type params struct {
-	localPeerURL   string
-	eventSnapshots map[string]fab.EventSnapshot
+	localPeerURL    string
+	initialBlockNum uint64
+	eventSnapshots  map[string]fab.EventSnapshot
 }
 
 // Provider implements a ChannelProvider that uses a dynamic discovery provider based on
@@ -59,6 +62,13 @@ type Opt func(*params)
 func WithEventSnapshots(snapshots map[string]fab.EventSnapshot) Opt {
 	return func(p *params) {
 		p.eventSnapshots = snapshots
+	}
+}
+
+// WithInitialBlockNum initializes the event service with the given event snapshots
+func WithInitialBlockNum(blockNum uint64) Opt {
+	return func(p *params) {
+		p.initialBlockNum = blockNum
 	}
 }
 
@@ -131,6 +141,10 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 		// Must initialize the event client right away since there will be outstanding
 		// registrations that are waiting for events
 		preInitialize = true
+	} else if params.initialBlockNum > 0 {
+		logger.Debugf("Asking deliver client for all blocks from block %d for channel [%s]", params.initialBlockNum, chConfig.ID())
+		opts = append(opts, deliverclient.WithSeekType(seek.FromBlock))
+		opts = append(opts, deliverclient.WithBlockNum(params.initialBlockNum))
 	}
 
 	logger.Infof("Creating new event service ref for channel [%s]", chConfig.ID())

@@ -42,6 +42,7 @@ import (
 	factoriesMsp "github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories/msp"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/handler"
 	txsnapconfig "github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/securekey/fabric-snaps/util/refcount"
@@ -91,7 +92,7 @@ type DynamicProviderFactory struct {
 	chProvider *chprovider.Provider
 }
 
-func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, channelID string) *DynamicProviderFactory {
+func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, channelID string, currentClient *clientImpl) *DynamicProviderFactory {
 	var opts []chprovider.Opt
 	localPeerCfg, err := cfg.GetLocalPeer()
 	if err != nil {
@@ -100,7 +101,14 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 		url := fmt.Sprintf("%s:%d", localPeerCfg.Host, localPeerCfg.Port)
 		opts = append(opts, chprovider.WithLocalPeerURL(url))
 	}
-	if eventSnapshot != nil {
+
+	if currentClient == nil {
+		// The first time we create a client we need to ask for all block from the current ledger block number
+		bcInfo, ok := initbcinfo.Get(channelID)
+		if ok && bcInfo.Height > 0 {
+			opts = append(opts, chprovider.WithInitialBlockNum(bcInfo.Height-1))
+		}
+	} else if eventSnapshot != nil {
 		opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot}))
 	}
 
@@ -214,7 +222,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	defer eventSnapshot.close()
 
 	if serviceProviderFactory == nil {
-		serviceProviderFactory = newServiceProvider(cfg, eventSnapshot.get(), channelID)
+		serviceProviderFactory = newServiceProvider(cfg, eventSnapshot.get(), channelID, currentClient)
 	}
 
 	customEndpointConfig := &CustomConfig{EndpointConfig: endpointConfig, localPeer: localPeer, localPeerTLSCertPem: cfg.GetTLSCertPem()}

@@ -14,11 +14,14 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util"
+	"github.com/securekey/fabric-snaps/util/bcinfo"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -33,6 +36,13 @@ type TxnSnap struct {
 
 var logger = logging.NewLogger("txnsnap")
 
+type bcInfoProvider interface {
+	GetBlockchainInfo(channelID string) (*cb.BlockchainInfo, error)
+}
+
+// bcInfoProvider can be modified by unit test
+var ledgerBCInfoProvider bcInfoProvider = bcinfo.NewProvider()
+
 // New chaincode implementation
 func New() shim.Chaincode {
 	return &TxnSnap{getTxService: func(channelID string) (*txsnapservice.TxServiceImpl, error) {
@@ -42,7 +52,20 @@ func New() shim.Chaincode {
 
 // Init snap
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	channelID := stub.GetChannelID()
+	if channelID != "" {
+		logger.Debugf("Getting local blockchain info for channel [%s]", channelID)
+		bcInfo, err := ledgerBCInfoProvider.GetBlockchainInfo(channelID)
+		if err != nil {
+			panic("unable to get blockchain info: " + err.Error())
+		}
 
+		logger.Infof("Setting initial blockchain info for channel [%s]: %#v", channelID, bcInfo)
+		err = initbcinfo.Set(channelID, bcInfo)
+		if err != nil {
+			panic("unable to set initial blockchain info: " + err.Error())
+		}
+	}
 	return shim.Success(nil)
 }
 

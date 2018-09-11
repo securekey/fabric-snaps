@@ -38,14 +38,17 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
+	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var mockEndorserServer *mocks.MockEndorserServer
@@ -73,6 +76,21 @@ func TestTransactionSnapInit(t *testing.T) {
 	if response.Status != shim.OK {
 		t.Fatalf("Expecting response status %d but got %d", shim.OK, response.Status)
 	}
+
+	initialBlockHeight := uint64(1001)
+
+	ledgerBCInfoProvider = mockbcinfo.NewProvider(
+		mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(initialBlockHeight)),
+	)
+
+	stub.ChannelID = channelID
+	response = stub.MockInit("TxID", args)
+	require.Equalf(t, int32(shim.OK), response.Status, "Expecting response status %d but got %d", shim.OK, response.Status)
+
+	bcInfo, ok := initbcinfo.Get(channelID)
+	require.True(t, ok)
+	require.NotNil(t, bcInfo)
+	assert.Equal(t, initialBlockHeight, bcInfo.Height)
 }
 
 func TestNotSupportedFunction(t *testing.T) {
