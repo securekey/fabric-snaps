@@ -9,8 +9,6 @@ package chprovider
 import (
 	reqContext "context"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient/seek"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -21,14 +19,14 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig"
 	evtclient "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client"
 	evtclientdisp "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/dispatcher"
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/lbp"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/peerresolver/preferpeer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient"
+	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/deliverclient/seek"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/dispatcher"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/pkg/errors"
 	dynamicDiscovery "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider/balancer"
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -131,7 +129,7 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 
 	if params.localPeerURL != "" {
 		// Connect to the local peer if not too far behind in block height
-		opts = append(opts, evtclientdisp.WithLoadBalancePolicy(balancer.NewPreferPeer(params.localPeerURL, lbp.NewRandom())))
+		opts = append(opts, evtclientdisp.WithPeerResolver(preferpeer.NewResolver(params.localPeerURL)))
 	}
 
 	if snapshot, ok := params.eventSnapshots[chConfig.ID()]; ok {
