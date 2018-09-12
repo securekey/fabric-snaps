@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "290d413e_2e546bfd",
+        "filename": "bddtests/fixtures/config/snaps/txnsnap/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-09-12T21:02:17Z",
+      "side": 1,
+      "message": "To double check, this is what you wanted right?",
+      "range": {
+        "startLine": 94,
+        "startChar": 14,
+        "endLine": 94,
+        "endChar": 20
+      },
+      "revId": "786b7039c5d8af1057566dc98b0303a041d3589e",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
