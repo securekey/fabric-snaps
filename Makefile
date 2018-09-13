@@ -16,7 +16,7 @@
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # Release Parameters
-BASE_VERSION = 0.2.17-metrics
+BASE_VERSION = 0.2.18-metrics
 IS_RELEASE = true
 
 ifneq ($(IS_RELEASE),true)
@@ -27,10 +27,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = v1.2.0-0.1.16-metrics
+FABRIC_NEXT_VERSION = v1.2.0-0.1.17-metrics
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.16-metrics
+export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.17-metrics
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
