@@ -13,6 +13,7 @@ import (
 
 	coreApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric/bccsp"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 )
 
 type cryptoSuite struct {
@@ -35,6 +36,10 @@ func (c *cryptoSuite) KeyImport(raw interface{}, opts coreApi.KeyImportOpts) (k 
 }
 
 func (c *cryptoSuite) GetKey(ski []byte) (k coreApi.Key, err error) {
+	if metrics.IsDebug() {
+		stopWatch := metrics.RootScope.Timer("crypto_snaps_getkey_time_seconds").Start()
+		defer stopWatch.Stop()
+	}
 	key, err := c.bccsp.GetKey(ski)
 	return GetKey(key), err
 }
@@ -48,10 +53,18 @@ func (c *cryptoSuite) GetHash(opts coreApi.HashOpts) (h hash.Hash, err error) {
 }
 
 func (c *cryptoSuite) Sign(k coreApi.Key, digest []byte, opts coreApi.SignerOpts) (signature []byte, err error) {
+	if metrics.IsDebug() {
+		stopWatch := metrics.RootScope.Timer("crypto_snaps_sign_time_seconds").Start()
+		defer stopWatch.Stop()
+	}
 	return c.bccsp.Sign(k.(*key).key, digest, opts)
 }
 
 func (c *cryptoSuite) Verify(k coreApi.Key, signature, digest []byte, opts coreApi.SignerOpts) (valid bool, err error) {
+	if metrics.IsDebug() {
+		stopWatch := metrics.RootScope.Timer("crypto_snaps_verify_time_seconds").Start()
+		defer stopWatch.Stop()
+	}
 	return c.bccsp.Verify(k.(*key).key, signature, digest, opts)
 }
 

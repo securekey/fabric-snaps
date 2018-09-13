@@ -36,6 +36,7 @@ const (
 var RootScope = tally.NoopScope
 var rootScopeMutex = &sync.Mutex{}
 var running bool
+var debugOn bool
 
 // StatsdReporterOpts ...
 type StatsdReporterOpts struct {
@@ -59,6 +60,11 @@ type Opts struct {
 	PromReporterOpts   PromReporterOpts
 }
 
+// IsDebug ...
+func IsDebug() bool {
+	return debugOn
+}
+
 // NewOpts create metrics options based config file.
 // TODO: Currently this is only for peer node which uses global viper.
 // As for orderer, which uses its local viper, we are unable to get
@@ -66,6 +72,7 @@ type Opts struct {
 func NewOpts(peerConfig *viper.Viper) Opts {
 	opts := Opts{}
 	opts.Enabled = peerConfig.GetBool("metrics.enabled")
+	debugOn = peerConfig.GetBool("metrics.debug.enabled")
 	if report := peerConfig.GetString("metrics.reporter"); report != "" {
 		opts.Reporter = report
 	} else {
