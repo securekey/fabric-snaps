@@ -37,8 +37,9 @@ func (f *filter) Init(next peer.EndorserServer) {
 
 	f.proposalCounter = metrics.RootScope.Counter("proposal_count")
 	f.proposalErrorCounter = metrics.RootScope.Counter("proposal_error_count")
-	f.proposalTimer = metrics.RootScope.Timer("proposal_processing_time_seconds")
-
+	if metrics.IsDebug() {
+		f.proposalTimer = metrics.RootScope.Timer("proposal_processing_time_seconds")
+	}
 	logger.Info("Metrics filter initialized")
 }
 
@@ -48,9 +49,11 @@ func (f *filter) ProcessProposal(ctx context.Context, signedProp *peer.SignedPro
 	f.proposalCounter.Inc(1)
 
 	// Time proposal
-	stopwatch := f.proposalTimer.Start()
+	if metrics.IsDebug() {
+		stopwatch := f.proposalTimer.Start()
+		defer stopwatch.Stop()
+	}
 	resp, err := f.next.ProcessProposal(ctx, signedProp)
-	stopwatch.Stop()
 
 	// increment proposal error count, if required.
 	if err != nil || resp.GetResponse().GetStatus() != http.StatusOK {
