@@ -230,16 +230,16 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	return instance, nil
 }
 
-func reportMetric() {
+func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
 	if metrics.IsDebug() {
 		timer = metrics.RootScope.Timer("httpsnap_time_seconds")
 		stopWatch := timer.Start()
 		defer stopWatch.Stop()
 	}
+	return httpServiceImpl.getDataFromSource(invokeReq)
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
-	reportMetric()
+func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
 	counter.Inc(1)
 
 	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
