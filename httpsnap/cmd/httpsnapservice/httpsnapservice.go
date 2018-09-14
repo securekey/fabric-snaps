@@ -208,9 +208,6 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 
 	once.Do(func() {
 		counter = metrics.RootScope.Counter("httpsnap_calls")
-		if metrics.IsDebug() {
-			timer = metrics.RootScope.Timer("httpsnap_time_seconds")
-		}
 		instance = &HTTPServiceImpl{}
 		err = initialize(config)
 		if err != nil {
@@ -233,11 +230,16 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	return instance, nil
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
+func reportMetric() {
 	if metrics.IsDebug() {
+		timer = metrics.RootScope.Timer("httpsnap_time_seconds")
 		stopWatch := timer.Start()
 		defer stopWatch.Stop()
 	}
+}
+
+func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
+	reportMetric()
 	counter.Inc(1)
 
 	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
