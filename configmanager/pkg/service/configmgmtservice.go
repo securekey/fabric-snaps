@@ -27,6 +27,7 @@ import (
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -139,6 +140,11 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 //Refresh adds new items into cache and refreshes existing ones
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) errors.Error {
+	if metrics.IsDebug() {
+		stopwatch := metrics.RootScope.Timer("config_service_refresh_time_seconds").Start()
+		defer stopwatch.Stop()
+	}
+
 	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
 		return errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
