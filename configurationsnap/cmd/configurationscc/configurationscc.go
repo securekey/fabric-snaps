@@ -37,6 +37,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 )
 
 //GeneralMspID msp id generic config
@@ -282,6 +283,11 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if metrics.IsDebug() {
+		stopwatch := metrics.RootScope.Timer("config__refresh_time_seconds").Start()
+		defer stopwatch.Stop()
+	}
+
 	if len(args) < 1 {
 		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "expecting first arg to be a JSON array of MSP IDs"), logger, stub)
 	}
@@ -645,6 +651,11 @@ func periodicRefresh(channelID string, peerID string, peerMSPID string, refreshI
 }
 
 func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
+	if metrics.IsDebug() {
+		stopwatch := metrics.RootScope.Timer("config_periodic_refresh_time_seconds").Start()
+		defer stopwatch.Stop()
+	}
+
 	//call to get snaps config from ledger and to initilaize cahce instance
 	txService, err := txsnapservice.Get(channelID)
 	if err != nil {
