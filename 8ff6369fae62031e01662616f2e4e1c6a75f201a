@@ -16,6 +16,29 @@
       "revId": "8ff6369fae62031e01662616f2e4e1c6a75f201a",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35447dfa_980b6245",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-09-18T20:20:17Z",
+      "side": 1,
+      "message": "not sure where the conversion happens, but in prometheus, these timers are actually milliseconds.",
+      "range": {
+        "startLine": 287,
+        "startChar": 61,
+        "endLine": 287,
+        "endChar": 68
+      },
+      "revId": "8ff6369fae62031e01662616f2e4e1c6a75f201a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
