@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cfbd610_e874fc8f",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2018-09-18T20:16:11Z",
+      "side": 1,
+      "message": "two _",
+      "revId": "8ff6369fae62031e01662616f2e4e1c6a75f201a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
