@@ -39,6 +39,30 @@
       "revId": "8ff6369fae62031e01662616f2e4e1c6a75f201a",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9aa9d6fa_78cf8995",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1000024
+      },
+      "writtenOn": "2018-09-18T20:22:33Z",
+      "side": 1,
+      "message": "but all the other timers are named this way already :P.",
+      "parentUuid": "35447dfa_980b6245",
+      "range": {
+        "startLine": 287,
+        "startChar": 61,
+        "endLine": 287,
+        "endChar": 68
+      },
+      "revId": "8ff6369fae62031e01662616f2e4e1c6a75f201a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
