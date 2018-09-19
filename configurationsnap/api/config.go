@@ -6,6 +6,12 @@ SPDX-License-Identifier: Apache-2.0
 
 package api
 
+const (
+	// ConfigCCEventName is the name of the chaincode event that is published to
+	// indicate that the configuration has changed
+	ConfigCCEventName = "cfgsnap-event"
+)
+
 // PublicKeyForLogging is public key and key id combination used for private logging
 type PublicKeyForLogging struct {
 	// PublicKey is the public key used for private logging
