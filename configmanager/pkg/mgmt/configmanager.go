@@ -12,6 +12,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/configmanager/api"
+	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -46,6 +47,9 @@ func (cmngr *configManagerImpl) Save(configData []byte) errors.Error {
 	if err != nil {
 		return err
 	}
+
+	cmngr.stub.SetEvent(cfgsnapapi.ConfigCCEventName, configData)
+
 	return cmngr.saveConfigs(configMessageMap)
 }
 

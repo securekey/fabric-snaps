@@ -31,16 +31,15 @@ import (
 	mgmtapi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
+	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/listener"
 	"github.com/securekey/fabric-snaps/healthcheck"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
-
-//GeneralMspID msp id generic config
-const GeneralMspID = "general"
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
 var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb.Response{
@@ -92,6 +91,15 @@ const (
 
 	// configDataWriteACLPrefix is the prefix for the write (save, delete) policy resource names
 	configDataWriteACLPrefix = "configdata/write/"
+
+	//GeneralMspID msp id generic config
+	GeneralMspID = "general"
+
+	// configSnapName is the cc name used for event source
+	configSnapName = "configsnap"
+
+	// connectBackoff is the time to back off for connecting to event listener
+	connectBackoff = time.Second
 )
 
 // Init snap
@@ -110,9 +118,41 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 		interval := config.GetDefaultRefreshInterval()
 		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
 		configmgmtService.Initialize(stub, peerMspID)
-		periodicRefresh(stub.GetChannelID(), peerID, peerMspID, interval)
+
+		eventSource := &listener.EventSource{
+			ChannelID:   stub.GetChannelID(),
+			ChaincodeID: configSnapName,
+			EventName:   cfgsnapapi.ConfigCCEventName,
+		}
+
+		updateListener, err1 := listener.NewChaincodeListener(eventSource)
+		if err1 != nil {
+			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err1, "Error initializing Configuration Snap"), logger, stub)
+		}
+
+		go listenConfigEvents(stub.GetChannelID(), peerID, peerMspID, updateListener)
 	}
 	return shim.Success(nil)
+}
+
+func listenConfigEvents(channelID, peerID, peerMSPID string, updateListener listener.ChaincodeListener) {
+	for {
+		eventChannel, err := updateListener.Listen()
+		if err != nil {
+			e := errors.Errorf(errors.SystemError, "Error listening for updates on channel [%s]: %s", channelID, err)
+			logger.Warnf(e.Error())
+			time.Sleep(connectBackoff)
+			continue
+		}
+
+		for updateEvent := range eventChannel {
+			if updateEvent == nil {
+				continue
+			}
+
+			go sendRefreshRequest(channelID, peerID, peerMSPID)
+		}
+	}
 }
 
 // Invoke is the main entry point for invocations
