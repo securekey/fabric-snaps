@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8a30679_63280913",
+        "filename": "configmanager/pkg/mgmt/configmanager.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-09-19T20:50:54Z",
+      "side": 1,
+      "message": "This payload is useless since we won\u0027t receive it in the filtered block. It\u0027s better to leave it nil.",
+      "range": {
+        "startLine": 51,
+        "startChar": 51,
+        "endLine": 51,
+        "endChar": 61
+      },
+      "revId": "f402fc0176f269a623e7ac0dfb51657a145b25e5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fd890c0_b54d5670",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2018-09-19T20:50:54Z",
+      "side": 1,
+      "message": "These aren\u0027t used - can you update the function so you don\u0027t have to pass them in?",
+      "range": {
+        "startLine": 153,
+        "startChar": 36,
+        "endLine": 153,
+        "endChar": 53
+      },
+      "revId": "f402fc0176f269a623e7ac0dfb51657a145b25e5",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
