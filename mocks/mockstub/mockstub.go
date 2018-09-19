@@ -67,6 +67,7 @@ func NewMockStub(name string, cc shim.Chaincode) *MockStub {
 	s.State = make(map[string][]byte)
 	s.Invokables = make(map[string]*MockStub)
 	s.Keys = list.New()
+	s.ChaincodeEventsChannel = make(chan *pb.ChaincodeEvent, 100)
 
 	return s
 }
