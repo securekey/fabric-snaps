@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
 // membershipService is used to get peers of channel .
 var membershipService membership.Service
 
@@ -156,7 +157,7 @@ func TestGenerateCSR(t *testing.T) {
 }
 
 func TestSendRefreshRequest(t *testing.T) {
-	sendRefreshRequest("testChannel", "peer1", "Org1MSP")
+	sendRefreshRequest("testChannel")
 }
 
 func TestNew(t *testing.T) {
