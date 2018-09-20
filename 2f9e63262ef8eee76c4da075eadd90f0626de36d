@@ -16,6 +16,24 @@
       "revId": "2f9e63262ef8eee76c4da075eadd90f0626de36d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc5baf18_1aebdba9",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2018-09-20T20:21:07Z",
+      "side": 1,
+      "message": "we should change the default value for refreshInterval to 10m",
+      "parentUuid": "fd3871a7_481f236a",
+      "revId": "2f9e63262ef8eee76c4da075eadd90f0626de36d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
