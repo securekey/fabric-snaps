@@ -77,7 +77,7 @@ channel-artifacts:
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
 depend:
-	@scripts/dependencies.sh
+	# @scripts/dependencies.sh
 
 docker: all
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \
@@ -118,7 +118,8 @@ cliconfig:
 
 all: clean checks snaps unit-test pkcs11-unit-test integration-test http-server
 
-populate: populate-vendor
+# populate: populate-vendor
+populate:
 
 populate-vendor:
 ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
