@@ -395,12 +395,7 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 func (b *BDDContext) populateChannelPeers() {
 	networkConfig := b.ClientConfig().NetworkConfig()
 	for channelID := range networkConfig.Channels {
-		peers, ok := b.ClientConfig().ChannelPeers(channelID)
-		if !ok {
-			continue
-		}
-
-		for _, peer := range peers {
+		for _, peer := range b.ClientConfig().ChannelPeers(channelID) {
 			serverHostOverride := ""
 			if str, ok := peer.PeerConfig.GRPCOptions["ssl-target-name-override"].(string); ok {
 				serverHostOverride = str

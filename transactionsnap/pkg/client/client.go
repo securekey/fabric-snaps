@@ -139,23 +139,23 @@ type CustomConfig struct {
 }
 
 // ChannelPeers returns the channel peers configuration
-func (c *CustomConfig) ChannelPeers(name string) ([]fabApi.ChannelPeer, bool) {
+func (c *CustomConfig) ChannelPeers(name string) []fabApi.ChannelPeer {
 	url := fmt.Sprintf("%s:%d", c.localPeer.Host, c.localPeer.Port)
 	peerConfig, ok := c.PeerConfig(url)
 	if !ok {
 		logger.Warnf("Could not find channel peer for [%s]", url)
-		return nil, false
+		return nil
 	}
 	networkPeer, err := txsnapconfig.NewNetworkPeer(peerConfig, string(c.localPeer.MSPid), c.localPeerTLSCertPem)
 	if err != nil {
 		logger.Errorf(errors.WithMessage(errors.SystemError, err, fmt.Sprintf("Error creating network peer for [%s]", url)).GenerateLogMsg())
-		return nil, false
+		return nil
 	}
 
 	peer := fabApi.ChannelPeer{PeerChannelConfig: fabApi.PeerChannelConfig{EndorsingPeer: true,
 		ChaincodeQuery: true, LedgerQuery: true, EventSource: true}, NetworkPeer: *networkPeer}
 	logger.Debugf("ChannelPeers return %v", peer)
-	return []fabApi.ChannelPeer{peer}, true
+	return []fabApi.ChannelPeer{peer}
 }
 
 // GetInstance returns an instance of the fabric client for the given channel.
