@@ -58,7 +58,7 @@ DOCKER_COMPOSE_CMD ?= docker-compose
 export GO_LDFLAGS=-s
 export GO_DEP_COMMIT=v0.5.0 # the version of dep that will be installed by depend-install (or in the CI)
 
-snaps: clean populate
+snaps: version clean populate
 	@echo "Building snap plugins"
 	@mkdir -p build/snaps
 	@mkdir -p build/test
@@ -76,7 +76,7 @@ channel-artifacts:
 		securekey/fabric-tools:$(ARCH)-$(FABRIC_NEXT_IMAGE_TAG) \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
-depend:
+depend: version
 	@scripts/dependencies.sh
 
 docker: all
@@ -88,7 +88,7 @@ docker: all
 checks: depend license lint spelling check-dep
 
 .PHONY: license
-license:
+license: version
 	@scripts/check_license.sh
 
 lint: populate
@@ -116,7 +116,11 @@ http-server:
 cliconfig:
 	@go build -o ./build/configcli ./configurationsnap/cmd/configcli
 
-all: clean checks snaps unit-test pkcs11-unit-test integration-test http-server
+all: version clean checks snaps unit-test pkcs11-unit-test integration-test http-server
+
+.PHONY: version
+version:
+	@scripts/check_version.sh
 
 populate: populate-vendor
 
