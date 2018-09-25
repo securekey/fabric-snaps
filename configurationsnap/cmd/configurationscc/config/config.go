@@ -22,7 +22,7 @@ import (
 
 var logger = logging.NewLogger("confgurationsnap")
 var defaultLogLevel = "info"
-var defaultRefreshInterval = 10 * time.Second
+var defaultRefreshInterval = 10 * time.Minute
 var minimumRefreshInterval = 5 * time.Second
 
 const (

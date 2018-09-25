@@ -235,6 +235,11 @@ func TestPutStateSuccess(t *testing.T) {
 	if err := configManager.Save(b); err != nil {
 		t.Fatalf("PutState failed %s", err)
 	}
+
+	ccEvent := <-stub.ChaincodeEventsChannel
+	if ccEvent == nil {
+		t.Fatalf("No cc event was set for save")
+	}
 }
 
 func TestGetFieldsForIndex(t *testing.T) {
