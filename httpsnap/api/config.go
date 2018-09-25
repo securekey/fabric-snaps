@@ -60,4 +60,6 @@ type Config interface {
 	TimeoutOrDefault(timeoutType HTTPClientTimeoutType) time.Duration
 	IsPeerTLSConfigEnabled() bool
 	IsHeaderAllowed(name string) bool
+	IsKeyCacheEnabled() bool
+	KeyCacheRefreshInterval() time.Duration
 }

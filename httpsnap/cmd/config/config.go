@@ -23,9 +23,10 @@ import (
 )
 
 const (
-	peerConfigFileName = "core"
-	cmdRootPrefix      = "core"
-	defaultTimeout     = time.Second * 5
+	peerConfigFileName  = "core"
+	cmdRootPrefix       = "core"
+	defaultTimeout      = time.Second * 5
+	defaultCacheRefresh = time.Minute * 180
 )
 
 var logger = logging.NewLogger("httpsnap")
@@ -125,6 +126,20 @@ func (c *config) GetConfigPath(path string) string {
 func (c *config) IsHeaderAllowed(name string) bool {
 	val, _ := c.headers[strings.ToLower(name)]
 	return val
+}
+
+//IsKeyCacheEnabled returns if key cache is enabled
+func (c *config) IsKeyCacheEnabled() bool {
+	return c.httpSnapConfig.GetBool("cache.keycache.enabled")
+}
+
+//KeyCacheRefreshInterval returns key cache refresh interval
+func (c *config) KeyCacheRefreshInterval() time.Duration {
+	refresh := c.httpSnapConfig.GetDuration("cache.keycache.refresh")
+	if refresh == 0 {
+		return defaultCacheRefresh
+	}
+	return refresh
 }
 
 // GetCaCerts returns the list of ca certs

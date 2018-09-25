@@ -44,3 +44,8 @@ schemas:
 headers: 
   - Content-Type
   - Authorization
+
+cache:
+  keycache:
+    enabled: true
+    refresh: 50m

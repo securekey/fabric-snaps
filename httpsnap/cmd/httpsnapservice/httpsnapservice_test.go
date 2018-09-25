@@ -15,8 +15,15 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
+
+	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/utils"
 
 	"github.com/stretchr/testify/require"
 
@@ -29,7 +36,6 @@ import (
 
 	"encoding/pem"
 
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
@@ -45,6 +51,7 @@ var headers = map[string]string{
 
 var channelID = "testChannel"
 var mspID = "Org1MSP"
+var testOnce sync.Once
 
 func TestRequiredArg(t *testing.T) {
 	// Missing RequestURL
@@ -260,6 +267,60 @@ func TestPost(t *testing.T) {
 	instance.config = currentConfig
 	instance.certPool = currenCertPool
 
+}
+
+func TestKeyByCache(t *testing.T) {
+
+	// Happy path: Should get "Hello" back - use default TLS settings
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+		RequestBody: jsonStr}, "Hello")
+
+	assert.NotNil(t, keyCache)
+
+	//manipulate cache to have incorrect key bytes
+	cryptoSuite, err := factory.GetBCCSP("SW")
+	assert.NoError(t, err)
+
+	badKey, err := cryptoSuite.KeyGen(&bccsp.ECDSAKeyGenOpts{true})
+	assert.NotNil(t, badKey)
+	assert.NoError(t, err)
+
+	//Below cache loads badkey once and then on retry loads good key
+	keyCache = lazycache.New(
+		"HttpSnap_KeyBySKI_Cache",
+		func(key lazycache.Key) (interface{}, error) {
+			var val bccsp.Key
+			testOnce.Do(func() {
+				val = badKey
+			})
+
+			if val != nil {
+				return badKey, nil
+			}
+
+			return initGetKeyBySKI()(key)
+		},
+		lazyref.WithRefreshInterval(lazyref.InitImmediately, 100*time.Minute),
+	)
+
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+		RequestBody: jsonStr}, "Hello")
+
+}
+
+func loadPrivateKey(path string) (interface{}, error) {
+
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := utils.PEMtoPrivateKey(raw, []byte(""))
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }
 
 func TestHttpServiceRefresh(t *testing.T) {

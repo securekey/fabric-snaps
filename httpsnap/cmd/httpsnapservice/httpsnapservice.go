@@ -239,13 +239,12 @@ func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeReque
 	return httpServiceImpl.getDataFromSource(invokeReq)
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
-	counter.Inc(1)
+func (httpServiceImpl *HTTPServiceImpl) getHTTPClient(invokeReq HTTPServiceInvokeRequest, forceReload bool) (*http.Client, error) {
 
-	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config)
+	tlsConfig, codedErr := httpServiceImpl.getTLSConfig(invokeReq.NamedClient, httpServiceImpl.config, forceReload)
 	if codedErr != nil {
 		logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, codedErr.GenerateLogMsg())
-		return "", nil, codedErr
+		return nil, codedErr
 	}
 
 	tlsConfig.BuildNameToCertificate()
@@ -266,23 +265,36 @@ func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceI
 		Transport: transport,
 	}
 
+	return client, nil
+}
+
+func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
+	counter.Inc(1)
+
 	logger.Debugf("Requesting %s from url=%s", invokeReq.RequestBody, invokeReq.RequestURL)
 
-	req, err := http.NewRequest("POST", invokeReq.RequestURL, bytes.NewBuffer([]byte(invokeReq.RequestBody)))
+	req, err := httpServiceImpl.prepareHTTPRequest(invokeReq)
 	if err != nil {
 		return "", nil, errors.Wrap(errors.ValidationError, err, "Failed http.NewRequest")
 	}
 
-	// Set allowed headers only
-	for name, value := range invokeReq.RequestHeaders {
-		allowed := httpServiceImpl.config.IsHeaderAllowed(name)
-		if allowed {
-			req.Header.Set(name, value)
-			logger.Debugf("Setting header '%s' to '%s'", name, value)
+	sendHTTPRequest := func(reload bool) (*http.Response, error) {
+		client, err := httpServiceImpl.getHTTPClient(invokeReq, reload)
+		if err != nil {
+			logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, err.Error())
+			return nil, err
 		}
+		return client.Do(req)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := sendHTTPRequest(false)
+	if err != nil && httpServiceImpl.config.IsKeyCacheEnabled() {
+		//try again once by forcing cache reload
+		logger.Debugf("Failed to send http request to URL '%s' due to error [%s], retrying with forced cache reload", invokeReq.RequestURL, err.Error())
+		resp, err = sendHTTPRequest(true)
+	}
+
+	//if fails again then return error
 	if err != nil {
 		errObj := errors.Wrapf(errors.HTTPClientError, err, "POST failed. url=%s", invokeReq.RequestURL)
 		logger.Errorf(errObj.GenerateLogMsg())
@@ -310,6 +322,25 @@ func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceI
 	logger.Debugf("Got %s from url=%s", contents, invokeReq.RequestURL)
 
 	return responseContentType, contents, nil
+}
+
+func (httpServiceImpl *HTTPServiceImpl) prepareHTTPRequest(invokeReq HTTPServiceInvokeRequest) (*http.Request, error) {
+
+	req, err := http.NewRequest("POST", invokeReq.RequestURL, bytes.NewBuffer([]byte(invokeReq.RequestBody)))
+	if err != nil {
+		return nil, err
+	}
+
+	// Set allowed headers only
+	for name, value := range invokeReq.RequestHeaders {
+		allowed := httpServiceImpl.config.IsHeaderAllowed(name)
+		if allowed {
+			req.Header.Set(name, value)
+			logger.Debugf("Setting header '%s' to '%s'", name, value)
+		}
+	}
+
+	return req, nil
 }
 
 func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, pins []string, config httpsnapApi.Config) Dialer {
@@ -360,7 +391,7 @@ func (httpServiceImpl *HTTPServiceImpl) GeneratePin(c *x509.Certificate) string 
 	return base64.StdEncoding.EncodeToString(digest[:])
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config) (*tls.Config, errors.Error) {
+func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config, reload bool) (*tls.Config, errors.Error) {
 
 	//Get cryptosuite provider name from name from peerconfig
 	cryptoProvider, err := config.GetCryptoProvider()
@@ -388,7 +419,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	}
 
 	//Get private key using SKI
-	pk, e = cryptoSuite.GetKey(key.SKI())
+	pk, e = getKey(key.SKI(), config, cryptoProvider, reload)
 	if e != nil {
 		return nil, errors.Wrap(errors.GetKeyError, e, "failed to get private key from SKI")
 	}

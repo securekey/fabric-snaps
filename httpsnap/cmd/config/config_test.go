@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
@@ -287,4 +288,9 @@ func TestGetCryptoProvider(t *testing.T) {
 	if swCryptoProvider != "SW" {
 		t.Fatalf(" GetCryptoProvider expected to return 'SW' but got '%s'", swCryptoProvider)
 	}
+}
+
+func TestKeyCacheConfig(t *testing.T){
+	assert.True(t, c.IsKeyCacheEnabled())
+	assert.Equal(t, 50*time.Minute, c.KeyCacheRefreshInterval())
 }
