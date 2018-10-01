@@ -10,6 +10,9 @@ const (
 	// ConfigCCEventName is the name of the chaincode event that is published to
 	// indicate that the configuration has changed
 	ConfigCCEventName = "cfgsnap-event"
+
+	//GeneralMspID is the msp id of generic config
+	GeneralMspID = "general"
 )
 
 // PublicKeyForLogging is public key and key id combination used for private logging
