@@ -27,6 +27,7 @@ import (
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -60,6 +61,7 @@ func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceIm
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
 	})
 	instance.Refresh(stub, mspID)
+	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
 	return instance
 }
 

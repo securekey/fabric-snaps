@@ -93,11 +93,8 @@ const (
 	// configDataWriteACLPrefix is the prefix for the write (save, delete) policy resource names
 	configDataWriteACLPrefix = "configdata/write/"
 
-	//GeneralMspID msp id generic config
-	GeneralMspID = "general"
-
 	// configSnapName is the cc name used for event source
-	configSnapName = "configsnap"
+	configSnapName = "configurationsnap"
 
 	// connectBackoff is the time to back off for connecting to event listener
 	connectBackoff = time.Second
@@ -357,7 +354,7 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 		logger.Debugf("****** Refresh msp id %s", msp)
 		instance.Refresh(stub, msp)
 	}
-	instance.Refresh(stub, GeneralMspID)
+	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
 
 	return shim.Success(nil)
 }
