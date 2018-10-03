@@ -71,7 +71,7 @@ var CfgProvider = func(channelID string) (api.Config, error) {
 	return txsnapconfig.NewConfig(PeerConfigPath, channelID)
 }
 
-var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
+var cache = newRefCache(10 * time.Second)
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
