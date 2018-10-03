@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f93bb5ff_87e34b68",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2018-10-03T19:31:49Z",
+      "side": 1,
+      "message": "can this be configurable? also does it make sense to refresh the cache every 5 or 10 seconds? how about a 30 seconds or 1 minute to reduce processing time? and clearCache is called on error for retry so maybe we don\u0027t need a low number.. what do you think?",
+      "range": {
+        "startLine": 74,
+        "startChar": 24,
+        "endLine": 74,
+        "endChar": 26
+      },
+      "revId": "fe43752b896e95c979351b7adb299741923ac8b7",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
