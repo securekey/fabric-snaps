@@ -22,6 +22,30 @@
       "revId": "fe43752b896e95c979351b7adb299741923ac8b7",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f34f8f3c_811c2395",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2018-10-03T20:04:54Z",
+      "side": 1,
+      "message": "No, we discussed about it earlier. We finalized the number to 10",
+      "parentUuid": "f93bb5ff_87e34b68",
+      "range": {
+        "startLine": 74,
+        "startChar": 24,
+        "endLine": 74,
+        "endChar": 26
+      },
+      "revId": "fe43752b896e95c979351b7adb299741923ac8b7",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
