@@ -54,17 +54,19 @@ func New() shim.Chaincode {
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := stub.GetChannelID()
 	if channelID != "" {
-		logger.Debugf("Getting local blockchain info for channel [%s]", channelID)
-		bcInfo, err := ledgerBCInfoProvider.GetBlockchainInfo(channelID)
-		if err != nil {
-			panic("unable to get blockchain info: " + err.Error())
-		}
+		go func() {
+			logger.Debugf("Getting local blockchain info for channel [%s]", channelID)
+			bcInfo, err := ledgerBCInfoProvider.GetBlockchainInfo(channelID)
+			if err != nil {
+				panic("unable to get blockchain info: " + err.Error())
+			}
 
-		logger.Infof("Setting initial blockchain info for channel [%s]: %#v", channelID, bcInfo)
-		err = initbcinfo.Set(channelID, bcInfo)
-		if err != nil {
-			panic("unable to set initial blockchain info: " + err.Error())
-		}
+			logger.Infof("Setting initial blockchain info for channel [%s]: %#v", channelID, bcInfo)
+			err = initbcinfo.Set(channelID, bcInfo)
+			if err != nil {
+				panic("unable to set initial blockchain info: " + err.Error())
+			}
+		}()
 	}
 	return shim.Success(nil)
 }

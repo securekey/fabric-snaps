@@ -34,6 +34,7 @@ import (
 	protosUtils "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/utils"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	cb "github.com/hyperledger/fabric/protos/common"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -87,8 +88,15 @@ func TestTransactionSnapInit(t *testing.T) {
 	response = stub.MockInit("TxID", args)
 	require.Equalf(t, int32(shim.OK), response.Status, "Expecting response status %d but got %d", shim.OK, response.Status)
 
-	bcInfo, ok := initbcinfo.Get(channelID)
-	require.True(t, ok)
+	var bcInfo *cb.BlockchainInfo
+	for i := 0; i < 10; i++ {
+		ok := false
+		bcInfo, ok = initbcinfo.Get(channelID)
+		if ok {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 	require.NotNil(t, bcInfo)
 	assert.Equal(t, initialBlockHeight, bcInfo.Height)
 }
