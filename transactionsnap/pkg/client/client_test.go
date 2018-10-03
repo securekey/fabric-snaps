@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"github.com/securekey/fabric-snaps/mocks/mockprovider"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
@@ -26,6 +28,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
+	utilErr "github.com/securekey/fabric-snaps/util/errors"
 )
 
 const (
@@ -178,4 +181,26 @@ func TestInitializer(t *testing.T) {
 	assert.False(t, oldCtx == client.context)
 	assert.False(t, oldChannelClient == client.channelClient)
 	assert.False(t, oldHash == client.configHash)
+}
+
+func TestRetryableErrors(t *testing.T) {
+
+	assert.True(t, isRetryable(errors.New("InvokeHandler Query failed: sign proposal failed: sign failed: Private key not found [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(errors.New("XYZ: sign proposal failed:  [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(errors.New("XYZ: sign failed:  [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(errors.New("XYZ: Private key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(errors.New("XYZ: [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.False(t, isRetryable(errors.New("XYZ: proposal failed: signing failed: Public key incorrect format")))
+
+	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "InvokeHandler Query failed: sign proposal failed: sign failed: Private key not found [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: sign proposal failed:  [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: sign failed:  [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: Private key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
+	assert.False(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: proposal failed: signing failed: Public key incorrect format")))
+
+	assert.False(t, isRetryable(nil))
+	assert.False(t, isRetryable(""))
+	assert.False(t, isRetryable("InvokeHandler Query failed: sign proposal failed: sign failed: Private key not found [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |."))
+
 }
