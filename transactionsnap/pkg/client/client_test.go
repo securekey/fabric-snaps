@@ -199,6 +199,12 @@ func TestRetryableErrors(t *testing.T) {
 	assert.True(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")))
 	assert.False(t, isRetryable(utilErr.New(utilErr.GeneralError, "XYZ: proposal failed: signing failed: Public key incorrect format")))
 
+	err := errors.New("InvokeHandler Query failed: sign proposal failed: sign failed: Private key not found [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |.")
+	assert.True(t, isRetryable(utilErr.WithMessage(utilErr.GeneralError, err, "InvokeHandler Query failed")))
+	assert.True(t, isRetryable(utilErr.WithMessage(utilErr.GeneralError, err, "")))
+	err = errors.New("XYZ: proposal failed: signing failed: Public key incorrect format")
+	assert.False(t, isRetryable(utilErr.WithMessage(utilErr.GeneralError, err, "XYZ: proposal failed: signing failed: Public key incorrect format")))
+
 	assert.False(t, isRetryable(nil))
 	assert.False(t, isRetryable(""))
 	assert.False(t, isRetryable("InvokeHandler Query failed: sign proposal failed: sign failed: Private key not found [Key not found [00000000  ab be 8e e0 f8 6c 22 7b  19 17 d2 08 92 14 97 60  |."))
