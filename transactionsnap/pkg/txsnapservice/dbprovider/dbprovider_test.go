@@ -10,24 +10,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestGetDBProviderInstance(t *testing.T) {
-	viper.Set("ledger.state.stateDatabase", "leveldb")
-	db, err := getStateDBProviderInstance()
-	assert.NotNil(t, err, "Expected error")
-	assert.Nil(t, db)
-
-	viper.Set("ledger.state.stateDatabase", "CouchDB")
-	db, err = getStateDBProviderInstance()
-	assert.NotNil(t, err, "Expected error")
-	assert.Nil(t, db)
-	// clean up
-	dbProviderErr = nil
-}
 
 func TestGetStateDB(t *testing.T) {
 	setupMockDBProvider(nil)
@@ -45,7 +31,7 @@ func TestGetStateDB(t *testing.T) {
 func setupMockDBProvider(err error) {
 	once.Do(func() {
 	})
-	stateDBProvider = &mockDBProvider{err: err}
+	vdbProvider = &mockDBProvider{err: err}
 }
 
 type mockDBProvider struct {
@@ -53,7 +39,7 @@ type mockDBProvider struct {
 }
 
 // GetDBHandle returns a handle to a PvtVersionedDB
-func (m *mockDBProvider) GetDBHandle(id string) (privacyenabledstate.DB, error) {
+func (m *mockDBProvider) GetDBHandle(id string) (statedb.VersionedDB, error) {
 	return nil, m.err
 }
 

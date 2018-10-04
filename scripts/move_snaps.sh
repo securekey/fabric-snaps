@@ -38,18 +38,6 @@ rm -rf ./vendor/golang.org/x/crypto/sha3/
 rm -rf ./vendor/golang.org/x/net/context/
 rm -rf ./vendor/golang.org/x/sys/unix/
 
-## remove when update to fabric 1.3
-rm -rf ./vendor/github.com/golang/protobuf/
-rm -rf ./vendor/github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos
-rm -rf ./vendor/github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protos
-rm -rf ./vendor/github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/discovery
-rm -rf ./vendor/github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery
-cp -r /opt/gopath/src/github.com/hyperledger/fabric/plugins/scripts/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos ./vendor/github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/
-cp -r /opt/gopath/src/github.com/hyperledger/fabric/plugins/scripts/fabric-sdk-go/internal/github.com/hyperledger/fabric/protos ./vendor/github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/
-cp -r /opt/gopath/src/github.com/hyperledger/fabric/plugins/scripts/fabric-sdk-go/internal/github.com/hyperledger/fabric/discovery ./vendor/github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/
-cp -r /opt/gopath/src/github.com/hyperledger/fabric/plugins/scripts/fabric-sdk-go/pkg/fab/discovery ./vendor/github.com/hyperledger/fabric-sdk-go/pkg/fab/
-
-
 echo "Restoring exceptions"
 cp -r ./vendor_backup/* ./vendor/
 

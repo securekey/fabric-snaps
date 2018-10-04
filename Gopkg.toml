@@ -37,15 +37,15 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[override]]
   name = "google.golang.org/genproto"
-  revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[constraint]]
   revision = "0ac402c89bd4e63c0f6e29e5cee5ef29d38cf87c"
   name = "github.com/hyperledger/fabric-sdk-go"
 
+
 [[constraint]]
   name = "github.com/hyperledger/fabric"
-  branch = "release-1.2"
+  revision = "3663e86a474a1a914d48ddeb7e39271c97975ce3"
 
 [[override]]
   name = "github.com/miekg/pkcs11"
@@ -69,7 +69,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[constraint]]
   name = "google.golang.org/grpc"
-  version = "=1.11.3"
+  version = "=1.13.0"
 
 [[override]]
   name = "github.com/golang/protobuf"

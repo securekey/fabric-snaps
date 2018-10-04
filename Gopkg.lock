@@ -214,14 +214,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3fb07f8e222402962fa190eb060608b34eddfb64562a18e2167df2de0ece85d8"
-  name = "github.com/golang/groupcache"
-  packages = ["lru"]
-  pruneopts = "NUT"
-  revision = "24b0969c4cb722950103eed87108c8d291a8df00"
-
-[[projects]]
-  branch = "master"
   digest = "1:2e292c0e36117b617c4df3f10ac9a7fe05e3c90bf057f1e61867c913d866e0c9"
   name = "github.com/golang/mock"
   packages = ["gomock"]
@@ -266,6 +258,14 @@
   revision = "391726f8973ddb3521ab1a462bd55a35c6f67f0b"
 
 [[projects]]
+  digest = "1:1b497700cbc61544430babb4e4fd4313758bb9fec7144ca50c625fa6ce8266c7"
+  name = "github.com/grpc-ecosystem/go-grpc-middleware"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c250d6563d4d4c20252cd865923440e829844f4e"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:b02943d3542f3fcb6faa4723b4e4f879d7fc166451e24f72c449de9a3be50e3c"
   name = "github.com/hashicorp/go-version"
@@ -293,8 +293,7 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "release-1.2"
-  digest = "1:a08ec7a387a8012c9cc88110033237d7e5319e2f85522ac2c9979781d523df23"
+  digest = "1:dfe9cd72cb19922f3dc000fc3d91ee10dd2a3c7b493f26a5fed23bd44cb67b80"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -305,6 +304,7 @@
     "bccsp/utils",
     "common/capabilities",
     "common/cauthdsl",
+    "common/chaincode",
     "common/channelconfig",
     "common/config",
     "common/configtx",
@@ -313,6 +313,7 @@
     "common/deliver",
     "common/errors",
     "common/flogging",
+    "common/flogging/fabenc",
     "common/genesis",
     "common/ledger",
     "common/ledger/blkstorage",
@@ -336,11 +337,8 @@
     "core/aclmgmt",
     "core/aclmgmt/resources",
     "core/chaincode/platforms",
-    "core/chaincode/platforms/car",
     "core/chaincode/platforms/ccmetadata",
     "core/chaincode/platforms/golang",
-    "core/chaincode/platforms/java",
-    "core/chaincode/platforms/node",
     "core/chaincode/platforms/util",
     "core/chaincode/shim",
     "core/comm",
@@ -371,20 +369,25 @@
     "core/ledger/kvledger/history/historydb/historyleveldb",
     "core/ledger/kvledger/txmgmt/privacyenabledstate",
     "core/ledger/kvledger/txmgmt/pvtstatepurgemgmt",
+    "core/ledger/kvledger/txmgmt/queryutil",
     "core/ledger/kvledger/txmgmt/rwsetutil",
     "core/ledger/kvledger/txmgmt/statedb",
     "core/ledger/kvledger/txmgmt/statedb/statecouchdb",
+    "core/ledger/kvledger/txmgmt/statedb/statecouchdb/msgs",
     "core/ledger/kvledger/txmgmt/statedb/stateleveldb",
+    "core/ledger/kvledger/txmgmt/statedb/stateleveldb/msgs",
+    "core/ledger/kvledger/txmgmt/storageutil",
     "core/ledger/kvledger/txmgmt/txmgr",
     "core/ledger/kvledger/txmgmt/txmgr/lockbasedtxmgr",
     "core/ledger/kvledger/txmgmt/validator",
+    "core/ledger/kvledger/txmgmt/validator/internal",
     "core/ledger/kvledger/txmgmt/validator/statebasedval",
     "core/ledger/kvledger/txmgmt/validator/valimpl",
-    "core/ledger/kvledger/txmgmt/validator/valinternal",
     "core/ledger/kvledger/txmgmt/version",
     "core/ledger/ledgerconfig",
     "core/ledger/ledgermgmt",
     "core/ledger/ledgerstorage",
+    "core/ledger/mock",
     "core/ledger/pvtdatapolicy",
     "core/ledger/pvtdatastorage",
     "core/ledger/util",
@@ -393,8 +396,6 @@
     "core/policy",
     "core/policy/mocks",
     "core/transientstore",
-    "events/consumer",
-    "events/producer",
     "gossip/api",
     "gossip/comm",
     "gossip/common",
@@ -409,6 +410,7 @@
     "gossip/identity",
     "gossip/integration",
     "gossip/privdata",
+    "gossip/privdata/common",
     "gossip/service",
     "gossip/state",
     "gossip/util",
@@ -425,23 +427,24 @@
     "protos/ledger/rwset/kvrwset",
     "protos/msp",
     "protos/orderer",
+    "protos/orderer/etcdraft",
     "protos/peer",
     "protos/transientstore",
     "protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "a58896e4b1b5ed071d76e6244174aeac853a7ba1"
+  revision = "3663e86a474a1a914d48ddeb7e39271c97975ce3"
 
 [[projects]]
   branch = "master"
-  digest = "1:1787f0512309054888eeabe19450c41893a64ab68b7ba06083b5bcf7c103e7d4"
+  digest = "1:b1c26a7393cb28a859e794f8eb364f5bae72ad9762e301325c50c7fa43544667"
   name = "github.com/hyperledger/fabric-amcl"
   packages = [
     "amcl",
     "amcl/FP256BN",
   ]
   pruneopts = "NUT"
-  revision = "600b0c45a024131b326a41096da0559a9a7461fd"
+  revision = "6b78f7a22d950103fb2669aabb969f56d42d283b"
 
 [[projects]]
   digest = "1:35608956a9fec8c72c6bf9a531004341f60bdcee98a25add5b62510ed0d8cd8c"
@@ -655,13 +658,11 @@
   revision = "a3b6351eb1ff8e1bfa30b2f55d7e282186ed8fee"
 
 [[projects]]
-  digest = "1:3ec3d482f3a7c3718b0330711a0d0de8148af3dfaa66df63426969b0ec820961"
+  digest = "1:450495ee4de4bf794a5c92db6530c9248227031a69beca1382454ca41b0f92ca"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
     "format",
-    "gbytes",
-    "gexec",
     "internal/assertion",
     "internal/asyncassertion",
     "internal/oraclematcher",
@@ -903,12 +904,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f1440768fc6dd60e53c0cb45a90958f5bd30aa3129aee0e81edaf3baf59d7ade"
+  digest = "1:ef1ff1c057c65dbc5f9c2d5ab4098aba90ac2014cd2ae3cd662e56213627c822"
   name = "github.com/tedsuo/ifrit"
-  packages = [
-    ".",
-    "ginkgomon",
-  ]
+  packages = ["."]
   pruneopts = "NUT"
   revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
 
@@ -923,6 +921,14 @@
   pruneopts = "NUT"
   revision = "522328b48efad0c6034dba92bf39228694e9d31f"
   version = "v3.3.2"
+
+[[projects]]
+  digest = "1:3f3f2b36f76d1187ccf6640dd5bdbce43fd3c1a2cc0d747abc1e0de374d13e63"
+  name = "github.com/willf/bitset"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e553b05586428962bf7058d1044519d87ca72d74"
+  version = "v1.1.9"
 
 [[projects]]
   branch = "master"
@@ -947,6 +953,38 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "0c8571ac0ce161a5feb57375a9cdf148c98c0f70"
+
+[[projects]]
+  digest = "1:22f696cee54865fb8e9ff91df7b633f6b8f22037a8015253c6b6a71ca82219c7"
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  digest = "1:58ca93bdf81bac106ded02226b5395a0595d5346cdc4caa8d9c1f3a5f8f9976e"
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:cb65d15dcf60c2729636ea04b10d108c8dda94396669badaac88dd2d0f55e9c8"
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore",
+    "zapgrpc",
+  ]
+  pruneopts = "NUT"
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
 
 [[projects]]
   branch = "master"
@@ -1046,7 +1084,7 @@
   revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[projects]]
-  digest = "1:3d43152515ea791363eb0d1d21378fbf70e7df4a3954fd315898532cf5e64a8c"
+  digest = "1:d0e5846da58e4e20d1bbd7502b24f31d37e3ac1e02a9042d95bd93c2d0c139dd"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -1058,9 +1096,11 @@
     "credentials",
     "encoding",
     "encoding/proto",
-    "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/grpcrand",
     "keepalive",
     "metadata",
     "naming",
@@ -1074,8 +1114,8 @@
     "transport",
   ]
   pruneopts = "NUT"
-  revision = "d11072e7ca9811b1100b80ca0269ac831f06d024"
-  version = "v1.11.3"
+  revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
+  version = "v1.13.0"
 
 [[projects]]
   digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
@@ -1096,11 +1136,6 @@
     "github.com/gogo/protobuf/proto",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
-    "github.com/golang/protobuf/ptypes/timestamp",
-    "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/util",
-    "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/discovery/client",
-    "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protos/discovery",
-    "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/protos/gossip",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection",
@@ -1109,7 +1144,6 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt",
-    "github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi",
     "github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry",
     "github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status",
     "github.com/hyperledger/fabric-sdk-go/pkg/common/logging",
@@ -1120,7 +1154,6 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp",
     "github.com/hyperledger/fabric-sdk-go/pkg/context",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config",
-    "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/config/lookup",
     "github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite",
@@ -1130,7 +1163,6 @@
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig",
-    "github.com/hyperledger/fabric-sdk-go/pkg/fab/comm",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/dispatcher",
     "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/client/peerresolver/preferpeer",
@@ -1172,12 +1204,13 @@
     "github.com/hyperledger/fabric/core/handlers/auth",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
+    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb",
+    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb/statecouchdb",
     "github.com/hyperledger/fabric/core/ledger/ledgerconfig",
     "github.com/hyperledger/fabric/core/ledger/ledgermgmt",
     "github.com/hyperledger/fabric/core/peer",
     "github.com/hyperledger/fabric/core/policy",
     "github.com/hyperledger/fabric/core/policy/mocks",
-    "github.com/hyperledger/fabric/events/consumer",
     "github.com/hyperledger/fabric/gossip/api",
     "github.com/hyperledger/fabric/gossip/comm",
     "github.com/hyperledger/fabric/gossip/common",

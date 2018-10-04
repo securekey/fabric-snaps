@@ -28,7 +28,6 @@ func GetSampleBCCSPFactoryOpts(ksPath string) *factory.FactoryOpts {
 		Pin:          "98765432",
 		Label:        "ForFabric",
 		Ephemeral:    false,
-		Sensitive:    true,
 		SoftVerify:   true,
 	}
 
