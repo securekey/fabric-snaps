@@ -39,7 +39,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "google.golang.org/genproto"
 
 [[constraint]]
-  revision = "0ac402c89bd4e63c0f6e29e5cee5ef29d38cf87c"
+  revision = "f7ae259c8eaddd62c3f09ea6faee27d6f70eca4f"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 
