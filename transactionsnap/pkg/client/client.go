@@ -336,10 +336,6 @@ type endorserFilter struct {
 	peersOfChannel []*memApi.PeerEndpoint
 }
 
-type channelPeerConfig interface {
-	ChannelPeersFromConfig(name string) []fabApi.ChannelPeer
-}
-
 func newEndorserFilter(channelID string, config fabApi.EndpointConfig, targetFilter api.PeerFilter) *endorserFilter {
 	var peersOfChannel []*memApi.PeerEndpoint
 	membershipService, err := MemServiceProvider()
