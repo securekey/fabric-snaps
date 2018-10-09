@@ -16,6 +16,7 @@ message PeerEndpoint {
     bytes MSPid = 2;
     uint64 ledger_height = 3;
     bool left_channel = 4;
+    repeated string roles = 5;
 }
 
 // PeerEndpoints contains a list of peer endpoints
