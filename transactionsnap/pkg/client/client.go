@@ -21,7 +21,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -35,6 +34,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
+	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
@@ -57,6 +58,12 @@ const (
 
 // ConfigProvider returns the config for the given channel
 type ConfigProvider func(channelID string) (api.Config, error)
+
+// MemServiceProvider returns the membership service provider
+// NOTE: Should only be modified by unit tests
+var MemServiceProvider = func() (memApi.Service, error) {
+	return memservice.Get()
+}
 
 var retryCounter = metrics.RootScope.Counter("transaction_retry")
 
@@ -323,6 +330,73 @@ func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.
 	return sdk, nil
 }
 
+type endorserFilter struct {
+	channelID      string
+	targetFilter   api.PeerFilter
+	peersOfChannel []*memApi.PeerEndpoint
+}
+
+type channelPeerConfig interface {
+	ChannelPeersFromConfig(name string) []fabApi.ChannelPeer
+}
+
+func newEndorserFilter(channelID string, config fabApi.EndpointConfig, targetFilter api.PeerFilter) *endorserFilter {
+	var peersOfChannel []*memApi.PeerEndpoint
+	membershipService, err := MemServiceProvider()
+	if err != nil {
+		logger.Errorf("Error getting membership service: %s", err)
+	} else {
+		peersOfChannel, err = membershipService.GetPeersOfChannel(channelID)
+		if err != nil {
+			logger.Errorf("Error getting peers of channel [%s]: %s", channelID, err)
+		}
+	}
+
+	return &endorserFilter{
+		channelID:      channelID,
+		targetFilter:   targetFilter,
+		peersOfChannel: peersOfChannel,
+	}
+}
+
+func (f *endorserFilter) Accept(peer fabApi.Peer) bool {
+	if !f.isEndorser(peer) {
+		logger.Debugf("Peer [%s] is NOT an endorsing peer for channel [%s]", peer.URL(), f.channelID)
+		return false
+	}
+
+	logger.Debugf("Peer [%s] is an endorsing peer for channel [%s]", peer.URL(), f.channelID)
+
+	if f.targetFilter != nil {
+		logger.Debugf("Invoking target filter for peer [%s]", peer.URL())
+		return f.targetFilter.Accept(peer)
+	}
+
+	return true
+}
+
+func (f *endorserFilter) isEndorser(peer fabApi.Peer) bool {
+	endorser, err := f.hasEndorserRole(peer)
+	if err != nil {
+		logger.Warnf("Unable to determine if peer [%s] has the endorser role. Returning true", peer.URL())
+		return true
+	}
+	return endorser
+}
+
+func (f *endorserFilter) hasEndorserRole(peer fabApi.Peer) (bool, error) {
+	for _, p := range f.peersOfChannel {
+		logger.Debugf("Checking peer [%s] against endpoint [%s]", peer.URL(), p.Endpoint)
+		if p.Endpoint == peer.URL() {
+			roles := memservice.Roles(p.Roles)
+			isEndorser := roles.HasRole(memservice.EndorserRole)
+			logger.Debugf("Peer [%s] is endorser: %t", peer.URL(), isEndorser)
+			return isEndorser, nil
+		}
+	}
+	return false, errors.Errorf(errors.SystemError, "Peer [%s] not found", peer.URL())
+}
+
 func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
@@ -345,9 +419,13 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		),
 	)
 
-	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
+	response, err := c.channelClient.InvokeHandler(
+		customQueryHandler,
+		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
+		channel.WithTargets(targets...),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithRetry(c.retryOpts()),
+		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
 			retryCounter.Inc(1)
 		}))
@@ -436,9 +514,13 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			txnHeaderOptsProvider),
 	)
 
-	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
+	resp, err := c.channelClient.InvokeHandler(
+		customExecuteHandler,
+		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
+		channel.WithTargets(targets...),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithRetry(c.retryOpts()),
+		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
 			retryCounter.Inc(1)
 		}))

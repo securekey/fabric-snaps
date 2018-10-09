@@ -293,8 +293,7 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "release-1.2"
-  digest = "1:a08ec7a387a8012c9cc88110033237d7e5319e2f85522ac2c9979781d523df23"
+  digest = "1:4fffe6f7662039320fb1f785d283fca7f0285eba003519e4121cf58da398c65c"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -316,6 +315,7 @@
     "common/genesis",
     "common/ledger",
     "common/ledger/blkstorage",
+    "common/ledger/blkstorage/cdbblkstorage",
     "common/ledger/blkstorage/fsblkstorage",
     "common/ledger/blockledger",
     "common/ledger/blockledger/file",
@@ -332,6 +332,7 @@
     "common/tools/configtxgen/localconfig",
     "common/tools/configtxlator/update",
     "common/util",
+    "common/util/retry",
     "common/viperutil",
     "core/aclmgmt",
     "core/aclmgmt/resources",
@@ -368,7 +369,11 @@
     "core/ledger/kvledger",
     "core/ledger/kvledger/bookkeeping",
     "core/ledger/kvledger/history/historydb",
+    "core/ledger/kvledger/history/historydb/historycouchdb",
+    "core/ledger/kvledger/history/historydb/historydbprovider",
     "core/ledger/kvledger/history/historydb/historyleveldb",
+    "core/ledger/kvledger/inventory/cdbid",
+    "core/ledger/kvledger/inventory/leveldbid",
     "core/ledger/kvledger/txmgmt/privacyenabledstate",
     "core/ledger/kvledger/txmgmt/pvtstatepurgemgmt",
     "core/ledger/kvledger/txmgmt/rwsetutil",
@@ -387,12 +392,16 @@
     "core/ledger/ledgerstorage",
     "core/ledger/pvtdatapolicy",
     "core/ledger/pvtdatastorage",
+    "core/ledger/pvtdatastorage/cdbpvtdata",
+    "core/ledger/pvtdatastorage/pvtmetadata",
     "core/ledger/util",
     "core/ledger/util/couchdb",
     "core/peer",
     "core/policy",
     "core/policy/mocks",
     "core/transientstore",
+    "core/transientstore/cdbtransientdata",
+    "core/transientstore/splitter",
     "events/consumer",
     "events/producer",
     "gossip/api",
@@ -430,7 +439,8 @@
     "protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "a58896e4b1b5ed071d76e6244174aeac853a7ba1"
+  revision = "e61fd89265b5397f6b84c732fbcaf7f76d995678"
+  source = "git@sk-git.securekey.com:gerrit/fabric-next.git"
 
 [[projects]]
   branch = "master"

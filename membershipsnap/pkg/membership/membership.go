@@ -10,13 +10,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
-
-	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
-
-	"github.com/securekey/fabric-snaps/util/bcinfo"
-
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
+	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
+	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/gossip/discovery"
@@ -25,6 +22,7 @@ import (
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	"github.com/securekey/fabric-snaps/util/bcinfo"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -33,6 +31,23 @@ var logger = logging.NewLogger("membershipsnap")
 const (
 	cacheExpiration = 500 * time.Millisecond // TODO: Make configurable
 )
+
+// Roles is a set of peer roles
+type Roles []string
+
+// HasRole return true if the given role is included in the set
+func (r Roles) HasRole(role string) bool {
+	if len(r) == 0 {
+		// Return true by default in order to be backward compatible
+		return true
+	}
+	for _, r := range r {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
 
 var membershipService = lazyref.New(func() (interface{}, error) {
 	return createMembershipService()
@@ -176,6 +191,7 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 	for _, member := range members {
 		ledgerHeight := uint64(0)
 		leftChannel := false
+		var roles []string
 
 		properties := member.Properties
 		if properties != nil {
@@ -183,18 +199,22 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 			// Gossip NetworkMember is really the block number.
 			ledgerHeight = properties.LedgerHeight + 1
 			leftChannel = properties.LeftChannel
+			roles = properties.Roles
 		}
 
 		if ledgerHeight == 0 {
 			logger.Warnf("Ledger height for channel [%s] on peer [%s] is 0.\n", channelID, member.Endpoint)
 		}
 
-		peerEndpoints = append(peerEndpoints, &memserviceapi.PeerEndpoint{
+		peerEndpoint := &memserviceapi.PeerEndpoint{
 			Endpoint:     member.PreferredEndpoint(),
 			MSPid:        []byte(s.mspProvider.GetMSPID(member.PKIid)),
 			LedgerHeight: ledgerHeight,
 			LeftChannel:  leftChannel,
-		})
+			Roles:        roles,
+		}
+		logger.Debugf("[%s] Adding peer [%s] - MSPID: [%s], LedgerHeight: %d, Roles: %s", channelID, peerEndpoint.Endpoint, peerEndpoint.MSPid, peerEndpoint.LedgerHeight, peerEndpoint.Roles)
+		peerEndpoints = append(peerEndpoints, peerEndpoint)
 	}
 
 	if includeLocalPeer {
@@ -214,9 +234,11 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 			MSPid:        s.localMSPID,
 			LedgerHeight: ledgerHeight,
 			LeftChannel:  false,
+			Roles:        ledgerconfig.RolesAsString(),
 		}
 
 		peerEndpoints = append(peerEndpoints, self)
+		logger.Debugf("[%s] Adding self [%s] - MSPID: [%s], LedgerHeight: %d, Roles: %s", self.Endpoint, self.MSPid, self.LedgerHeight, self.Roles)
 	}
 
 	return peerEndpoints

@@ -38,8 +38,11 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/mocks/mockmembership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -617,6 +620,24 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
+
+	mockMembership := &mockmembership.Service{
+		PeersOfChannel: map[string][]*memApi.PeerEndpoint{
+			channelID: {
+				&memApi.PeerEndpoint{
+					Endpoint:     "grpc://127.0.0.1:7040",
+					MSPid:        []byte("org1MSP"),
+					LedgerHeight: 1000,
+					Roles:        []string{memservice.EndorserRole, memservice.CommitterRole},
+				},
+			},
+		},
+	}
+
+	client.MemServiceProvider = func() (memApi.Service, error) {
+		return mockMembership, nil
+	}
+
 	os.Exit(m.Run())
 
 }
