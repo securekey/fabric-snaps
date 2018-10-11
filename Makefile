@@ -16,7 +16,7 @@
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # Release Parameters
-BASE_VERSION = 0.3.0-metrics
+BASE_VERSION = 0.3.1-metrics
 IS_RELEASE = true
 
 ifneq ($(IS_RELEASE),true)

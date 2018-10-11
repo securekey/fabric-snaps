@@ -45,7 +45,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[constraint]]
   name = "github.com/hyperledger/fabric"
-  revision = "3663e86a474a1a914d48ddeb7e39271c97975ce3"
+  version = "1.3.0"
 
 [[override]]
   name = "github.com/miekg/pkcs11"
