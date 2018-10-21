@@ -33,10 +33,10 @@ import (
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric/common/metrics"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
 	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
@@ -64,8 +64,6 @@ type ConfigProvider func(channelID string) (api.Config, error)
 var MemServiceProvider = func() (memApi.Service, error) {
 	return memservice.Get()
 }
-
-var retryCounter = metrics.RootScope.Counter("transaction_retry")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
@@ -423,7 +421,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			retryCounter.Inc(1)
+			metrics.RootScope.Counter("txnsnap_retry").Inc(1)
 		}))
 
 	if err != nil {
@@ -518,7 +516,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			retryCounter.Inc(1)
+			metrics.RootScope.Counter("txnsnap_retry").Inc(1)
 		}))
 
 	if err != nil {
