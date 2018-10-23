@@ -409,6 +409,9 @@ peer:
             name: DefaultAuth
           -
             name: ExpirationCheck    # This filter checks identity x509 certificate expiration
+          -
+            name: MetricsFilter
+            library: /opt/extsysccs/metricsfilter.so
         decorators:
           -
             name: DefaultDecorator

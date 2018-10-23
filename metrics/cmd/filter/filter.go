@@ -9,10 +9,15 @@ package main
 import (
 	"net/http"
 
+	"fmt"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/handlers/auth"
 	"github.com/hyperledger/fabric/protos/peer"
+	pb "github.com/hyperledger/fabric/protos/peer"
+	putils "github.com/hyperledger/fabric/protos/utils"
 	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
+	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/uber-go/tally"
 	"golang.org/x/net/context"
 )
@@ -48,6 +53,12 @@ func (f *filter) ProcessProposal(ctx context.Context, signedProp *peer.SignedPro
 	// increment proposal count
 	f.proposalCounter.Inc(1)
 
+	_, cis, errObj := f.getCCProposalPayloadAndCis(signedProp)
+	if errObj != nil {
+		return nil, errObj
+	}
+
+	fmt.Printf("calling cc %s args %s\n", cis.ChaincodeSpec.ChaincodeId.Name, cis.ChaincodeSpec.Input.Args)
 	// Time proposal
 	if metrics.IsDebug() {
 		stopwatch := f.proposalTimer.Start()
@@ -61,6 +72,25 @@ func (f *filter) ProcessProposal(ctx context.Context, signedProp *peer.SignedPro
 	}
 
 	return resp, err
+}
+
+func (f *filter) getCCProposalPayloadAndCis(signedProp *pb.SignedProposal) (*pb.ChaincodeProposalPayload, *pb.ChaincodeInvocationSpec, errors.Error) {
+	prop, err := putils.GetProposal(signedProp.ProposalBytes)
+	if err != nil {
+		return nil, nil, errors.WithMessage(errors.SystemError, err, "Failed to extract proposal from proposal bytes")
+	}
+
+	cis, err := putils.GetChaincodeInvocationSpec(prop)
+	if err != nil {
+		return nil, nil, errors.WithMessage(errors.SystemError, err, "Failed to get chaincode invocation spec")
+	}
+
+	ccProp, err := putils.GetChaincodeProposalPayload(prop.Payload)
+	if err != nil {
+		return nil, nil, errors.WithMessage(errors.SystemError, err, "Failed to get chaincode proposal payload")
+	}
+
+	return ccProp, cis, nil
 }
 
 func main() {}

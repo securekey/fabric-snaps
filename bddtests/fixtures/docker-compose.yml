@@ -99,6 +99,7 @@ services:
         - ../../build/snaps/configurationscc.so:/opt/extsysccs/configurationscc.so
         - ../../build/test/eventconsumersnap.so:/opt/extsysccs/eventconsumersnap.so
         - ../../build/test/bootstrapsnap.so:/opt/extsysccs/bootstrapsnap.so
+        - ../../build/snaps/metricsfilter.so:/opt/extsysccs/metricsfilter.so
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/msp/peer
         - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
         # Give Snap the orderer CA
