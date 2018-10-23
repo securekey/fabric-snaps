@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/core/policy"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
@@ -69,14 +70,19 @@ var initializer ccInitializer = func(mscc *MembershipSnap) error {
 // Init is called once when the chaincode started the first time
 func (t *MembershipSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	if stub.GetChannelID() == "" {
-		logger.Info("Initializing membership snap...\n")
+		if !ledgerconfig.HasRole(ledgerconfig.EndorserRole) {
+			logger.Infof("Not starting Membership Snap on channel [%s] since this peer is not an endorser", stub.GetChannelID())
+			return shim.Success(nil)
+		}
+
+		logger.Info("Initializing membership snap...")
 		err := initializer(t)
 		if err != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Membership Snap"), logger, stub)
 		}
-		logger.Info("... successfully initialized membership snap\n")
+		logger.Info("... successfully initialized membership snap")
 	} else {
-		logger.Infof("Initializing membership snap - nothing to do for channel [%s]\n", stub.GetChannelID())
+		logger.Debugf("Initializing membership snap - nothing to do for channel [%s]", stub.GetChannelID())
 	}
 	return shim.Success(nil)
 }
