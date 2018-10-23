@@ -360,28 +360,24 @@ func (httpServiceImpl *HTTPServiceImpl) verifyPinDialer(tlsConfig *tls.Config, p
 			return nil, errors.Wrap(errors.HTTPClientError, err, "Failed tls.DialWithDialer")
 		}
 
-		var peerPins []string
+		chain := c.ConnectionState().VerifiedChains[0]
+		if len(chain) == 0 {
+			return nil, errors.Errorf(errors.InvalidCertPinError, "Verified certificate chain is empty")
+		}
 
-		pinValid := false
-		connState := c.ConnectionState()
-		for _, peerCert := range connState.PeerCertificates {
-			if !peerCert.IsCA {
-				certPin := httpServiceImpl.GeneratePin(peerCert)
-				peerPins = append(peerPins, certPin)
-				for _, pin := range pins {
-					if pin == certPin {
-						pinValid = true
-						break
-					}
-				}
+		leafCert := chain[0]
+
+		// use the first in the list as client cert
+		// compute the fingerprint of the cert
+		fingerprint := httpServiceImpl.GeneratePin(leafCert)
+
+		for _, pin := range pins {
+			if pin == fingerprint {
+				return c, nil
 			}
 		}
 
-		if pinValid == false {
-			return nil, errors.Errorf(errors.InvalidCertPinError, "Failed to validate peer cert pins %s against allowed pins: %s", peerPins, pins)
-		}
-
-		return c, nil
+		return nil, errors.Errorf(errors.InvalidCertPinError, "Failed to validate peer cert %s against allowed pins: %s", fingerprint, pins)
 	}
 }
 

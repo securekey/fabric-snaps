@@ -188,13 +188,15 @@ func TestAsync(t *testing.T) {
 
 func TestCertPinning(t *testing.T) {
 
+	fingerprint := "JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="
+
 	// Happy path: Should get "Hello" back - one pin provided
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-		RequestBody: jsonStr, PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="}}, "Hello")
+		RequestBody: jsonStr, PinSet: []string{fingerprint}}, "Hello")
 
 	// Happy path: Should get "Hello" back - pinset is provided (comma separated)
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-		RequestBody: jsonStr, PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY=", "pin2"}}, "Hello")
+		RequestBody: jsonStr, PinSet: []string{fingerprint, "pin2"}}, "Hello")
 
 	// Happy path: Should get "Hello" back - nil pinset is provided (no cert pin validation)
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
@@ -202,7 +204,7 @@ func TestCertPinning(t *testing.T) {
 
 	// Failed path: Invalid pinset is provided
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
-		RequestBody: jsonStr, PinSet: []string{"pin1", "pin2", "pin3"}}, "Failed to validate peer cert pins")
+		RequestBody: jsonStr, PinSet: []string{"pin1", "pin2", "pin3"}}, fmt.Sprintf("Failed to validate peer cert %s against allowed pins", fingerprint))
 }
 
 func TestJsonValidation(t *testing.T) {
