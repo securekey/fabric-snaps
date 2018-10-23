@@ -236,12 +236,17 @@ func (a *action) initTargetPeers() error {
 
 		cliconfig.Config().Logger().Debugf("Peers for org [%s]: %+v\n", orgID, peersConfig)
 
-		for _, p := range peersConfig {
+		for _, peerConfig := range peersConfig {
+			// See if the peer is blacklisted
+			p, ok := cliconfig.Config().PeerConfig(peerConfig.URL)
+			if !ok {
+				continue
+			}
 
 			var includePeer bool
-			if cliconfig.Config().PeerURL() != "" {
+			if len(cliconfig.Config().Peers()) > 0 {
 				// A single peer URL was specified. Only include the peer that matches.
-				includePeer = (cliconfig.Config().PeerURL() == p.URL)
+				includePeer = contains(cliconfig.Config().Peers(), p.URL)
 			} else {
 				// An org ID and/or MSP ID was specified. Include if the peer's org/MSP matches
 				includePeer = (selectedOrgID == orgID || cliconfig.Config().GetMspID() == orgConfig.MSPID)
@@ -250,7 +255,7 @@ func (a *action) initTargetPeers() error {
 			if includePeer {
 				cliconfig.Config().Logger().Debugf("Adding peer for org [%s]: %s\n", orgID, p.URL)
 
-				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: p, MSPID: orgConfig.MSPID}))
+				endorser, err := peer.New(cliconfig.Config(), peer.FromPeerConfig(&fabApi.NetworkPeer{PeerConfig: *p, MSPID: orgConfig.MSPID}))
 				if err != nil {
 					return errors.Wrap(errors.GeneralError, err, "NewPeer return error")
 				}
@@ -264,6 +269,15 @@ func (a *action) initTargetPeers() error {
 	cliconfig.Config().Logger().Debugf("All peers: %+v\n", a.peers)
 
 	return nil
+}
+
+func contains(vals []string, val string) bool {
+	for _, value := range vals {
+		if value == val {
+			return true
+		}
+	}
+	return false
 }
 
 func readFromTerminal(prompt string, responsech chan string) {
