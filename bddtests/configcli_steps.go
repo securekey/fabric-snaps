@@ -28,11 +28,45 @@ func NewConfigCLISteps(context *BDDContext) *ConfigCLISteps {
 
 // UpdateConfig update config using config cli
 func (c *ConfigCLISteps) UpdateConfig(configFile, mspID, orgID, channelID string) error {
-	_, err := c.BDDContext.configCLI.ExecUpdate(channelID, mspID, orgID, configFile)
+	_, err := c.BDDContext.configCLI.ExecUpdate(channelID, mspID, orgID, configFile, "")
 	if err != nil {
 		return fmt.Errorf("failed to update config: %v", err)
 	}
 	return nil
+}
+
+// UpdateConfigWithExceptions updates config using config cli
+func (c *ConfigCLISteps) UpdateConfigWithExceptions(configFile, mspID, orgID, channelID, blackListRegex string) error {
+	var targets []string
+	if blackListRegex != "" {
+		logger.Infof("Config won't be updated on the following peers: [%s]", blackListRegex)
+		var err error
+		targets, err = c.getLocalTargets(orgID, blackListRegex)
+		if err != nil {
+			return err
+		}
+	}
+
+	peers := ""
+	if len(targets) > 0 {
+		for i, target := range targets {
+			peers += target
+			if i+1 < len(targets) {
+				peers += ","
+			}
+		}
+		logger.Infof("Updating config on peers: [%s]", peers)
+	}
+
+	_, err := c.BDDContext.configCLI.ExecUpdate(channelID, mspID, orgID, configFile, peers)
+	if err != nil {
+		return fmt.Errorf("failed to update config: %v", err)
+	}
+	return nil
+}
+
+func (c *ConfigCLISteps) getLocalTargets(orgID string, blackListRegex string) ([]string, error) {
+	return getLocalTargets(c.BDDContext, orgID, blackListRegex)
 }
 
 // exec executes action on config using config cli
@@ -69,6 +103,7 @@ func (c *ConfigCLISteps) RegisterSteps(s *godog.Suite) {
 	s.BeforeScenario(c.BDDContext.BeforeScenario)
 	s.AfterScenario(c.BDDContext.AfterScenario)
 	s.Step(`^client update config "([^"]*)" with mspid "([^"]*)" with orgid "([^"]*)" on the "([^"]*)" channel$`, c.UpdateConfig)
+	s.Step(`^client update config "([^"]*)" with mspid "([^"]*)" with orgid "([^"]*)" on the "([^"]*)" channel except on "([^"]*)"$`, c.UpdateConfigWithExceptions)
 	s.Step(`^client "([^"]*)" config by peer id "([^"]*)" with mspid "([^"]*)" with app name "([^"]*)" with app version "([^"]*)" with comp name "([^"]*)" with comp version "([^"]*)" on the "([^"]*)" channel$`, c.exec)
 	s.Step(`^response from cli query to client contains value "([^"]*)"$`, c.containsInQueryResult)
 	s.Step(`^response from cli query to client not contains value "([^"]*)"$`, c.notContainsInQueryResult)

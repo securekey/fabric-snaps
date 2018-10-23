@@ -14,6 +14,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -54,6 +55,11 @@ func New() shim.Chaincode {
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := stub.GetChannelID()
 	if channelID != "" {
+		if !ledgerconfig.HasRole(ledgerconfig.EndorserRole) {
+			logger.Infof("Not starting Transaction Snap on channel [%s] since this peer is not an endorser", channelID)
+			return shim.Success(nil)
+		}
+
 		go func() {
 			logger.Debugf("Getting local blockchain info for channel [%s]", channelID)
 			bcInfo, err := ledgerBCInfoProvider.GetBlockchainInfo(channelID)
