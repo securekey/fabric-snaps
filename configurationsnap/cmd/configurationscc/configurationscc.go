@@ -25,6 +25,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp/signer"
 	acl "github.com/hyperledger/fabric/core/aclmgmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
 	"github.com/hyperledger/fabric/core/peer"
 	protosMSP "github.com/hyperledger/fabric/protos/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -97,9 +98,13 @@ const (
 
 // Init snap
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
+		if !ledgerconfig.HasRole(ledgerconfig.EndorserRole) {
+			logger.Infof("Not starting Config Snap on channel [%s] since this peer is not an endorser", stub.GetChannelID())
+			return shim.Success(nil)
+		}
 
+		logger.Infof("******** Init Config Snap on channel [%s]", stub.GetChannelID())
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
@@ -109,7 +114,7 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
 		}
 		interval := config.GetDefaultRefreshInterval()
-		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
+		logger.Debugf("******** Call initialize for [%s][%s][%v]", peerMspID, peerID, interval)
 		configmgmtService.Initialize(stub, peerMspID)
 		periodicRefresh(stub.GetChannelID(), peerID, peerMspID, interval)
 	}
