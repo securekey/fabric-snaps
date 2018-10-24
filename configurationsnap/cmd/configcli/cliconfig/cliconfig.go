@@ -9,6 +9,7 @@ package cliconfig
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -285,9 +286,12 @@ func InitUserPassword(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.password, passwordFlag, defaultPassword, passwordDescription)
 }
 
-// PeerURL returns a comma-separated list of peers in the format host1:port1,host2:port2,...
-func (c *CLIConfig) PeerURL() string {
-	return opts.peerURL
+// Peers returns a list of peer URLs
+func (c *CLIConfig) Peers() []string {
+	if opts.peerURL == "" {
+		return nil
+	}
+	return strings.Split(opts.peerURL, ",")
 }
 
 // InitPeerURL initializes the peer URL from the provided arguments

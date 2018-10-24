@@ -11,19 +11,21 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
+	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
@@ -448,7 +450,12 @@ func (d *CommonSteps) equalQueryValue(ccID string, value string) error {
 
 func (d *CommonSteps) installChaincodeToAllPeers(ccType, ccID, ccPath string) error {
 	logger.Infof("Installing chaincode [%s] from path [%s] to all peers", ccID, ccPath)
-	return d.installChaincodeToOrg(ccType, ccID, ccPath, "")
+	return d.installChaincodeToOrg(ccType, ccID, ccPath, "", "")
+}
+
+func (d *CommonSteps) installChaincodeToAllPeersExcept(ccType, ccID, ccPath, blackListRegex string) error {
+	logger.Infof("Installing chaincode [%s] from path [%s] to all peers except [%s]", ccID, ccPath, blackListRegex)
+	return d.installChaincodeToOrg(ccType, ccID, ccPath, "", blackListRegex)
 }
 
 func (d *CommonSteps) instantiateChaincode(ccType, ccID, ccPath, channelID, args, ccPolicy, collectionNames string) error {
@@ -466,8 +473,8 @@ func (d *CommonSteps) deployChaincode(ccType, ccID, ccPath, channelID, args, ccP
 	return d.deployChaincodeToOrg(ccType, ccID, ccPath, "", channelID, args, ccPolicy, collectionPolicy)
 }
 
-func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string) error {
-	logger.Infof("Preparing to install chaincode [%s] from path [%s] to orgs [%s]", ccID, ccPath, orgIDs)
+func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs, blackListRegex string) error {
+	logger.Infof("Preparing to install chaincode [%s] from path [%s] to orgs [%s] - Blacklisted peers: [%s]", ccID, ccPath, orgIDs, blackListRegex)
 
 	var oIDs []string
 	if orgIDs != "" {
@@ -477,6 +484,10 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 	}
 
 	for _, orgID := range oIDs {
+		targets, err := d.getLocalTargets(orgID, blackListRegex)
+		if err != nil {
+			return err
+		}
 
 		resMgmtClient := d.BDDContext.ResMgmtClient(orgID, ADMIN)
 
@@ -485,16 +496,61 @@ func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string)
 			return err
 		}
 
-		logger.Infof("... installing chaincode [%s] from path [%s] to org [%s]", ccID, ccPath, orgID)
+		if len(targets) == 0 {
+			return errors.Errorf("no targets for chaincode [%s]", ccID)
+		}
+
+		logger.Infof("... installing chaincode [%s] from path [%s] to targets %s", ccID, ccPath, targets)
 		_, err = resMgmtClient.InstallCC(
 			resmgmt.InstallCCRequest{Name: ccID, Path: ccPath, Version: "v1", Package: ccPkg},
 			resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+			resmgmt.WithTargetEndpoints(targets...),
 		)
 		if err != nil {
 			return fmt.Errorf("SendInstallProposal return error: %s", err)
 		}
 	}
 	return nil
+}
+
+func (d *CommonSteps) getLocalTargets(orgID string, blackListRegex string) ([]string, error) {
+	return getLocalTargets(d.BDDContext, orgID, blackListRegex)
+}
+
+func getLocalTargets(context *BDDContext, orgID string, blackListRegex string) ([]string, error) {
+	var blacklistedPeersRegex *regexp.Regexp
+	if blackListRegex != "" {
+		var err error
+		blacklistedPeersRegex, err = regexp.Compile(blackListRegex)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	contextProvider := func() (contextApi.Client, error) {
+		return context.OrgUserContext(orgID, ADMIN), nil
+	}
+
+	localContext, err := contextImpl.NewLocal(contextProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	peers, err := localContext.LocalDiscoveryService().GetPeers()
+	if err != nil {
+		return nil, err
+	}
+
+	var peerURLs []string
+	for _, peer := range peers {
+		if blacklistedPeersRegex != nil && blacklistedPeersRegex.MatchString(peer.URL()) {
+			logger.Infof("Not returning local peer [%s] since it is blacklisted", peer.URL())
+			continue
+		}
+		peerURLs = append(peerURLs, peer.URL())
+	}
+
+	return peerURLs, nil
 }
 
 func (d *CommonSteps) instantiateChaincodeWithOpts(ccType, ccID, ccPath, orgIDs, channelID, args, ccPolicy, collectionNames string, allPeers bool) error {
@@ -728,6 +784,7 @@ func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^response from "([^"]*)" to client equal value "([^"]*)"$`, d.equalQueryValue)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers$`, d.installChaincodeToAllPeers)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers in the "([^"]*)" org$`, d.installChaincodeToOrg)
+	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers except "([^"]*)"$`, d.installChaincodeToAllPeersExcept)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincodeOnOrg)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is instantiated from path "([^"]*)" on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.instantiateChaincode)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is deployed from path "([^"]*)" to all peers in the "([^"]*)" org on the "([^"]*)" channel with args "([^"]*)" with endorsement policy "([^"]*)" with collection policy "([^"]*)"$`, d.deployChaincodeToOrg)

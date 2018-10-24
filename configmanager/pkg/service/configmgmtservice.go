@@ -42,23 +42,22 @@ type ConfigServiceImpl struct {
 	configHashes map[string]string
 }
 
-var instance *ConfigServiceImpl
-var once sync.Once
+var instance = newConfigService()
 
 //GetInstance gets instance of cache for snaps
 func GetInstance() api.ConfigService {
 	return instance
 }
 
+func newConfigService() *ConfigServiceImpl {
+	service := &ConfigServiceImpl{}
+	service.cacheMap = make(map[string]cache)
+	service.configHashes = make(map[string]string)
+	return service
+}
+
 //Initialize will be called from config snap
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
-
-	once.Do(func() {
-		instance = &ConfigServiceImpl{}
-		instance.cacheMap = make(map[string]cache)
-		instance.configHashes = make(map[string]string)
-		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
-	})
 	instance.Refresh(stub, mspID)
 	return instance
 }
