@@ -202,9 +202,7 @@ func (s *Service) getEndpoints(channelID string, members []discovery.NetworkMemb
 
 		properties := member.Properties
 		if properties != nil {
-			// Need to add 1 to the block height since the LedgerHeight in the
-			// Gossip NetworkMember is really the block number.
-			ledgerHeight = properties.LedgerHeight + 1
+			ledgerHeight = properties.LedgerHeight
 			leftChannel = properties.LeftChannel
 			roles = properties.Roles
 		}
