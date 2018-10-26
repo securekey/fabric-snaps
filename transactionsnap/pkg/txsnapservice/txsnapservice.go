@@ -90,7 +90,7 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 
 	var peerFilter api.PeerFilter
 	if snapTxRequest.PeerFilter != nil {
-		logger.Debugf("Using peer filter [%s]\n", snapTxRequest.PeerFilter.Type)
+		logger.Debugf("Using peer filter [%s], Args: %s", snapTxRequest.PeerFilter.Type, snapTxRequest.PeerFilter.Args)
 		var err error
 		peerFilter, err = peerfilter.New(snapTxRequest.PeerFilter)
 		if err != nil {

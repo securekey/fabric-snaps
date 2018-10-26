@@ -14,16 +14,12 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 var logger = logging.NewLogger("txnsnap")
-
-var memServiceProvider = func() (memserviceapi.Service, error) {
-	return membership.Get()
-}
 
 // New creates a new Min Block Height peer filter. This filter
 // selects peers whose block height is at least that of the
@@ -40,10 +36,12 @@ func New(args []string) (transactionsnapApi.PeerFilter, error) {
 		return nil, errors.WithMessage(errors.SystemError, err, "invalid block height arg "+args[1])
 	}
 
-	service, err := memServiceProvider()
+	service, err := client.MemServiceProvider()
 	if err != nil {
 		return nil, errors.WithMessage(errors.SystemError, err, "error getting membership service")
 	}
+
+	logger.Debugf("Creating MinBlockHeight peer filter - Channel [%s], Height [%d]", args[0], height)
 
 	return &peerFilter{
 		channelID: args[0],

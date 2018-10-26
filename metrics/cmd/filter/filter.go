@@ -9,8 +9,6 @@ package main
 import (
 	"net/http"
 
-	"fmt"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/handlers/auth"
 	"github.com/hyperledger/fabric/protos/peer"
@@ -53,12 +51,6 @@ func (f *filter) ProcessProposal(ctx context.Context, signedProp *peer.SignedPro
 	// increment proposal count
 	f.proposalCounter.Inc(1)
 
-	_, cis, errObj := f.getCCProposalPayloadAndCis(signedProp)
-	if errObj != nil {
-		return nil, errObj
-	}
-
-	fmt.Printf("calling cc %s args %s\n", cis.ChaincodeSpec.ChaincodeId.Name, cis.ChaincodeSpec.Input.Args)
 	// Time proposal
 	if metrics.IsDebug() {
 		stopwatch := f.proposalTimer.Start()

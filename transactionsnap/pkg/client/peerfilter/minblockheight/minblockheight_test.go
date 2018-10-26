@@ -19,6 +19,7 @@ import (
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	membershipMocks "github.com/securekey/fabric-snaps/membershipsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/mocks/mockmembership"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 )
 
 const (
@@ -57,7 +58,7 @@ func TestPeerFilter(t *testing.T) {
 		},
 	}
 
-	memServiceProvider = func() (memserviceapi.Service, error) {
+	client.MemServiceProvider = func() (memserviceapi.Service, error) {
 		return mockMembership, nil
 	}
 
@@ -83,7 +84,7 @@ func TestPeerFilterError(t *testing.T) {
 		Error: fmt.Errorf("simulated error"),
 	}
 
-	memServiceProvider = func() (memserviceapi.Service, error) {
+	client.MemServiceProvider = func() (memserviceapi.Service, error) {
 		return mockMembership, nil
 	}
 
