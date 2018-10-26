@@ -450,12 +450,12 @@ func (d *CommonSteps) equalQueryValue(ccID string, value string) error {
 
 func (d *CommonSteps) installChaincodeToAllPeers(ccType, ccID, ccPath string) error {
 	logger.Infof("Installing chaincode [%s] from path [%s] to all peers", ccID, ccPath)
-	return d.installChaincodeToOrg(ccType, ccID, ccPath, "", "")
+	return d.doInstallChaincodeToOrg(ccType, ccID, ccPath, "", "")
 }
 
 func (d *CommonSteps) installChaincodeToAllPeersExcept(ccType, ccID, ccPath, blackListRegex string) error {
 	logger.Infof("Installing chaincode [%s] from path [%s] to all peers except [%s]", ccID, ccPath, blackListRegex)
-	return d.installChaincodeToOrg(ccType, ccID, ccPath, "", blackListRegex)
+	return d.doInstallChaincodeToOrg(ccType, ccID, ccPath, "", blackListRegex)
 }
 
 func (d *CommonSteps) instantiateChaincode(ccType, ccID, ccPath, channelID, args, ccPolicy, collectionNames string) error {
@@ -473,7 +473,11 @@ func (d *CommonSteps) deployChaincode(ccType, ccID, ccPath, channelID, args, ccP
 	return d.deployChaincodeToOrg(ccType, ccID, ccPath, "", channelID, args, ccPolicy, collectionPolicy)
 }
 
-func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs, blackListRegex string) error {
+func (d *CommonSteps) installChaincodeToOrg(ccType, ccID, ccPath, orgIDs string) error {
+	return d.doInstallChaincodeToOrg(ccType, ccID, ccPath, orgIDs, "")
+}
+
+func (d *CommonSteps) doInstallChaincodeToOrg(ccType, ccID, ccPath, orgIDs, blackListRegex string) error {
 	logger.Infof("Preparing to install chaincode [%s] from path [%s] to orgs [%s] - Blacklisted peers: [%s]", ccID, ccPath, orgIDs, blackListRegex)
 
 	var oIDs []string
