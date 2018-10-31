@@ -37,9 +37,10 @@ type cache interface {
 }
 
 type params struct {
-	localPeerURL    string
-	initialBlockNum uint64
-	eventSnapshots  map[string]fab.EventSnapshot
+	localPeerURL      string
+	initialBlockNum   uint64
+	eventSnapshots    map[string]fab.EventSnapshot
+	enableBlockEvents bool
 }
 
 // Provider implements a ChannelProvider that uses a dynamic discovery provider based on
@@ -74,6 +75,13 @@ func WithInitialBlockNum(blockNum uint64) Opt {
 func WithLocalPeerURL(url string) Opt {
 	return func(p *params) {
 		p.localPeerURL = url
+	}
+}
+
+// WithBlockEvents enables block events (as opposed to filtered block events)
+func WithBlockEvents() Opt {
+	return func(p *params) {
+		p.enableBlockEvents = true
 	}
 }
 
@@ -126,6 +134,11 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 
 	// Keep retrying to connect to the event client forever
 	opts = append(opts, evtclient.WithMaxConnectAttempts(0))
+
+	if params.enableBlockEvents {
+		logger.Debugf("Event service will be started with block events")
+		opts = append(opts, evtclient.WithBlockEvents())
+	}
 
 	if params.localPeerURL != "" {
 		// Connect to the local peer if not too far behind in block height

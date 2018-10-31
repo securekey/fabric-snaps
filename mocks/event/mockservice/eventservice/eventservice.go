@@ -21,6 +21,13 @@ type ProducerOpts struct {
 //ProducerOpt ...
 type ProducerOpt func(opts *ProducerOpts)
 
+//WithBlockLedger ...
+func WithBlockLedger() ProducerOpt {
+	return func(opts *ProducerOpts) {
+		opts.ledger = servicemocks.NewMockLedger(servicemocks.BlockEventFactory, "")
+	}
+}
+
 //WithFilteredBlockLedger ...
 func WithFilteredBlockLedger() ProducerOpt {
 	return func(opts *ProducerOpts) {
