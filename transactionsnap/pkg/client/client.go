@@ -76,6 +76,8 @@ var CfgProvider = func(channelID string) (api.Config, error) {
 	return txsnapconfig.NewConfig(PeerConfigPath, channelID)
 }
 
+var enableBlockEvents bool
+
 var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
 
 type clientImpl struct {
@@ -105,6 +107,10 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 	} else {
 		url := fmt.Sprintf("%s:%d", localPeerCfg.Host, localPeerCfg.Port)
 		opts = append(opts, chprovider.WithLocalPeerURL(url))
+	}
+
+	if enableBlockEvents {
+		opts = append(opts, chprovider.WithBlockEvents())
 	}
 
 	if currentClient == nil {
@@ -173,6 +179,12 @@ func GetInstance(channelID string) (api.Client, error) {
 	}
 
 	return c, nil
+}
+
+// EnableBlockEvents turns on block event publishing in the event service.
+// By default, filtered block events are published.
+func EnableBlockEvents(enable bool) {
+	enableBlockEvents = enable
 }
 
 // generateHash generates hash for give bytes
