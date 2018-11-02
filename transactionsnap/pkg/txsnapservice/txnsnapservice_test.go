@@ -259,9 +259,9 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
-		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+		Peers: []configmanagerApi.PeerConfig{{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
+				{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 	stub := getMockStub()
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {

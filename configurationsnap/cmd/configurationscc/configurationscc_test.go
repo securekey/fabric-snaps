@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
 // membershipService is used to get peers of channel .
 var membershipService membership.Service
 
@@ -1019,9 +1020,9 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: "Org1MSP",
-		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+		Peers: []configmanagerApi.PeerConfig{{
 			PeerID: "peer1", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "configurationsnap", Version: api.VERSION, Config: string(configData)}}}}}
+				{AppName: "configurationsnap", Version: api.VERSION, Config: string(configData)}}}}}
 
 	stub := getMockStub("testChannel")
 
@@ -1076,5 +1077,9 @@ func (m *mockMembershipService) GetAllPeers() []*membership.PeerEndpoint {
 }
 
 func (m *mockMembershipService) GetPeersOfChannel(channelID string) ([]*membership.PeerEndpoint, error) {
+	return nil, nil
+}
+
+func (m *mockMembershipService) GetLocalPeer(channelID string) (*membership.PeerEndpoint, error) {
 	return nil, nil
 }

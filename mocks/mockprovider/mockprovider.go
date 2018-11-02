@@ -14,7 +14,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	discoveryService "github.com/securekey/fabric-snaps/membershipsnap/pkg/discovery/local/service"
 	"github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 )
 
 // Factory mocks out the channel provider
@@ -43,8 +42,7 @@ func (cp *mockChannelProvider) Initialize(providers contextApi.Providers) error 
 }
 
 func (cp *mockChannelProvider) ChannelService(ctx fabApi.ClientContext, channelID string) (fabApi.ChannelService, error) {
-	memService := membership.NewServiceWithMocks([]byte(ctx.Identifier().MSPID), "internalhost1:1000", mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(uint64(1000)))))
-
+	memService := membership.NewServiceWithMocks([]byte(ctx.Identifier().MSPID), membership.NewLocalNetworkChannelMember("internalhost1:1000", 1000))
 	discovery := discoveryService.New(channelID, ctx.EndpointConfig(), memService)
 
 	selection, err := staticselection.NewService(discovery)

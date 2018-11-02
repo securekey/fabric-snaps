@@ -9,17 +9,17 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"strings"
-	"testing"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/ledger/ledgermgmt"
 	"github.com/hyperledger/fabric/core/peer"
+	"github.com/hyperledger/fabric/gossip/discovery"
+	"github.com/hyperledger/fabric/protos/gossip"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	"github.com/stretchr/testify/assert"
+	"strings"
+	"testing"
 )
 
 var (
@@ -53,11 +53,12 @@ func TestErrorInInit(t *testing.T) {
 
 // TestInvokeInvalidFunction tests Invoke method with an invalid function name
 func TestInvokeInvalidFunction(t *testing.T) {
+	localAddress := address1
 	identity := newMockIdentity()
 	sProp, identityDeserializer := newMockSignedProposal(identity)
 
 	args := [][]byte{}
-	stub := newMockStub(identity, identityDeserializer, msp1, address1, mockbcinfo.ChannelBCInfos())
+	stub := newMockStub(identity, identityDeserializer, msp1, discovery.NetworkMember{Endpoint: localAddress})
 	if res := stub.MockInvokeWithSignedProposal("txID", args, sProp); res.Status == shim.OK {
 		t.Fatal("mscc invoke expecting error for invalid number of args")
 	}
@@ -76,7 +77,7 @@ func TestGetAllPeers(t *testing.T) {
 
 	identity := newMockIdentity()
 	sProp, identityDeserializer := newMockSignedProposal(identity)
-	stub := newMockStub(identity, identityDeserializer, msp1, localAddress, mockbcinfo.ChannelBCInfos())
+	stub := newMockStub(identity, identityDeserializer, msp1, discovery.NetworkMember{Endpoint: localAddress})
 
 	args := [][]byte{[]byte(getAllPeersFunction)}
 	res := stub.MockInvokeWithSignedProposal("txID", args, sProp)
@@ -107,7 +108,7 @@ func TestGetAllPeers(t *testing.T) {
 
 	stub = newMockStub(
 		identity, identityDeserializer,
-		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
+		msp1, discovery.NetworkMember{Endpoint: localAddress},
 		memservice.NewMSPNetworkMembers(
 			msp2,
 			memservice.NewNetworkMember(pkiID2, address2),
@@ -160,7 +161,7 @@ func TestGetPeersOfChannel(t *testing.T) {
 
 	stub := newMockStub(
 		identity, identityDeserializer,
-		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
+		msp1, discovery.NetworkMember{Endpoint: localAddress, Properties: &gossip.Properties{LedgerHeight: localBlockHeight}},
 		memservice.NewMSPNetworkMembers(
 			msp2,
 			memservice.NewNetworkChannelMember(pkiID2, address2, blockHeight1),
@@ -240,16 +241,17 @@ func TestGetPeersOfChannel(t *testing.T) {
 
 // TestAccessControl tests access control
 func TestAccessControl(t *testing.T) {
+	localAddress := "localhost:1000"
 	sProp, identityDeserializer := newMockSignedProposal([]byte("invalididentity"))
 
 	// getAllPeers
-	stub := newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
+	stub := newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), discovery.NetworkMember{Endpoint: localAddress})
 	res := stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getAllPeersFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
 	assert.True(t, strings.Contains(res.Message, "\"getAllPeers\" request failed authorization check"), "Unexpected error message: %s", res.Message)
 
 	// getPeersOfChannel
-	stub = newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), "localhost:1000", mockbcinfo.ChannelBCInfos())
+	stub = newMockStub(newMockIdentity(), identityDeserializer, []byte("Org1MSP"), discovery.NetworkMember{Endpoint: localAddress})
 	res = stub.MockInvokeWithSignedProposal("txID", [][]byte{[]byte(getPeersOfChannelFunction), nil}, sProp)
 	assert.Equal(t, int32(shim.ERROR), res.Status, "mscc invoke expected to fail with authorization error")
 	assert.True(t, strings.Contains(res.Message, "\"getPeersOfChannel\" request failed authorization check"), "Unexpected error message: %s", res.Message)

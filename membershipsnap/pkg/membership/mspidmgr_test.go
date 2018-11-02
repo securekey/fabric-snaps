@@ -11,6 +11,7 @@ import (
 	"time"
 
 	gcommon "github.com/hyperledger/fabric/gossip/common"
+	"github.com/hyperledger/fabric/gossip/discovery"
 	msppb "github.com/hyperledger/fabric/protos/msp"
 )
 
@@ -24,7 +25,12 @@ func TestMSPIDMgr(t *testing.T) {
 	pkiID2 := []byte("pki-id-2")
 	pkiID3 := []byte("pki-id-3")
 
-	gossipService := newMockGossipService()
+	gossipService := newMockGossipService(
+		discovery.NetworkMember{
+			Endpoint: "localhost:9999",
+			PKIid:    []byte("pkiid1"),
+		},
+	)
 
 	mspIDMgr := newMSPIDMgr(gossipService)
 
