@@ -101,7 +101,6 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 	if stub.GetChannelID() != "" {
 		if !ledgerconfig.HasRole(ledgerconfig.EndorserRole) {
 			logger.Infof("Not starting Config Snap on channel [%s] since this peer is not an endorser", stub.GetChannelID())
-			go initConfigDB(stub.GetChannelID())
 			return shim.Success(nil)
 		}
 
@@ -654,25 +653,6 @@ func periodicRefresh(channelID string, peerID string, peerMSPID string, refreshI
 			}
 		}
 	}()
-}
-
-// initConfigDB sends one request to get config data which will have the side-effect of creating the database.
-// This is only performed on a committing peer since non-committing peers do not have permission to create databases.
-func initConfigDB(channelID string) {
-	configService := configmgmtService.GetInstance().(*configmgmtService.ConfigServiceImpl)
-
-	for {
-		logger.Infof("Initializing the config DB ...")
-		_, _, err := configService.GetConfigFromLedger(channelID, mgmtapi.ConfigKey{MspID: GeneralMspID, AppName: "System", AppVersion: "1.0"})
-		if err == nil {
-			logger.Infof("... successfully initialized the config DB")
-			return
-		}
-
-		// This shouldn't happen unless the DB is down
-		logger.Warnf("... error initializing config DB: %s. Retrying in 5 seconds", err)
-		time.Sleep(5 * time.Second)
-	}
 }
 
 func sendRefreshRequest(channelID string, peerID string, peerMSPID string) {
