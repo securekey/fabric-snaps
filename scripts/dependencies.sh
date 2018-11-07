@@ -69,7 +69,7 @@ function installGoPkg {
     fi
     (cd ${BUILD_TMP}/src/${repo} && git reset --hard ${revision})
     echo " Checking $GOPATH ..."
-    GOPATH=${BUILD_TMP} go install -i ${repo}/${pkgPath}
+    GOPATH=${BUILD_TMP} GOBIN=${BUILD_TMP}/bin go install -i ${repo}/${pkgPath}
 
     mkdir -p ${GOPATH}/bin
     for cmd in ${cmds[@]}
