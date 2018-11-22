@@ -79,13 +79,14 @@ func GetByteArgs(argsArray []string) [][]byte {
 }
 
 // NewCollectionConfig return CollectionConfig
-func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32, policy *common.SignaturePolicyEnvelope) *common.CollectionConfig {
+func NewCollectionConfig(collName string, requiredPeerCount, maxPeerCount int32, blocksToLive uint64, policy *common.SignaturePolicyEnvelope) *common.CollectionConfig {
 	return &common.CollectionConfig{
 		Payload: &common.CollectionConfig_StaticCollectionConfig{
 			StaticCollectionConfig: &common.StaticCollectionConfig{
 				Name:              collName,
 				RequiredPeerCount: requiredPeerCount,
 				MaximumPeerCount:  maxPeerCount,
+				BlockToLive:       blocksToLive,
 				MemberOrgsPolicy: &common.CollectionPolicyConfig{
 					Payload: &common.CollectionPolicyConfig_SignaturePolicy{
 						SignaturePolicy: policy,

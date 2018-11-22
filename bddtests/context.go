@@ -70,6 +70,7 @@ type CollectionConfig struct {
 	Policy            string
 	RequiredPeerCount int32
 	MaxPeerCount      int32
+	BlocksToLive      uint64
 }
 
 // NewBDDContext create new BDDContext
@@ -378,7 +379,7 @@ func (b *BDDContext) addPeerConfigToChannel(pconfig *PeerConfig, channelID strin
 }
 
 // DefineCollectionConfig defines a new private data collection configuration
-func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPeerCount, maxPeerCount int32) *CollectionConfig {
+func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPeerCount, maxPeerCount int32, blocksToLive uint64) *CollectionConfig {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
@@ -387,6 +388,7 @@ func (b *BDDContext) DefineCollectionConfig(id, name, policy string, requiredPee
 		Policy:            policy,
 		RequiredPeerCount: requiredPeerCount,
 		MaxPeerCount:      maxPeerCount,
+		BlocksToLive:      blocksToLive,
 	}
 	b.collectionConfigs[id] = config
 	return config
