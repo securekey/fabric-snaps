@@ -78,7 +78,7 @@ var CfgProvider = func(channelID string) (api.Config, error) {
 
 var enableBlockEvents bool
 
-var cache = newRefCache(5 * time.Second) // FIXME: Make configurable
+var cache = newRefCache(10 * time.Second)
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
