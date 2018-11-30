@@ -27,7 +27,6 @@ import (
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
-	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
 	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -60,7 +59,6 @@ func newConfigService() *ConfigServiceImpl {
 //Initialize will be called from config snap
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
 	instance.Refresh(stub, mspID)
-	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
 	return instance
 }
 
