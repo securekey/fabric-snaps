@@ -10,5 +10,6 @@ set -e
 PKGS=`go list github.com/securekey/fabric-snaps/bddtests/... 2> /dev/null | \
                                                  grep -v /fixtures | \
                                                  grep -v /vendor`
-echo "Running integration tests..."
-go test -count=1 -v -cover $PKGS -p 1 -timeout=20m
+# DEV-10981
+#echo "Running integration tests..."
+#go test -count=1 -v -cover $PKGS -p 1 -timeout=20m
