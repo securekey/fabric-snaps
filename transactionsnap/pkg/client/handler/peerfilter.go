@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter"
-	"github.com/hyperledger/fabric/common/metrics"
+	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
