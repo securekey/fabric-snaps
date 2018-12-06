@@ -30,7 +30,7 @@ endif
 FABRIC_NEXT_VERSION = edb81454c5f73c477f87cfcc51d0edc335111ad1
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.23-cluster-snapshot-ba84d19
+export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.23-cluster-snapshot-edb8145
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
