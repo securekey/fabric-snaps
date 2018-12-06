@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter"
+	"github.com/hyperledger/fabric/common/metrics"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	selectopts "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options"
@@ -43,19 +44,23 @@ func (p *PeerFilterHandler) Handle(requestContext *invoke.RequestContext, client
 		remainingAttempts := p.config.GetEndorserSelectionMaxAttempts()
 		logger.Debugf("Attempting to get endorsers - [%d] attempts...", remainingAttempts)
 		var endorsers []fabApi.Peer
+		stopwatch := metrics.RootScope.Timer("transactionsnap_getendorsers_duration").Start()
 		for len(endorsers) == 0 && remainingAttempts > 0 {
 			var err error
 			endorsers, err = p.getEndorsers(requestContext, clientContext)
 			if err != nil {
 				requestContext.Error = errors.WithMessage(err, "Failed to get endorsing peers")
+				stopwatch.Stop()
 				return
 			}
 			if len(endorsers) == 0 {
+				metrics.RootScope.Counter("transactionsnap_getendorsers_retry").Inc(1)
 				remainingAttempts--
 				logger.Warnf("No endorsers. [%d] remaining attempts...", remainingAttempts)
 				time.Sleep(p.config.GetEndorserSelectionInterval())
 			}
 		}
+		stopwatch.Stop()
 		requestContext.Opts.Targets = endorsers
 	}
 
