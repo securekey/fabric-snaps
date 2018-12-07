@@ -47,6 +47,7 @@ import (
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/securekey/fabric-snaps/util/refcount"
+	grpcCodes "google.golang.org/grpc/codes"
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -122,6 +123,19 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 	} else if eventSnapshot != nil {
 		opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot}))
 	}
+
+	selectionRetryOpts := cfg.RetryOpts()
+	retryableCodes := map[status.Group][]status.Code{
+		status.GRPCTransportStatus: {
+			status.Code(grpcCodes.Unavailable),
+		},
+		status.DiscoveryServerStatus: {
+			status.QueryEndorsers,
+		},
+	}
+	selectionRetryOpts.RetryableCodes = retryableCodes
+
+	opts = append(opts, chprovider.WithSelectionRetryOpts(selectionRetryOpts))
 
 	return &DynamicProviderFactory{
 		opts: opts,
@@ -232,7 +246,6 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	if err != nil {
 		return nil, err
 	}
-
 	eventSnapshot := takeEventSnapshot(currentClient)
 	// If an error occurs after taking a snapshot then all of the event registrations that were transferred
 	// into the snapshot must be closed so that the listeners will be notified.
