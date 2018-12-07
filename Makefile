@@ -27,7 +27,7 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = dadddfe53833249a3f97748786ef7eb37f55add0
+FABRIC_NEXT_VERSION = 6520ae6e63bd38b4906cfcbd1b028f9f7dbfbbf3
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
 export FABRIC_NEXT_IMAGE_TAG = 1.2.0-0.1.23-cluster-snapshot-dadddfe
