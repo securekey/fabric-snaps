@@ -489,21 +489,10 @@ func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, e
 
 func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
-	validTxnID := false
-	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		var creator []byte
-		var err errors.Error
-		validTxnID, creator, err = c.checkTxnID(endorseRequest)
-		if err != nil {
-			return nil, false, err
-		}
-		if !validTxnID {
-			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
-			}
-			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
-		}
+
+	invalidResponse, validTxnID, errObj := c.validate(endorseRequest)
+	if !validTxnID {
+		return invalidResponse, false, errObj
 	}
 
 	targets := endorseRequest.Targets
@@ -533,6 +522,9 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			txnHeaderOptsProvider),
 	)
 
+	numRetries := 0
+	var lastErr error
+
 	resp, err := c.channelClient.InvokeHandler(
 		customExecuteHandler,
 		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
@@ -540,15 +532,42 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
-			logger.Infof("Retrying on error: %s", err.Error())
+			numRetries++
+			lastErr = err
+			logger.Infof("[%s] Retry #%d on error: %s", c.channelID, numRetries, err.Error())
 			metrics.RootScope.Counter("txnsnap_retry").Inc(1)
 		}))
 
 	if err != nil {
+		if numRetries > 0 {
+			logger.Infof("[%s] Failed after %d retries. Last error: %s", c.channelID, numRetries, err)
+		}
 		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
+	}
+	if numRetries > 0 {
+		logger.Infof("[%s] Succeeded after %d retries. Last error: %s", c.channelID, numRetries, lastErr)
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
 }
+
+func (c *clientImpl) validate(endorseRequest *api.EndorseTxRequest) (*channel.Response, bool, errors.Error) {
+	if len(endorseRequest.Nonce) == 0 && endorseRequest.TransactionID == "" {
+		return nil, true, nil
+	}
+	validTxnID, creator, errObj := c.checkTxnID(endorseRequest)
+	if errObj != nil {
+		return nil, false, errObj
+	}
+	if validTxnID {
+		return nil, true, nil
+	}
+	jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
+	if err != nil {
+		return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
+	}
+	return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
+}
+
 func (c *clientImpl) endorseRequestArgs(endorseRequest *api.EndorseTxRequest) [][]byte {
 	args := make([][]byte, 0)
 	if len(endorseRequest.Args) > 1 {
