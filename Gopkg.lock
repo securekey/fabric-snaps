@@ -293,11 +293,13 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:4fffe6f7662039320fb1f785d283fca7f0285eba003519e4121cf58da398c65c"
+  digest = "1:9b66d70c4928f31d62fbf43b81065a119d8ad26d6da6722e15a54e14274df599"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
     "bccsp/factory",
+    "bccsp/grep11",
+    "bccsp/grep11/protos",
     "bccsp/pkcs11",
     "bccsp/signer",
     "bccsp/sw",
@@ -315,14 +317,18 @@
     "common/genesis",
     "common/ledger",
     "common/ledger/blkstorage",
+    "common/ledger/blkstorage/cachedblkstore",
     "common/ledger/blkstorage/cdbblkstorage",
     "common/ledger/blkstorage/fsblkstorage",
+    "common/ledger/blkstorage/ldbblkindex",
+    "common/ledger/blkstorage/memblkcache",
     "common/ledger/blockledger",
     "common/ledger/blockledger/file",
     "common/ledger/util",
     "common/ledger/util/leveldbhelper",
     "common/localmsp",
     "common/metadata",
+    "common/metrics",
     "common/mocks/config",
     "common/mocks/configtx",
     "common/mocks/policies",
@@ -365,6 +371,7 @@
     "core/ledger",
     "core/ledger/cceventmgmt",
     "core/ledger/confighistory",
+    "core/ledger/confighistory/cdbconfighistory",
     "core/ledger/customtx",
     "core/ledger/kvledger",
     "core/ledger/kvledger/bookkeeping",
@@ -378,7 +385,10 @@
     "core/ledger/kvledger/txmgmt/pvtstatepurgemgmt",
     "core/ledger/kvledger/txmgmt/rwsetutil",
     "core/ledger/kvledger/txmgmt/statedb",
+    "core/ledger/kvledger/txmgmt/statedb/kvcache",
+    "core/ledger/kvledger/txmgmt/statedb/statecachedstore",
     "core/ledger/kvledger/txmgmt/statedb/statecouchdb",
+    "core/ledger/kvledger/txmgmt/statedb/statekeyindex",
     "core/ledger/kvledger/txmgmt/statedb/stateleveldb",
     "core/ledger/kvledger/txmgmt/txmgr",
     "core/ledger/kvledger/txmgmt/txmgr/lockbasedtxmgr",
@@ -392,7 +402,9 @@
     "core/ledger/ledgerstorage",
     "core/ledger/pvtdatapolicy",
     "core/ledger/pvtdatastorage",
+    "core/ledger/pvtdatastorage/cachedpvtdatastore",
     "core/ledger/pvtdatastorage/cdbpvtdata",
+    "core/ledger/pvtdatastorage/mempvtdatacache",
     "core/ledger/pvtdatastorage/pvtmetadata",
     "core/ledger/util",
     "core/ledger/util/couchdb",
@@ -401,9 +413,8 @@
     "core/policy/mocks",
     "core/transientstore",
     "core/transientstore/cdbtransientdata",
-    "core/transientstore/splitter",
+    "core/transientstore/memtransientdata",
     "events/consumer",
-    "events/producer",
     "gossip/api",
     "gossip/comm",
     "gossip/common",
@@ -418,8 +429,10 @@
     "gossip/identity",
     "gossip/integration",
     "gossip/privdata",
+    "gossip/roleutil",
     "gossip/service",
     "gossip/state",
+    "gossip/state/validationctx",
     "gossip/util",
     "idemix",
     "integration/helpers",
@@ -439,7 +452,7 @@
     "protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "e61fd89265b5397f6b84c732fbcaf7f76d995678"
+  revision = "0eb0312c6b0fa161255d6f7c5090f7d149b34cff"
   source = "git@sk-git.securekey.com:gerrit/fabric-next.git"
 
 [[projects]]
