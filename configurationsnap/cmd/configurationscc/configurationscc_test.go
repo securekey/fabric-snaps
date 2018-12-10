@@ -157,7 +157,7 @@ func TestGenerateCSR(t *testing.T) {
 }
 
 func TestSendRefreshRequest(t *testing.T) {
-	sendRefreshRequest("testChannel", "peer1", "Org1MSP")
+	sendRefreshRequest("testChannel")
 }
 
 func TestNew(t *testing.T) {
