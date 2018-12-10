@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -53,7 +53,7 @@ type mockDBProvider struct {
 }
 
 // GetDBHandle returns a handle to a PvtVersionedDB
-func (m *mockDBProvider) GetDBHandle(id string) (privacyenabledstate.DB, error) {
+func (m *mockDBProvider) GetDBHandle(id string) (statedb.VersionedDB, error) {
 	return nil, m.err
 }
 

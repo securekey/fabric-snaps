@@ -50,15 +50,17 @@ func getStateDBProviderInstance() (statedb.VersionedDBProvider, error) {
 
 	once.Do(func() {
 		logger.Info("Creating StateDB provider")
-		vdbProvider, err := statecouchdb.NewVersionedDBProvider()
-		if err != nil {
-			logger.Warnf("Error creating StateDB provider %s", err)
-		}
-		stateKeyIndexProvider := statekeyindex.NewProvider()
+		var vdbProvider statedb.VersionedDBProvider
+		vdbProvider, dbProviderErr = statecouchdb.NewVersionedDBProvider()
+		if dbProviderErr != nil {
+			logger.Warnf("Error creating StateDB provider %s", dbProviderErr)
+		} else {
+			stateKeyIndexProvider := statekeyindex.NewProvider()
 
-		stateDBProvider = statecachedstore.NewProvider(
-			vdbProvider,
-			stateKeyIndexProvider)
+			stateDBProvider = statecachedstore.NewProvider(
+				vdbProvider,
+				stateKeyIndexProvider)
+		}
 
 	})
 
