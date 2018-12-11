@@ -15,12 +15,12 @@ import (
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
+	"github.com/hyperledger/fabric/core/ledger/ledgermgmt"
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/bcinfo"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -244,33 +244,22 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, errors.Error) {
 	ccNamespace := string(args[2])
 	key := string(args[3])
 
-	db, err := dbprovider.GetStateDB(channelID)
+	ledger, err := ledgermgmt.OpenLedger(channelID)
 	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get State DB")
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to open ledger")
 	}
-
-	err = db.Open()
+	queryExecutor, err := ledger.NewQueryExecutor()
 	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Failed to open State DB")
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed from NewQueryExecutor")
 	}
-	defer db.Close()
-	defer logger.Debug("DB handle closed")
-
-	logger.Debug("DB handle opened")
-
-	vv, err := db.GetState(ccNamespace, key)
+	value, err := queryExecutor.GetState(ccNamespace, key)
 	if err != nil {
 		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get state")
 	}
 
-	if vv == nil {
-		logger.Debugf("Query returned nil for namespace %s and key %s", ccNamespace, key)
-		return nil, nil
-	}
+	logger.Debugf("Query returned %+v for namespace %s and key %s", value, ccNamespace, key)
 
-	logger.Debugf("Query returned %+v for namespace %s and key %s", vv.Value, ccNamespace, key)
-
-	return vv.Value, nil
+	return value, nil
 }
 
 // getSnapTransactionRequest
