@@ -293,7 +293,7 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:9b66d70c4928f31d62fbf43b81065a119d8ad26d6da6722e15a54e14274df599"
+  digest = "1:707d308e91cde54041975b721bc79a5d98460bb6934f9e30ddbdee2a702418d8"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -452,7 +452,7 @@
     "protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "0eb0312c6b0fa161255d6f7c5090f7d149b34cff"
+  revision = "35ae3404236fc6ef46e2a5f1c741565bb4ab1706"
   source = "git@sk-git.securekey.com:gerrit/fabric-next.git"
 
 [[projects]]
@@ -1194,10 +1194,6 @@
     "github.com/hyperledger/fabric/core/chaincode/shim",
     "github.com/hyperledger/fabric/core/handlers/auth",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
-    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb",
-    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb/statecachedstore",
-    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb/statecouchdb",
-    "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb/statekeyindex",
     "github.com/hyperledger/fabric/core/ledger/ledgerconfig",
     "github.com/hyperledger/fabric/core/ledger/ledgermgmt",
     "github.com/hyperledger/fabric/core/peer",

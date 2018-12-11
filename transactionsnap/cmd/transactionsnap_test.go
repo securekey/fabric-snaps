@@ -535,7 +535,7 @@ func TestTxnSnapUnsafeGetState(t *testing.T) {
 	response = stub.MockInvoke("TxID", args)
 	assert.NotNil(t, response)
 	assert.NotEqual(t, int32(200), response.GetStatus())
-	assert.Contains(t, response.GetMessage(), "Failed to get State DB")
+	assert.Contains(t, response.GetMessage(), "Failed to open ledger")
 }
 
 func TestMain(m *testing.M) {
