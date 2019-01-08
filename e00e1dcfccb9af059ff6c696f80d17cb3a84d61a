@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "397dc59c_f56f80df",
+        "filename": "httpsnap/cmd/httpsnapservice/metrics.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-01-08T20:30:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9cb25a4b_effe7188",
+      "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca69c55b_c3f4830f",
         "filename": "metrics/pkg/util/util.go",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-08T20:29:46Z",
       "side": 1,
       "message": "License missing",
+      "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c28ff1f7_a42efaf8",
+        "filename": "metrics/pkg/util/util.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-01-08T20:30:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca69c55b_c3f4830f",
       "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
