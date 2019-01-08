@@ -25,6 +25,14 @@
   version = "v0.7.4"
 
 [[projects]]
+  digest = "1:9c8312fb77e9c27242307176963dd65c02ad03016f7696026a83214fc45c6566"
+  name = "github.com/DataDog/zstd"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c7161f8c63c045cbc7ca051dcc969dd0e4054de2"
+  version = "v1.3.5"
+
+[[projects]]
   digest = "1:a8bc08e25d94bdcbf8ea54ee8e4b2a00a8c3b6957501b4fdb1a6d303e5292f6d"
   name = "github.com/Knetic/govaluate"
   packages = ["."]
@@ -49,12 +57,12 @@
   revision = "cd527374f1e5bff4938207604a14f2e38a9cf512"
 
 [[projects]]
-  digest = "1:9c883d2e7fd391fbc7db7536863cc4cd181a97646b4659e9a7e7aa583c411885"
+  digest = "1:d23be4935b3f63583b7a7f847dca8be74c89af8943a5f70d96cace715aed47c1"
   name = "github.com/Shopify/sarama"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "35324cf48e33d8260e1c7c18854465a904ade249"
-  version = "v1.17.0"
+  revision = "879f631812a30a580659e8035e7cda9994bb99ac"
+  version = "v1.20.0"
 
 [[projects]]
   branch = "master"
@@ -205,12 +213,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:8352ba7f5cc5cc2368c9958c7524460cb3cb53dad1c72ed6354fef652225d898"
+  digest = "1:8ba832f19021187b30cf505ea0335c1b779b378e61c2468790082f7262925c4d"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   pruneopts = "NUT"
-  revision = "100ba4e885062801d56799d78530b73b178a78f3"
-  version = "v0.4"
+  revision = "4cbf7e384e768b4e01799441fdf2a706a5635ae7"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -266,12 +274,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b02943d3542f3fcb6faa4723b4e4f879d7fc166451e24f72c449de9a3be50e3c"
+  digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "4fe82ae3040f80a03d04d2cccb5606a626b8e1ee"
+  revision = "b5a281d3160aa11950a6182bd9a9dc2cb1e02d50"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -293,11 +301,17 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:0f196a8caf9bf38ec3d0c14cfeee5e88649aa9fa67be7638664c4deaff203629"
+  branch = "src-1.4"
+  digest = "1:73e336d7078ac73f27d44e7038ddf5d99dc6e4513b3f0c40d5dd3a0dd034e231"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
     "bccsp/factory",
+    "bccsp/grep11",
+    "bccsp/grep11/protos",
+    "bccsp/idemix",
+    "bccsp/idemix/bridge",
+    "bccsp/idemix/handlers",
     "bccsp/pkcs11",
     "bccsp/signer",
     "bccsp/sw",
@@ -324,6 +338,8 @@
     "common/ledger/util/leveldbhelper",
     "common/localmsp",
     "common/metadata",
+    "common/metrics",
+    "common/metrics/disabled",
     "common/mocks/config",
     "common/mocks/configtx",
     "common/mocks/policies",
@@ -429,12 +445,19 @@
     "protos/orderer",
     "protos/orderer/etcdraft",
     "protos/peer",
+    "protos/token",
     "protos/transientstore",
     "protos/utils",
+    "token/identity",
+    "token/ledger",
+    "token/tms",
+    "token/tms/manager",
+    "token/tms/plain",
+    "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "ab0a67ad7102f1281736e2c309e9a0ef91b08fd9"
-  version = "v1.3.0"
+  revision = "32a5f928d596cf82da628564fe15cd649bde7ccc"
+  source = "github.com/securekey/fabric-next"
 
 [[projects]]
   branch = "master"
@@ -448,7 +471,7 @@
   revision = "6b78f7a22d950103fb2669aabb969f56d42d283b"
 
 [[projects]]
-  digest = "1:b5a48b1872624878cc9eaf1ccfca7350198d9e01c21a668133ced1e4b86f13de"
+  digest = "1:b0c75a78d127455f3028f4df9bd403a400f88d90cdd0f68994de318fcaff9884"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -472,7 +495,9 @@
     "internal/github.com/hyperledger/fabric/common/channelconfig",
     "internal/github.com/hyperledger/fabric/common/crypto",
     "internal/github.com/hyperledger/fabric/common/ledger",
+    "internal/github.com/hyperledger/fabric/common/metrics",
     "internal/github.com/hyperledger/fabric/common/util",
+    "internal/github.com/hyperledger/fabric/core/common/privdata",
     "internal/github.com/hyperledger/fabric/core/ledger",
     "internal/github.com/hyperledger/fabric/discovery/client",
     "internal/github.com/hyperledger/fabric/msp",
@@ -588,10 +613,11 @@
     "third_party/github.com/hyperledger/fabric/protos/msp",
     "third_party/github.com/hyperledger/fabric/protos/orderer",
     "third_party/github.com/hyperledger/fabric/protos/peer",
+    "third_party/github.com/hyperledger/fabric/protos/token",
     "third_party/github.com/hyperledger/fabric/protos/utils",
   ]
   pruneopts = "NUT"
-  revision = "34bbf26678d30cda3e3e895ca326774732ef49ee"
+  revision = "95e07420b43765af9ee6a6e42d706d146cbb8d34"
 
 [[projects]]
   digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
@@ -625,12 +651,12 @@
   revision = "6dbd569b952ec150d1425722dbbe80f2c6193f83"
 
 [[projects]]
-  branch = "master"
-  digest = "1:6a65dcd0d14fc0595ee982afc3c59deb5b769ca374455c80c649d92f8a152930"
+  digest = "1:a45ae66dea4c899d79fceb116accfa1892105c251f0dcd9a217ddc276b42ec68"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "d0303fe809921458f417bcf828397a65db30a7e4"
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
+  version = "v1.1.2"
 
 [[projects]]
   digest = "1:6b85e6a61fffb6aafbd9a8dd855aa4300d3b0bc7c3405a48eb232c20fff88668"
@@ -659,7 +685,7 @@
   revision = "a3b6351eb1ff8e1bfa30b2f55d7e282186ed8fee"
 
 [[projects]]
-  digest = "1:450495ee4de4bf794a5c92db6530c9248227031a69beca1382454ca41b0f92ca"
+  digest = "1:0db10c512b410a1ecd8845e31db52622c08b76198f7ab76afb25319c84a7fd4b"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
@@ -676,8 +702,8 @@
     "types",
   ]
   pruneopts = "NUT"
-  revision = "62bff4df71bdbc266561a0caee19f0594b17c240"
-  version = "v1.4.0"
+  revision = "65fb64232476ad9046e57c26cd0bff3d3a8dc6cd"
+  version = "v1.4.3"
 
 [[projects]]
   branch = "master"
@@ -872,15 +898,15 @@
   revision = "aafc9e6bc7b7bb53ddaa75a5ef49a17d6e654be5"
 
 [[projects]]
-  digest = "1:0d3d375df794ab11a192668f4eacdb116ccd99aa574fe357185a2d463e07f2fb"
+  digest = "1:85adecf1dbfae5769cc62a8bcea6498f8e9f0e2452e4e6686eb36fa4428a5a6e"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "NUT"
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -1033,14 +1059,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:12b88f0e4ffe0f995582b71f063d5b77c7d11537b9412428a8a26a6a74b91026"
+  digest = "1:847ffe30bb2463c17bf12bac2558b63f5dc104fd5920c8adf8c150a08cd176fb"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "7a85bfad8bb9558204b9cc9b3624680d2d443a35"
+  revision = "af653ce8b74f808d092db8ca9741fbb63d2a469d"
 
 [[projects]]
   digest = "1:8a12cbc891b7130d3f660f8a309e5c0b083f831e6ac38cdaa1f12e63c12d6bea"
@@ -1085,7 +1111,7 @@
   revision = "df60624c1e9b9d2973e889c7a1cff73155da81c4"
 
 [[projects]]
-  digest = "1:d0e5846da58e4e20d1bbd7502b24f31d37e3ac1e02a9042d95bd93c2d0c139dd"
+  digest = "1:5b805b8e03b29399b344655cac16873f026e54dc0a7c17b381f6f4d4c7b6d741"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -1101,7 +1127,9 @@
     "internal",
     "internal/backoff",
     "internal/channelz",
+    "internal/envconfig",
     "internal/grpcrand",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
@@ -1112,11 +1140,10 @@
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "NUT"
-  revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
-  version = "v1.13.0"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
@@ -1132,9 +1159,7 @@
   input-imports = [
     "github.com/DATA-DOG/godog",
     "github.com/DATA-DOG/godog/gherkin",
-    "github.com/cactus/go-statsd-client/statsd",
     "github.com/fsouza/go-dockerclient",
-    "github.com/gogo/protobuf/proto",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel",
@@ -1197,6 +1222,8 @@
     "github.com/hyperledger/fabric/bccsp/pkcs11",
     "github.com/hyperledger/fabric/bccsp/signer",
     "github.com/hyperledger/fabric/bccsp/utils",
+    "github.com/hyperledger/fabric/common/metrics",
+    "github.com/hyperledger/fabric/common/metrics/disabled",
     "github.com/hyperledger/fabric/common/policies",
     "github.com/hyperledger/fabric/common/util",
     "github.com/hyperledger/fabric/common/viperutil",
@@ -1229,17 +1256,12 @@
     "github.com/hyperledger/fabric/protos/utils",
     "github.com/op/go-logging",
     "github.com/pkg/errors",
-    "github.com/prometheus/client_golang/prometheus",
-    "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/rs/xid",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
-    "github.com/uber-go/tally",
-    "github.com/uber-go/tally/prometheus",
-    "github.com/uber-go/tally/statsd",
     "github.com/xeipuuv/gojsonschema",
     "golang.org/x/net/context",
     "google.golang.org/grpc",

@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/bccsp"
@@ -35,7 +35,7 @@ import (
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/config"
 	"github.com/securekey/fabric-snaps/configurationsnap/cmd/configurationscc/listener"
 	"github.com/securekey/fabric-snaps/healthcheck"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
 	"github.com/securekey/fabric-snaps/util"
@@ -76,6 +76,7 @@ var supportedAlgs = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024"
 var availableFunctions = functionSet()
 
 var logger = logging.NewLogger("configsnap")
+var metrics *Metrics
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
@@ -322,10 +323,8 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
-	if metrics.IsDebug() {
-		stopwatch := metrics.RootScope.Timer("config_refresh_time_seconds").Start()
-		defer stopwatch.Stop()
-	}
+	startTime := time.Now()
+	defer func() { metrics.ConfigRefresh.Observe(time.Since(startTime).Seconds()) }()
 
 	if len(args) < 1 {
 		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "expecting first arg to be a JSON array of MSP IDs"), logger, stub)
@@ -690,10 +689,8 @@ func periodicRefresh(channelID string, refreshInterval time.Duration) {
 }
 
 func sendRefreshRequest(channelID string) {
-	if metrics.IsDebug() {
-		stopwatch := metrics.RootScope.Timer("config_periodic_refresh_time_seconds").Start()
-		defer stopwatch.Stop()
-	}
+	startTime := time.Now()
+	defer func() { metrics.ConfigPeriodicRefresh.Observe(time.Since(startTime).Seconds()) }()
 
 	//call to get snaps config from ledger and to initilaize cahce instance
 	txService, err := txsnapservice.Get(channelID)
@@ -787,6 +784,7 @@ func getACLProvider() acl.ACLProvider {
 
 // New chaincode implementation
 func New() shim.Chaincode {
+	metrics = NewMetrics(metricsutil.GetMetricsInstance())
 	return &ConfigurationSnap{}
 }
 

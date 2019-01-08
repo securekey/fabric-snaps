@@ -26,6 +26,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1015,6 +1016,8 @@ func uplaodConfigToHL(stub *mockstub.MockStub, message []byte) error {
 }
 
 func TestMain(m *testing.M) {
+	metrics = NewMetrics(metricsutil.GetMetricsInstance())
+
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %s\n", err))
