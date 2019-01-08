@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cb25a4b_effe7188",
+        "filename": "httpsnap/cmd/httpsnapservice/metrics.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2019-01-08T20:27:17Z",
+      "side": 1,
+      "message": "IBM license? Applies to all metrics.go files",
+      "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
