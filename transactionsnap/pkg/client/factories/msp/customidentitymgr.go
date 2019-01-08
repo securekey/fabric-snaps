@@ -116,8 +116,8 @@ func (c *CustomIdentityManager) GetUser(userName string) (*User, error) {
 	}
 
 	return &User{
-		mspID: c.mspID,
-		id:    userName,
+		mspID:                 c.mspID,
+		id:                    userName,
 		enrollmentCertificate: enrollmentCert,
 		privateKey:            privateKey,
 	}, nil

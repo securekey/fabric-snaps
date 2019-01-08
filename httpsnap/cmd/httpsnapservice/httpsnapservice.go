@@ -39,9 +39,8 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
-	"github.com/uber-go/tally"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -52,14 +51,13 @@ var PeerConfigPath = ""
 
 var once sync.Once
 var instance *HTTPServiceImpl
-var counter tally.Counter
-var timer tally.Timer
 
 //HTTPServiceImpl used to create transaction service
 type HTTPServiceImpl struct {
 	sync.RWMutex
 	config   httpsnapApi.Config
 	certPool fab.CertPool
+	metrics  *Metrics
 }
 
 //HTTPServiceInvokeRequest used to create http invoke service
@@ -207,8 +205,8 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	}
 
 	once.Do(func() {
-		counter = metrics.RootScope.Counter("httpsnap_calls")
 		instance = &HTTPServiceImpl{}
+		instance.metrics = NewMetrics(util.GetMetricsInstance())
 		err = initialize(config)
 		if err != nil {
 			return
@@ -231,11 +229,8 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 }
 
 func (httpServiceImpl *HTTPServiceImpl) getData(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
-	if metrics.IsDebug() {
-		timer = metrics.RootScope.Timer("httpsnap_time_seconds")
-		stopWatch := timer.Start()
-		defer stopWatch.Stop()
-	}
+	startTime := time.Now()
+	defer func() { httpServiceImpl.metrics.HTTPTimer.Observe(time.Since(startTime).Seconds()) }()
 	return httpServiceImpl.getDataFromSource(invokeReq)
 }
 
@@ -269,7 +264,7 @@ func (httpServiceImpl *HTTPServiceImpl) getHTTPClient(invokeReq HTTPServiceInvok
 }
 
 func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceInvokeRequest) (responseContentType string, responseBody []byte, codedErr errors.Error) {
-	counter.Inc(1)
+	httpServiceImpl.metrics.HTTPCounter.Add(1)
 
 	logger.Debugf("Requesting %s from url=%s", invokeReq.RequestBody, invokeReq.RequestURL)
 

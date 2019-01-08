@@ -8,22 +8,20 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/handlers/auth"
-	"github.com/hyperledger/fabric/protos/peer"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
-	"github.com/uber-go/tally"
+	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"golang.org/x/net/context"
 )
 
 var logger = logging.NewLogger("metricsfilter")
 
 type filter struct {
-	next                 peer.EndorserServer
-	proposalCounter      tally.Counter
-	proposalErrorCounter tally.Counter
-	proposalTimer        tally.Timer
+	next    pb.EndorserServer
+	metrics *Metrics
 }
 
 // NewFilter creates a new Filter
@@ -32,32 +30,25 @@ func NewFilter() auth.Filter { //nolint: deadcode
 }
 
 // Init initializes the Filter with the next EndorserServer
-func (f *filter) Init(next peer.EndorserServer) {
+func (f *filter) Init(next pb.EndorserServer) {
 	f.next = next
-
-	f.proposalCounter = metrics.RootScope.Counter("proposal_count")
-	f.proposalErrorCounter = metrics.RootScope.Counter("proposal_error_count")
-	if metrics.IsDebug() {
-		f.proposalTimer = metrics.RootScope.Timer("proposal_processing_time_seconds")
-	}
+	f.metrics = NewMetrics(util.GetMetricsInstance())
 	logger.Info("Metrics filter initialized")
 }
 
 // ProcessProposal processes a signed proposal
-func (f *filter) ProcessProposal(ctx context.Context, signedProp *peer.SignedProposal) (*peer.ProposalResponse, error) {
+func (f *filter) ProcessProposal(ctx context.Context, signedProp *pb.SignedProposal) (*pb.ProposalResponse, error) {
 	// increment proposal count
-	f.proposalCounter.Inc(1)
-
+	f.metrics.ProposalCounter.Add(1)
 	// Time proposal
-	if metrics.IsDebug() {
-		stopwatch := f.proposalTimer.Start()
-		defer stopwatch.Stop()
-	}
+	startTime := time.Now()
+	defer func() { f.metrics.ProposalTimer.Observe(time.Since(startTime).Seconds()) }()
+
 	resp, err := f.next.ProcessProposal(ctx, signedProp)
 
 	// increment proposal error count, if required.
 	if err != nil || resp.GetResponse().GetStatus() != http.StatusOK {
-		f.proposalErrorCounter.Inc(1)
+		f.metrics.ProposalErrorCounter.Add(1)
 	}
 
 	return resp, err
