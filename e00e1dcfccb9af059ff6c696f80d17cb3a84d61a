@@ -16,6 +16,23 @@
       "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca69c55b_c3f4830f",
+        "filename": "metrics/pkg/util/util.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2019-01-08T20:29:46Z",
+      "side": 1,
+      "message": "License missing",
+      "revId": "e00e1dcfccb9af059ff6c696f80d17cb3a84d61a",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
