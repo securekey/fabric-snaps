@@ -28,7 +28,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -41,6 +41,7 @@ type ConfigServiceImpl struct {
 	mtx          sync.RWMutex
 	cacheMap     map[string]cache
 	configHashes map[string]string
+	metrics      *Metrics
 }
 
 var instance *ConfigServiceImpl
@@ -55,7 +56,7 @@ func GetInstance() api.ConfigService {
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
 
 	once.Do(func() {
-		instance = &ConfigServiceImpl{}
+		instance = &ConfigServiceImpl{metrics: NewMetrics(util.GetMetricsInstance())}
 		instance.cacheMap = make(map[string]cache)
 		instance.configHashes = make(map[string]string)
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
@@ -142,10 +143,8 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 //Refresh adds new items into cache and refreshes existing ones
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) errors.Error {
-	if metrics.IsDebug() {
-		stopwatch := metrics.RootScope.Timer("config_service_refresh_time_seconds").Start()
-		defer stopwatch.Stop()
-	}
+	startTime := time.Now()
+	defer func() { csi.metrics.RefreshTimer.Observe(time.Since(startTime).Seconds()) }()
 
 	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {

@@ -35,7 +35,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/securekey/fabric-snaps/metrics/cmd/filter/metrics"
+
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
@@ -57,8 +58,6 @@ const (
 
 // ConfigProvider returns the config for the given channel
 type ConfigProvider func(channelID string) (api.Config, error)
-
-var retryCounter = metrics.RootScope.Counter("transaction_retry")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
@@ -82,6 +81,7 @@ type clientImpl struct {
 	context       contextApi.Channel
 	configHash    string
 	sdk           *fabsdk.FabricSDK
+	metrics       *Metrics
 }
 
 // DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
@@ -253,6 +253,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		clientConfig:  customEndpointConfig,
 		context:       chContext,
 		configHash:    generateHash(cfg.GetConfigBytes()),
+		metrics:       NewMetrics(metricsutil.GetMetricsInstance()),
 	}
 	// close will be called when the client is closed and the last reference is released.
 	client.ReferenceCounter = refcount.New(client.close)
@@ -309,7 +310,7 @@ func getEndpointConfig(cfg api.Config) (core.ConfigProvider, fabApi.EndpointConf
 func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.EndpointConfig, serviceProviderFactory apisdk.ServiceProviderFactory, cfg api.Config) (*fabsdk.FabricSDK, errors.Error) {
 	cryptoProvider, err := cfg.GetCryptoProvider()
 	if err != nil {
-		return nil, errors.Errorf(errors.GeneralError, "error getting crypto provider on channel [%s]: %s", channelID)
+		return nil, errors.Errorf(errors.GeneralError, "error getting crypto provider on channel [%s]: %s", channelID, err)
 	}
 
 	sdk, e := fabsdk.New(configProvider,
@@ -349,7 +350,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			retryCounter.Inc(1)
+			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
 	if err != nil {
@@ -440,7 +441,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			retryCounter.Inc(1)
+			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
 	if err != nil {

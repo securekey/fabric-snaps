@@ -14,6 +14,7 @@ import (
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb/statecouchdb"
 	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -32,7 +33,7 @@ func GetStateDB(channelID string) (privacyenabledstate.DB, error) {
 	}
 	once.Do(func() {
 		logger.Info("Creating StateDB provider")
-		vdbProvider, dbProviderErr = statecouchdb.NewVersionedDBProvider()
+		vdbProvider, dbProviderErr = statecouchdb.NewVersionedDBProvider(util.GetMetricsInstance())
 		if dbProviderErr != nil {
 			logger.Warnf("Error creating StateDB provider %s", dbProviderErr)
 		}
@@ -40,7 +41,7 @@ func GetStateDB(channelID string) (privacyenabledstate.DB, error) {
 
 	var err error
 	if vdbProvider == nil {
-		vdbProvider, err = statecouchdb.NewVersionedDBProvider()
+		vdbProvider, err = statecouchdb.NewVersionedDBProvider(util.GetMetricsInstance())
 		if err != nil {
 			return nil, err
 		}
