@@ -25,6 +25,7 @@ func GetMetricsInstance() metrics.Provider {
 	return metricsInstance
 }
 
+//FilterMetricName filter metric name
 func FilterMetricName(name string) string {
 	return reg.ReplaceAllString(name, "_")
 }
