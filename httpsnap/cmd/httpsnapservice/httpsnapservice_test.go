@@ -61,19 +61,19 @@ func TestRequiredArg(t *testing.T) {
 	var invalidHeaders = map[string]string{}
 
 	// Missing required ContentType header tests
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: invalidHeaders,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: invalidHeaders,
 		RequestBody: jsonStr}, "Missing request headers")
 
 	invalidHeaders["Test-Header"] = "Test"
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: invalidHeaders,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: invalidHeaders,
 		RequestBody: jsonStr}, "Missing required content-type header")
 
 	invalidHeaders["Content-Type"] = ""
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: invalidHeaders,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: invalidHeaders,
 		RequestBody: jsonStr}, "content-type header is empty")
 
 	// Missing RequestBody
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: ""}, "Missing RequestBody")
 
 }
@@ -81,15 +81,15 @@ func TestRequiredArg(t *testing.T) {
 func TestNamedClient(t *testing.T) {
 
 	// Failed path: Use invalid named client 'xyz' to override default TLS settings
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, NamedClient: "xyz"}, "client[xyz] crt not found")
 
 	// Happy path: Should get "Hello" back - use named client 'abc' to override default TLS settings
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, NamedClient: "abc"}, "Hello")
 
 	// Happy path: Should get "Hello" back - empty named client is using default TLS settings
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, NamedClient: ""}, "Hello")
 
 }
@@ -105,11 +105,11 @@ func TestExpiredServerCert(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// Failure path - With Dialer (for checking pins)
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://127.0.0.1:8449/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="}}, "x509: certificate has expired or is not yet valid")
 
 	// Failure path (no pins)
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://127.0.0.1:8449/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "x509: certificate has expired or is not yet valid")
 
 }
@@ -119,7 +119,7 @@ func TestAsync(t *testing.T) {
 	require.NoError(t, err)
 
 	req := HTTPServiceInvokeRequest{
-		RequestURL:     "https://localhost:8443/hello",
+		RequestURL:     "https://localhost:8444/hello",
 		RequestHeaders: headers,
 		RequestBody:    jsonStr,
 		NamedClient:    "abc",
@@ -169,7 +169,7 @@ func TestAsync(t *testing.T) {
 
 	t.Run("Invalid response", func(t *testing.T) {
 		invalidReq := req
-		invalidReq.RequestURL = "https://localhost:8443/test/invalidJSONResponse"
+		invalidReq.RequestURL = "https://localhost:8444/test/invalidJSONResponse"
 
 		invoker, err := httpService.NewInvoker(invalidReq)
 		require.NoError(t, err)
@@ -191,43 +191,43 @@ func TestCertPinning(t *testing.T) {
 	fingerprint := "JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="
 
 	// Happy path: Should get "Hello" back - one pin provided
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, PinSet: []string{fingerprint}}, "Hello")
 
 	// Happy path: Should get "Hello" back - pinset is provided (comma separated)
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, PinSet: []string{fingerprint, "pin2"}}, "Hello")
 
 	// Happy path: Should get "Hello" back - nil pinset is provided (no cert pin validation)
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, PinSet: nil}, "Hello")
 
 	// Failed path: Invalid pinset is provided
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr, PinSet: []string{"pin1", "pin2", "pin3"}}, fmt.Sprintf("Failed to validate peer cert %s against allowed pins", fingerprint))
 }
 
 func TestJsonValidation(t *testing.T) {
 
 	// Happy path: Validation is correct for both request and response (got "Hello" back)
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "Hello")
 
 	// Failed path: Request fails schema validation
 	invalidJSONStr := `{"test": "test"}`
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/abc", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/test/abc", RequestHeaders: headers,
 		RequestBody: string(invalidJSONStr)}, "Failed to validate request body: id is required, name is required")
 
 	// Failed path: Response fails schema validation
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/invalidJSONResponse", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/test/invalidJSONResponse", RequestHeaders: headers,
 		RequestBody: jsonStr}, "failed to validate response body against schema: description is required")
 
 	// Failed path: Request content type doesn't match response content type
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/textResponse", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/test/textResponse", RequestHeaders: headers,
 		RequestBody: jsonStr}, "Response content-type: text/plain; charset=utf-8 doesn't match request content-type: application/json")
 
 	// Failed path: Wrong request content type (not JSON)
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: map[string]string{"Content-Type": "text/html"},
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: map[string]string{"Content-Type": "text/html"},
 		RequestBody: jsonStr}, "text/html not found")
 
 }
@@ -235,7 +235,7 @@ func TestJsonValidation(t *testing.T) {
 func TestPost(t *testing.T) {
 
 	// Happy path: Should get "Hello" back - use default TLS settings
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "Hello")
 
 	// Failed Path: Connect to Google
@@ -243,11 +243,11 @@ func TestPost(t *testing.T) {
 		RequestBody: jsonStr}, "Method Not Allowed, url=https://www.google.ca")
 
 	// Failed Path: Http Status NOT OK
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/statusNotOK", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/test/statusNotOK", RequestHeaders: headers,
 		RequestBody: jsonStr}, "status: 500")
 
 	// Failed path - should get 404 back since there's no handler for xyz
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/test/xyz", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/test/xyz", RequestHeaders: headers,
 		RequestBody: jsonStr}, "status: 404")
 
 	currentConfig := instance.config
@@ -258,12 +258,12 @@ func TestPost(t *testing.T) {
 	instance.config = &customHTTPConfig{Config: currentConfig, customCaCerts: []string{"cert1,cert2"}}
 	instance.certPool, err = commtls.NewCertPool(currentConfig.IsSystemCertPoolEnabled())
 	assert.Nil(t, err)
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "certificate signed by unknown authority")
 
 	// Failed path: invalid client key or cert
 	instance.config = &customHTTPConfig{Config: currentConfig, customClientCert: "invalid.crt"}
-	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "could not decode pem bytes")
 
 	instance.config = currentConfig
@@ -274,7 +274,7 @@ func TestPost(t *testing.T) {
 func TestKeyByCache(t *testing.T) {
 
 	// Happy path: Should get "Hello" back - use default TLS settings
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "Hello")
 
 	assert.NotNil(t, keyCache)
@@ -305,7 +305,7 @@ func TestKeyByCache(t *testing.T) {
 		lazyref.WithRefreshInterval(lazyref.InitImmediately, 100*time.Minute),
 	)
 
-	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
+	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8444/hello", RequestHeaders: headers,
 		RequestBody: jsonStr}, "Hello")
 
 }
@@ -477,7 +477,7 @@ func TextServer(w http.ResponseWriter, req *http.Request) {
 
 func initHTTPServerConfig() {
 
-	viper.Set("http.listen.address", "127.0.0.1:8443")
+	viper.Set("http.listen.address", "localhost:8444")
 	viper.Set("http.tls.caCert.file", "../test-data/httpserver/test-client.crt")
 	viper.Set("http.tls.cert.file", "../test-data/httpserver/server.crt")
 	viper.Set("http.tls.key.file", "../test-data/httpserver/server.key")
