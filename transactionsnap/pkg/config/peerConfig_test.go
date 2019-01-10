@@ -13,7 +13,7 @@ import (
 )
 
 func TestLenFunc(t *testing.T) {
-	peerConfig := transactionsnapApi.PeerConfig{Host: "localhost", Port: 0, EventHost: "localhost", EventPort: 0, MSPid: nil}
+	peerConfig := transactionsnapApi.PeerConfig{Host: "localhost", Port: 0, MSPid: nil}
 	var peerConfigs PeerConfigs
 	peerConfigs = append(peerConfigs, peerConfig)
 	if peerConfigs.Len() != 1 {
@@ -22,8 +22,8 @@ func TestLenFunc(t *testing.T) {
 }
 
 func TestLessFunc(t *testing.T) {
-	peerConfig := transactionsnapApi.PeerConfig{Host: "a", Port: 0, EventHost: "a", EventPort: 0, MSPid: nil}
-	peerConfig1 := transactionsnapApi.PeerConfig{Host: "b", Port: 0, EventHost: "b", EventPort: 0, MSPid: nil}
+	peerConfig := transactionsnapApi.PeerConfig{Host: "a", Port: 0, MSPid: nil}
+	peerConfig1 := transactionsnapApi.PeerConfig{Host: "b", Port: 0, MSPid: nil}
 	var peerConfigs PeerConfigs
 	peerConfigs = append(peerConfigs, peerConfig)
 	peerConfigs = append(peerConfigs, peerConfig1)
@@ -33,8 +33,8 @@ func TestLessFunc(t *testing.T) {
 }
 
 func TestSwapFunc(t *testing.T) {
-	peerConfig := transactionsnapApi.PeerConfig{Host: "a", Port: 0, EventHost: "a", EventPort: 0, MSPid: nil}
-	peerConfig1 := transactionsnapApi.PeerConfig{Host: "b", Port: 0, EventHost: "b", EventPort: 0, MSPid: nil}
+	peerConfig := transactionsnapApi.PeerConfig{Host: "a", Port: 0, MSPid: nil}
+	peerConfig1 := transactionsnapApi.PeerConfig{Host: "b", Port: 0, MSPid: nil}
 	var peerConfigs PeerConfigs
 	peerConfigs = append(peerConfigs, peerConfig)
 	peerConfigs = append(peerConfigs, peerConfig1)

@@ -157,15 +157,6 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatal("GetLocalPeer() didn't return expected error msg")
 	}
 	c.GetPeerConfig().Set("peer.address", "peer:Address")
-	c.GetPeerConfig().Set("peer.events.address", "")
-	_, err = c.GetLocalPeer()
-	if err == nil {
-		t.Fatal("GetLocalPeer() didn't return error")
-	}
-	if err.Error() != "Peer event address not found in config" {
-		t.Fatal("GetLocalPeer() didn't return expected error msg")
-	}
-	c.GetPeerConfig().Set("peer.events.address", "peer:EventAddress")
 	_, err = c.GetLocalPeer()
 	if err == nil {
 		t.Fatal("GetLocalPeer() didn't return error")
@@ -174,14 +165,6 @@ func TestGetLocalPeer(t *testing.T) {
 		t.Fatalf("GetLocalPeer() didn't return expected error msg. got: %s", err)
 	}
 	c.GetPeerConfig().Set("peer.address", "peer:5050")
-	_, err = c.GetLocalPeer()
-	if err == nil {
-		t.Fatal("GetLocalPeer() didn't return error")
-	}
-	if !strings.Contains(err.Error(), `parsing "EventAddress": invalid syntax`) {
-		t.Fatal("GetLocalPeer() didn't return expected error msg")
-	}
-	c.GetPeerConfig().Set("peer.events.address", "event:5151")
 	c.GetPeerConfig().Set("peer.localMspId", "")
 	_, err = c.GetLocalPeer()
 	if err == nil {
@@ -202,14 +185,6 @@ func TestGetLocalPeer(t *testing.T) {
 	if localPeer.Port != 5050 {
 		t.Fatalf("Expected localPeer.Port value %d but got %d",
 			5050, localPeer.Port)
-	}
-	if localPeer.EventHost != "peer" {
-		t.Fatalf("Expected localPeer.EventHost value %s but got %s",
-			"event", localPeer.Host)
-	}
-	if localPeer.EventPort != 5151 {
-		t.Fatalf("Expected localPeer.EventPort value %d but got %d",
-			5151, localPeer.EventPort)
 	}
 	if string(localPeer.MSPid) != "mspID" {
 		t.Fatalf("Expected localPeer.MSPid value %s but got %s",
