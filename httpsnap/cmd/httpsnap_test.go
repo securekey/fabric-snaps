@@ -68,7 +68,7 @@ func TestUsingHttpService(t *testing.T) {
 
 	stub := newMockStub(channelID, mspID)
 	// Happy path: Should get "Hello" back - use default TLS settings
-	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
+	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8444/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
 	// Failed Path: Connect to Google
 	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://www.google.ca", headers, jsonStr)}
@@ -80,7 +80,7 @@ func TestUsingHttpServiceOnPeerTLSConfig(t *testing.T) {
 
 	stub := newMockStub(peerTLSChannelID, mspID)
 	// Happy path: Should get "Hello" back - use default TLS settings
-	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8443/hello", headers, jsonStr)}
+	args := [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://localhost:8444/hello", headers, jsonStr)}
 	verifySuccess(t, stub, args, "Hello")
 	// Failed Path: Connect to Google
 	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://www.google.ca", headers, jsonStr)}
@@ -184,7 +184,7 @@ func TextServer(w http.ResponseWriter, req *http.Request) {
 
 func initHTTPServerConfig() {
 
-	viper.Set("http.listen.address", "127.0.0.1:8443")
+	viper.Set("http.listen.address", "127.0.0.1:8444")
 	viper.Set("http.tls.caCert.file", "./test-data/httpserver/test-client.crt")
 	viper.Set("http.tls.cert.file", "./test-data/httpserver/server.crt")
 	viper.Set("http.tls.key.file", "./test-data/httpserver/server.key")
