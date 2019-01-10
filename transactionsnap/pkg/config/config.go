@@ -98,20 +98,9 @@ func (c *Config) GetLocalPeer() (*transactionsnapApi.PeerConfig, errors.Error) {
 	if peerAddress == "" {
 		return nil, errors.New(errors.PeerConfigError, "Peer address not found in config")
 	}
-	eventAddress := c.peerConfig.GetString("peer.events.address")
-	if eventAddress == "" {
-		return nil, errors.New(errors.PeerConfigError, "Peer event address not found in config")
-	}
 	splitPeerAddress := strings.Split(peerAddress, ":")
 	peer.Host = splitPeerAddress[0]
 	peer.Port, err = strconv.Atoi(splitPeerAddress[1])
-	if err != nil {
-		return nil, errors.WithMessage(errors.PeerConfigError, err, "Failed strconv.Atoi")
-	}
-	splitEventAddress := strings.Split(eventAddress, ":")
-	// Event host should be set to the peer host as that is the advertised address
-	peer.EventHost = splitPeerAddress[0]
-	peer.EventPort, err = strconv.Atoi(splitEventAddress[1])
 	if err != nil {
 		return nil, errors.WithMessage(errors.PeerConfigError, err, "Failed strconv.Atoi")
 	}

@@ -39,9 +39,7 @@ type Config interface {
 
 // PeerConfig represents the server addresses of a fabric peer
 type PeerConfig struct {
-	Host      string
-	Port      int
-	EventHost string
-	EventPort int
-	MSPid     []byte
+	Host  string
+	Port  int
+	MSPid []byte
 }
