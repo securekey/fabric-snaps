@@ -7,11 +7,11 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
-	"github.com/hyperledger/fabric/common/metrics"
+	fabricmetrics "github.com/hyperledger/fabric/common/metrics"
 )
 
 var (
-	transactionRetryCounter = metrics.CounterOpts{
+	transactionRetryCounter = fabricmetrics.CounterOpts{
 		Namespace: "transaction",
 		Name:      "retry",
 		Help:      "The number of transaction retry.",
@@ -20,11 +20,11 @@ var (
 
 //Metrics contain graphs
 type Metrics struct {
-	TransactionRetryCounter metrics.Counter
+	TransactionRetryCounter fabricmetrics.Counter
 }
 
 //NewMetrics create new instance of metrics
-func NewMetrics(p metrics.Provider) *Metrics {
+func NewMetrics(p fabricmetrics.Provider) *Metrics {
 	return &Metrics{
 		TransactionRetryCounter: p.NewCounter(transactionRetryCounter),
 	}

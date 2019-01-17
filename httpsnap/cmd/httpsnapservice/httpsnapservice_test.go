@@ -106,7 +106,7 @@ func TestExpiredServerCert(t *testing.T) {
 
 	// Failure path - With Dialer (for checking pins)
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
-		RequestBody: jsonStr, PinSet: []string{"JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="}}, "x509: certificate has expired or is not yet valid")
+		RequestBody: jsonStr, PinSet: []string{"i3b2FTV89d16EuCYyri2lRO85e32qSGRm0377Qhsa4E="}}, "x509: certificate has expired or is not yet valid")
 
 	// Failure path (no pins)
 	verifyFailure(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8449/hello", RequestHeaders: headers,
@@ -188,7 +188,7 @@ func TestAsync(t *testing.T) {
 
 func TestCertPinning(t *testing.T) {
 
-	fingerprint := "JimkpX4DHgDC5gzsmyfTSDuYi+qCAaW36LXrSqvoTHY="
+	fingerprint := "i3b2FTV89d16EuCYyri2lRO85e32qSGRm0377Qhsa4E="
 
 	// Happy path: Should get "Hello" back - one pin provided
 	verifySuccess(t, HTTPServiceInvokeRequest{RequestURL: "https://localhost:8443/hello", RequestHeaders: headers,
