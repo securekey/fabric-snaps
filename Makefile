@@ -27,10 +27,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 33e7f5cbf7950606c0d6b85cf7ea130197bbbb10
+FABRIC_NEXT_VERSION = a0cba08ed7d351d1dfc512cf560e31848566d606
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.1-snapshot-33e7f5c
+export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.1-snapshot-a0cba08
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -85,7 +85,7 @@ docker: all
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
-checks: depend license lint spelling check-dep
+checks: depend license lint spelling check-dep check-metrics-doc
 
 .PHONY: license
 license: version
@@ -117,6 +117,15 @@ cliconfig:
 	@go build -o ./build/configcli ./configurationsnap/cmd/configcli
 
 all: version clean checks snaps unit-test pkcs11-unit-test integration-test http-server
+
+
+check-metrics-doc:
+	@echo "METRICS: Checking for outdated reference documentation.."
+	@scripts/metrics_doc.sh check
+
+generate-metrics-doc:
+	@echo "Generating metrics reference documentation..."
+	@scripts/metrics_doc.sh generate
 
 .PHONY: version
 version:

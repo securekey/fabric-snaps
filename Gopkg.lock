@@ -302,7 +302,7 @@
 
 [[projects]]
   branch = "src-1.4"
-  digest = "1:73e336d7078ac73f27d44e7038ddf5d99dc6e4513b3f0c40d5dd3a0dd034e231"
+  digest = "1:067467948969b9ddeffd9c0203f6cd37a5629f46dfb03d3cabbbf13384afaf1e"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -340,6 +340,8 @@
     "common/metadata",
     "common/metrics",
     "common/metrics/disabled",
+    "common/metrics/gendoc",
+    "common/metrics/internal/namer",
     "common/mocks/config",
     "common/mocks/configtx",
     "common/mocks/policies",
@@ -1104,6 +1106,23 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:27e7fb3f0e273bb9b88b6f76d056f76f6a57401f43bd2bf2eabd24a61cefe558"
+  name = "golang.org/x/tools"
+  packages = [
+    "go/ast/astutil",
+    "go/gcexportdata",
+    "go/internal/cgo",
+    "go/internal/gcimporter",
+    "go/packages",
+    "go/types/typeutil",
+    "internal/fastwalk",
+    "internal/gopathwalk",
+    "internal/semver",
+  ]
+  pruneopts = "NUT"
+  revision = "f60e5f99f0816fc2d9ecb338008ea420248d2943"
+
+[[projects]]
   digest = "1:cd018653a358d4b743a9d3bee89e825521f2ab2f2ec0770164bf7632d8d73ab7"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
@@ -1224,6 +1243,7 @@
     "github.com/hyperledger/fabric/bccsp/utils",
     "github.com/hyperledger/fabric/common/metrics",
     "github.com/hyperledger/fabric/common/metrics/disabled",
+    "github.com/hyperledger/fabric/common/metrics/gendoc",
     "github.com/hyperledger/fabric/common/policies",
     "github.com/hyperledger/fabric/common/util",
     "github.com/hyperledger/fabric/common/viperutil",
@@ -1264,6 +1284,7 @@
     "github.com/stretchr/testify/require",
     "github.com/xeipuuv/gojsonschema",
     "golang.org/x/net/context",
+    "golang.org/x/tools/go/packages",
     "google.golang.org/grpc",
   ]
   solver-name = "gps-cdcl"
