@@ -12,7 +12,8 @@ import (
 
 var (
 	transactionRetryCounter = fabricmetrics.CounterOpts{
-		Namespace: "transaction",
+		Namespace: "snap",
+		Subsystem: "txn",
 		Name:      "retry",
 		Help:      "The number of transaction retry.",
 	}

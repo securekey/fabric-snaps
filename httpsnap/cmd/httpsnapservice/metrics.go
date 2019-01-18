@@ -12,12 +12,14 @@ import (
 
 var (
 	httpCounter = metrics.CounterOpts{
-		Namespace: "http",
+		Namespace: "snap",
+		Subsystem: "http",
 		Name:      "count",
 		Help:      "The number of http calls.",
 	}
 	httpTimer = metrics.HistogramOpts{
-		Namespace: "http",
+		Namespace: "snap",
+		Subsystem: "http",
 		Name:      "duration",
 		Help:      "The http call duration.",
 	}

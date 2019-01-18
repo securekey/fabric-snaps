@@ -12,7 +12,8 @@ import (
 
 var (
 	refreshTimer = fabricmetrics.HistogramOpts{
-		Namespace: "config_service",
+		Namespace: "snap",
+		Subsystem: "config_service",
 		Name:      "refresh_duration",
 		Help:      "The config refresh duration.",
 	}

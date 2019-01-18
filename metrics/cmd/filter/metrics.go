@@ -12,18 +12,18 @@ import (
 
 var (
 	proposalCounter = metrics.CounterOpts{
-		Namespace: "proposal",
-		Name:      "count",
+		Namespace: "snap",
+		Name:      "proposal_count",
 		Help:      "The number of proposal.",
 	}
 	proposalErrorCounter = metrics.CounterOpts{
-		Namespace: "proposal",
-		Name:      "error_count",
+		Namespace: "snap",
+		Name:      "proposal_error_count",
 		Help:      "The number of failed proposal.",
 	}
 	proposalTimer = metrics.HistogramOpts{
-		Namespace: "proposal",
-		Name:      "duration",
+		Namespace: "snap",
+		Name:      "proposal_duration",
 		Help:      "The proposal duration.",
 	}
 )

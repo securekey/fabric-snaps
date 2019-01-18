@@ -12,12 +12,14 @@ import (
 
 var (
 	configRefresh = kitmetrics.HistogramOpts{
-		Namespace: "config",
+		Namespace: "snap",
+		Subsystem: "config",
 		Name:      "refresh_duration",
 		Help:      "The config refresh duration.",
 	}
 	configPeriodicRefresh = kitmetrics.HistogramOpts{
-		Namespace: "config",
+		Namespace: "snap",
+		Subsystem: "config",
 		Name:      "periodic_refresh_duration",
 		Help:      "The config periodic refresh duration.",
 	}
