@@ -302,7 +302,7 @@
 
 [[projects]]
   branch = "src-1.4"
-  digest = "1:067467948969b9ddeffd9c0203f6cd37a5629f46dfb03d3cabbbf13384afaf1e"
+  digest = "1:06820d1ff9492dd7d051a3034c43762244ce9b4884fd89e4154b99e82747b17a"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -372,7 +372,6 @@
     "core/container/util",
     "core/deliverservice",
     "core/deliverservice/blocksprovider",
-    "core/handlers/auth",
     "core/handlers/validation/api",
     "core/handlers/validation/api/capabilities",
     "core/handlers/validation/api/identities",
@@ -1249,7 +1248,6 @@
     "github.com/hyperledger/fabric/common/viperutil",
     "github.com/hyperledger/fabric/core/aclmgmt",
     "github.com/hyperledger/fabric/core/chaincode/shim",
-    "github.com/hyperledger/fabric/core/handlers/auth",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb",

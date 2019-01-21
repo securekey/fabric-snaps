@@ -154,8 +154,3 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 	}
 	return nil
 }
-
-// GetFabricClient return fabric client
-func GetFabricClient(channelID string) (api.Client, error) {
-	return txnSnapClient.GetInstance(channelID)
-}

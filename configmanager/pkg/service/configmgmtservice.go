@@ -56,6 +56,7 @@ func GetInstance() api.ConfigService {
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
 
 	once.Do(func() {
+		//TODO [DEV-11797] Create metrics provider instance in snaps
 		instance = &ConfigServiceImpl{metrics: NewMetrics(util.GetMetricsInstance())}
 		instance.cacheMap = make(map[string]cache)
 		instance.configHashes = make(map[string]string)

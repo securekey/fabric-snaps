@@ -36,6 +36,8 @@ import (
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
 
+	"sync"
+
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
@@ -50,6 +52,8 @@ import (
 )
 
 var logger = logging.NewLogger("txnsnap")
+var metrics *Metrics
+var once sync.Once
 
 const (
 	txnSnapUser     = "Txn-Snap-User"
@@ -71,7 +75,6 @@ var CfgProvider = func(channelID string) (api.Config, error) {
 }
 
 var cache = newRefCache(10 * time.Second)
-var metrics = NewMetrics(metricsutil.GetMetricsInstance())
 
 type clientImpl struct {
 	*refcount.ReferenceCounter
@@ -201,6 +204,8 @@ func (c *clientImpl) channelConfig() (fabApi.ChannelCfg, error) {
 }
 
 func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory, currentClient *clientImpl) (*clientImpl, errors.Error) {
+	//TODO [DEV-11797] Create metrics provider instance in snaps
+	once.Do(func() { metrics = NewMetrics(metricsutil.GetMetricsInstance()) })
 	configProvider, endpointConfig, err := getEndpointConfig(cfg)
 	if err != nil {
 		return nil, err
