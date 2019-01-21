@@ -206,6 +206,7 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 
 	once.Do(func() {
 		instance = &HTTPServiceImpl{}
+		//TODO [DEV-11797] Create metrics provider instance in snaps
 		instance.metrics = NewMetrics(util.GetMetricsInstance())
 		err = initialize(config)
 		if err != nil {
