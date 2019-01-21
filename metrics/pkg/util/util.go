@@ -20,6 +20,7 @@ var reg = regexp.MustCompile("[^a-zA-Z0-9_]+")
 func GetMetricsInstance() metrics.Provider {
 	metricsInstance := peer.GetMetricsProvider()
 	if metricsInstance == nil {
+		panic("w")
 		metricsInstance = &disabled.Provider{}
 	}
 	return metricsInstance

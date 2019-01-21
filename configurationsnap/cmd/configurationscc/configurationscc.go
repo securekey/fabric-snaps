@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -77,6 +79,7 @@ var availableFunctions = functionSet()
 
 var logger = logging.NewLogger("configsnap")
 var metrics *Metrics
+var once sync.Once
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
@@ -105,7 +108,8 @@ const (
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
-
+		//TODO [DEV-11797] Create metrics provider instance in snaps
+		once.Do(func() { metrics = NewMetrics(metricsutil.GetMetricsInstance()) })
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
@@ -784,7 +788,6 @@ func getACLProvider() acl.ACLProvider {
 
 // New chaincode implementation
 func New() shim.Chaincode {
-	metrics = NewMetrics(metricsutil.GetMetricsInstance())
 	return &ConfigurationSnap{}
 }
 
