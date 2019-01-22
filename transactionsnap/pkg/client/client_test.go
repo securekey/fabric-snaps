@@ -9,26 +9,23 @@ SPDX-License-Identifier: Apache-2.0
 package client
 
 import (
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
-
-	"github.com/securekey/fabric-snaps/mocks/mockprovider"
-
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"io/ioutil"
-
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/pkg/errors"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	"github.com/securekey/fabric-snaps/mocks/mockprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	utilErr "github.com/securekey/fabric-snaps/util/errors"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -117,6 +114,10 @@ func TestInitializer(t *testing.T) {
 
 	//Setup bccsp factory
 	opts := sampleconfig.GetSampleBCCSPFactoryOpts("../../cmd/sampleconfig")
+
+	if err := util.InitializeMetricsProvider("../../cmd/sampleconfig"); err != nil {
+		panic(err)
+	}
 
 	//Now call init factories using opts you got
 	bccspFactory.InitFactories(opts)

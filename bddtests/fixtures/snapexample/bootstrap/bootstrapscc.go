@@ -18,6 +18,7 @@ import (
 	"github.com/hyperledger/fabric/common/viperutil"
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/spf13/viper"
 )
 
@@ -49,6 +50,9 @@ func (bootstrapSnap *BootstrapSnap) Init(stub shim.ChaincodeStubInterface) pb.Re
 	err := bootstrapSnap.initBCCSP()
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to initialize bootstrap snap. Error : %v", err))
+	}
+	if err := util.InitializeMetricsProvider(""); err != nil {
+		panic(err)
 	}
 	logger.Debug("bccsp initialized successfully")
 	return shim.Success(nil)

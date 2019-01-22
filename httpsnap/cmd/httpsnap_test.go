@@ -30,6 +30,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -192,6 +193,9 @@ func initHTTPServerConfig() {
 }
 
 func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("./sampleconfig"); err != nil {
+		panic(err)
+	}
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
