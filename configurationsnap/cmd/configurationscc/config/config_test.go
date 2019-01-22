@@ -16,6 +16,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
@@ -54,7 +55,9 @@ func checkString(t *testing.T, field string, value string, expectedValue string)
 }
 
 func TestMain(m *testing.M) {
-
+	if err := util.InitializeMetricsProvider("../sampleconfig"); err != nil {
+		panic(err)
+	}
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))

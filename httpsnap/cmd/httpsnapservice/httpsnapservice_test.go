@@ -40,6 +40,7 @@ import (
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -485,6 +486,9 @@ func initHTTPServerConfig() {
 }
 
 func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("../sampleconfig"); err != nil {
+		panic(err)
+	}
 	configData, err := ioutil.ReadFile("../sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %s\n", err))

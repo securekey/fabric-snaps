@@ -1016,7 +1016,9 @@ func uplaodConfigToHL(stub *mockstub.MockStub, message []byte) error {
 }
 
 func TestMain(m *testing.M) {
-	metrics = NewMetrics(metricsutil.GetMetricsInstance())
+	if err := metricsutil.InitializeMetricsProvider("./sampleconfig"); err != nil {
+		panic(err)
+	}
 
 	configData, err := ioutil.ReadFile("./sampleconfig/config.yaml")
 	if err != nil {

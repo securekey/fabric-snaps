@@ -213,6 +213,38 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:c244cf1dfe6a89844fd22158c361922ad1c16bd9d07e5cb98b53dff582a33d15"
+  name = "github.com/go-kit/kit"
+  packages = [
+    "log",
+    "metrics",
+    "metrics/internal/lv",
+    "metrics/internal/ratemap",
+    "metrics/prometheus",
+    "metrics/statsd",
+    "util/conn",
+  ]
+  pruneopts = "NUT"
+  revision = "ca4112baa34cb55091301bdc13b1420a122b1b9e"
+  version = "v0.7.0"
+
+[[projects]]
+  digest = "1:738c75300725db7262825a96ba5b6a8a737f0faa93d9dadcf3977504034877e0"
+  name = "github.com/go-logfmt/logfmt"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "07c9b44f60d7ffdfb7d8efe1ad539965737836dc"
+  version = "v0.4.0"
+
+[[projects]]
+  digest = "1:91358b3a314c1ddfd4d6445ca9c1fb846842c31c153e626730594b3c95f73f4a"
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
+
+[[projects]]
   digest = "1:8ba832f19021187b30cf505ea0335c1b779b378e61c2468790082f7262925c4d"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
@@ -301,14 +333,11 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "src-1.4"
-  digest = "1:06820d1ff9492dd7d051a3034c43762244ce9b4884fd89e4154b99e82747b17a"
+  digest = "1:73c14ea03bb1b78e5cdab73a0c510e986e772e41528ac54b713cfd1e2ce6d445"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
     "bccsp/factory",
-    "bccsp/grep11",
-    "bccsp/grep11/protos",
     "bccsp/idemix",
     "bccsp/idemix/bridge",
     "bccsp/idemix/handlers",
@@ -342,6 +371,8 @@
     "common/metrics/disabled",
     "common/metrics/gendoc",
     "common/metrics/internal/namer",
+    "common/metrics/prometheus",
+    "common/metrics/statsd",
     "common/mocks/config",
     "common/mocks/configtx",
     "common/mocks/policies",
@@ -457,8 +488,8 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "32a5f928d596cf82da628564fe15cd649bde7ccc"
-  source = "github.com/securekey/fabric-next"
+  revision = "d700b43476e803c864c48021e63a78543b60e17e"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
@@ -627,6 +658,14 @@
   pruneopts = "NUT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f91bb67d051a94cf6ab2cf07eee0550432afc31655838d42cdec258db4b348f0"
+  name = "github.com/kr/logfmt"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
   digest = "1:999238e7b79f7a5a3bc98aa5cb12f8f34f2d7d3def7cdbf698b9b499edd47767"
@@ -1178,6 +1217,7 @@
     "github.com/DATA-DOG/godog",
     "github.com/DATA-DOG/godog/gherkin",
     "github.com/fsouza/go-dockerclient",
+    "github.com/go-kit/kit/metrics/statsd",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel",
@@ -1243,6 +1283,8 @@
     "github.com/hyperledger/fabric/common/metrics",
     "github.com/hyperledger/fabric/common/metrics/disabled",
     "github.com/hyperledger/fabric/common/metrics/gendoc",
+    "github.com/hyperledger/fabric/common/metrics/prometheus",
+    "github.com/hyperledger/fabric/common/metrics/statsd",
     "github.com/hyperledger/fabric/common/policies",
     "github.com/hyperledger/fabric/common/util",
     "github.com/hyperledger/fabric/common/viperutil",

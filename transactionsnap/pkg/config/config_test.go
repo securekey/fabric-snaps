@@ -19,6 +19,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	transactionsnapApi "github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/spf13/viper"
@@ -201,6 +202,10 @@ func TestGetConfigPath(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("../../cmd/sampleconfig"); err != nil {
+		panic(err)
+	}
+
 	configData, err := ioutil.ReadFile("../../cmd/sampleconfig/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %s\n", err))

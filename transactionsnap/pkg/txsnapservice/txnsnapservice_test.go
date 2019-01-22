@@ -34,6 +34,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -232,6 +233,9 @@ func TestMain(m *testing.M) {
 	path := "../../cmd/sampleconfig/msp/keystore"
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		panic(fmt.Sprintf("Wrong path: %v\n", err))
+	}
+	if err := util.InitializeMetricsProvider("../../cmd/sampleconfig"); err != nil {
+		panic(err)
 	}
 	opts := &bccspFactory.FactoryOpts{
 		ProviderName: "SW",

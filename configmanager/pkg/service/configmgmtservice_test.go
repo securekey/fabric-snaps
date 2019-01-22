@@ -9,11 +9,13 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 
 	"testing"
 
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 )
@@ -412,4 +414,11 @@ func getMockStub() *mockstub.MockStub {
 	stub.ChannelID = channelID
 	stub.SetMspID("msp.one")
 	return stub
+}
+
+func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("../../../configurationsnap/cmd/configurationscc/sampleconfig"); err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
 }

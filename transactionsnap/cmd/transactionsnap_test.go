@@ -38,6 +38,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
@@ -557,6 +558,11 @@ func TestMain(m *testing.M) {
 			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "./sampleconfig/msp/keystore"},
 		},
 	}
+
+	if err := util.InitializeMetricsProvider("./sampleconfig"); err != nil {
+		panic(err)
+	}
+
 	// TDOD
 	bccspFactory.InitFactories(opts)
 

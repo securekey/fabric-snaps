@@ -17,6 +17,7 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
@@ -163,6 +164,9 @@ func verifyEqual(t *testing.T, value string, expected string, errMsg string) {
 }
 
 func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("../sampleconfig"); err != nil {
+		panic(err)
+	}
 	configData, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("File error: %v\n", err))
@@ -290,7 +294,7 @@ func TestGetCryptoProvider(t *testing.T) {
 	}
 }
 
-func TestKeyCacheConfig(t *testing.T){
+func TestKeyCacheConfig(t *testing.T) {
 	assert.True(t, c.IsKeyCacheEnabled())
 	assert.Equal(t, 50*time.Minute, c.KeyCacheRefreshInterval())
 }
