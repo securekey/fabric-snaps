@@ -17,8 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"sync"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -45,7 +43,7 @@ import (
 )
 
 // functionRegistry is a registry of the functions that are supported by configuration snap
-var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte) pb.Response{
+var functionRegistry = map[string]func(shim.ChaincodeStubInterface, [][]byte, *Metrics) pb.Response{
 	"healthCheck":     healthCheck,
 	"save":            save,
 	"get":             get,
@@ -78,11 +76,11 @@ var supportedAlgs = []string{"ECDSA", "ECDSAP256", "ECDSAP384", "RSA", "RSA1024"
 var availableFunctions = functionSet()
 
 var logger = logging.NewLogger("configsnap")
-var metrics *Metrics
-var once sync.Once
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
+	metrics                  *Metrics
+	configmgmtServiceMetrics *configmgmtService.Metrics
 }
 
 var peerConfigPath = ""
@@ -108,8 +106,6 @@ const (
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
-		//TODO [DEV-11797] Create metrics provider instance in snaps
-		once.Do(func() { metrics = NewMetrics(metricsutil.GetMetricsInstance()) })
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
@@ -120,7 +116,7 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 		}
 		interval := config.GetDefaultRefreshInterval()
 		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
-		configmgmtService.Initialize(stub, peerMspID)
+		configmgmtService.Initialize(stub, peerMspID, configSnap.configmgmtServiceMetrics)
 
 		eventSource := &listener.EventSource{
 			ChannelID:   stub.GetChannelID(),
@@ -133,14 +129,14 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err1, "Error initializing Configuration Snap"), logger, stub)
 		}
 
-		go listenConfigEvents(stub.GetChannelID(), updateListener)
+		go listenConfigEvents(stub.GetChannelID(), updateListener, configSnap.metrics)
 
-		periodicRefresh(stub.GetChannelID(), interval)
+		periodicRefresh(stub.GetChannelID(), interval, configSnap.metrics)
 	}
 	return shim.Success(nil)
 }
 
-func listenConfigEvents(channelID string, updateListener listener.ChaincodeListener) {
+func listenConfigEvents(channelID string, updateListener listener.ChaincodeListener, metrics *Metrics) {
 	for {
 		eventChannel, err := updateListener.Listen()
 		if err != nil {
@@ -155,7 +151,7 @@ func listenConfigEvents(channelID string, updateListener listener.ChaincodeListe
 				continue
 			}
 
-			go sendRefreshRequest(channelID)
+			go sendRefreshRequest(channelID, metrics)
 		}
 	}
 }
@@ -179,7 +175,7 @@ func (configSnap *ConfigurationSnap) Invoke(stub shim.ChaincodeStubInterface) (r
 	functionArgs := args[1:]
 
 	logger.Debugf("Invoking function [%s] with args: %s", functionName, functionArgs)
-	return function(stub, functionArgs)
+	return function(stub, functionArgs, configSnap.metrics)
 }
 
 // functionSet returns a string enumerating all available functions
@@ -192,7 +188,7 @@ func functionSet() string {
 }
 
 // healthCheck is the health check function of this ConfigurationSnap
-func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	response := healthcheck.SmokeTest(healthcheck.ConfigurationScc, stub, args)
 	if response.Status != shim.OK {
 		errObj := errors.New(errors.SystemError, fmt.Sprintf("%s healthcheck failed: %s", healthcheck.ConfigurationScc, response.Message))
@@ -245,7 +241,7 @@ func getMspID(stub shim.ChaincodeStubInterface) (string, errors.Error) {
 }
 
 //save - saves configuration passed in args
-func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func save(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	configMsg := args[0]
 	if len(configMsg) == 0 {
 		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Config is empty-cannot be saved"), logger, stub)
@@ -274,7 +270,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 //get - gets configuration using configkey as criteria
-func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func get(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 
 	configKey, codedErr := getKey(args)
 	if codedErr != nil {
@@ -305,7 +301,7 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 //delete - deletes configuration using config key as criteria
-func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func delete(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 
 	configKey, err := getKey(args)
 	if err != nil {
@@ -326,7 +322,7 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 	return shim.Success(nil)
 }
 
-func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func refresh(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	startTime := time.Now()
 	defer func() { metrics.ConfigRefresh.Observe(time.Since(startTime).Seconds()) }()
 
@@ -363,7 +359,7 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 }
 
 //getFromCache - gets configuration using configkey as criteria from cache
-func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 
 	configKey, err := getKey(args)
 	if err != nil {
@@ -386,7 +382,7 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
 
 //to generate key pair based on options submitted
 //expected keytype and ephemeral flag in args
-func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	if len(args) < 2 {
 		return shim.Error(fmt.Sprintf("Required arguments are: key type and ephemeral flag"))
 	}
@@ -408,7 +404,7 @@ func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte) pb.Respons
 //first arg: key type (ECDSA, RSA)
 //second arg : ephemeral flag (true/false)
 //third  arg: signature algorithm (one of x509.SignatureAlgorithm)
-func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	//check args
 	if len(args) < 4 {
 		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag, CSR's signature algorithm and common name"))
@@ -669,12 +665,12 @@ func parseKey(k bccsp.Key) pb.Response {
 
 }
 
-func periodicRefresh(channelID string, refreshInterval time.Duration) {
+func periodicRefresh(channelID string, refreshInterval time.Duration, metrics *Metrics) {
 	logger.Debugf("***Periodic refresh was called on [%d]\n", refreshInterval)
 	go func() {
 		for {
 			time.Sleep(refreshInterval)
-			sendRefreshRequest(channelID)
+			sendRefreshRequest(channelID, metrics)
 			csccconfig, err := config.New(channelID, peerConfigPath)
 			if err != nil {
 				logger.Debugf("Got error while creating config for channel %v\n", channelID)
@@ -692,7 +688,7 @@ func periodicRefresh(channelID string, refreshInterval time.Duration) {
 	}()
 }
 
-func sendRefreshRequest(channelID string) {
+func sendRefreshRequest(channelID string, metrics *Metrics) {
 	startTime := time.Now()
 	defer func() { metrics.ConfigPeriodicRefresh.Observe(time.Since(startTime).Seconds()) }()
 
@@ -788,7 +784,8 @@ func getACLProvider() acl.ACLProvider {
 
 // New chaincode implementation
 func New() shim.Chaincode {
-	return &ConfigurationSnap{}
+	return &ConfigurationSnap{metrics: NewMetrics(metricsutil.GetMetricsInstance()),
+		configmgmtServiceMetrics: configmgmtService.NewMetrics(metricsutil.GetMetricsInstance())}
 }
 
 func main() {

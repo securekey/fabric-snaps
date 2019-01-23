@@ -8,27 +8,21 @@ package httpsnapservice
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"encoding/pem"
-
-	"crypto"
-	"io"
-
-	"crypto/rsa"
-
-	"crypto/ecdsa"
-
 	"sync"
-
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier"
@@ -39,7 +33,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
-	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -205,9 +199,8 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	}
 
 	once.Do(func() {
-		instance = &HTTPServiceImpl{}
-		//TODO [DEV-11797] Create metrics provider instance in snaps
-		instance.metrics = NewMetrics(util.GetMetricsInstance())
+		// we need initialize metrics inside once because newHTTPService is called from multiple snaps
+		instance = &HTTPServiceImpl{metrics: NewMetrics(metricsutil.GetMetricsInstance())}
 		err = initialize(config)
 		if err != nil {
 			return

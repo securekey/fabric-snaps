@@ -37,6 +37,9 @@ var encryptLogging bool
 
 // New chaincode implementation
 func New() shim.Chaincode {
+	if err := util.InitializeMetricsProvider(""); err != nil {
+		panic(err)
+	}
 	return &BootstrapSnap{}
 }
 
@@ -50,9 +53,6 @@ func (bootstrapSnap *BootstrapSnap) Init(stub shim.ChaincodeStubInterface) pb.Re
 	err := bootstrapSnap.initBCCSP()
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to initialize bootstrap snap. Error : %v", err))
-	}
-	if err := util.InitializeMetricsProvider(""); err != nil {
-		panic(err)
 	}
 	logger.Debug("bccsp initialized successfully")
 	return shim.Success(nil)

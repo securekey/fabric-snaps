@@ -596,6 +596,11 @@ chaincode:
     # Like regular system chaincodes, plugins must also be white listed in the
     # chaincode.system section above.
     systemPlugins:
+      - enabled: true
+        name: bootstrapsnap
+        path: /opt/extsysccs/bootstrapsnap.so
+        invokableExternal: false
+        invokableCC2CC: false
       # example configuration:
       - enabled: true
         name: configurationsnap
@@ -630,11 +635,6 @@ chaincode:
         path: /opt/extsysccs/eventconsumersnap.so
         invokableExternal: true
         invokableCC2CC: true
-      - enabled: true
-        name: bootstrapsnap
-        path: /opt/extsysccs/bootstrapsnap.so
-        invokableExternal: false
-        invokableCC2CC: false
     # Logging section for the chaincode container
     logging:
       # Default level for all loggers within the chaincode container

@@ -7,18 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 package txsnapservice
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
-
-	"encoding/hex"
-	"hash"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
@@ -35,12 +32,14 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 var channelID = "testChannel"
@@ -274,7 +273,7 @@ func TestMain(m *testing.M) {
 
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID)
+	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
 
 	PeerConfigPath = "../../cmd/sampleconfig"
 	txSnapConfig, err = config.NewConfig("../../cmd/sampleconfig", channelID)
@@ -299,7 +298,7 @@ func TestMain(m *testing.M) {
 
 	client.ServiceProviderFactory = &mocks.MockProviderFactory{EventService: eventService}
 	client.CfgProvider = func(channelID string) (api.Config, error) { return &sampleConfig{txSnapConfig}, nil }
-	fcClient, err = client.GetInstance(channelID)
+	fcClient, err = client.GetInstance(channelID, client.NewMetrics(metricsutil.GetMetricsInstance()))
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}

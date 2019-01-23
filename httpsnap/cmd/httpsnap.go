@@ -8,12 +8,11 @@ package main
 import (
 	"encoding/json"
 
-	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
-	shim "github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
-	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
+	"github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
