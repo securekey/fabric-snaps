@@ -18,6 +18,7 @@ import (
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/mocks/mockprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -36,6 +37,13 @@ const (
 	testChannelID = "mychannel"
 	orgName       = "peerorg1"
 )
+
+func TestMain(m *testing.M) {
+	if err := util.InitializeMetricsProvider("../../cmd/sampleconfig"); err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
+}
 
 func TestRetryOpts(t *testing.T) {
 	impl := &clientImpl{
@@ -126,7 +134,7 @@ func TestInitializer(t *testing.T) {
 		return createConfig(t, txnCfgPath, peerCfgPath), nil
 	}
 
-	client, err := checkClient(testChannelID, nil, configProvider, &mockprovider.Factory{})
+	client, err := checkClient(testChannelID, nil, configProvider, &mockprovider.Factory{}, NewMetrics(metricsutil.GetMetricsInstance()))
 	require.NoError(t, err)
 
 	//sdk, channel client, context are loaded and config hash updated
@@ -142,7 +150,7 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient := client.channelClient
 	oldHash := client.configHash
 
-	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{}, NewMetrics(metricsutil.GetMetricsInstance()))
 	assert.NoError(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
@@ -157,7 +165,7 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient = client.channelClient
 	oldHash = client.configHash
 
-	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{}, NewMetrics(metricsutil.GetMetricsInstance()))
 	assert.Nil(t, err)
 
 	//pointer compare should pass on sdk, context , channel client and config hash
@@ -175,7 +183,7 @@ func TestInitializer(t *testing.T) {
 	oldChannelClient = client.channelClient
 	oldHash = client.configHash
 
-	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{})
+	client, err = checkClient(testChannelID, client, configProvider, &mockprovider.Factory{}, NewMetrics(metricsutil.GetMetricsInstance()))
 	assert.NoError(t, err)
 	//pointer negative compare should pass on sdk, context , channel client and config hash
 	assert.False(t, oldSdk == client.sdk)

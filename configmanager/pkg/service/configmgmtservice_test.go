@@ -16,6 +16,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +45,7 @@ func TestMngmtServiceRefreshSameKeyDifferentConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot upload %s", err)
 	}
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 
 	key := api.ConfigKey{MspID: mspID, PeerID: "peer.zero.example.com", AppName: "testAppName", AppVersion: "1"}
 	originalConfig, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
@@ -84,7 +85,7 @@ func TestGetCacheByMspID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot upload %s", err)
 	}
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 
 	key := api.ConfigKey{MspID: mspID, PeerID: "", AppName: ""}
 	_, _, err = cacheInstance.Get(stub.GetChannelID(), key)
@@ -102,7 +103,7 @@ func TestGetCacheByCompID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot upload %s", err)
 	}
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 
 	key := api.ConfigKey{MspID: mspID, AppName: "app1", AppVersion: "1", ComponentName: "comp1"}
 	value, dirty, err := cacheInstance.Get(stub.GetChannelID(), key)
@@ -166,7 +167,7 @@ someconfig:
 		t.Fatalf("cannot upload %s", err)
 	}
 
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 
 	config, dirty, err := cacheInstance.GetViper(stub.GetChannelID(), api.ConfigKey{MspID: mspID, PeerID: peerID, AppName: "unknown app"}, api.YAML)
 	if err == nil {
@@ -199,7 +200,7 @@ func TestTwoChannels(t *testing.T) {
 	if err != nil {
 
 	}
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	_, e := uplaodConfigToHL(t, stub, validMsg)
 	if e != nil {
 		t.Fatalf("Cannot upload %s", e)
@@ -224,7 +225,7 @@ func TestTwoChannels(t *testing.T) {
 	if e != nil {
 		t.Fatalf("Cannot upload %s", e)
 	}
-	cacheInstance = Initialize(stub1, mspID)
+	cacheInstance = Initialize(stub1, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	b, dirty, err = cacheInstance.Get("channelIDTwo", configK)
 	if len(b) == 0 {
 		t.Fatalf("Error expected value here for key %s ", configK)
@@ -236,7 +237,7 @@ func TestTwoChannels(t *testing.T) {
 func TestRefreshOnNilStub(t *testing.T) {
 	stub := getMockStub()
 
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	//do refresh cache
 	if err := cacheInstance.Refresh(nil, mspID); err == nil {
 		t.Fatalf("Error expected: 'Stub is nil'")
@@ -251,7 +252,7 @@ func TestRefreshCache(t *testing.T) {
 	key.PeerID = "peer.zero.example.com"
 	key.AppName = "testAppName"
 	key.AppVersion = "1"
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	configKV := api.ConfigKV{Key: key, Value: []byte("someValue")}
 	configMessages := []*api.ConfigKV{&configKV}
 
@@ -288,7 +289,7 @@ func TestMngmtServiceRefreshSameConfig(t *testing.T) {
 
 	stub := getMockStub()
 
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	//upload valid message to HL
 	_, err := uplaodConfigToHL(t, stub, validMsg)
 	if err != nil {
@@ -314,7 +315,7 @@ func TestMngmtServiceRefreshValidNonExistingKey(t *testing.T) {
 
 	stub := getMockStub()
 
-	cacheInstance := Initialize(stub, mspID)
+	cacheInstance := Initialize(stub, mspID, NewMetrics(metricsutil.GetMetricsInstance()))
 	adminService := GetInstance()
 	//upload valid message to HL
 	_, err := uplaodConfigToHL(t, stub, validMsg)

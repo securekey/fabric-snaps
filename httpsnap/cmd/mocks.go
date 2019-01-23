@@ -11,7 +11,7 @@ import (
 )
 
 func newMockStub(channelID string, MspID string) *mockstub.MockStub { //nolint:deadcode
-	snap := new(HTTPSnap)
+	snap := New()
 	stub := mockstub.NewMockStub("httpsnap", snap)
 	stub.ChannelID = channelID
 	stub.SetMspID(MspID)

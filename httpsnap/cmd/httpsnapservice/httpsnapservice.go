@@ -8,27 +8,21 @@ package httpsnapservice
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"encoding/pem"
-
-	"crypto"
-	"io"
-
-	"crypto/rsa"
-
-	"crypto/ecdsa"
-
 	"sync"
-
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier"
@@ -39,7 +33,6 @@ import (
 	"github.com/hyperledger/fabric/bccsp/factory"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapconfig "github.com/securekey/fabric-snaps/httpsnap/cmd/config"
-	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -90,8 +83,8 @@ const (
 type Dialer func(network, addr string) (net.Conn, error)
 
 //Get will return httpService to caller
-func Get(channelID string) (*HTTPServiceImpl, error) {
-	return newHTTPService(channelID)
+func Get(channelID string, metrics *Metrics) (*HTTPServiceImpl, error) {
+	return newHTTPService(channelID, metrics)
 }
 
 //updateConfig http service updates http service config if provided config has any updates
@@ -194,7 +187,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateURL(httpServiceInvokeRequest HTT
 }
 
 //newHTTPService creates new http snap service
-func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
+func newHTTPService(channelID string, metrics *Metrics) (*HTTPServiceImpl, error) {
 	config, dirty, err := httpsnapconfig.NewConfig(PeerConfigPath, channelID)
 	if err != nil {
 		return nil, errors.Wrap(errors.InitializeConfigError, err, "Failed to initialize config")
@@ -205,9 +198,7 @@ func newHTTPService(channelID string) (*HTTPServiceImpl, error) {
 	}
 
 	once.Do(func() {
-		instance = &HTTPServiceImpl{}
-		//TODO [DEV-11797] Create metrics provider instance in snaps
-		instance.metrics = NewMetrics(util.GetMetricsInstance())
+		instance = &HTTPServiceImpl{metrics: metrics}
 		err = initialize(config)
 		if err != nil {
 			return

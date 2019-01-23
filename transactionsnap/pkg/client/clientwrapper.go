@@ -36,6 +36,7 @@ var retryableErrors = []*regexp.Regexp{
 // the operation is in progress. Once the invocation has completed, the reference is released.
 type clientWrapper struct {
 	channelID string
+	metrics   *Metrics
 }
 
 func (c *clientWrapper) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
@@ -189,7 +190,7 @@ func (c *clientWrapper) get() (*clientImpl, errors.Error) {
 }
 
 func (c *clientWrapper) getClient() (*clientImpl, errors.Error) {
-	ref, err := cache.Get(newCacheKey(c.channelID, CfgProvider, ServiceProviderFactory))
+	ref, err := cache.Get(newCacheKey(c.channelID, CfgProvider, ServiceProviderFactory, c.metrics))
 	if err != nil {
 		return nil, errors.WithMessage(errors.GeneralError, err, "Got error while getting item from cache")
 	}
@@ -203,7 +204,7 @@ func (c *clientWrapper) getClient() (*clientImpl, errors.Error) {
 }
 
 func (c *clientWrapper) clearCache() {
-	cache.Delete(newCacheKey(c.channelID, CfgProvider, ServiceProviderFactory))
+	cache.Delete(newCacheKey(c.channelID, CfgProvider, ServiceProviderFactory, c.metrics))
 }
 
 //isRetryable matches error message predefined set of error patterns

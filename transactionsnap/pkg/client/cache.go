@@ -22,6 +22,7 @@ type CacheKey interface {
 	ChannelID() string
 	ServiceProviderFactory() apisdk.ServiceProviderFactory
 	ConfigProvider() ConfigProvider
+	MetricsProvider() *Metrics
 }
 
 // cacheKey holds a key for the cache
@@ -30,13 +31,15 @@ type cacheKey struct {
 	txnSnapConfig          api.Config
 	configProvider         ConfigProvider
 	serviceProviderFactory apisdk.ServiceProviderFactory
+	metrics                *Metrics
 }
 
-func newCacheKey(channelID string, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory) *cacheKey {
+func newCacheKey(channelID string, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory, metrics *Metrics) *cacheKey {
 	return &cacheKey{
 		channelID:              channelID,
 		configProvider:         configProvider,
 		serviceProviderFactory: serviceProviderFactory,
+		metrics:                metrics,
 	}
 }
 
@@ -60,6 +63,11 @@ func (k *cacheKey) ConfigProvider() ConfigProvider {
 	return k.configProvider
 }
 
+// MetricsProvider returns the metrics provider
+func (k *cacheKey) MetricsProvider() *Metrics {
+	return k.metrics
+}
+
 func newRefCache(refresh time.Duration) *lazycache.Cache {
 	initializer := func(key lazycache.Key) (interface{}, error) {
 		ck, ok := key.(CacheKey)
@@ -67,17 +75,17 @@ func newRefCache(refresh time.Duration) *lazycache.Cache {
 			return nil, errors.New(errors.GeneralError, "unexpected cache key")
 		}
 		return lazyref.New(
-			newInitializer(ck.ChannelID(), ck.ConfigProvider(), ck.ServiceProviderFactory()),
+			newInitializer(ck.ChannelID(), ck.ConfigProvider(), ck.ServiceProviderFactory(), ck.MetricsProvider()),
 			lazyref.WithRefreshInterval(lazyref.InitImmediately, refresh),
 		), nil
 	}
 	return lazycache.New("Client_Cache", initializer)
 }
 
-func newInitializer(channelID string, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory) lazyref.Initializer {
+func newInitializer(channelID string, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory, metrics *Metrics) lazyref.Initializer {
 	var client *clientImpl
 	return func() (interface{}, error) {
-		newClient, err := checkClient(channelID, client, configProvider, serviceProviderFactory)
+		newClient, err := checkClient(channelID, client, configProvider, serviceProviderFactory, metrics)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +94,7 @@ func newInitializer(channelID string, configProvider ConfigProvider, serviceProv
 	}
 }
 
-func checkClient(channelID string, currentClient *clientImpl, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory) (*clientImpl, errors.Error) {
+func checkClient(channelID string, currentClient *clientImpl, configProvider ConfigProvider, serviceProviderFactory apisdk.ServiceProviderFactory, metrics *Metrics) (*clientImpl, errors.Error) {
 	cfg, err := configProvider(channelID)
 	if err != nil {
 		return nil, errors.WithMessage(errors.InitializeConfigError, err, "Failed to initialize config")
@@ -108,7 +116,7 @@ func checkClient(channelID string, currentClient *clientImpl, configProvider Con
 
 	logger.Infof("The client config was updated for channel [%s]. Existing hash [%s] new hash [%s]. Initializing new SDK ...", channelID, currentHash, cfgHash)
 
-	newClient, e := newClient(channelID, cfg, serviceProviderFactory, currentClient)
+	newClient, e := newClient(channelID, cfg, serviceProviderFactory, currentClient, metrics)
 	if e != nil {
 		return nil, e
 	}

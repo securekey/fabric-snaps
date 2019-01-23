@@ -21,7 +21,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -35,10 +34,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
-
-	"sync"
-
-	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
@@ -52,8 +47,6 @@ import (
 )
 
 var logger = logging.NewLogger("txnsnap")
-var metrics *Metrics
-var once sync.Once
 
 const (
 	txnSnapUser     = "Txn-Snap-User"
@@ -85,6 +78,7 @@ type clientImpl struct {
 	context       contextApi.Channel
 	configHash    string
 	sdk           *fabsdk.FabricSDK
+	metrics       *Metrics
 }
 
 // DynamicProviderFactory returns a Channel Provider that uses a dynamic discovery provider
@@ -162,8 +156,8 @@ func (c *CustomConfig) ChannelPeers(name string) []fabApi.ChannelPeer {
 }
 
 // GetInstance returns an instance of the fabric client for the given channel.
-func GetInstance(channelID string) (api.Client, error) {
-	c := &clientWrapper{channelID: channelID}
+func GetInstance(channelID string, metrics *Metrics) (api.Client, error) {
+	c := &clientWrapper{channelID: channelID, metrics: metrics}
 
 	// Make sure that the client can be retrieved
 	if _, err := c.getClient(); err != nil {
@@ -203,9 +197,7 @@ func (c *clientImpl) channelConfig() (fabApi.ChannelCfg, error) {
 	return c.context.ChannelService().ChannelConfig()
 }
 
-func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory, currentClient *clientImpl) (*clientImpl, errors.Error) {
-	//TODO [DEV-11797] Create metrics provider instance in snaps
-	once.Do(func() { metrics = NewMetrics(metricsutil.GetMetricsInstance()) })
+func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.ServiceProviderFactory, currentClient *clientImpl, metrics *Metrics) (*clientImpl, errors.Error) {
 	configProvider, endpointConfig, err := getEndpointConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -258,6 +250,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		clientConfig:  customEndpointConfig,
 		context:       chContext,
 		configHash:    generateHash(cfg.GetConfigBytes()),
+		metrics:       metrics,
 	}
 	// close will be called when the client is closed and the last reference is released.
 	client.ReferenceCounter = refcount.New(client.close)
@@ -354,7 +347,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			metrics.TransactionRetryCounter.Add(1)
+			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
 	if err != nil {
@@ -445,7 +438,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
-			metrics.TransactionRetryCounter.Add(1)
+			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
 	if err != nil {

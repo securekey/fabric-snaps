@@ -77,7 +77,7 @@ func TestRefreshACLSuccess(t *testing.T) {
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: false}
 	membershipService = &mockMembershipService{}
-	response := refresh(stub, args)
+	response := refresh(stub, args, NewMetrics(metricsutil.GetMetricsInstance()))
 	if response.Status != 200 {
 		t.Fatalf("Refresh failed: %v", response.Message)
 	}
@@ -100,7 +100,7 @@ func TestRefreshACLFailure(t *testing.T) {
 	aclCheckCalled = false
 	aclProvider = &mockACLProvider{aclFailed: true}
 	membershipService = &mockMembershipService{}
-	response := refresh(stub, args)
+	response := refresh(stub, args, NewMetrics(metricsutil.GetMetricsInstance()))
 	if response.Status != 500 {
 		t.Fatal("Refresh should have failed for ACL with 500 status")
 	}
@@ -158,7 +158,7 @@ func TestGenerateCSR(t *testing.T) {
 }
 
 func TestSendRefreshRequest(t *testing.T) {
-	sendRefreshRequest("testChannel")
+	sendRefreshRequest("testChannel", NewMetrics(metricsutil.GetMetricsInstance()))
 }
 
 func TestNew(t *testing.T) {
@@ -1046,7 +1046,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s", err))
 	}
 	//initialize and refresh
-	configmgmtService.Initialize(stub, "Org1MSP")
+	configmgmtService.Initialize(stub, "Org1MSP", configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	instance.Refresh(stub, "Org1MSP")

@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,25 +24,21 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
 	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/utils"
-
-	"github.com/stretchr/testify/require"
-
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
-	"github.com/securekey/fabric-snaps/util/errors"
-	"github.com/spf13/viper"
-
-	"encoding/pem"
-
-	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/config"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
+	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -116,7 +113,7 @@ func TestExpiredServerCert(t *testing.T) {
 }
 
 func TestAsync(t *testing.T) {
-	httpService, err := Get(channelID)
+	httpService, err := Get(channelID, NewMetrics(metricsutil.GetMetricsInstance()))
 	require.NoError(t, err)
 
 	req := HTTPServiceInvokeRequest{
@@ -392,7 +389,7 @@ func initExpiredHTTPServerConfig() {
 }
 
 func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
-	httpService, err := Get(channelID)
+	httpService, err := Get(channelID, NewMetrics(metricsutil.GetMetricsInstance()))
 	if err != nil {
 		t.Fatalf("Get return error: %s", err)
 	}
@@ -407,7 +404,7 @@ func verifySuccess(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeReque
 }
 
 func verifyFailure(t *testing.T, httpServiceInvokeRequest HTTPServiceInvokeRequest, expected string) {
-	httpService, err := Get(channelID)
+	httpService, err := Get(channelID, NewMetrics(metricsutil.GetMetricsInstance()))
 	if err != nil {
 		t.Fatalf("Get return error: %s", err)
 	}
@@ -505,7 +502,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID)
+	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
 
 	//Change peer config path
 	PeerConfigPath = sampleconfig.ResolvPeerConfig("../sampleconfig")

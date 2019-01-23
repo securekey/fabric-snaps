@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-
 	shim "github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
 	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
@@ -22,11 +22,12 @@ var logger = logging.NewLogger("httpsnap")
 
 //HTTPSnap implementation
 type HTTPSnap struct {
+	metrics *httpsnapservice.Metrics
 }
 
 // New chaincode implementation
 func New() shim.Chaincode {
-	return &HTTPSnap{}
+	return &HTTPSnap{metrics: httpsnapservice.NewMetrics(metricsutil.GetMetricsInstance())}
 }
 
 // Init snap
@@ -43,7 +44,7 @@ func (httpsnap *HTTPSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Resp
 
 	defer util.HandlePanic(&resp, logger, stub)
 
-	httpservice, err := httpsnapservice.Get(stub.GetChannelID())
+	httpservice, err := httpsnapservice.Get(stub.GetChannelID(), httpsnap.metrics)
 	if err != nil {
 		return util.CreateShimResponseFromError(errors.WithMessage(errors.SystemError, err, "Failed to get http snap service"), logger, stub)
 	}

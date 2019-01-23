@@ -18,19 +18,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/httpsnap/api"
-	httpsnapservice "github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
-	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
-
-	"github.com/spf13/viper"
-
-	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/securekey/fabric-snaps/httpsnap/cmd/httpsnapservice"
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
+	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
+	"github.com/spf13/viper"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -212,7 +211,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID)
+	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
 
 	//configdata for second channel for which peer TLS config is enabled
 	configDataStr := string(configData)
@@ -230,7 +229,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
 
-	configmgmtService.Initialize(stub2, mspID)
+	configmgmtService.Initialize(stub2, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
 
 	httpsnapservice.PeerConfigPath = sampleconfig.ResolvPeerConfig("./sampleconfig")
 

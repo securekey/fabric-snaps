@@ -7,11 +7,14 @@ SPDX-License-Identifier: Apache-2.0
 package txsnapservice
 
 import (
+	"sync"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter"
@@ -22,6 +25,8 @@ var logger = logging.NewLogger("txnsnap")
 
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
+var metrics *txnSnapClient.Metrics
+var once sync.Once
 
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
@@ -50,7 +55,9 @@ func (txs *TxServiceImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 
 //New creates new transaction snap service
 func newTxService(channelID string) (*TxServiceImpl, errors.Error) {
-	client, err := txnSnapClient.GetInstance(channelID)
+	// we need to use once here to initialize metrics because newTxService is called from multiple snaps
+	once.Do(func() { metrics = txnSnapClient.NewMetrics(metricsutil.GetMetricsInstance()) })
+	client, err := txnSnapClient.GetInstance(channelID, metrics)
 	if err != nil {
 		return nil, errors.WithMessage(errors.TxClientInitError, err, "Cannot initialize client")
 	}
