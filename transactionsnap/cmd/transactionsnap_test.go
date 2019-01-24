@@ -588,7 +588,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub, mspID)
 
 	_, err = config.NewConfig("./sampleconfig", channelID)
 	if err != nil {

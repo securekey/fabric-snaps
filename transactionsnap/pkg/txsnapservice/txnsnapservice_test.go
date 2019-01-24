@@ -273,7 +273,7 @@ func TestMain(m *testing.M) {
 
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub, mspID)
 
 	PeerConfigPath = "../../cmd/sampleconfig"
 	txSnapConfig, err = config.NewConfig("../../cmd/sampleconfig", channelID)

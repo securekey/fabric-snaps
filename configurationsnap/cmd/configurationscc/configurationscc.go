@@ -79,8 +79,7 @@ var logger = logging.NewLogger("configsnap")
 
 // ConfigurationSnap implementation
 type ConfigurationSnap struct {
-	metrics                  *Metrics
-	configmgmtServiceMetrics *configmgmtService.Metrics
+	metrics *Metrics
 }
 
 var peerConfigPath = ""
@@ -116,7 +115,7 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 		}
 		interval := config.GetDefaultRefreshInterval()
 		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
-		configmgmtService.Initialize(stub, peerMspID, configSnap.configmgmtServiceMetrics)
+		configmgmtService.Initialize(stub, peerMspID)
 
 		eventSource := &listener.EventSource{
 			ChannelID:   stub.GetChannelID(),
@@ -784,8 +783,7 @@ func getACLProvider() acl.ACLProvider {
 
 // New chaincode implementation
 func New() shim.Chaincode {
-	return &ConfigurationSnap{metrics: NewMetrics(metricsutil.GetMetricsInstance()),
-		configmgmtServiceMetrics: configmgmtService.NewMetrics(metricsutil.GetMetricsInstance())}
+	return &ConfigurationSnap{metrics: NewMetrics(metricsutil.GetMetricsInstance())}
 }
 
 func main() {

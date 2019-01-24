@@ -17,7 +17,6 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
-	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
@@ -78,7 +77,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, "Org1MSP", configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub, "Org1MSP")
 
 	os.Exit(m.Run())
 }

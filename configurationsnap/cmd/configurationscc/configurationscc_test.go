@@ -1046,7 +1046,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("Cannot upload %s", err))
 	}
 	//initialize and refresh
-	configmgmtService.Initialize(stub, "Org1MSP", configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub, "Org1MSP")
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
 	instance.Refresh(stub, "Org1MSP")

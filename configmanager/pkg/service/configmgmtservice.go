@@ -28,6 +28,7 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
+	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -52,10 +53,11 @@ func GetInstance() api.ConfigService {
 }
 
 //Initialize will be called from config snap
-func Initialize(stub shim.ChaincodeStubInterface, mspID string, metrics *Metrics) *ConfigServiceImpl {
+func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
 
 	once.Do(func() {
-		instance = &ConfigServiceImpl{metrics: metrics}
+		// we need initialize metrics inside once because Initialize configmgmt service is called from multiple snaps
+		instance = &ConfigServiceImpl{metrics: NewMetrics(metricsutil.GetMetricsInstance())}
 		instance.cacheMap = make(map[string]cache)
 		instance.configHashes = make(map[string]string)
 		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))

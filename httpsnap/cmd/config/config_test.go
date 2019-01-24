@@ -20,7 +20,6 @@ import (
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
 	httpsnapApi "github.com/securekey/fabric-snaps/httpsnap/api"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
-	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -181,7 +180,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub, mspID)
 
 	//Setup config for second channel where use peer tls config is enabled
 	configDataStr := string(configData)
@@ -200,7 +199,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Cannot upload %s\n", err))
 	}
-	configmgmtService.Initialize(stub2, mspID, configmgmtService.NewMetrics(metricsutil.GetMetricsInstance()))
+	configmgmtService.Initialize(stub2, mspID)
 
 	c, _, err = NewConfig("../sampleconfig", channelID)
 	if err != nil {

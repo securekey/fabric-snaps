@@ -14,7 +14,6 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 )
 
@@ -39,7 +38,7 @@ func SaveConfig(stub *mockstub.MockStub, mspID, peerID, appName, ver string, con
 	if err := mgmt.NewConfigManager(stub).Save(configBytes); err != nil {
 		return errors.Wrap(err, "error saving config")
 	}
-	service.Initialize(stub, mspID, service.NewMetrics(metricsutil.GetMetricsInstance()))
+	service.Initialize(stub, mspID)
 	return nil
 }
 
