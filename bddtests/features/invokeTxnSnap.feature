@@ -41,6 +41,9 @@ Feature:  Feature Invoke Transaction Snap
         And "test" chaincode "readtest_cc" is instantiated from path "github.com/readtest_cc" on the "mychannel" channel with args "init,k1,hello,k2,world" with endorsement policy "" with collection policy ""
         And chaincode "readtest_cc" is warmed up on all peers on the "mychannel" channel
         When client invokes chaincode "readtest_cc" with args "concat,mychannel,readtest_cc,k1,k2,k3" on a peer in the "peerorg1" org on the "mychannel" channel it gets response "helloworld" and the read set is empty
+        When client invokes chaincode "readtest_cc" with args "put,k4,value4" on all peers in the "peerorg1" org on the "mychannel" channel
+        When client invokes chaincode "readtest_cc" with args "put,k4,value4_update" on all peers in the "peerorg1" org on the "mychannel" channel
+        When client invokes chaincode "readtest_cc" with args "checkGetStateAndUnsafeGetState,mychannel,readtest_cc,k4" on all peers in the "peerorg1" org on the "mychannel" channel
 
   @verifyEndorsements
   Scenario: Invoke Transaction Snap verifyEndorsements function

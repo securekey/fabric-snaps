@@ -1391,6 +1391,7 @@
     "golang.org/x/net/context",
     "golang.org/x/tools/go/packages",
     "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

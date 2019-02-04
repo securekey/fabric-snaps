@@ -9,11 +9,13 @@ package cliconfig
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 
@@ -178,6 +180,18 @@ func InitConfig() error {
 	}
 
 	cryptoConfig := cryptosuite.ConfigFromBackend(cnfg...)
+
+	cryptoSuiteProvider, err := multisuite.GetSuiteByConfig(cryptoConfig)
+	if err != nil {
+		//config may not have bccsp configuration, in case of failure let SDK initialize default cryptosuite
+		instance.logger.Warnf("Failed to get cryptosuite from config, will switch to default cryptosuite, %s", err)
+	} else {
+		err = cryptosuite.SetDefault(cryptoSuiteProvider)
+		if err != nil {
+			instance.logger.Warnf("Error setting default cryptosuite, %s", err)
+		}
+	}
+
 	endpointConfig, err := fab.ConfigFromBackend(cnfg...)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
@@ -272,9 +286,12 @@ func InitUserPassword(flags *pflag.FlagSet) {
 	flags.StringVar(&opts.password, passwordFlag, defaultPassword, passwordDescription)
 }
 
-// PeerURL returns a comma-separated list of peers in the format host1:port1,host2:port2,...
-func (c *CLIConfig) PeerURL() string {
-	return opts.peerURL
+// Peers returns a list of peer URLs
+func (c *CLIConfig) Peers() []string {
+	if opts.peerURL == "" {
+		return nil
+	}
+	return strings.Split(opts.peerURL, ",")
 }
 
 // InitPeerURL initializes the peer URL from the provided arguments

@@ -1084,3 +1084,8 @@ func (m *mockMembershipService) GetAllPeers() []*membership.PeerEndpoint {
 func (m *mockMembershipService) GetPeersOfChannel(channelID string) ([]*membership.PeerEndpoint, error) {
 	return nil, nil
 }
+
+// GetLocalPeer return the local peer for the channel
+func (m *mockMembershipService) GetLocalPeer(channelID string) (*membership.PeerEndpoint, error) {
+	return nil, nil
+}
