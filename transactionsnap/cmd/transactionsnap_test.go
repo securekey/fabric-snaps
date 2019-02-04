@@ -38,10 +38,12 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
-	"github.com/securekey/fabric-snaps/metrics/pkg/util"
+	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
 	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/securekey/fabric-snaps/mocks/mockmembership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/cmd/sampleconfig"
@@ -534,7 +536,7 @@ func TestTxnSnapUnsafeGetState(t *testing.T) {
 	response = stub.MockInvoke("TxID", args)
 	assert.NotNil(t, response)
 	assert.NotEqual(t, int32(200), response.GetStatus())
-	assert.Contains(t, response.GetMessage(), "Failed to get State DB")
+	assert.True(t, strings.Contains(response.GetMessage(), "Failed to open ledger") || strings.Contains(response.GetMessage(), "Failed to get State DB"))
 }
 
 func TestMain(m *testing.M) {
@@ -560,7 +562,7 @@ func TestMain(m *testing.M) {
 		},
 	}
 
-	if err := util.InitializeMetricsProvider("./sampleconfig"); err != nil {
+	if err := metricsutil.InitializeMetricsProvider("./sampleconfig"); err != nil {
 		panic(err)
 	}
 
@@ -575,9 +577,9 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %s\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
-		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+		Peers: []configmanagerApi.PeerConfig{{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
+				{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 	stub := getMockStub()
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
@@ -624,6 +626,24 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("Client GetInstance return error %s", err))
 	}
+
+	mockMembership := &mockmembership.Service{
+		PeersOfChannel: map[string][]*memApi.PeerEndpoint{
+			channelID: {
+				&memApi.PeerEndpoint{
+					Endpoint:     "grpc://127.0.0.1:7040",
+					MSPid:        []byte("org1MSP"),
+					LedgerHeight: 1000,
+					Roles:        []string{memservice.EndorserRole, memservice.CommitterRole},
+				},
+			},
+		},
+	}
+
+	client.MemServiceProvider = func() (memApi.Service, error) {
+		return mockMembership, nil
+	}
+
 	os.Exit(m.Run())
 
 }

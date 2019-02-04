@@ -10,6 +10,7 @@ import (
 	reqContext "context"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -37,9 +38,11 @@ type cache interface {
 }
 
 type params struct {
-	localPeerURL    string
-	initialBlockNum uint64
-	eventSnapshots  map[string]fab.EventSnapshot
+	localPeerURL       string
+	initialBlockNum    uint64
+	eventSnapshots     map[string]fab.EventSnapshot
+	enableBlockEvents  bool
+	selectionRetryOpts retry.Opts
 }
 
 // Provider implements a ChannelProvider that uses a dynamic discovery provider based on
@@ -77,6 +80,20 @@ func WithLocalPeerURL(url string) Opt {
 	}
 }
 
+// WithBlockEvents enables block events (as opposed to filtered block events)
+func WithBlockEvents() Opt {
+	return func(p *params) {
+		p.enableBlockEvents = true
+	}
+}
+
+// WithSelectionRetryOpts initializes the retry opts for selection
+func WithSelectionRetryOpts(selectionRetryOpts retry.Opts) Opt {
+	return func(p *params) {
+		p.selectionRetryOpts = selectionRetryOpts
+	}
+}
+
 // New creates a new Provider
 func New(config fab.EndpointConfig, opts ...Opt) (*Provider, error) {
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
@@ -104,7 +121,7 @@ func New(config fab.EndpointConfig, opts ...Opt) (*Provider, error) {
 		"TxSnap_Selection_Service_Cache",
 		func(key lazycache.Key) (interface{}, error) {
 			ck := key.(*cacheKey)
-			return cp.createSelectionService(ck.context, ck.channelID)
+			return cp.createSelectionService(ck.context, ck.channelID, params.selectionRetryOpts)
 		},
 	)
 
@@ -126,6 +143,11 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 
 	// Keep retrying to connect to the event client forever
 	opts = append(opts, evtclient.WithMaxConnectAttempts(0))
+
+	if params.enableBlockEvents {
+		logger.Debugf("Event service will be started with block events")
+		opts = append(opts, evtclient.WithBlockEvents())
+	}
 
 	if params.localPeerURL != "" {
 		// Connect to the local peer if not too far behind in block height
@@ -234,14 +256,13 @@ func (cp *Provider) getDiscoveryService(context fab.ClientContext, channelID str
 	return discoveryService.(fab.DiscoveryService), nil
 }
 
-func (cp *Provider) createSelectionService(ctx context.Client, channelID string) (fab.SelectionService, error) {
+func (cp *Provider) createSelectionService(ctx context.Client, channelID string, retryOpts retry.Opts) (fab.SelectionService, error) {
 	logger.Debugf("Creating selection service for channel [%s]", channelID)
 	discovery, err := cp.getDiscoveryService(ctx, channelID)
 	if err != nil {
 		return nil, err
 	}
-
-	return fabricselection.New(ctx, channelID, discovery)
+	return fabricselection.New(ctx, channelID, discovery, fabricselection.WithRetryOpts(retryOpts))
 }
 
 func (cp *Provider) getSelectionService(context fab.ClientContext, channelID string) (fab.SelectionService, error) {

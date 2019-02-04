@@ -123,3 +123,8 @@ func (e *customError) GenerateLogMsg() string {
 func (e *customError) GenerateClientErrorMsg() string {
 	return fmt.Sprintf("errorID:%s errorCode:%s error:%v", e.errorID, e.code, e.error)
 }
+
+// Cause returns the cause of the error
+func (e *customError) Cause() error {
+	return e.error
+}
