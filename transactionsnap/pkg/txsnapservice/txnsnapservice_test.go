@@ -31,9 +31,12 @@ import (
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
+	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	eventserviceMocks "github.com/securekey/fabric-snaps/mocks/event/mockservice/eventservice"
+	"github.com/securekey/fabric-snaps/mocks/mockmembership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -259,9 +262,9 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("File error: %v\n", err))
 	}
 	configMsg := &configmanagerApi.ConfigMessage{MspID: mspID,
-		Peers: []configmanagerApi.PeerConfig{configmanagerApi.PeerConfig{
+		Peers: []configmanagerApi.PeerConfig{{
 			PeerID: "jdoe", App: []configmanagerApi.AppConfig{
-				configmanagerApi.AppConfig{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
+				{AppName: "txnsnap", Version: configmanagerApi.VERSION, Config: string(configData)}}}}}
 	stub := getMockStub()
 	configBytes, err := json.Marshal(configMsg)
 	if err != nil {
@@ -306,6 +309,23 @@ func TestMain(m *testing.M) {
 	mockBroadcastServer := &fcmocks.MockBroadcastServer{}
 	mockBroadcastServer.Start(fmt.Sprintf("%s:%d", testhost, testBroadcastPort))
 	defer mockBroadcastServer.Stop()
+
+	mockMembership := &mockmembership.Service{
+		PeersOfChannel: map[string][]*memApi.PeerEndpoint{
+			channelID: {
+				&memApi.PeerEndpoint{
+					Endpoint:     "grpc://127.0.0.1:7040",
+					MSPid:        []byte("org1MSP"),
+					LedgerHeight: 1000,
+					Roles:        []string{memservice.EndorserRole, memservice.CommitterRole},
+				},
+			},
+		},
+	}
+
+	client.MemServiceProvider = func() (memApi.Service, error) {
+		return mockMembership, nil
+	}
 
 	os.Exit(m.Run())
 

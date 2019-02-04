@@ -62,48 +62,78 @@ func (t *ReadTest) Init(stub shim.ChaincodeStubInterface) pb.Response {
 // store it in key3
 // The response will contain a concatenated string of the values that were read (corresponding to key1, key2)
 func (t *ReadTest) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	args := stub.GetArgs()
+	function, args := stub.GetFunctionAndParameters()
 	logger.Infof("ReadTest Args=%s", args)
 
-	if len(args) < 6 {
-		return shim.Error("Required args are: concat, channelID, ccID, key1, key2, key3")
-	}
-	function := string(args[0])
-	channelID := string(args[1])
-	ccID := string(args[2])
-	key1 := string(args[3])
-	key2 := string(args[4])
-	key3 := string(args[5])
+	if function == "concat" {
+		if len(args) < 5 {
+			return shim.Error("Required args are: concat, channelID, ccID, key1, key2, key3")
+		}
+		channelID := string(args[0])
+		ccID := string(args[1])
+		key1 := string(args[2])
+		key2 := string(args[3])
+		key3 := string(args[4])
 
-	if function != "concat" {
-		return shim.Error("Only one function is supported: concat")
+		// The unsafeGetState on the transaction snap can be invoked with or without a channel.
+		resp1 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key1)}, channelID)
+		resp2 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key2)}, "")
+		resp3 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte("invalidKey")}, "")
+
+		if resp1.GetStatus() != 200 {
+			return shim.Error("Query on key1 failed: " + resp1.GetMessage())
+		}
+		if resp2.GetStatus() != 200 {
+			return shim.Error("Query on key2 failed: " + resp2.GetMessage())
+		}
+		if resp3.GetStatus() != 200 {
+			return shim.Error("Query on invalid key failed: " + resp2.GetMessage())
+		}
+
+		logger.Infof("Response from %s for key1 : %s ", TransactionSnap, string(resp1.Payload))
+		logger.Infof("Response from %s for key2 : %s ", TransactionSnap, string(resp2.Payload))
+
+		v3 := strings.Join([]string{string(resp1.Payload), string(resp2.Payload)}, "")
+		err := stub.PutState(key3, []byte(v3))
+		if err != nil {
+			return shim.Error(fmt.Sprintf("PutState failed: key %s, value %s, error: %s", key3, v3, err.Error()))
+		}
+
+		return shim.Success([]byte(v3))
 	}
 
-	// The unsafeGetState on the transaction snap can be invoked with or without a channel.
-	resp1 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key1)}, channelID)
-	resp2 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key2)}, "")
-	resp3 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte("invalidKey")}, "")
-
-	if resp1.GetStatus() != 200 {
-		return shim.Error("Query on key1 failed: " + resp1.GetMessage())
+	if function == "put" {
+		if len(args) < 2 {
+			return shim.Error("Required args are: key,value")
+		}
+		key := string(args[0])
+		value := []byte(args[1])
+		stub.PutState(key, value)
+		return shim.Success([]byte(""))
 	}
-	if resp2.GetStatus() != 200 {
-		return shim.Error("Query on key2 failed: " + resp2.GetMessage())
-	}
-	if resp3.GetStatus() != 200 {
-		return shim.Error("Query on invalid key failed: " + resp2.GetMessage())
+	if function == "checkGetStateAndUnsafeGetState" {
+		if len(args) < 1 {
+			return shim.Error("Required args are: channelID, ccID, key")
+		}
+		channelID := string(args[0])
+		ccID := string(args[1])
+		key := string(args[2])
+		value, err := stub.GetState(key)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		resp1 := stub.InvokeChaincode(TransactionSnap, [][]byte{[]byte(QueryFunc), []byte(channelID), []byte(ccID), []byte(key)}, channelID)
+		if resp1.GetStatus() != 200 {
+			return shim.Error(fmt.Sprintf("Query on %s failed: %s", key, resp1.GetMessage()))
+		}
+		if string(value) != string(resp1.Payload) {
+			return shim.Error(fmt.Sprintf("unsafeGetState return different value from GetState %s %s", value, resp1.Payload))
+		}
+		return shim.Success([]byte(""))
 	}
 
-	logger.Infof("Response from %s for key1 : %s ", TransactionSnap, string(resp1.Payload))
-	logger.Infof("Response from %s for key2 : %s ", TransactionSnap, string(resp2.Payload))
+	return shim.Error("Only three functions is supported: concat, put, get")
 
-	v3 := strings.Join([]string{string(resp1.Payload), string(resp2.Payload)}, "")
-	err := stub.PutState(key3, []byte(v3))
-	if err != nil {
-		return shim.Error(fmt.Sprintf("PutState failed: key %s, value %s, error: %s", key3, v3, err.Error()))
-	}
-
-	return shim.Success([]byte(v3))
 }
 
 func main() {

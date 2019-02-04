@@ -34,6 +34,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
+	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
+	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/chprovider"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
@@ -44,6 +46,7 @@ import (
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 	"github.com/securekey/fabric-snaps/util/refcount"
+	grpcCodes "google.golang.org/grpc/codes"
 )
 
 var logger = logging.NewLogger("txnsnap")
@@ -56,6 +59,12 @@ const (
 // ConfigProvider returns the config for the given channel
 type ConfigProvider func(channelID string) (api.Config, error)
 
+// MemServiceProvider returns the membership service provider
+// NOTE: Should only be modified by unit tests
+var MemServiceProvider = func() (memApi.Service, error) {
+	return memservice.Get()
+}
+
 //PeerConfigPath use for testing
 var PeerConfigPath = ""
 
@@ -66,6 +75,8 @@ var ServiceProviderFactory apisdk.ServiceProviderFactory
 var CfgProvider = func(channelID string) (api.Config, error) {
 	return txsnapconfig.NewConfig(PeerConfigPath, channelID)
 }
+
+var enableBlockEvents bool
 
 var cache = newRefCache(10 * time.Second)
 
@@ -99,6 +110,10 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 		opts = append(opts, chprovider.WithLocalPeerURL(url))
 	}
 
+	if enableBlockEvents {
+		opts = append(opts, chprovider.WithBlockEvents())
+	}
+
 	if currentClient == nil {
 		// The first time we create a client we need to ask for all block from the current ledger block number
 		bcInfo, ok := initbcinfo.Get(channelID)
@@ -108,6 +123,19 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 	} else if eventSnapshot != nil {
 		opts = append(opts, chprovider.WithEventSnapshots(map[string]fabApi.EventSnapshot{channelID: eventSnapshot}))
 	}
+
+	selectionRetryOpts := cfg.RetryOpts()
+	retryableCodes := map[status.Group][]status.Code{
+		status.GRPCTransportStatus: {
+			status.Code(grpcCodes.Unavailable),
+		},
+		status.DiscoveryServerStatus: {
+			status.QueryEndorsers,
+		},
+	}
+	selectionRetryOpts.RetryableCodes = retryableCodes
+
+	opts = append(opts, chprovider.WithSelectionRetryOpts(selectionRetryOpts))
 
 	return &DynamicProviderFactory{
 		opts: opts,
@@ -165,6 +193,12 @@ func GetInstance(channelID string, metrics *Metrics) (api.Client, error) {
 	}
 
 	return c, nil
+}
+
+// EnableBlockEvents turns on block event publishing in the event service.
+// By default, filtered block events are published.
+func EnableBlockEvents(enable bool) {
+	enableBlockEvents = enable
 }
 
 // generateHash generates hash for give bytes
@@ -321,6 +355,69 @@ func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.
 	return sdk, nil
 }
 
+type endorserFilter struct {
+	channelID      string
+	targetFilter   api.PeerFilter
+	peersOfChannel []*memApi.PeerEndpoint
+}
+
+func newEndorserFilter(channelID string, config fabApi.EndpointConfig, targetFilter api.PeerFilter) *endorserFilter {
+	var peersOfChannel []*memApi.PeerEndpoint
+	membershipService, err := MemServiceProvider()
+	if err != nil {
+		logger.Errorf("Error getting membership service: %s", err)
+	} else {
+		peersOfChannel, err = membershipService.GetPeersOfChannel(channelID)
+		if err != nil {
+			logger.Errorf("Error getting peers of channel [%s]: %s", channelID, err)
+		}
+	}
+
+	return &endorserFilter{
+		channelID:      channelID,
+		targetFilter:   targetFilter,
+		peersOfChannel: peersOfChannel,
+	}
+}
+
+func (f *endorserFilter) Accept(peer fabApi.Peer) bool {
+	if !f.isEndorser(peer) {
+		logger.Debugf("Peer [%s] is NOT an endorsing peer for channel [%s]", peer.URL(), f.channelID)
+		return false
+	}
+
+	logger.Debugf("Peer [%s] is an endorsing peer for channel [%s]", peer.URL(), f.channelID)
+
+	if f.targetFilter != nil {
+		logger.Debugf("Invoking target filter for peer [%s]", peer.URL())
+		return f.targetFilter.Accept(peer)
+	}
+
+	return true
+}
+
+func (f *endorserFilter) isEndorser(peer fabApi.Peer) bool {
+	endorser, err := f.hasEndorserRole(peer)
+	if err != nil {
+		logger.Warnf("Unable to determine if peer [%s] has the endorser role. Returning true", peer.URL())
+		return true
+	}
+	return endorser
+}
+
+func (f *endorserFilter) hasEndorserRole(peer fabApi.Peer) (bool, error) {
+	for _, p := range f.peersOfChannel {
+		logger.Debugf("Checking peer [%s] against endpoint [%s]", peer.URL(), p.Endpoint)
+		if p.Endpoint == peer.URL() {
+			roles := memservice.Roles(p.Roles)
+			isEndorser := roles.HasRole(memservice.EndorserRole)
+			logger.Debugf("Peer [%s] is endorser: %t", peer.URL(), isEndorser)
+			return isEndorser, nil
+		}
+	}
+	return false, errors.Errorf(errors.SystemError, "Peer [%s] not found", peer.URL())
+}
+
 func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
@@ -343,9 +440,13 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		),
 	)
 
-	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
+	response, err := c.channelClient.InvokeHandler(
+		customQueryHandler,
+		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
+		channel.WithTargets(targets...),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithRetry(c.retryOpts()),
+		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
 			c.metrics.TransactionRetryCounter.Add(1)
 		}))
@@ -390,21 +491,10 @@ func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, e
 
 func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
-	validTxnID := false
-	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		var creator []byte
-		var err errors.Error
-		validTxnID, creator, err = c.checkTxnID(endorseRequest)
-		if err != nil {
-			return nil, false, err
-		}
-		if !validTxnID {
-			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
-			}
-			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
-		}
+
+	invalidResponse, validTxnID, errObj := c.validate(endorseRequest)
+	if !validTxnID {
+		return invalidResponse, false, errObj
 	}
 
 	targets := endorseRequest.Targets
@@ -434,18 +524,52 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			txnHeaderOptsProvider),
 	)
 
-	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
-		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
-		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
-			logger.Infof("Retrying on error: %s", err.Error())
+	numRetries := 0
+	var lastErr error
+
+	resp, err := c.channelClient.InvokeHandler(
+		customExecuteHandler,
+		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
+		channel.WithTargets(targets...),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithRetry(c.retryOpts()),
+		channel.WithBeforeRetry(func(err error) {
+			numRetries++
+			lastErr = err
+			logger.Infof("[%s] Retry #%d on error: %s", c.channelID, numRetries, err.Error())
 			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
 	if err != nil {
+		if numRetries > 0 {
+			logger.Infof("[%s] Failed after %d retries. Last error: %s", c.channelID, numRetries, err)
+		}
 		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
+	}
+	if numRetries > 0 {
+		logger.Infof("[%s] Succeeded after %d retries. Last error: %s", c.channelID, numRetries, lastErr)
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
 }
+
+func (c *clientImpl) validate(endorseRequest *api.EndorseTxRequest) (*channel.Response, bool, errors.Error) {
+	if len(endorseRequest.Nonce) == 0 && endorseRequest.TransactionID == "" {
+		return nil, true, nil
+	}
+	validTxnID, creator, errObj := c.checkTxnID(endorseRequest)
+	if errObj != nil {
+		return nil, false, errObj
+	}
+	if validTxnID {
+		return nil, true, nil
+	}
+	jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
+	if err != nil {
+		return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
+	}
+	return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
+}
+
 func (c *clientImpl) endorseRequestArgs(endorseRequest *api.EndorseTxRequest) [][]byte {
 	args := make([][]byte, 0)
 	if len(endorseRequest.Args) > 1 {

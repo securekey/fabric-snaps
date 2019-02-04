@@ -45,6 +45,8 @@ func New(args []string) (transactionsnapApi.PeerFilter, error) {
 		return nil, errors.WithMessage(errors.SystemError, err, "error getting membership service")
 	}
 
+	logger.Debugf("Creating MinBlockHeight peer filter - Channel [%s], Height [%d]", args[0], height)
+
 	return &peerFilter{
 		channelID: args[0],
 		height:    height,

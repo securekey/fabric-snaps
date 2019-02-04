@@ -21,19 +21,14 @@ import (
 	"github.com/hyperledger/fabric/gossip/service"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/gossip"
-	protogossip "github.com/hyperledger/fabric/protos/gossip"
 	msppb "github.com/hyperledger/fabric/protos/msp"
 	"github.com/hyperledger/fabric/protos/transientstore"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
-	"github.com/securekey/fabric-snaps/mocks/mockchinfo"
 )
 
 // NewServiceWithMocks creates a membership service with the given mocks.
-// - localMSPID is the ID of the peer's local MSP
-// - localPeerAddress is the address (host:port) of the local peer
-// - bcInfo is an array of block chain info for all the channels to which the peer is joined
+// - self is the local peer
 // - members contains zero or more MSP network members
-func NewServiceWithMocks(localMSPID api.OrgIdentityType, localPeerAddress string, bcInfo []*mockbcinfo.ChannelBCInfo, members ...MspNetworkMembers) *Service {
+func NewServiceWithMocks(localMSPID []byte, self discovery.NetworkMember, members ...MspNetworkMembers) *Service {
 	m := make(map[string]string)
 	for _, member := range members {
 		for _, netMember := range member.NetworkMembers {
@@ -41,18 +36,10 @@ func NewServiceWithMocks(localMSPID api.OrgIdentityType, localPeerAddress string
 		}
 	}
 
-	var channelIDs []string
-	for _, info := range bcInfo {
-		channelIDs = append(channelIDs, info.ChannelID)
-	}
-
 	return newServiceWithOpts(
-		localPeerAddress,
 		localMSPID,
-		newMockGossipService(members...),
+		newMockGossipService(self, members...),
 		newmockMSPIDMgr(m),
-		mockchinfo.NewProvider(channelIDs...),
-		mockbcinfo.NewProvider(bcInfo...),
 	)
 }
 
@@ -60,10 +47,13 @@ type mockGossipService struct {
 	mockGossip
 }
 
-func newMockGossipService(members ...MspNetworkMembers) *mockGossipService {
-	return &mockGossipService{mockGossip: mockGossip{
-		members: members,
-	}}
+func newMockGossipService(self discovery.NetworkMember, members ...MspNetworkMembers) *mockGossipService {
+	return &mockGossipService{
+		mockGossip: mockGossip{
+			self:    self,
+			members: members,
+		},
+	}
 }
 
 func (s *mockGossipService) sendMessage(msg gossip.ReceivedMessage) {
@@ -98,15 +88,23 @@ func (s *mockGossipService) IdentityInfo() api.PeerIdentitySet {
 	panic("not implemented")
 }
 
-func (s *mockGossipService) SelfChannelInfo(common.ChainID) *protogossip.SignedGossipMessage {
-	panic("not implemented")
+func (s *mockGossipService) SelfChannelInfo(common.ChainID) *gossip.SignedGossipMessage {
+	return &gossip.SignedGossipMessage{
+		GossipMessage: &gossip.GossipMessage{
+			Content: &gossip.GossipMessage_StateInfo{
+				StateInfo: &gossip.StateInfo{
+					Properties: s.self.Properties,
+				},
+			},
+		},
+	}
 }
 
 func (s *mockGossipService) SelfMembershipInfo() discovery.NetworkMember {
-	panic("not implemented")
+	return s.self
 }
 
-func (s *mockGossipService) UpdateChaincodes(chaincode []*protogossip.Chaincode, chainID common.ChainID) {
+func (s *mockGossipService) UpdateChaincodes(chaincode []*gossip.Chaincode, chainID common.ChainID) {
 	panic("not implemented")
 }
 
@@ -115,6 +113,7 @@ func (s *mockGossipService) UpdateLedgerHeight(height uint64, chainID common.Cha
 }
 
 type mockGossip struct {
+	self     discovery.NetworkMember
 	members  []MspNetworkMembers
 	acceptor gcommon.MessageAcceptor
 	msgCh    chan gossip.ReceivedMessage
@@ -205,6 +204,16 @@ func NewNetworkMember(pkiID gcommon.PKIidType, endpoint string) discovery.Networ
 func NewNetworkChannelMember(pkiID gcommon.PKIidType, endpoint string, ledgerHeight uint64) discovery.NetworkMember {
 	return discovery.NetworkMember{
 		PKIid:    pkiID,
+		Endpoint: endpoint,
+		Properties: &gossip.Properties{
+			LedgerHeight: ledgerHeight,
+		},
+	}
+}
+
+// NewLocalNetworkChannelMember creates a new NetworkMember instance for a local peer
+func NewLocalNetworkChannelMember(endpoint string, ledgerHeight uint64) discovery.NetworkMember {
+	return discovery.NetworkMember{
 		Endpoint: endpoint,
 		Properties: &gossip.Properties{
 			LedgerHeight: ledgerHeight,
