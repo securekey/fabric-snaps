@@ -12,6 +12,7 @@ import (
 
 // Service is a mock membership service
 type Service struct {
+	LocalPeer      *memserviceapi.PeerEndpoint
 	Peers          []*memserviceapi.PeerEndpoint
 	PeersOfChannel map[string][]*memserviceapi.PeerEndpoint
 	Error          error
@@ -28,4 +29,9 @@ func (s *Service) GetPeersOfChannel(channelID string) ([]*memserviceapi.PeerEndp
 		return nil, s.Error
 	}
 	return s.PeersOfChannel[channelID], nil
+}
+
+// GetLocalPeer return the local peer for the channel
+func (s *Service) GetLocalPeer(channelID string) (*memserviceapi.PeerEndpoint, error) {
+	return s.LocalPeer, s.Error
 }

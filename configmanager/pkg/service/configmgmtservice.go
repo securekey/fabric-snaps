@@ -28,7 +28,6 @@ import (
 	"github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	cfgsnapapi "github.com/securekey/fabric-snaps/configurationsnap/api"
-	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -44,24 +43,22 @@ type ConfigServiceImpl struct {
 	metrics      *Metrics
 }
 
-var instance *ConfigServiceImpl
-var once sync.Once
+var instance = newConfigService()
 
 //GetInstance gets instance of cache for snaps
 func GetInstance() api.ConfigService {
 	return instance
 }
 
+func newConfigService() *ConfigServiceImpl {
+	service := &ConfigServiceImpl{}
+	service.cacheMap = make(map[string]cache)
+	service.configHashes = make(map[string]string)
+	return service
+}
+
 //Initialize will be called from config snap
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
-
-	once.Do(func() {
-		// we need initialize metrics inside once because Initialize configmgmt service is called from multiple snaps
-		instance = &ConfigServiceImpl{metrics: NewMetrics(metricsutil.GetMetricsInstance())}
-		instance.cacheMap = make(map[string]cache)
-		instance.configHashes = make(map[string]string)
-		logger.Infof("Created cache instance %v", time.Unix(time.Now().Unix(), 0))
-	})
 	instance.Refresh(stub, mspID)
 	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
 	return instance
@@ -144,9 +141,6 @@ func (csi *ConfigServiceImpl) GetViper(channelID string, configKey api.ConfigKey
 
 //Refresh adds new items into cache and refreshes existing ones
 func (csi *ConfigServiceImpl) Refresh(stub shim.ChaincodeStubInterface, mspID string) errors.Error {
-	startTime := time.Now()
-	defer func() { csi.metrics.RefreshTimer.Observe(time.Since(startTime).Seconds()) }()
-
 	logger.Debugf("***Refreshing mspid %s at %v\n", mspID, time.Unix(time.Now().Unix(), 0))
 	if csi == nil {
 		return errors.New(errors.SystemError, "ConfigServiceImpl was not initialized")
