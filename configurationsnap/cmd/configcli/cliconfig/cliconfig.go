@@ -15,6 +15,7 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	mspApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/bccsp/multisuite"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/msp"
 
@@ -179,6 +180,18 @@ func InitConfig() error {
 	}
 
 	cryptoConfig := cryptosuite.ConfigFromBackend(cnfg...)
+
+	cryptoSuiteProvider, err := multisuite.GetSuiteByConfig(cryptoConfig)
+	if err != nil {
+		//config may not have bccsp configuration, in case of failure let SDK initialize default cryptosuite
+		instance.logger.Warnf("Failed to get cryptosuite from config, will switch to default cryptosuite, %s", err)
+	} else {
+		err = cryptosuite.SetDefault(cryptoSuiteProvider)
+		if err != nil {
+			return errors.WithMessage(errors.GeneralError, err, "error setting default cryptosuite")
+		}
+	}
+
 	endpointConfig, err := fab.ConfigFromBackend(cnfg...)
 	if err != nil {
 		return errors.WithMessage(errors.GeneralError, err, "from backend returned error")
