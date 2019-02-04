@@ -8,6 +8,10 @@ package main
 import (
 	"encoding/json"
 
+	"github.com/securekey/fabric-snaps/util/kevlar/statemgr"
+
+	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
+
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
@@ -19,7 +23,6 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/bcinfo"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -54,6 +57,11 @@ func New() shim.Chaincode {
 func (es *TxnSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := stub.GetChannelID()
 	if channelID != "" {
+		if !rolesmgr.HasEndorserRole() {
+			logger.Infof("Not starting Transaction Snap on channel [%s] since this peer is not an endorser", channelID)
+			return shim.Success(nil)
+		}
+
 		go func() {
 			logger.Debugf("Getting local blockchain info for channel [%s]", channelID)
 			bcInfo, err := ledgerBCInfoProvider.GetBlockchainInfo(channelID)
@@ -306,7 +314,7 @@ func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) errors.Error {
 // Function name: unsafeGetState, Arguments: channelID, ccID, key
 func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, errors.Error) {
 	if len(args) < 4 {
-		return nil, errors.New(errors.MissingRequiredParameterError,
+		return nil, errors.New(errors.GeneralError,
 			"unsafeGetState requires function and three args: channelID, ccID, key")
 	}
 
@@ -314,33 +322,7 @@ func (es *TxnSnap) unsafeGetState(args [][]byte) ([]byte, errors.Error) {
 	ccNamespace := string(args[2])
 	key := string(args[3])
 
-	db, err := dbprovider.GetStateDB(channelID)
-	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get State DB")
-	}
-
-	err = db.Open()
-	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Failed to open State DB")
-	}
-	defer db.Close()
-	defer logger.Debug("DB handle closed")
-
-	logger.Debug("DB handle opened")
-
-	vv, err := db.GetState(ccNamespace, key)
-	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Failed to get state")
-	}
-
-	if vv == nil {
-		logger.Debugf("Query returned nil for namespace %s and key %s", ccNamespace, key)
-		return nil, nil
-	}
-
-	logger.Debugf("Query returned %+v for namespace %s and key %s", vv.Value, ccNamespace, key)
-
-	return vv.Value, nil
+	return statemgr.GetState(channelID, ccNamespace, key)
 }
 
 // getSnapTransactionRequest

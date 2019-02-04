@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -105,6 +107,12 @@ const (
 func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Debugf("******** Init Config Snap on channel [%s]\n", stub.GetChannelID())
 	if stub.GetChannelID() != "" {
+		if !rolesmgr.HasEndorserRole() {
+			logger.Infof("Not starting Config Snap on channel [%s] since this peer is not an endorser", stub.GetChannelID())
+			return shim.Success(nil)
+		}
+
+		logger.Infof("******** Init Config Snap on channel [%s]", stub.GetChannelID())
 		peerMspID, err := config.GetPeerMSPID(peerConfigPath)
 		if err != nil {
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
@@ -114,7 +122,7 @@ func (configSnap *ConfigurationSnap) Init(stub shim.ChaincodeStubInterface) pb.R
 			return util.CreateShimResponseFromError(errors.WithMessage(errors.InitializeSnapError, err, "Error initializing Configuration Snap"), logger, stub)
 		}
 		interval := config.GetDefaultRefreshInterval()
-		logger.Debugf("******** Call initialize for [%s][%s][%v]\n", peerMspID, peerID, interval)
+		logger.Debugf("******** Call initialize for [%s][%s][%v]", peerMspID, peerID, interval)
 		configmgmtService.Initialize(stub, peerMspID)
 
 		eventSource := &listener.EventSource{

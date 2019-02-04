@@ -11,8 +11,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hyperledger/fabric/gossip/discovery"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
-	"github.com/securekey/fabric-snaps/mocks/mockbcinfo"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -37,7 +39,7 @@ func TestGetAllPeers(t *testing.T) {
 	localAddress := address1
 
 	// First test with no members (except for self)
-	memService := NewServiceWithMocks(msp1, localAddress, mockbcinfo.ChannelBCInfos())
+	memService := NewServiceWithMocks(msp1, discovery.NetworkMember{Endpoint: localAddress})
 
 	endpoints := memService.GetAllPeers()
 	expected := []*memserviceapi.PeerEndpoint{
@@ -50,7 +52,7 @@ func TestGetAllPeers(t *testing.T) {
 
 	// Second test with two members plus self
 	memService = NewServiceWithMocks(
-		msp1, localAddress, mockbcinfo.ChannelBCInfos(),
+		msp1, discovery.NetworkMember{Endpoint: localAddress},
 		NewMSPNetworkMembers(
 			msp2,
 			NewNetworkMember(pkiID2, address2),
@@ -81,7 +83,7 @@ func TestGetPeersOfChannel(t *testing.T) {
 
 	// Test on channel that peer hasn't joined
 	memService := NewServiceWithMocks(
-		msp1, localAddress, mockbcinfo.ChannelBCInfos(mockbcinfo.NewChannelBCInfo(channelID, mockbcinfo.BCInfo(localBlockHeight))),
+		msp1, NewNetworkChannelMember([]byte(""), localAddress, localBlockHeight),
 		NewMSPNetworkMembers(
 			msp2,
 			NewNetworkChannelMember(pkiID2, address2, blockHeight2),
@@ -111,6 +113,26 @@ func TestGetPeersOfChannel(t *testing.T) {
 	if err := checkEndpoints(expected, endpoints); err != nil {
 		t.Fatalf("mscc invoke(getPeersOfChannel) - %s", err)
 	}
+}
+
+func TestGetLocalPeer(t *testing.T) {
+	channelID := "testchannel"
+	localAddress := "host3:1000"
+	localBlockHeight := blockHeight1
+
+	// Test on channel that peer hasn't joined
+	memService := NewServiceWithMocks(
+		msp1, NewNetworkChannelMember([]byte(""), localAddress, localBlockHeight),
+	)
+
+	endpoint, err := memService.GetLocalPeer("somechannel")
+	assert.NoErrorf(t, err, "Expecting error since local peer is not joined to channel but got none")
+
+	endpoint, err = memService.GetLocalPeer(channelID)
+	require.NoError(t, err)
+
+	assert.Equal(t, localAddress, endpoint.Endpoint)
+	assert.Equal(t, localBlockHeight, endpoint.LedgerHeight)
 }
 
 func checkEndpoints(expected []*memserviceapi.PeerEndpoint, actual []*memserviceapi.PeerEndpoint) error {

@@ -69,7 +69,14 @@ type PeerConfig struct {
 	PeerID string
 }
 
-type CollectionType string
+// CollectionConfig contains the private data collection config
+type CollectionConfig struct {
+	Name              string
+	Policy            string
+	RequiredPeerCount int32
+	MaxPeerCount      int32
+	BlocksToLive      uint64
+}
 
 // NewBDDContext create new BDDContext
 func NewBDDContext(orgs []string, ordererOrgID string, clientConfigFilePath string, clientConfigFileName string,
