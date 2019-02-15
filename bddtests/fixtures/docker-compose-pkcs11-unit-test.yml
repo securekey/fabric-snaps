@@ -10,6 +10,8 @@ services:
   pkcs11-image:
     container_name: pkcs11-image
     image: ${FABRIC_NEXT_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
+    environment:
+      - GO111MODULE=on
     volumes:
-        - ../../:/opt/gopath/src/github.com/securekey/fabric-snaps
-    command: /opt/gopath/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh
+        - ../../:/tmp/securekey/fabric-snaps
+    command: /bin/bash -c 'mkdir -p opt/gopath/src/github.com/securekey && cp -r /tmp/securekey/fabric-snaps /opt/gopath/src/github.com/securekey && /opt/gopath/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh'
