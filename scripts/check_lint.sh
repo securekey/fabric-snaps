@@ -8,11 +8,16 @@
 
 set -e
 
-set -e
-
 
 GOMETALINT_CMD=gometalinter
 
 
+function finish {
+  rm -rf vendor
+}
+trap finish EXIT
+
+
 echo "Running metalinters..."
-$GOMETALINT_CMD --config=./gometalinter.json ./...
+go mod vendor
+GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...

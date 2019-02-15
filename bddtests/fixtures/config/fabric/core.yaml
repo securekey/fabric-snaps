@@ -586,7 +586,6 @@ chaincode:
 
         # Snaps used in BDD tests
         txnsnapinvoker: enable
-        eventconsumersnap: enable
         bootstrapsnap: enable
 
     # System chaincode plugins: in addition to being imported and compiled
@@ -628,11 +627,6 @@ chaincode:
       - enabled: true
         name: txnsnapinvoker
         path: /opt/extsysccs/txnsnapinvoker.so
-        invokableExternal: true
-        invokableCC2CC: true
-      - enabled: true
-        name: eventconsumersnap
-        path: /opt/extsysccs/eventconsumersnap.so
         invokableExternal: true
         invokableCC2CC: true
     # Logging section for the chaincode container
