@@ -8,11 +8,18 @@
 
 set -e
 
-set -e
-
 
 GOMETALINT_CMD=gometalinter
 
 
+function finish {
+  rm -rf vendor
+}
+trap finish EXIT
+
+
 echo "Running metalinters..."
-$GOMETALINT_CMD --config=./gometalinter.json ./...
+# metalinters don't work with go modules yet
+# for now we create vendor folder and remove it after running metalinters
+go mod vendor
+GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...

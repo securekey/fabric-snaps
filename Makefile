@@ -11,8 +11,6 @@
 # integration-test: runs all the integration tests
 # checks: runs all check conditions (license, spelling, linting)
 # snaps: generate snaps binary
-# populate: populates generated files (not included in git) - currently only vendor
-# populate-vendor: populate the vendor directory based on the lock
 # channel-artifacts: generates the channel tx files used in the bdd tests
 
 # Release Parameters
@@ -27,10 +25,10 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 39b3609c1d278cfce3dcfbe0ec40c9932a1b68e0
+FABRIC_NEXT_VERSION = 3ccc752793333eedb7023ddeeebb0ccc945cfd81
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-39b3609
+export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -51,14 +49,11 @@ FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.14
 
 GO_BUILD_TAGS ?= "pkcs11"
 
-FABRIC_SNAPS_POPULATE_VENDOR ?= true
-
 DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
-export GO_DEP_COMMIT=v0.5.0 # the version of dep that will be installed by depend-install (or in the CI)
 
-snaps: version clean populate
+snaps: version clean
 	@echo "Building snap plugins"
 	@mkdir -p build/snaps
 	@mkdir -p build/test
@@ -85,29 +80,25 @@ docker: all
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
-checks: depend license lint spelling check-dep check-metrics-doc
+checks: depend license lint spelling check-metrics-doc
 
 .PHONY: license
 license: version
 	@scripts/check_license.sh
 
-lint: populate
+lint:
 	 @scripts/check_lint.sh
 
 spelling:
 	@scripts/check_spelling.sh
 
-.PHONY: check-dep
-check-dep:
-	@dep check -skip-vendor
-
-unit-test: depend populate
+unit-test: depend
 	@scripts/unit.sh
 
-pkcs11-unit-test: depend populate
+pkcs11-unit-test: depend
 	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit
 
-integration-test: clean depend populate snaps cliconfig
+integration-test: clean depend snaps cliconfig
 	@scripts/integration.sh
 
 http-server:
@@ -130,16 +121,6 @@ generate-metrics-doc:
 .PHONY: version
 version:
 	@scripts/check_version.sh
-
-populate: populate-vendor
-
-populate-vendor:
-ifeq ($(FABRIC_SNAPS_POPULATE_VENDOR),true)
-		@echo "Populating vendor ..."
-		@dep ensure -vendor-only -v
-		@scripts/prune_licenses.sh
-endif
-
 
 clean:
 	rm -Rf ./bddtests/fixtures/config/extsysccs
