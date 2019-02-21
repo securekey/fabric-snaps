@@ -17,6 +17,9 @@
 BASE_VERSION = 0.4.1
 IS_RELEASE = false
 
+export GO111MODULE=on
+
+
 ifneq ($(IS_RELEASE),true)
 EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short=7 HEAD)
 PROJECT_VERSION=$(BASE_VERSION)-$(EXTRA_VERSION)
