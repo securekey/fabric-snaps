@@ -9,8 +9,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -22,6 +20,7 @@ import (
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/rolesmgr"
 )
 
 var logger = logging.NewLogger("membershipsnap")

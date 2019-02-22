@@ -17,6 +17,8 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.0
 	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
+	github.com/securekey/fabric-snaps/util/rolesmgr v0.4.0
+	github.com/securekey/fabric-snaps/util/statemgr v0.4.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v0.0.0-20171227194143-aafc9e6bc7b7
@@ -28,6 +30,7 @@ require (
 	golang.org/x/net v0.0.0-20181003013248-f5e5bdd77824
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081
 	google.golang.org/grpc v1.15.0
+
 )
 
 replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0-20190216163058-9e08161f2597
@@ -49,3 +52,7 @@ replace github.com/go-logfmt/logfmt => github.com/go-logfmt/logfmt v0.3.0
 replace github.com/stretchr/testify => github.com/stretchr/testify v1.2.2
 
 replace github.com/onsi/gomega => github.com/onsi/gomega v1.4.2
+
+replace github.com/securekey/fabric-snaps/util/rolesmgr => ./util/rolesmgr
+
+replace github.com/securekey/fabric-snaps/util/statemgr => ./util/statemgr
