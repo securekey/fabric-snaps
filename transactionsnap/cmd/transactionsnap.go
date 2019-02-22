@@ -7,11 +7,6 @@ package main
 
 import (
 	"encoding/json"
-
-	"github.com/securekey/fabric-snaps/util/kevlar/statemgr"
-
-	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
-
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
@@ -26,6 +21,8 @@ import (
 	"github.com/securekey/fabric-snaps/util"
 	"github.com/securekey/fabric-snaps/util/bcinfo"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/rolesmgr"
+	"github.com/securekey/fabric-snaps/util/statemgr"
 )
 
 // txServiceProvider is used by unit tests

@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
+	"github.com/securekey/fabric-snaps/util/rolesmgr"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"

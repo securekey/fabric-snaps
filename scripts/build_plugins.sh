@@ -15,7 +15,10 @@ mkdir -p /opt/gopath/src/github.com/securekey
 
 cp -r /opt/temp/src/github.com/securekey/fabric-snaps /opt/gopath/src/github.com/securekey
 rm -rf /opt/gopath/src/github.com/securekey/fabric-snaps/go.sum
-sed 's/\github.com\/securekey\/fabric-next.*/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod;sed 's/\github.com\/securekey\/fabric-snaps.*/github.com\/hyperledger\/fabric\/plugins/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod
+sed 's/\github.com\/securekey\/fabric-next.*/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod
+sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/rolesmgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod
+sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/statemgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod
+
 
 echo "Cloning fabric..."
 cd /opt/gopath/src/github.com/hyperledger

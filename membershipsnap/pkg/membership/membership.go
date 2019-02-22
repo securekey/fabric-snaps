@@ -9,8 +9,6 @@ package membership
 import (
 	"time"
 
-	"github.com/securekey/fabric-snaps/util/kevlar/rolesmgr"
-
 	logging "github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
@@ -20,6 +18,7 @@ import (
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	memserviceapi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/rolesmgr"
 )
 
 var logger = logging.NewLogger("membershipsnap")

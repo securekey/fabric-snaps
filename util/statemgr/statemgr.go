@@ -8,8 +8,8 @@ package statemgr
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
-	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice/dbprovider"
 	"github.com/securekey/fabric-snaps/util/errors"
+	"github.com/securekey/fabric-snaps/util/statemgr/dbprovider"
 )
 
 var logger = logging.NewLogger("statemgr")
