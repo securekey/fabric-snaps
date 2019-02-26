@@ -8,32 +8,35 @@
 
 export GO111MODULE=on GOCACHE=on
 
+git config --global url."git@github.com:securekey/fabric-kevlar".insteadOf "https://github.com/securekey/fabric-kevlar"
 set -e
 
-mkdir -p /opt/gopath/src/github.com/hyperledger
-mkdir -p /opt/gopath/src/github.com/securekey
+mkdir -p /go/src/github.com/hyperledger
+mkdir -p /go/src/github.com/securekey
 
-cp -r /opt/temp/src/github.com/securekey/fabric-snaps /opt/gopath/src/github.com/securekey
-rm -rf /opt/gopath/src/github.com/securekey/fabric-snaps/go.sum
-sed 's/\github.com\/securekey\/fabric-next.*/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod
-sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/rolesmgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod
-sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/statemgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod
+cp -r /opt/temp/src/github.com/securekey/fabric-snaps /go/src/github.com/securekey
+rm -rf /go/src/github.com/securekey/fabric-snaps/go.sum
+sed 's/\gerrit.securekey.com\/fabric-mod.*/..\//g' -i /go/src/github.com/securekey/fabric-snaps/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i /go/src/github.com/securekey/fabric-snaps/go.mod
+sed 's/\github.com\/securekey\/fabric-kevlar\/fsblkstorage.*/..\/fabric-kevlar\/fsblkstorage/g' -i /go/src/github.com/securekey/fabric-snaps/go.mod
+sed 's/\gerrit.securekey.com\/fabric-mod.*/..\/..\/..\/..\//g' -i /go/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/rolesmgr/g' -i /go/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod
+sed 's/\gerrit.securekey.com\/fabric-mod.*/..\/..\/..\/..\//g' -i /go/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/statemgr/g' -i /go/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod
 
 
 echo "Cloning fabric..."
-cd /opt/gopath/src/github.com/hyperledger
-git clone https://github.com/securekey/fabric-next.git
-cd fabric-next/scripts
+cd /go/src/github.com/hyperledger
+git clone https://gerrit.securekey.com/fabric-kevlar
+cd fabric-kevlar
 git checkout $FABRIC_NEXT_VERSION
-./fabric_cherry_picks.sh >/dev/null
-cd /opt/gopath/src/github.com/hyperledger/fabric
+./scripts/fabric_cherry_picks.sh >/dev/null
+cd /go/src/github.com/hyperledger/fabric
 
 
-cd  /opt/gopath/src/github.com/securekey/fabric-snaps
+
+cd  /go/src/github.com/securekey/fabric-snaps
 echo "Executing move script..."
 ./scripts/move_snaps.sh
 
-cd /opt/gopath/src/github.com/hyperledger/fabric/plugins
+cd /go/src/github.com/hyperledger/fabric/plugins
 
 echo "Building plugins..."
 echo "Building transaction snap..."

@@ -1,6 +1,6 @@
 module github.com/securekey/fabric-snaps/util/statemgr
 
-replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0-20190216163058-9e08161f2597
+replace github.com/hyperledger/fabric => gerrit.securekey.com/fabric-mod v0.0.0-20190228191641-1628bcab7f94
 
 replace github.com/securekey/fabric-snaps => ../..
 
