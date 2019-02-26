@@ -28,10 +28,12 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 3ccc752793333eedb7023ddeeebb0ccc945cfd81
+FABRIC_NEXT_VERSION ?= 8af5d6a3a3cb93632821c1f7a3a83c9716f43f20
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
+ifndef FABRIC_NEXT_IMAGE_TAG
+  export FABRIC_NEXT_IMAGE_TAG = 0.0.1-snapshot-8af5d6a
+endif
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -48,7 +50,7 @@ PACKAGE_NAME = github.com/$(PROJECT_NAME)
 #fabric base image parameters
 FABRIC_BASE_IMAGE_NS=securekey
 FABRIC_BASE_IMAGE=fabric-baseimage
-FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.14
+FABRIC_BASE_IMAGE_VERSION=$(ARCH)-0.4.14.1
 
 GO_BUILD_TAGS ?= "pkcs11"
 
@@ -63,8 +65,9 @@ snaps: version clean
 	@docker run -i --rm \
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
+		-v ${HOME}/.ssh:/root/.ssh \
 		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
-		$(FABRIC_BASE_IMAGE_NS)/$(FABRIC_BASE_IMAGE):$(FABRIC_BASE_IMAGE_VERSION) \
+		securekey/fabric-build-snaps:amd64-0.4.14 \
 		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/build_plugins.sh"
 
 channel-artifacts:
