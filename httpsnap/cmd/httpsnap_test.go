@@ -18,6 +18,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/viper"
+
+	v1 "github.com/spf13/newviper1"
+
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
@@ -28,7 +32,6 @@ import (
 	"github.com/securekey/fabric-snaps/httpsnap/cmd/sampleconfig"
 	"github.com/securekey/fabric-snaps/metrics/pkg/util"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
-	"github.com/spf13/viper"
 )
 
 var jsonStr = `{"id":"123", "name": "Test Name"}`
@@ -72,6 +75,7 @@ func TestUsingHttpService(t *testing.T) {
 	// Failed Path: Connect to Google
 	args = [][]byte{[]byte("invoke"), createHTTPSnapRequest("https://www.google.ca", headers, jsonStr)}
 	verifyFailure(t, stub, args, "Invoke should have failed to connect to google")
+	v1.AllKeys()
 
 }
 
