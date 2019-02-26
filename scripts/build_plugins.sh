@@ -10,6 +10,10 @@ export GO111MODULE=on GOCACHE=on
 
 set -e
 
+echo $FABRIC_NEXT_VERSION
+
+exit -1
+
 mkdir -p /opt/gopath/src/github.com/hyperledger
 mkdir -p /opt/gopath/src/github.com/securekey
 
