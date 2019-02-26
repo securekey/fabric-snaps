@@ -28,10 +28,12 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION = 3ccc752793333eedb7023ddeeebb0ccc945cfd81
+FABRIC_NEXT_VERSION ?= 3ccc752793333eedb7023ddeeebb0ccc945cfd81
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
-export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
+ifndef FABRIC_NEXT_IMAGE_TAG
+  export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
+endif
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
 # Namespace for the fabric-snaps image created by 'make docker'
@@ -101,7 +103,7 @@ unit-test: depend
 pkcs11-unit-test: depend
 	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit
 
-integration-test: clean depend snaps cliconfig
+integration-test:
 	@scripts/integration.sh
 
 http-server:
