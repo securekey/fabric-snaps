@@ -15,7 +15,7 @@ require (
 	github.com/hyperledger/fabric-sdk-go v0.0.0-20190125204638-b490519efff9
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
 	github.com/securekey/fabric-snaps/util/rolesmgr v0.4.0
 	github.com/securekey/fabric-snaps/util/statemgr v0.4.0
@@ -27,9 +27,10 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20170225233418-6fe8760cad35 // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20150808065054-e02fc20de94c // indirect
 	github.com/xeipuuv/gojsonschema v0.0.0-20170528113821-0c8571ac0ce1
+	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4
 	golang.org/x/net v0.0.0-20181003013248-f5e5bdd77824
 	golang.org/x/tools v0.0.0-20181026183834-f60e5f99f081
-	google.golang.org/grpc v1.15.0
+	google.golang.org/grpc v1.17.0
 
 )
 
@@ -56,3 +57,9 @@ replace github.com/onsi/gomega => github.com/onsi/gomega v1.4.2
 replace github.com/securekey/fabric-snaps/util/rolesmgr => ./util/rolesmgr
 
 replace github.com/securekey/fabric-snaps/util/statemgr => ./util/statemgr
+
+replace google.golang.org/grpc => google.golang.org/grpc v1.15.0
+
+replace github.com/pkg/errors => github.com/pkg/errors v0.8.0
+
+replace github.com/spf13/oldviper => github.com/spf13/viper v0.0.0-20150908122457-1967d93db724

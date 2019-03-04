@@ -43,8 +43,6 @@ services:
       - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/tls/orderer/ca.crt]
       - ORDERER_GENERAL_TLS_CLIENTAUTHENABLED=true
       - ORDERER_GENERAL_TLS_CLIENTROOTCAS=[/etc/hyperledger/tls/orderer/ca.crt,/etc/hyperledger/mutual_tls/orderer/client_sdk_go-ca_root.pem]
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
-    command: /bin/bash -c 'orderer'
     ports:
       - 7050:7050
     volumes:
@@ -80,7 +78,7 @@ services:
       - CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/fabric/tls/ca.crt /etc/hyperledger/mutual_tls/peer/client_sdk_go-ca_root.pem
       # override chaincode images
       - CORE_CHAINCODE_BUILDER=${FABRIC_NEXT_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
-      - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_BASEOS_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BASEOS_FIXTURE_TAG}
+      - CORE_CHAINCODE_GOLANG_RUNTIME=${FABRIC_GOLANG_RUNTIME_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BASEIMAGE_FIXTURE_TAG}
       # metrics config
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:8080
