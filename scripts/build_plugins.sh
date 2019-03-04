@@ -10,30 +10,27 @@ export GO111MODULE=on GOCACHE=on
 
 set -e
 
-mkdir -p /opt/gopath/src/github.com/hyperledger
-mkdir -p /opt/gopath/src/github.com/securekey
+mkdir -p $GOPATH/src/github.com/hyperledger
+mkdir -p $GOPATH/src/github.com/securekey
 
-cp -r /opt/temp/src/github.com/securekey/fabric-snaps /opt/gopath/src/github.com/securekey
-rm -rf /opt/gopath/src/github.com/securekey/fabric-snaps/go.sum
-sed 's/\github.com\/securekey\/fabric-next.*/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/go.mod
-sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/rolesmgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/rolesmgr/go.mod
-sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod;sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/statemgr/g' -i /opt/gopath/src/github.com/securekey/fabric-snaps/util/statemgr/go.mod
-
+cp -r /opt/temp/src/github.com/securekey/fabric-snaps $GOPATH/src/github.com/securekey
+rm -rf $GOPATH/src/github.com/securekey/fabric-snaps/go.sum
 
 echo "Cloning fabric..."
-cd /opt/gopath/src/github.com/hyperledger
-git clone https://github.com/securekey/fabric-next.git
-cd fabric-next/scripts
+cd $GOPATH/src/github.com/hyperledger
+git clone $FABRIC_NEXT_REPO fabric-next
+cd fabric-next
 git checkout $FABRIC_NEXT_VERSION
-./fabric_cherry_picks.sh >/dev/null
-cd /opt/gopath/src/github.com/hyperledger/fabric
+./scripts/fabric_cherry_picks.sh >/dev/null
 
 
-cd  /opt/gopath/src/github.com/securekey/fabric-snaps
+cd  $GOPATH/src/github.com/securekey/fabric-snaps
+echo "Executing replace module..."
+./scripts/replace_module.sh
 echo "Executing move script..."
 ./scripts/move_snaps.sh
 
-cd /opt/gopath/src/github.com/hyperledger/fabric/plugins
+cd $GOPATH/src/github.com/hyperledger/fabric/plugins
 
 echo "Building plugins..."
 echo "Building transaction snap..."
