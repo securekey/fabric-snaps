@@ -8,7 +8,7 @@ set -e
 
 export GO111MODULE=on
 
-$GIT_CONFIG
+$CONFIG_GIT
 
 GO_SRC=/opt/gopath/src
 

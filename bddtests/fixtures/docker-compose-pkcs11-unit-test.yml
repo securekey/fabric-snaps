@@ -14,5 +14,5 @@ services:
         - ../../:/tmp/securekey/fabric-snaps
         - ${HOME}/.ssh:/root/.ssh \
     environment:
-        - GIT_CONFIG=$GIT_CONFIG
+        - CONFIG_GIT=$CONFIG_GIT
     command: /bin/bash -c 'mkdir -p opt/gopath/src/github.com/securekey && cp -r /tmp/securekey/fabric-snaps /opt/gopath/src/github.com/securekey && /opt/gopath/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh'
