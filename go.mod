@@ -11,14 +11,17 @@ require (
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/google/certificate-transparency-go v0.0.0-20180219093839-391726f8973d // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hyperledger/fabric v1.4.0
 	github.com/hyperledger/fabric-sdk-go v0.0.0-20190125204638-b490519efff9
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
 	github.com/securekey/fabric-snaps/util/rolesmgr v0.4.0
 	github.com/securekey/fabric-snaps/util/statemgr v0.4.0
+	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v0.0.0-20171227194143-aafc9e6bc7b7
@@ -34,13 +37,13 @@ require (
 
 )
 
-replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0-20190216163058-9e08161f2597
+replace github.com/hyperledger/fabric => gerrit.securekey.com/fabric-mod v0.0.0-20190228191641-1628bcab7f94
+
+replace github.com/hyperledger/fabric/common/ledger/blkstorage/fsblkstorage => github.com/securekey/fabric-kevlar/fsblkstorage v0.0.0-20190304235126-d1debe6ae11e
 
 replace github.com/docker/libnetwork => github.com/docker/libnetwork v0.0.0-20180608203834-19279f049241
 
 replace github.com/docker/docker => github.com/docker/docker v0.0.0-20180827131323-0c5f8d2b9b23
-
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20180827131323-e3636079e1a4
 
 replace github.com/spf13/afero => github.com/spf13/afero v1.2.1
 
@@ -50,16 +53,10 @@ replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.1.1
 
 replace github.com/go-logfmt/logfmt => github.com/go-logfmt/logfmt v0.3.0
 
-replace github.com/stretchr/testify => github.com/stretchr/testify v1.2.2
-
 replace github.com/onsi/gomega => github.com/onsi/gomega v1.4.2
 
 replace github.com/securekey/fabric-snaps/util/rolesmgr => ./util/rolesmgr
 
 replace github.com/securekey/fabric-snaps/util/statemgr => ./util/statemgr
-
-replace google.golang.org/grpc => google.golang.org/grpc v1.15.0
-
-replace github.com/pkg/errors => github.com/pkg/errors v0.8.0
 
 replace github.com/spf13/oldviper => github.com/spf13/viper v0.0.0-20150908122457-1967d93db724

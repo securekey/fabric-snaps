@@ -27,14 +27,14 @@ else
 PROJECT_VERSION=$(BASE_VERSION)
 endif
 
-FABRIC_NEXT_REPO ?= https://github.com/securekey/fabric-next.git
+FABRIC_NEXT_REPO ?= https://gerrit.securekey.com/fabric-kevlar
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION ?= 3ccc752793333eedb7023ddeeebb0ccc945cfd81
+FABRIC_NEXT_VERSION ?= d1debe6ae11e815da092f91c126e48a5c1a4af9b
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
 ifndef FABRIC_NEXT_IMAGE_TAG
-  export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
+  export FABRIC_NEXT_IMAGE_TAG = 0.0.1-snapshot-d1debe6
 endif
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
@@ -51,7 +51,7 @@ PACKAGE_NAME = github.com/$(PROJECT_NAME)
 
 #fabric build snaps image parameters
 FABRIC_BUILD_SNAPS_IMAGE_NS ?= securekey
-FABRIC_BUILD_SNAPS_IMAGE ?= fabric-baseimage
+FABRIC_BUILD_SNAPS_IMAGE ?= fabric-build-snaps
 FABRIC_BUILD_SNAPS_IMAGE_VERSION ?= $(ARCH)-0.4.14
 
 GO_BUILD_TAGS ?= "pkcs11"
