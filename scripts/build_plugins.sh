@@ -25,10 +25,11 @@ git checkout $FABRIC_NEXT_VERSION
 
 
 cd  $GOPATH/src/github.com/securekey/fabric-snaps
-echo "Executing replace module..."
-./scripts/replace_module.sh
 echo "Executing move script..."
 ./scripts/move_snaps.sh
+echo "Executing replace module..."
+$GOPATH/src/github.com/hyperledger/fabric/plugins/scripts/replace_module.sh
+
 
 cd $GOPATH/src/github.com/hyperledger/fabric/plugins
 
