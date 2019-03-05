@@ -28,10 +28,12 @@ cd  $GOPATH/src/github.com/securekey/fabric-snaps
 echo "Executing move script..."
 ./scripts/move_snaps.sh
 echo "Executing replace module..."
-$GOPATH/src/github.com/hyperledger/fabric/plugins/scripts/replace_module.sh
-
-
 cd $GOPATH/src/github.com/hyperledger/fabric/plugins
+./scripts/replace_module.sh
+
+
+
+
 
 echo "Building plugins..."
 echo "Building transaction snap..."
