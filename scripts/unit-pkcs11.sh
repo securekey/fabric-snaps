@@ -6,9 +6,11 @@
 #
 set -e
 
-PKC11_TOOL=github.com/gbolo/go-util/p11tool
-GO_SRC=/opt/gopath/src
 export GO111MODULE=on
+
+$GIT_CONFIG
+
+GO_SRC=/opt/gopath/src
 
 #Add entry here below for your key to be imported into softhsm
 declare -a PRIVATE_KEYS=(
@@ -17,23 +19,18 @@ declare -a PRIVATE_KEYS=(
 )
 
 # list all modules requiring PKCS11 testing
-declare -a PKG_TESTS=(
-    "github.com/securekey/fabric-snaps/httpsnap"
-    "github.com/securekey/fabric-snaps/transactionsnap"
-)
+declare PKG_TESTS="github.com/securekey/fabric-snaps/httpsnap/... github.com/securekey/fabric-snaps/transactionsnap/..."
 
-echo "Installing pkcs11 tool..."
-GO111MODULE=off go get ${PKC11_TOOL}
+
+
 
 echo "Importing keys to softhsm..."
-softhsm2-util --init-token --slot 1 --label "ForFabric" --pin 98765432 --so-pin 987654
 
-cd ${GO_SRC}/${PKC11_TOOL}
 for i in "${PRIVATE_KEYS[@]}"
 do
     echo "Importing key : ${GO_SRC}/${i}"
     openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in ${GO_SRC}/${i} -out private.p8
-    GO111MODULE=off go run main.go -action import -keyFile private.p8
+    pkcs11helper -action import -keyFile private.p8
     rm -rf private.p8
 done
 
@@ -42,12 +39,4 @@ echo "Running PKCS11 unit tests..."
 cd /opt/gopath/src/github.com/securekey/fabric-snaps
 rm go.sum
 
-PKGS=""
-for i in "${PKG_TESTS[@]}"
-do
-    PKGS_LIST=`go list "${i}"... 2> /dev/null | \
-                    grep -v /api`
-    PKGS+=" $PKGS_LIST"
-done
-
-GO111MODULE=on go test -count=1 -tags pkcs11 -cover $PKGS -p 1 -timeout=10m
+GO111MODULE=on go test -count=1 -tags pkcs11 -cover $PKG_TESTS -p 1 -timeout=10m
