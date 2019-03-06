@@ -12,7 +12,7 @@ services:
     image: ${FABRIC_NEXT_NS}/${FABRIC_PEER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
     volumes:
         - ../../:/tmp/securekey/fabric-snaps
-        - ${HOME}/.ssh:/root/.ssh \
+        - ${HOME}/.ssh:/root/.ssh
     environment:
         - CONFIG_GIT=$CONFIG_GIT
     command: /bin/bash -c 'mkdir -p opt/gopath/src/github.com/securekey && cp -r /tmp/securekey/fabric-snaps /opt/gopath/src/github.com/securekey && /opt/gopath/src/github.com/securekey/fabric-snaps/scripts/unit-pkcs11.sh'
