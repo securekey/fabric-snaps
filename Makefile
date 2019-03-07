@@ -49,6 +49,9 @@ PROJECT_NAME = securekey/fabric-snaps
 PACKAGE_NAME = github.com/$(PROJECT_NAME)
 
 
+FABRIC_SNAPS_IMAGE_NAME ?= fabric-snaps
+
+
 #fabric build snaps image parameters
 FABRIC_BUILD_SNAPS_IMAGE_NS ?= securekey
 FABRIC_BUILD_SNAPS_IMAGE ?= fabric-baseimage
@@ -84,7 +87,7 @@ depend: version
 	@scripts/dependencies.sh
 
 docker: all
-	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \
+	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(FABRIC_SNAPS_IMAGE_NAME):$(ARCH)-$(PROJECT_VERSION) \
 	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer-softhsm \
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
