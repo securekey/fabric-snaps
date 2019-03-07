@@ -6,11 +6,13 @@
 #
 set -e
 
+mkdir -p $GOPATH/src/github.com/securekey
+cp -r /tmp/securekey/fabric-snaps $GOPATH/src/github.com/securekey
+
+
 export GO111MODULE=on
 
 $CONFIG_GIT
-
-GO_SRC=/opt/gopath/src
 
 #Add entry here below for your key to be imported into softhsm
 declare -a PRIVATE_KEYS=(
@@ -28,15 +30,15 @@ echo "Importing keys to softhsm..."
 
 for i in "${PRIVATE_KEYS[@]}"
 do
-    echo "Importing key : ${GO_SRC}/${i}"
-    openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in ${GO_SRC}/${i} -out private.p8
+    echo "Importing key : ${GOPATH}/src/${i}"
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in ${GOPATH}/src/${i} -out private.p8
     pkcs11helper -action import -keyFile private.p8
     rm -rf private.p8
 done
 
 
 echo "Running PKCS11 unit tests..."
-cd /opt/gopath/src/github.com/securekey/fabric-snaps
+cd $GOPATH/src/github.com/securekey/fabric-snaps
 rm go.sum
 
 GO111MODULE=on go test -count=1 -tags pkcs11 -cover $PKG_TESTS -p 1 -timeout=10m
