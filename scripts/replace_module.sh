@@ -10,7 +10,7 @@ sed 's/\github.com\/securekey\/fabric-next.*/..\//g' -i $GOPATH/src/github.com/h
 sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/go.mod
 # replace modules in rolesmgr go.mod
 sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/rolesmgr/go.mod
-sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/rolesmgr/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/rolesmgr/go.mod
+sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/rolesmgr/go.mod
 # replace modules in statemgr go.mod
 sed 's/\github.com\/securekey\/fabric-next.*/..\/..\/..\/..\//g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
-sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins\/util\/statemgr/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
+sed 's/\github.com\/securekey\/fabric-snaps/github.com\/hyperledger\/fabric\/plugins/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
