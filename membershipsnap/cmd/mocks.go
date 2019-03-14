@@ -15,7 +15,7 @@ import (
 	"github.com/hyperledger/fabric/gossip/discovery"
 	"github.com/hyperledger/fabric/msp"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/hyperledger/fabric/protos/utils"
+	protos_utils "github.com/hyperledger/fabric/protos/utils"
 	memservice "github.com/securekey/fabric-snaps/membershipsnap/pkg/membership"
 )
 
@@ -60,7 +60,7 @@ func newMockIdentity() []byte { //nolint: deadcode
 }
 
 func newMockSignedProposal(identity []byte) (*pb.SignedProposal, msp.IdentityDeserializer) { //nolint: deadcode
-	sProp, _ := utils.MockSignedEndorserProposalOrPanic("", &pb.ChaincodeSpec{}, identity, nil)
+	sProp, _ := protos_utils.MockSignedEndorserProposalOrPanic("", &pb.ChaincodeSpec{}, identity, nil)
 	sProp.Signature = sProp.ProposalBytes
 	identityDeserializer := &policymocks.MockIdentityDeserializer{
 		Identity: identity,
