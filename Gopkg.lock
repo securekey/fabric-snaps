@@ -773,15 +773,14 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c1b423f7c38055168a45046fd3542a0fef73f27b5a3b29ff8b9ceb5e70416f6f"
+  digest = "1:971cda0c4952d270accd75052ba5690025d3831a9ab1d22f12bb83dfcbd8f8a5"
   name = "github.com/opencontainers/runc"
   packages = [
     "libcontainer/system",
     "libcontainer/user",
   ]
   pruneopts = "NUT"
-  revision = "68e00e906b27f92454736fe010ddcfa1181868e4"
+  revision = "2b18fe1d885ee5083ef9f0838fee39b62d653e30"
 
 [[projects]]
   digest = "1:51ea800cff51752ff68e12e04106f5887b4daec6f9356721238c28019f0b42db"

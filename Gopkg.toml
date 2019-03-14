@@ -86,6 +86,10 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "github.com/mitchellh/mapstructure"
   version = "v1.1.1"
 
+[[override]]
+  name = "github.com/opencontainers/runc"
+  revision = "2b18fe1d885ee5083ef9f0838fee39b62d653e30"
+
 [prune]
   go-tests = true
   unused-packages = true
