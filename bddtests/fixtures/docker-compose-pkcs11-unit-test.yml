@@ -15,4 +15,5 @@ services:
         - ${HOME}/.ssh:/root/.ssh
     environment:
         - CONFIG_GIT=$CONFIG_GIT
+        - GOPROXY=$GOPROXY
     command: /bin/bash -c '/tmp/securekey/fabric-snaps/scripts/unit-pkcs11.sh'

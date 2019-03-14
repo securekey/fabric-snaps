@@ -71,6 +71,7 @@ snaps: version clean
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
 		-e FABRIC_NEXT_REPO=$(FABRIC_NEXT_REPO) \
+		-e GOPROXY=$(GOPROXY) \
 		-v ${HOME}/.ssh:/root/.ssh \
 		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
 		$(FABRIC_BUILD_SNAPS_IMAGE_NS)/$(FABRIC_BUILD_SNAPS_IMAGE):$(FABRIC_BUILD_SNAPS_IMAGE_VERSION) \
