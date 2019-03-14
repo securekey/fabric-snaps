@@ -28,7 +28,7 @@ function installGoMetalinter {
      echo "Installing installGoMetalinter..."
 
     declare repo="github.com/alecthomas/gometalinter"
-    declare revision="v2"
+    declare revision="v2.0.12"
 
     declare pkg="github.com/alecthomas/gometalinter"
 
