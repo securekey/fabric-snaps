@@ -96,7 +96,7 @@ func getReadSet(r *pb.ProposalResponse) ([]*kvrwset.KVRead, error) {
 
 	for _, nsRWSet := range txRWSet.NsRwSets {
 		// Skip reads from lscc or +lifecycle
-		if nsRWSet.NameSpace == "lscc" || nsRWSet.NameSpace == "+lifecycle" {
+		if nsRWSet.NameSpace == "lscc" || nsRWSet.NameSpace == "_lifecycle" {
 			continue
 		}
 		if nsRWSet.KvRwSet != nil && len(nsRWSet.KvRwSet.Reads) > 0 {

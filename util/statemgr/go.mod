@@ -4,6 +4,12 @@ replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0
 
 replace github.com/securekey/fabric-snaps => ../..
 
+replace github.com/securekey/fabric-snaps/membershipsnap/pkg/membership => ../../membershipsnap/pkg/membership
+
+replace github.com/securekey/fabric-snaps/util/rolesmgr => ../../util/rolesmgr
+
+replace github.com/securekey/fabric-snaps/util/statemgr => ./
+
 require (
 	github.com/hyperledger/fabric v1.4.0
 	github.com/hyperledger/fabric-sdk-go v0.0.0-20190125204638-b490519efff9

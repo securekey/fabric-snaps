@@ -8,6 +8,8 @@ replace github.com/securekey/fabric-snaps/util/rolesmgr => ../../../util/rolesmg
 
 replace github.com/securekey/fabric-snaps/util/statemgr => ../../../util/statemgr
 
+replace github.com/securekey/fabric-snaps/membershipsnap/pkg/membership => ./
+
 require (
 	github.com/golang/protobuf v1.2.0
 	github.com/hyperledger/fabric v1.4.0
