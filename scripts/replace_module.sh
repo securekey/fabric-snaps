@@ -22,3 +22,10 @@ sed 's/$GOPATH/'"$sedGoPath"'/' -i $GOPATH/src/github.com/hyperledger/fabric/plu
 sed 's/\github.com\/securekey\/fabric-next.*/$GOPATH\/src\/github.com\/hyperledger\/fabric/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
 sed 's/\github.com\/securekey\/fabric-snaps\/util/github.com\/hyperledger\/fabric\/plugins\/util/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
 sed 's/$GOPATH/'"$sedGoPath"'/' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/util/statemgr/go.mod
+
+# replace modules in membership go.mod
+sed 's/\github.com\/securekey\/fabric-next.*/$GOPATH\/src\/github.com\/hyperledger\/fabric/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/membershipsnap/pkg/membership/go.mod
+sed 's/\github.com\/securekey\/fabric-snaps\/membershipsnap/github.com\/hyperledger\/fabric\/plugins\/membershipsnap/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/membershipsnap/pkg/membership/go.mod
+sed 's/\github.com\/securekey\/fabric-snaps\/util/github.com\/hyperledger\/fabric\/plugins\/util/g' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/membershipsnap/pkg/membership/go.mod
+sed 's/$GOPATH/'"$sedGoPath"'/' -i $GOPATH/src/github.com/hyperledger/fabric/plugins/membershipsnap/pkg/membership/go.mod
+

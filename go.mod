@@ -17,6 +17,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
+	github.com/securekey/fabric-snaps/membershipsnap/pkg/membership v0.0.0
 	github.com/securekey/fabric-snaps/util/rolesmgr v0.4.0
 	github.com/securekey/fabric-snaps/util/statemgr v0.4.0
 	github.com/spf13/cobra v0.0.3
@@ -57,6 +58,8 @@ replace github.com/onsi/gomega => github.com/onsi/gomega v1.4.2
 replace github.com/securekey/fabric-snaps/util/rolesmgr => ./util/rolesmgr
 
 replace github.com/securekey/fabric-snaps/util/statemgr => ./util/statemgr
+
+replace github.com/securekey/fabric-snaps/membershipsnap/pkg/membership => ./membershipsnap/pkg/membership
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.15.0
 
