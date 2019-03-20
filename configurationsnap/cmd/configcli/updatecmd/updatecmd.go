@@ -203,7 +203,7 @@ func (a *updateAction) update() error {
 		}
 	}
 
-	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{[]byte(configBytes)}); err != nil {
+	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{configBytes}); err != nil {
 		fmt.Printf("Error invoking chaincode: %s\n", err)
 		return errors.Wrap(err, "Update command returned with error")
 	}
@@ -230,7 +230,8 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 			PeerID: peerConfig.PeerID,
 		}
 		for _, appConfig := range peerConfig.App {
-			newAppConfig := &appConfig
+			tmpAppConfig := appConfig
+			newAppConfig := &tmpAppConfig
 			// Substitute all of the file refs with the actual contents of the file
 			fileRef := appConfig.Config[0:7]
 			if fileRef == "file://" {
@@ -269,7 +270,8 @@ func updateAppConfigInfo(configMsg *mgmtapi.ConfigMessage, baseFilePath string, 
 		}
 
 		for _, compConfig := range appConfig.Components {
-			newCompConfig := &compConfig
+			tmpCompConfig := compConfig
+			newCompConfig := &tmpCompConfig
 			// Substitute all of the file refs with the actual contents of the file
 			if strings.HasPrefix(compConfig.Config, "file://") {
 				refFilePath := newCompConfig.Config[7:]

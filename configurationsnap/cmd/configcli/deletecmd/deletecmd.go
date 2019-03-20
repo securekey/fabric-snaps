@@ -119,7 +119,7 @@ func (a *deleteAction) delete() error {
 		}
 	}
 
-	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "delete", [][]byte{[]byte(configKeyBytes)}); err != nil {
+	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "delete", [][]byte{configKeyBytes}); err != nil {
 		fmt.Printf("Error invoking chaincode: %s\n", err)
 	} else {
 		fmt.Println("Invocation successful!")
