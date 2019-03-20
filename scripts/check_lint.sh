@@ -8,18 +8,18 @@
 
 set -e
 
+GO_CMD="${GO_CMD:-go}"
+LINT_CMD="golangci-lint"
 
-GOMETALINT_CMD=gometalinter
+mkdir -p "${GOPATH}"/src/github.com/securekey
+cp -R /opt/temp/src/github.com/securekey/fabric-snaps "${GOPATH}"/src/github.com/securekey
 
+cd "${GOPATH}"/src/github.com/securekey/fabric-snaps
 
-function finish {
-  rm -rf vendor
-}
-trap finish EXIT
+apt-get update
+apt-get -y install libtool libltdl-dev
 
+export GO111MODULE=on
+export GOPROXY=https://athens:Na5ZcpmKjPM7XZTW@eng-athens.onetap.ca
 
-echo "Running metalinters..."
-# metalinters don't work with go modules yet
-# for now we create vendor folder and remove it after running metalinters
-go mod vendor
-GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...
+${LINT_CMD} -v run ./... -c ".golangci.yml"
