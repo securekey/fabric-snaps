@@ -6,7 +6,7 @@
 
 # Supported Targets:
 # all : runs unit and integration tests
-# depend: checks that test dependencies are installed
+# lint: runs the static code analyzer
 # unit-test: runs all the unit tests
 # integration-test: runs all the integration tests
 # checks: runs all check conditions (license, spelling, linting)
@@ -64,10 +64,12 @@ DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
 
+
 snaps: version clean
 	@echo "Building snap plugins"
 	@mkdir -p build/snaps
 	@mkdir -p build/test
+
 	@docker run -i --rm \
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
@@ -101,7 +103,8 @@ license: version
 	@scripts/check_license.sh
 
 lint:
-	 @scripts/check_lint.sh
+	@echo "Executing target lint..."
+	@scripts/check_lint.sh
 
 spelling:
 	@scripts/check_spelling.sh
