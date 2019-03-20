@@ -71,10 +71,6 @@ func (l *listenerImpl) Listen() (<-chan *fab.CCEvent, error) {
 
 	l.reg = reg
 
-	if err != nil {
-		return nil, errors.WithMessage(errors.SystemError, err, "Error initializing listener")
-	}
-
 	return eventch, nil
 }
 
