@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
@@ -8,18 +9,9 @@
 
 set -e
 
+FS_DIR=$1
+cd "${FS_DIR}"
+go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
-GOMETALINT_CMD=gometalinter
+golangci-lint run ./... -c .golangci.yml
 
-
-function finish {
-  rm -rf vendor
-}
-trap finish EXIT
-
-
-echo "Running metalinters..."
-# metalinters don't work with go modules yet
-# for now we create vendor folder and remove it after running metalinters
-go mod vendor
-GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...

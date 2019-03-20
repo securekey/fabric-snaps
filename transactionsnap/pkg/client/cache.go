@@ -12,7 +12,6 @@ import (
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
-	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -28,7 +27,6 @@ type CacheKey interface {
 // cacheKey holds a key for the cache
 type cacheKey struct {
 	channelID              string
-	txnSnapConfig          api.Config
 	configProvider         ConfigProvider
 	serviceProviderFactory apisdk.ServiceProviderFactory
 	metrics                *Metrics
