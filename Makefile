@@ -19,12 +19,13 @@ IS_RELEASE ?= false
 
 export GO111MODULE=on
 
-
+ifndef PROJECT_VERSION
 ifneq ($(IS_RELEASE),true)
 EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short=7 HEAD)
 PROJECT_VERSION=$(BASE_VERSION)-$(EXTRA_VERSION)
 else
 PROJECT_VERSION=$(BASE_VERSION)
+endif
 endif
 
 FABRIC_NEXT_REPO ?= https://github.com/securekey/fabric-next.git
