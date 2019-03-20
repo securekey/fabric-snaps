@@ -77,7 +77,8 @@ type Invoker interface {
 }
 
 const (
-	contentType = "content-type"
+	contentType   = "content-type"
+	blockTypeCert = "CERTIFICATE"
 )
 
 // Dialer is custom dialer to verify cert against pinset
@@ -268,10 +269,10 @@ func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceI
 	}
 
 	sendHTTPRequest := func(reload bool) (*http.Response, error) {
-		client, err := httpServiceImpl.getHTTPClient(invokeReq, reload)
-		if err != nil {
-			logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, err.Error())
-			return nil, err
+		client, getHTTPClientErr := httpServiceImpl.getHTTPClient(invokeReq, reload)
+		if getHTTPClientErr != nil {
+			logger.Errorf("Failed to load tls config. namedClient=%s, err=%s", invokeReq.NamedClient, getHTTPClientErr.Error())
+			return nil, getHTTPClientErr
 		}
 		return client.Do(req)
 	}
@@ -398,7 +399,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	var pk bccsp.Key
 
 	//Get Key from Pem bytes
-	key, codedErr := httpServiceImpl.getPublicKeyFromPem([]byte(clientCert), cryptoSuite)
+	key, codedErr := httpServiceImpl.getPublicKeyFromPem([]byte(clientCert), cryptoSuite.KeyImport)
 	if codedErr != nil {
 		return nil, codedErr
 	}
@@ -415,9 +416,9 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 
 	} else if config.IsPeerTLSConfigEnabled() {
 		// If private key not found and allowPeerConfig enabled, then use peer tls client key
-		peerClientTLSKey, err := config.GetPeerClientKey()
-		if err != nil {
-			return nil, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get peer tls client key")
+		peerClientTLSKey, getPeerClientKeyErr := config.GetPeerClientKey()
+		if getPeerClientKeyErr != nil {
+			return nil, errors.WithMessage(errors.MissingConfigDataError, getPeerClientKeyErr, "failed to get peer tls client key")
 		}
 		return httpServiceImpl.prepareTLSConfigFromClientKeyBytes(clientCert, peerClientTLSKey, caCerts, config.IsSystemCertPoolEnabled())
 
@@ -457,13 +458,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateClientConfig(client string, conf
 	}
 	return clientCert, caCerts, nil
 }
-func (httpServiceImpl *HTTPServiceImpl) validatePeerTLSClientKey(config httpsnapApi.Config) (string, errors.Error) {
-	peerClientTLSKey, err := config.GetPeerClientKey()
-	if err != nil {
-		return peerClientTLSKey, errors.WithMessage(errors.MissingConfigDataError, err, "failed to get peer tls client key")
-	}
-	return peerClientTLSKey, nil
-}
+
 func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromClientKeyBytes(clientCert, clientKey string, caCerts []string, systemCertPoolEnabled bool) (*tls.Config, errors.Error) {
 	// Load client cert
 	cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
@@ -479,7 +474,7 @@ func (httpServiceImpl *HTTPServiceImpl) prepareTLSConfigFromCert(cert tls.Certif
 	httpServiceImpl.certPool.Add(decodeCerts(caCerts)...)
 	pool, err := httpServiceImpl.certPool.Get()
 	if err != nil {
-		return nil, errors.Wrap(errors.SystemError, err, "failed to create cert pool")
+		return nil, errors.Wrapf(errors.SystemError, err, "failed to create cert pool; systemCertPoolEnabled=%t", systemCertPoolEnabled)
 	}
 
 	verifyPeerCerts := func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
@@ -513,17 +508,14 @@ func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCS
 	fail := func(err errors.Error) (tls.Certificate, errors.Error) { return tls.Certificate{}, err }
 
 	var cert tls.Certificate
-	var skippedBlockTypes []string
 	for {
 		var certDERBlock *pem.Block
 		certDERBlock, certPEMBlock = pem.Decode(certPEMBlock)
 		if certDERBlock == nil {
 			break
 		}
-		if certDERBlock.Type == "CERTIFICATE" {
+		if certDERBlock.Type == blockTypeCert {
 			cert.Certificate = append(cert.Certificate, certDERBlock.Bytes)
-		} else {
-			skippedBlockTypes = append(skippedBlockTypes, certDERBlock.Type)
 		}
 	}
 
@@ -579,7 +571,7 @@ func (httpServiceImpl *HTTPServiceImpl) validateJSON(jsonSchema string, jsonStr 
 	return nil
 }
 
-func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite bccsp.BCCSP) (bccsp.Key, errors.Error) {
+func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryptoSuite func(interface{}, bccsp.KeyImportOpts) (bccsp.Key, error)) (bccsp.Key, errors.Error) {
 	if len(idBytes) == 0 {
 		return nil, errors.New(errors.MissingConfigDataError, "getPublicKeyFromPem error: empty pem bytes")
 	}
@@ -596,7 +588,7 @@ func (httpServiceImpl *HTTPServiceImpl) getPublicKeyFromPem(idBytes []byte, cryp
 		return nil, errors.Wrap(errors.ParseCertError, err, "getPublicKeyFromPem error: failed to parse x509 cert")
 	}
 	// get the public key in the right format
-	certPubK, err := cryptoSuite.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
+	certPubK, err := cryptoSuite(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 	if err != nil {
 		return nil, errors.Wrap(errors.ImportKeyError, err, "getPublicKeyFromPem error: Failed to import public key")
 	}

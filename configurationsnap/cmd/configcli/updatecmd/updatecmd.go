@@ -203,7 +203,7 @@ func (a *updateAction) update() error {
 		}
 	}
 
-	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{[]byte(configBytes)}); err != nil {
+	if err := a.ExecuteTx(cliconfig.ConfigSnapID, "save", [][]byte{configBytes}); err != nil {
 		fmt.Printf("Error invoking chaincode: %s\n", err)
 		return errors.Wrap(err, "Update command returned with error")
 	}
@@ -230,18 +230,18 @@ func configFromString(configString string, baseFilePath string) (*mgmtapi.Config
 			PeerID: peerConfig.PeerID,
 		}
 		for _, appConfig := range peerConfig.App {
-			newAppConfig := &appConfig
+			appConfig := appConfig
 			// Substitute all of the file refs with the actual contents of the file
 			fileRef := appConfig.Config[0:7]
 			if fileRef == "file://" {
-				refFilePath := newAppConfig.Config[7:]
+				refFilePath := appConfig.Config[7:]
 				contents, err := readFileRef(baseFilePath, refFilePath)
 				if err != nil {
 					return nil, errors.Wrapf(err, "error retrieving contents of file [%s]", refFilePath)
 				}
-				newAppConfig.Config = contents
+				appConfig.Config = contents
 			}
-			newPeerConfig.App = append(newPeerConfig.App, *newAppConfig)
+			newPeerConfig.App = append(newPeerConfig.App, appConfig)
 		}
 		newConfigMsg.Peers = append(newConfigMsg.Peers, newPeerConfig)
 	}
@@ -269,17 +269,17 @@ func updateAppConfigInfo(configMsg *mgmtapi.ConfigMessage, baseFilePath string, 
 		}
 
 		for _, compConfig := range appConfig.Components {
-			newCompConfig := &compConfig
+			compConfig := compConfig
 			// Substitute all of the file refs with the actual contents of the file
 			if strings.HasPrefix(compConfig.Config, "file://") {
-				refFilePath := newCompConfig.Config[7:]
+				refFilePath := compConfig.Config[7:]
 				contents, err := readFileRef(baseFilePath, refFilePath)
 				if err != nil {
 					return nil, errors.Wrapf(err, "error retrieving contents of file [%s]", refFilePath)
 				}
-				newCompConfig.Config = contents
+				compConfig.Config = contents
 			}
-			newAppConfig.Components = append(newAppConfig.Components, *newCompConfig)
+			newAppConfig.Components = append(newAppConfig.Components, compConfig)
 		}
 		newConfigMsg.Apps = append(newConfigMsg.Apps, newAppConfig)
 	}

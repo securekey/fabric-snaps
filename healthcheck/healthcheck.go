@@ -33,6 +33,10 @@ type SmokeTestResult struct {
 
 // SmokeTest is a health check function that returns the status of Snap it is called up
 func SmokeTest(extScc string, stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if stub == nil || args == nil {
+		logger.Info("SmokeTest: The arguments extScc or args may be nil")
+	}
+
 	switch extScc {
 	case FMPScc:
 		logger.Info("Executing FMP SCC smoke test...")
@@ -67,18 +71,27 @@ func UnmarshalEchoResponse(objBytes []byte) (*SmokeTestResult, error) {
 
 // Healthcheck FMPScc
 func healthcheckFmpScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if stub == nil || args == nil {
+		logger.Info("healthcheckFmpScc: The arguments stub or args may be nil")
+	}
 	//todo add FMPScc healthcheck logic here
 	return shim.Success(nil)
 }
 
 // Healthcheck ConfigurationScc
 func healthcheckConfigurationScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if stub == nil || args == nil {
+		logger.Info("healthcheckConfigurationScc: The arguments stub or args may be nil")
+	}
 	//todo add ConfigurationScc healthcheck logic here
 	return shim.Success(nil)
 }
 
 // Healthcheck TxDelegationScc
 func healthcheckTxDelegationScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if stub == nil || args == nil {
+		logger.Info("healthcheckTxDelegationScc: The arguments stub or args may be nil")
+	}
 	//todo add TxDelegationScc healthcheck logic here
 	return shim.Success(nil)
 }

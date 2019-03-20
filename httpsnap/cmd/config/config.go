@@ -124,7 +124,7 @@ func (c *config) GetConfigPath(path string) string {
 
 // IsHeaderAllowed returns true if specified http header type is enabled
 func (c *config) IsHeaderAllowed(name string) bool {
-	val, _ := c.headers[strings.ToLower(name)]
+	val := c.headers[strings.ToLower(name)]
 	return val
 }
 
@@ -150,9 +150,7 @@ func (c *config) GetCaCerts() ([]string, errors.Error) {
 	caCerts := c.httpSnapConfig.GetStringSlice("tls.caCerts")
 	absoluteCaCerts := make([]string, 0, len(caCerts))
 
-	for _, v := range caCerts {
-		absoluteCaCerts = append(absoluteCaCerts, v)
-	}
+	absoluteCaCerts = append(absoluteCaCerts, caCerts...)
 
 	if len(absoluteCaCerts) == 0 && c.IsPeerTLSConfigEnabled() {
 		return c.getPeerTLSRootCert()
@@ -303,7 +301,7 @@ func (c *config) preloadEntities() errors.Error {
 
 	}
 
-	if allHeaders == nil || len(allHeaders) == 0 {
+	if len(allHeaders) == 0 {
 		return errors.New(errors.InitializeConfigError, "Missing http headers configuration")
 	}
 
@@ -322,6 +320,7 @@ func (c *config) preloadEntities() errors.Error {
 	c.schemaConfigs = make(map[string]*httpsnapApi.SchemaConfig, len(allSchemas))
 
 	for _, sc := range allSchemas {
+		sc := sc
 		c.schemaConfigs[sc.Type] = &sc
 	}
 

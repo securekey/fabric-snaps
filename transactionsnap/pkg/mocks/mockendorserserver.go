@@ -57,6 +57,13 @@ func (m *MockEndorserServer) ProcessProposal(context context.Context,
 
 }
 
+func serve(server *grpc.Server, lis net.Listener) {
+	serveErr := server.Serve(lis)
+	if serveErr != nil {
+		fmt.Printf("The server.Serve returned an error %s", serveErr)
+	}
+}
+
 //StartEndorserServer starts mock server for unit testing purpose
 func StartEndorserServer(endorserTestURL string) *MockEndorserServer {
 	grpcServer := grpc.NewServer()
@@ -67,7 +74,7 @@ func StartEndorserServer(endorserTestURL string) *MockEndorserServer {
 	endorserServer := &MockEndorserServer{}
 	pb.RegisterEndorserServer(grpcServer, endorserServer)
 	fmt.Printf("Test endorser server started\n")
-	go grpcServer.Serve(lis)
+	go serve(grpcServer, lis)
 	return endorserServer
 }
 

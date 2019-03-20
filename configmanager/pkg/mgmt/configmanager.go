@@ -85,9 +85,9 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	}
 
 	if len(configKey.ComponentName) > 0 && len(configKey.ComponentVersion) == 0 {
-		values, err := cmngr.getConfigs(configKey)
-		if err != nil {
-			return nil, err
+		values, getConfigsErr := cmngr.getConfigs(configKey)
+		if getConfigsErr != nil {
+			return nil, getConfigsErr
 		}
 		filterComp := make([]*api.ConfigKV, 0)
 		for _, v := range values {
@@ -99,9 +99,9 @@ func (cmngr *configManagerImpl) Get(configKey api.ConfigKey) ([]*api.ConfigKV, e
 	}
 
 	//search for one config by valid key
-	config, err := cmngr.getConfig(configKey)
-	if err != nil {
-		return nil, err
+	config, getConfigErr := cmngr.getConfig(configKey)
+	if getConfigErr != nil {
+		return nil, getConfigErr
 	}
 	configKeys := []*api.ConfigKV{{Key: configKey, Value: config}}
 	return configKeys, nil
@@ -169,13 +169,13 @@ func (cmngr *configManagerImpl) Delete(configKey api.ConfigKey) errors.Error {
 		return cmngr.deleteConfigs(configKey)
 	}
 
-	if err := cmngr.deleteState(configKey); err != nil {
-		return err
+	if deleteStateErr := cmngr.deleteState(configKey); deleteStateErr != nil {
+		return deleteStateErr
 	}
 
-	key, err := ConfigKeyToString(configKey)
-	if err != nil {
-		return err
+	key, configKeyToStringErr := ConfigKeyToString(configKey)
+	if configKeyToStringErr != nil {
+		return configKeyToStringErr
 	}
 	//delete configuration for valid key
 	e := cmngr.stub.DelState(key)
@@ -274,8 +274,8 @@ func (cmngr *configManagerImpl) addIndexes(key api.ConfigKey) errors.Error {
 		return err
 	}
 	for _, index := range indexes {
-		if err := cmngr.addIndex(index, key); err != nil {
-			return err
+		if addIndexErr := cmngr.addIndex(index, key); addIndexErr != nil {
+			return addIndexErr
 		}
 	}
 	return nil
