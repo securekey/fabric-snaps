@@ -185,7 +185,13 @@ func (cp *Provider) newEventClientRef(params *params, ctx fab.ClientContext, chC
 			}
 
 			logger.Debugf("Initializing event service for channel [%s]", chConfig.ID())
-			ref.get() //nolint:gas
+			eventService, getErr := ref.get() //nolint:gas
+			if eventService == nil {
+				logger.Warn("The eventService returned by ref.get is null")
+			}
+			if getErr != nil {
+				logger.Warnf("There is an error when getting the eventService from ref.get; %s", getErr)
+			}
 		}()
 
 	}
