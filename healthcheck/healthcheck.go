@@ -36,13 +36,13 @@ func SmokeTest(extScc string, stub shim.ChaincodeStubInterface, args [][]byte) p
 	switch extScc {
 	case FMPScc:
 		logger.Info("Executing FMP SCC smoke test...")
-		return healthcheckFmpScc(stub, args)
+		return healthcheckFmpScc()
 	case ConfigurationScc:
 		logger.Info("Executing Confirguration SCC smoke test...")
-		return healthcheckConfigurationScc(stub, args)
+		return healthcheckConfigurationScc()
 	case TxDelegationScc:
 		logger.Info("Executing Tx Delegation SCC smoke test...")
-		return healthcheckTxDelegationScc(stub, args)
+		return healthcheckTxDelegationScc()
 	default:
 		logger.Info("Smoke test of unrecognized ExtSCC '%s' ...")
 		defaultResult := &SmokeTestResult{
@@ -51,7 +51,7 @@ func SmokeTest(extScc string, stub shim.ChaincodeStubInterface, args [][]byte) p
 		}
 		payload, err := json.Marshal(defaultResult)
 		if err != nil {
-			return shim.Error(fmt.Sprintf("Error occurred while Marshalling: %s", err))
+			return shim.Error(fmt.Sprintf("Error occurred while Marshalling: %s; stub=%s ; args=%s", err, stub, args))
 		}
 		return shim.Success(payload)
 	}
@@ -66,19 +66,25 @@ func UnmarshalEchoResponse(objBytes []byte) (*SmokeTestResult, error) {
 }
 
 // Healthcheck FMPScc
-func healthcheckFmpScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func healthcheckFmpScc(
+//stub shim.ChaincodeStubInterface, args [][]byte
+) pb.Response {
 	//todo add FMPScc healthcheck logic here
 	return shim.Success(nil)
 }
 
 // Healthcheck ConfigurationScc
-func healthcheckConfigurationScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func healthcheckConfigurationScc(
+//stub shim.ChaincodeStubInterface, args [][]byte
+) pb.Response {
 	//todo add ConfigurationScc healthcheck logic here
 	return shim.Success(nil)
 }
 
 // Healthcheck TxDelegationScc
-func healthcheckTxDelegationScc(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+func healthcheckTxDelegationScc(
+//stub shim.ChaincodeStubInterface, args [][]byte
+) pb.Response {
 	//todo add TxDelegationScc healthcheck logic here
 	return shim.Success(nil)
 }
