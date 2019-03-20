@@ -289,6 +289,7 @@ func contains(vals []string, val string) bool {
 
 func readFromTerminal(prompt string, responsech chan string) {
 	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("%s :", prompt)
 	if response, err := reader.ReadString('\n'); err != nil {
 		cliconfig.Config().Logger().Errorf("Error reading from terminal: %s\n", err)
 	} else {
