@@ -225,7 +225,7 @@ func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) errors.Error {
 		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", channelID))
 	}
 
-	err := srvc.VerifyTxnProposalSignature(signedProposal)
+	err := srvc.VerifyTxnProposalSignature(proto.Message(signedProposal))
 	if err != nil {
 		return err
 	}
