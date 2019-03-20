@@ -101,6 +101,12 @@ const (
 
 	// connectBackoff is the time to back off for connecting to event listener
 	connectBackoff = time.Second
+
+	publicKeyAlgRSA = "RSA"
+
+	publicKeyAlgDSA = "DSA"
+
+	publicKeyAlgECDSA = "ECDSA"
 )
 
 // Init snap
@@ -198,7 +204,7 @@ func functionSet() string {
 func healthCheck(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	response := healthcheck.SmokeTest(healthcheck.ConfigurationScc, stub, args)
 	if response.Status != shim.OK {
-		errObj := errors.New(errors.SystemError, fmt.Sprintf("%s healthcheck failed: %s", healthcheck.ConfigurationScc, response.Message))
+		errObj := errors.New(errors.SystemError, fmt.Sprintf("%s healthcheck failed: %s ; metrics=%s", healthcheck.ConfigurationScc, response.Message, metrics))
 		logger.Error(errObj.GenerateLogMsg())
 		return util.CreateShimResponseFromError(errObj, logger, stub)
 	}
@@ -261,7 +267,8 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.
 	}
 
 	for key := range configMessageMap {
-		if err := checkACLforKey(stub, &key, configDataWriteACLPrefix); err != nil {
+		tmpKey := key
+		if err = checkACLforKey(stub, &tmpKey, configDataWriteACLPrefix); err != nil {
 			return util.CreateShimResponseFromError(err, logger, stub)
 		}
 	}
@@ -269,7 +276,7 @@ func save(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.
 	cmngr := mgmt.NewConfigManager(stub)
 	err = cmngr.Save(configMsg)
 	if err != nil {
-		logger.Errorf("Got error while saving config: %s", err.GenerateLogMsg())
+		logger.Errorf("Got error while saving config: %s ; metrics= %s", err.GenerateLogMsg(), metrics)
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
@@ -284,16 +291,16 @@ func get(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.R
 		return util.CreateShimResponseFromError(codedErr, logger, stub)
 	}
 
-	if codedErr := checkACLforKey(stub, configKey, configDataReadACLPrefix); codedErr != nil {
+	if codedErr = checkACLforKey(stub, configKey, configDataReadACLPrefix); codedErr != nil {
 		return util.CreateShimResponseFromError(codedErr, logger, stub)
 	}
 
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
-	config, codedErr := cmngr.Get(*configKey)
-	if codedErr != nil {
-		logger.Errorf("Get for key %+v returns error: %s", configKey, codedErr.GenerateLogMsg())
-		return util.CreateShimResponseFromError(errors.WithMessage(errors.GetConfigError, codedErr, fmt.Sprintf("Failed to retrieve config for config key %+v", configKey)), logger, stub)
+	config, getCodedErr := cmngr.Get(*configKey)
+	if getCodedErr != nil {
+		logger.Errorf("Get for key %+v returns error: %s ; metrics= %s", configKey, getCodedErr.GenerateLogMsg(), metrics)
+		return util.CreateShimResponseFromError(errors.WithMessage(errors.GetConfigError, getCodedErr, fmt.Sprintf("Failed to retrieve config for config key %+v", configKey)), logger, stub)
 	}
 
 	payload, err := json.Marshal(config)
@@ -322,7 +329,7 @@ func delete(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) p
 	//valid key
 	cmngr := mgmt.NewConfigManager(stub)
 	if err := cmngr.Delete(*configKey); err != nil {
-		logger.Errorf("Got error while deleting config: %s", err.GenerateLogMsg())
+		logger.Errorf("Got error while deleting config: %s ; metrics= %s", err.GenerateLogMsg(), metrics)
 		return util.CreateShimResponseFromError(err, logger, stub)
 
 	}
@@ -358,9 +365,16 @@ func refresh(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) 
 
 	for _, msp := range msps {
 		logger.Debugf("****** Refresh msp id %s", msp)
-		instance.Refresh(stub, msp)
+		refreshErr := instance.Refresh(stub, msp)
+		if refreshErr != nil {
+			logger.Debugf("****** instance.Refresh returned error %s", refreshErr)
+		}
 	}
-	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
+
+	refreshError := instance.Refresh(stub, cfgsnapapi.GeneralMspID)
+	if refreshError != nil {
+		logger.Debugf("****** instance.Refresh returned error %s", refreshError)
+	}
 
 	return shim.Success(nil)
 }
@@ -373,16 +387,16 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metr
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 
-	if err := checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
+	if err = checkACLforKey(stub, configKey, configDataReadACLPrefix); err != nil {
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 	//valid key
 	x := configmgmtService.GetInstance()
 	instance := x.(*configmgmtService.ConfigServiceImpl)
-	config, err := instance.GetFromCache(stub.GetChannelID(), *configKey)
-	if err != nil {
-		logger.Errorf("Get for key %+v returns error: %s", configKey, err.GenerateLogMsg())
-		return util.CreateShimResponseFromError(err, logger, stub)
+	config, getFromCacheErr := instance.GetFromCache(stub.GetChannelID(), *configKey)
+	if getFromCacheErr != nil {
+		logger.Errorf("Get for key %+v returns error: %s ; metrics=%s", configKey, getFromCacheErr.GenerateLogMsg(), metrics)
+		return util.CreateShimResponseFromError(getFromCacheErr, logger, stub)
 	}
 	return shim.Success(config)
 }
@@ -391,7 +405,7 @@ func getFromCache(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metr
 //expected keytype and ephemeral flag in args
 func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	if len(args) < 2 {
-		return shim.Error(fmt.Sprintf("Required arguments are: key type and ephemeral flag"))
+		return shim.Error(fmt.Sprintf("Required arguments are: key type and ephemeral flag; metrics=%s", metrics))
 	}
 	keyType := string(args[0])
 	ephemeral, err := strconv.ParseBool(string(args[1]))
@@ -414,12 +428,12 @@ func generateKeyPair(stub shim.ChaincodeStubInterface, args [][]byte, metrics *M
 func generateCSR(stub shim.ChaincodeStubInterface, args [][]byte, metrics *Metrics) pb.Response {
 	//check args
 	if len(args) < 4 {
-		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag, CSR's signature algorithm and common name"))
+		return shim.Error(fmt.Sprintf("Required arguments are: [key type,ephemeral flag, CSR's signature algorithm and common name; metrics=%s", metrics))
 	}
 	keyType := string(args[0])
 	ephemeral, err := strconv.ParseBool(string(args[1]))
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Ephemeral flag is not set"))
+		return shim.Error(fmt.Sprintf("Ephemeral flag is not set; metrics=%s", metrics))
 	}
 	sigAlgType := string(args[2])
 	csrCommonName := string(args[3])
@@ -594,11 +608,11 @@ func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, b
 func getPublicKeyAlg(algorithm string) (x509.PublicKeyAlgorithm, error) {
 	var sigAlg x509.PublicKeyAlgorithm
 	switch algorithm {
-	case "RSA":
+	case publicKeyAlgRSA:
 		return x509.RSA, nil
-	case "DSA":
+	case publicKeyAlgDSA:
 		return x509.RSA, nil
-	case "ECDSA":
+	case publicKeyAlgECDSA:
 		return x509.RSA, nil
 	default:
 		return sigAlg, errors.Errorf(errors.GeneralError, "Public key algorithm is not supported %s", algorithm)
@@ -606,8 +620,9 @@ func getPublicKeyAlg(algorithm string) (x509.PublicKeyAlgorithm, error) {
 }
 func getSignatureAlg(algorithm string) (x509.SignatureAlgorithm, error) {
 	var signatureAlgorithm x509.SignatureAlgorithm
+	var ok bool
 
-	if signatureAlgorithm, ok := signatureRegistry[algorithm]; ok {
+	if signatureAlgorithm, ok = signatureRegistry[algorithm]; ok {
 		return signatureAlgorithm, nil
 	}
 	err := errors.New(errors.GeneralError, "Alg is not supported.")
@@ -724,16 +739,16 @@ func sendEndorseRequest(channelID string, txService *txsnapservice.TxServiceImpl
 	var mspIDs []string
 	for _, mspConfig := range chConfig.MSPs() {
 		fabricMSPConfig := &protosMSP.FabricMSPConfig{}
-		err := proto.Unmarshal(mspConfig.Config, fabricMSPConfig)
+		err = proto.Unmarshal(mspConfig.Config, fabricMSPConfig)
 		if err != nil {
 			logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error unmarshalling MSP config").GenerateLogMsg())
 		}
 		mspIDs = append(mspIDs, fabricMSPConfig.Name)
 	}
 
-	mspIDsBytes, err := json.Marshal(mspIDs)
-	if err != nil {
-		logger.Errorf(errors.WithMessage(errors.SystemError, err, "Error marshalling JSON args").GenerateLogMsg())
+	mspIDsBytes, marshalErr := json.Marshal(mspIDs)
+	if marshalErr != nil {
+		logger.Errorf(errors.WithMessage(errors.SystemError, marshalErr, "Error marshalling JSON args").GenerateLogMsg())
 		return
 	}
 

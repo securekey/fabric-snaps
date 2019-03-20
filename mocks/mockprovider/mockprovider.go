@@ -8,7 +8,7 @@ package mockprovider
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection"
-	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
@@ -32,7 +32,7 @@ type mockChannelProvider struct {
 	fabApi.ChannelProvider
 }
 
-func (cp *mockChannelProvider) Initialize(providers contextApi.Providers) error {
+func (cp *mockChannelProvider) Initialize(providers core.Providers) error {
 	chProvider, err := fcmocks.NewMockChannelProvider(providers)
 	if err != nil {
 		return err

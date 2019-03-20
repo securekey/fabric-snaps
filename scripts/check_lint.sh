@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
@@ -7,19 +8,25 @@
 # This script runs Go linting and vetting tools
 
 set -e
+GOLANGCI_LINT_CMD=golangci-lint
 
+FS_DIR=$1
+TMP_MOD=${GO111MODULE}
+TMP_GOPATH=${GOPATH}
 
-GOMETALINT_CMD=gometalinter
+cd "${FS_DIR}"
 
+BUILD_TMP=`mktemp -d 2>/dev/null || mktemp -d -t 'fabricsnaps'`
+export GO111MODULE=off
+export GOPATH=${BUILD_TMP}
+go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+export GOPATH=${TMP_GOPATH}
+mkdir -p ${GOPATH}/bin
+cp -f ${BUILD_TMP}/bin/${GOLANGCI_LINT_CMD} ${GOPATH}/bin/
+rm -rf "${BUILD_TMP}"
 
-function finish {
-  rm -rf vendor
-}
-trap finish EXIT
+export GO111MODULE=on
 
+${GOLANGCI_LINT_CMD} run ./... -c .golangci.yml
 
-echo "Running metalinters..."
-# metalinters don't work with go modules yet
-# for now we create vendor folder and remove it after running metalinters
-go mod vendor
-GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...
+export GO111MODULE=${TMP_MOD}

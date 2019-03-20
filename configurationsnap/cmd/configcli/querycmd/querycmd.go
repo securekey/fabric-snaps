@@ -134,7 +134,7 @@ func (a *queryAction) query() error {
 
 	cliconfig.Config().Logger().Debugf("Using config key: [%s]\n", configKeyBytes)
 
-	response, err := a.Query(cliconfig.ConfigSnapID, "get", [][]byte{[]byte(configKeyBytes)})
+	response, err := a.Query(cliconfig.ConfigSnapID, "get", [][]byte{configKeyBytes})
 	if err != nil {
 		return err
 	}
