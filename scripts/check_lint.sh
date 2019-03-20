@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #
 # Copyright SecureKey Technologies Inc. All Rights Reserved.
 #
@@ -8,18 +9,48 @@
 
 set -e
 
-
-GOMETALINT_CMD=gometalinter
-
-
-function finish {
-  rm -rf vendor
+runLint() {
+    dirs=$*
+    for i in `echo $dirs`
+    do
+        if [ -d "${i}" ]
+        then
+            go_files_count=`find ${i} -name "*.go" | wc -l`
+            if [ ${go_files_count} -gt 0 ]
+            then
+                echo "Running lint for directory ${i}..."
+                golangci-lint -v run ${i}/... -c .golangci.yml
+                echo "Linting done for ${i}."
+            fi
+        fi
+    done
 }
-trap finish EXIT
+
+FS_DIR=$1
+
+echo "FS_DIR=${FS_DIR}"
+
+#apk add --update alpine-sdk
+#apk add git gcc libstdc++
+
+#apt-get update
+#apt-get install -y libtool libltdl-dev
+
+export GOPROXY=
+go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
+cd "${FS_DIR}"
+
+export GO111MODULE=on
+
+go env
+
+echo "GO111MODULE=${GO111MODULE}"
+echo "GOPROXY=${GOPROXY}"
+
+env
+
+runLint "."
 
 
-echo "Running metalinters..."
-# metalinters don't work with go modules yet
-# for now we create vendor folder and remove it after running metalinters
-go mod vendor
-GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...
+
