@@ -121,6 +121,9 @@ func (t *MembershipSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Respo
 
 //getAllPeers retrieves all of the peers that are currently alive
 func (t *MembershipSnap) getAllPeers(stub shim.ChaincodeStubInterface, args [][]byte) pb.Response {
+	if args == nil {
+		logger.Println("The input byte array args is null.")
+	}
 	payload, err := t.marshalEndpoints(t.membershipService.GetAllPeers())
 	if err != nil {
 		return util.CreateShimResponseFromError(errors.WithMessage(errors.MembershipError, err, "Failed to marshal endpoints"), logger, stub)
