@@ -31,8 +31,6 @@ var MspID string
 // Use this instead of ChaincodeStub in your chaincode's unit test calls to Init or Invoke.
 type MockStub struct {
 	shim.MockStub
-	// mocked signedProposal
-	signedProposal *pb.SignedProposal
 	// arguments the stub was called with
 	args [][]byte
 	// A pointer back to the chaincode that will invoke this, set by constructor.
@@ -58,7 +56,7 @@ func (stub *MockStub) GetCreator() ([]byte, error) {
 	return b, nil
 }
 
-//NewMockStub Constructor to initialise the internal State map
+//NewMockStub Constructor to initialize the internal State map
 func NewMockStub(name string, cc shim.Chaincode) *MockStub {
 	mockLogger.Debug("MockStub(", name, cc, ")")
 	s := new(MockStub)
@@ -72,7 +70,7 @@ func NewMockStub(name string, cc shim.Chaincode) *MockStub {
 	return s
 }
 
-// MockInit Initialise this chaincode,  also starts and ends a transaction.
+// MockInit Initialize this chaincode,  also starts and ends a transaction.
 func (stub *MockStub) MockInit(uuid string, args [][]byte) pb.Response {
 	stub.args = args
 	stub.MockTransactionStart(uuid)

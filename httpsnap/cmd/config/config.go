@@ -322,7 +322,8 @@ func (c *config) preloadEntities() errors.Error {
 	c.schemaConfigs = make(map[string]*httpsnapApi.SchemaConfig, len(allSchemas))
 
 	for _, sc := range allSchemas {
-		c.schemaConfigs[sc.Type] = &sc
+		tmpSc := sc
+		c.schemaConfigs[sc.Type] = &tmpSc
 	}
 
 	return nil
