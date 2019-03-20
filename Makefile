@@ -6,7 +6,7 @@
 
 # Supported Targets:
 # all : runs unit and integration tests
-# depend: checks that test dependencies are installed
+# lint: runs the static code analyzer
 # unit-test: runs all the unit tests
 # integration-test: runs all the integration tests
 # checks: runs all check conditions (license, spelling, linting)
@@ -64,10 +64,13 @@ DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
 
+GOLANGCI=golangci/golangci-lint:v1.15.0
+
 snaps: version clean
 	@echo "Building snap plugins"
 	@mkdir -p build/snaps
 	@mkdir -p build/test
+
 	@docker run -i --rm \
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
@@ -85,34 +88,36 @@ channel-artifacts:
 		securekey/fabric-tools:$(ARCH)-$(FABRIC_NEXT_IMAGE_TAG) \
 		/bin/bash -c "/opt/gopath/src/$(PACKAGE_NAME)/scripts/generate_channeltx.sh"
 
-depend: version
-	@scripts/dependencies.sh
-
 docker: all
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(FABRIC_SNAPS_IMAGE_NAME):$(ARCH)-$(PROJECT_VERSION) \
 	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer-softhsm \
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
-checks: depend license lint spelling check-metrics-doc
+checks: license lint spelling check-metrics-doc
 
 .PHONY: license
 license: version
 	@scripts/check_license.sh
 
 lint:
-	 @scripts/check_lint.sh
+	@echo "Executing target lint..."
+	@docker run -i --rm \
+			-e GOPROXY=$(GOPROXY) \
+			-v $(abspath .):/go/src/github.com/securekey/fabric-snaps \
+			golang:1.11.5 \
+			/bin/bash -x -c /go/src/github.com/securekey/fabric-snaps/scripts/check_lint.sh
 
 spelling:
 	@scripts/check_spelling.sh
 
-unit-test: depend
+unit-test:
 	@scripts/unit.sh
 
-pkcs11-unit-test: depend
+pkcs11-unit-test:
 	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit
 
-integration-test: clean depend snaps cliconfig
+integration-test: clean snaps cliconfig
 	@scripts/integration.sh
 
 http-server:

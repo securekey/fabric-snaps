@@ -46,9 +46,7 @@ func (l *MockBlockchainInfoProvider) GetBlockchainInfo(channelID string) (*cb.Bl
 // ChannelBCInfos returns an array of ChannelBCInfo
 func ChannelBCInfos(bcInfo ...*ChannelBCInfo) []*ChannelBCInfo {
 	infos := make([]*ChannelBCInfo, len(bcInfo))
-	for i, info := range bcInfo {
-		infos[i] = info
-	}
+	copy(infos, bcInfo)
 	return infos
 }
 
