@@ -7,30 +7,9 @@
 
 set -e
 GO_CMD="${GO_CMD:-go}"
-GO_METALINTER_CMD="${GO_METALINTER_CMD:-gometalinter}"
+GOLANGCI_LINT_CMD="${GO_METALINTER_CMD:-golangci-lint}"
 GOPATH="${GOPATH:-${HOME}/go}"
 
-function installGoMetalinter {
-     echo "Installing installGoMetalinter..."
-    declare repo="github.com/alecthomas/gometalinter"
-    declare revision="v2.0.12"
-    declare pkg="github.com/alecthomas/gometalinter"
-    installGoPkg "${repo}" "${revision}" "" "gometalinter"
-    rm -Rf ${GOPATH}/src/${pkg}
-    mkdir -p ${GOPATH}/src/${pkg}
-    cp -Rf ${BUILD_TMP}/src/${repo}/* ${GOPATH}/src/${pkg}/
-    GO111MODULE=off ${GO_METALINTER_CMD} --install --force
-}
-
-function installGoGas {
-    declare repo="github.com/GoASTScanner/gas"
-    declare revision="4ae8c95"
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/kisielk/gotool
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/nbutton23/zxcvbn-go
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/ryanuber/go-glob
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u gopkg.in/yaml.v2
-    installGoPkg "${repo}" "${revision}" "/cmd/gas/..." "gas"
-}
 
 function installGoPkg {
     declare repo=$1
@@ -56,17 +35,23 @@ function installGoPkg {
     done
 }
 
+function installGolangCi {
+    echo "Installing ${GOLANGCI_LINT_CMD} ..."
+
+    declare repo="github.com/golangci/golangci-lint/cmd/golangci-lint"
+    declare revision="v1.15.0"
+    installGoPkg "${repo}" "${revision}" "" "${GOLANGCI_LINT_CMD}"
+}
+
 function installDependencies {
     echo "Installing dependencies ..."
     BUILD_TMP=`mktemp -d 2>/dev/null || mktemp -d -t 'fabricsnaps'`
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/axw/gocov/...
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/AlekSi/gocov-xml
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/golang/mock/mockgen
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/client9/misspell/cmd/misspell
-    GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u golang.org/x/tools/cmd/goimports
-    installGoMetalinter
-    # gas in gometalinter is out of date.
-    installGoGas
+
+    installGolangCi
+
     rm -Rf ${BUILD_TMP}
 }
 

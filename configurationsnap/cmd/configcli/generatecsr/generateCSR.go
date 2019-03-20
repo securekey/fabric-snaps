@@ -119,7 +119,7 @@ func (a *queryAction) generateCSR() error {
 		return errors.Errorf("csrCommonName is mandatory field")
 	}
 
-	args := [][]byte{[]byte(keyType), []byte([]byte(ephemeralstr)), []byte(sigAlg), []byte(csrCommonName)}
+	args := [][]byte{[]byte(keyType), []byte(ephemeralstr), []byte(sigAlg), []byte(csrCommonName)}
 
 	cliconfig.Config().Logger().Debugf("Using generate csr args: %v\n", args)
 	//invoke configuration snap -function name: 'generateCSR'

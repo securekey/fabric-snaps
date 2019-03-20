@@ -36,9 +36,9 @@ type MockPeer struct {
 	Payload              map[string][]byte
 	ResponseMessage      string
 	MockMSP              string
-	Status               int32
-	ProcessProposalCalls int
 	Endorser             []byte
+	ProcessProposalCalls int
+	Status               int32
 	KVWrite              bool
 }
 

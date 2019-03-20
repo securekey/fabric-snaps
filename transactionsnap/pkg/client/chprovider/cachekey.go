@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package chprovider
 
 import (
+	"errors"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 )
 
@@ -19,6 +21,9 @@ type cacheKey struct {
 
 // newCacheKey returns a new cacheKey
 func newCacheKey(ctx fab.ClientContext, channelID string) (*cacheKey, error) {
+	if channelID == "" || ctx == nil {
+		return nil, errors.New("The channelID may be empty or context may be nil")
+	}
 	return &cacheKey{
 		channelID: channelID,
 		context:   ctx,

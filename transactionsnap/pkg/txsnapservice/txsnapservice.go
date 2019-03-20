@@ -13,7 +13,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	pb "github.com/hyperledger/fabric/protos/peer"
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -145,13 +144,13 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature
-func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error {
+func (txs *TxServiceImpl) VerifyTxnProposalSignature(message proto.Message) errors.Error {
 
-	if signedProposal == nil {
+	if message == nil {
 		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
 	}
 
-	proposalBytes, e := proto.Marshal(signedProposal)
+	proposalBytes, e := proto.Marshal(message)
 	if e != nil {
 		return errors.Wrap(errors.SystemError, e, "Cannot marshal signed proposal")
 	}
