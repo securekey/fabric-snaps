@@ -51,7 +51,7 @@ const (
 	lineSep = "--------------------------------------------------------------------"
 )
 
-// Print prints the given config bytes, which is a marshalled JSON array of ConfigKV
+// Print prints the given config bytes, which is a marshaled JSON array of ConfigKV
 func Print(configBytes []byte) {
 	if AsOutputFormat(cliconfig.Config().OutputFormat()) == RawOutput {
 		fmt.Printf("\n%s\n[%s]\n", lineSep, configBytes)

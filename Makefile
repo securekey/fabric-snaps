@@ -64,10 +64,13 @@ DOCKER_COMPOSE_CMD ?= docker-compose
 
 export GO_LDFLAGS=-s
 
+GOLANGCI=golangci/golangci-lint:v1.15.0
+
 snaps: version clean
 	@echo "Building snap plugins"
 	@mkdir -p build/snaps
 	@mkdir -p build/test
+
 	@docker run -i --rm \
 		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
 		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
@@ -101,7 +104,13 @@ license: version
 	@scripts/check_license.sh
 
 lint:
-	 @scripts/check_lint.sh
+	@echo "Executing target lint..."
+	@docker run -i --rm \
+    	-e GOPROXY=$(GOPROXY) \
+    	-v ${HOME}/.ssh:/root/.ssh \
+    	-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
+    	"${GOLANGCI}" \
+    	/bin/bash -c "/opt/temp/src/github.com/securekey/fabric-snaps/scripts/check_lint.sh"
 
 spelling:
 	@scripts/check_spelling.sh
