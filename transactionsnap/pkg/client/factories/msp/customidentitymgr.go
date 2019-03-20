@@ -26,7 +26,7 @@ import (
 
 var logger = logging.NewLogger("txnsnap")
 
-// CustomIdentityManager is used for retriving user's identity manager
+// CustomIdentityManager is used for retrieving user's identity manager
 type CustomIdentityManager struct {
 	*msp.IdentityManager
 	orgName        string

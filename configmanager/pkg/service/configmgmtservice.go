@@ -40,7 +40,6 @@ type ConfigServiceImpl struct {
 	mtx          sync.RWMutex
 	cacheMap     map[string]cache
 	configHashes map[string]string
-	metrics      *Metrics
 }
 
 var instance = newConfigService()
@@ -59,8 +58,16 @@ func newConfigService() *ConfigServiceImpl {
 
 //Initialize will be called from config snap
 func Initialize(stub shim.ChaincodeStubInterface, mspID string) *ConfigServiceImpl {
-	instance.Refresh(stub, mspID)
-	instance.Refresh(stub, cfgsnapapi.GeneralMspID)
+	err := instance.Refresh(stub, mspID)
+	if err != nil {
+		logger.Warnf("Error while Refreshing the instance for mspID %s ; err= %s \n", mspID, err)
+	}
+
+	err = instance.Refresh(stub, cfgsnapapi.GeneralMspID)
+	if err != nil {
+		logger.Warnf("Error while Refreshing the instance for mspID %s ; err= %s \n", cfgsnapapi.GeneralMspID, err)
+	}
+
 	return instance
 }
 

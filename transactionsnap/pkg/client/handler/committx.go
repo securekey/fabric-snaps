@@ -50,7 +50,7 @@ func (l *CommitTxHandler) Handle(requestContext *invoke.RequestContext, clientCo
 		select {
 		case txStatusEvent := <-statusNotifier:
 
-			requestContext.Response.TxValidationCode = pb.TxValidationCode(txStatusEvent.TxValidationCode)
+			requestContext.Response.TxValidationCode = txStatusEvent.TxValidationCode
 			if requestContext.Response.TxValidationCode != pb.TxValidationCode_VALID {
 				requestContext.Error = status.New(status.EventServerStatus, int32(txStatusEvent.TxValidationCode),
 					fmt.Sprintf("transaction [%s] did not commit successfully", txnID), nil)
