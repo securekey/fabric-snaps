@@ -210,7 +210,7 @@ func computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {
 
 func TestVerifyProposalSignature(t *testing.T) {
 	txService := newMockTxService(nil)
-	err := txService.VerifyTxnProposalSignature(nil)
+	err := txService.VerifyTxnProposalSignature(proto.Message(nil))
 	if err == nil {
 		t.Fatal("SignedProposal is mandatory field")
 	}
