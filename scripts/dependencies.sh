@@ -7,19 +7,13 @@
 
 set -e
 GO_CMD="${GO_CMD:-go}"
-GO_METALINTER_CMD="${GO_METALINTER_CMD:-gometalinter}"
+LINT_CMD="${LINT_CMD:-golangci-lint}"
 GOPATH="${GOPATH:-${HOME}/go}"
 
-function installGoMetalinter {
-     echo "Installing installGoMetalinter..."
-    declare repo="github.com/alecthomas/gometalinter"
-    declare revision="v2.0.12"
-    declare pkg="github.com/alecthomas/gometalinter"
-    installGoPkg "${repo}" "${revision}" "" "gometalinter"
-    rm -Rf ${GOPATH}/src/${pkg}
-    mkdir -p ${GOPATH}/src/${pkg}
-    cp -Rf ${BUILD_TMP}/src/${repo}/* ${GOPATH}/src/${pkg}/
-    GO111MODULE=off ${GO_METALINTER_CMD} --install --force
+function installGoLangCi {
+    declare repo="github.com/golangci/golangci-lint/cmd/golangci-lint"
+    declare revision="v1.15.0"
+    installGoPkg "${repo}" "${revision}" "" "golangci-lint"
 }
 
 function installGoGas {
@@ -64,7 +58,7 @@ function installDependencies {
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/golang/mock/mockgen
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u github.com/client9/misspell/cmd/misspell
     GO111MODULE=off GOPATH=${BUILD_TMP} ${GO_CMD} get -u golang.org/x/tools/cmd/goimports
-    installGoMetalinter
+    installGoLangCi
     # gas in gometalinter is out of date.
     installGoGas
     rm -Rf ${BUILD_TMP}

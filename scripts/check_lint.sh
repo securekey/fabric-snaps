@@ -8,8 +8,7 @@
 
 set -e
 
-
-GOMETALINT_CMD=gometalinter
+LINT_CMD=golangci-lint
 
 
 function finish {
@@ -18,8 +17,5 @@ function finish {
 trap finish EXIT
 
 
-echo "Running metalinters..."
-# metalinters don't work with go modules yet
-# for now we create vendor folder and remove it after running metalinters
-go mod vendor
-GO111MODULE=off $GOMETALINT_CMD --config=./gometalinter.json ./...
+echo "Running linters..."
+${LINT_CMD} run ./... -c ".golangci.yml"
