@@ -87,23 +87,6 @@ func (p *PeerFilterHandler) getEndorsers(requestContext *invoke.RequestContext, 
 	return clientContext.Selection.GetEndorsersForChaincode(ccCalls, selectionOpts...)
 }
 
-// filterTargets is helper method to filter peers
-func (p *PeerFilterHandler) filterTargets(peers []fabApi.Peer, filter api.PeerFilter) []fabApi.Peer {
-
-	if filter == nil {
-		return peers
-	}
-
-	filteredPeers := []fabApi.Peer{}
-	for _, peer := range peers {
-		if filter.Accept(peer) {
-			filteredPeers = append(filteredPeers, peer)
-		}
-	}
-
-	return filteredPeers
-}
-
 func getNext(next []invoke.Handler) invoke.Handler {
 	if len(next) > 0 {
 		return next[0]

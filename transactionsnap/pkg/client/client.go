@@ -242,7 +242,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 		return nil, err
 	}
 
-	orgName, err := getOrgName(cfg, endpointConfig, string(localPeer.MSPid))
+	orgName, err := getOrgName(endpointConfig, string(localPeer.MSPid))
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func newClient(channelID string, cfg api.Config, serviceProviderFactory apisdk.S
 	return client, nil
 }
 
-func getOrgName(cfg api.Config, endpointConfig fabApi.EndpointConfig, localMSPID string) (string, errors.Error) {
+func getOrgName(endpointConfig fabApi.EndpointConfig, localMSPID string) (string, errors.Error) {
 	var orgname string
 	for name, org := range endpointConfig.NetworkConfig().Organizations {
 		if org.MSPID == localMSPID {
@@ -361,7 +361,7 @@ type endorserFilter struct {
 	peersOfChannel []*memApi.PeerEndpoint
 }
 
-func newEndorserFilter(channelID string, config fabApi.EndpointConfig, targetFilter api.PeerFilter) *endorserFilter {
+func newEndorserFilter(channelID string, targetFilter api.PeerFilter) *endorserFilter {
 	var peersOfChannel []*memApi.PeerEndpoint
 	membershipService, err := MemServiceProvider()
 	if err != nil {
@@ -444,7 +444,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		customQueryHandler,
 		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
 		channel.WithTargets(targets...),
-		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, endorseRequest.PeerFilter)),
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
@@ -531,7 +531,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		customExecuteHandler,
 		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
 		channel.WithTargets(targets...),
-		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
+		channel.WithTargetFilter(newEndorserFilter(c.channelID, endorseRequest.PeerFilter)),
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
 			numRetries++
@@ -563,7 +563,7 @@ func (c *clientImpl) validate(endorseRequest *api.EndorseTxRequest) (*channel.Re
 	if validTxnID {
 		return nil, true, nil
 	}
-	jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
+	jsonBytes, err := json.Marshal(&api.Creator{Identity: base64.RawURLEncoding.EncodeToString(creator)})
 	if err != nil {
 		return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
 	}
