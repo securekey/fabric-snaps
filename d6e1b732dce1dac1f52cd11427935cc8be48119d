@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7674137a_3ddc28da",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "change to log warning",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 89
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3e3896b_be35e29e",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "change to log warning",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 107
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9e40657_3a645d18",
+        "filename": "configurationsnap/cmd/configcli/action/action.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "why we have this printf",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37a34610_0bc63e74",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "????",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1d9b54a_fb274714",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "why you log metrics",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35051b0d_d2a7151d",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-21T21:12:17Z",
+      "side": 1,
+      "message": "????",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
