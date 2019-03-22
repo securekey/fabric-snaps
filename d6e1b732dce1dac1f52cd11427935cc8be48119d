@@ -113,6 +113,29 @@
       "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c3d0946_32fb1fbb",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-22T03:33:42Z",
+      "side": 1,
+      "message": "logger.Println is not usually used,\n\nwe should be using a levelled logging function like Info, Warn or Debug.\n\nPrintln function should be avoided",
+      "range": {
+        "startLine": 125,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 16
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
