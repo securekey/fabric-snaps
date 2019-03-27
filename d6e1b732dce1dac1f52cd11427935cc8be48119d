@@ -65,6 +65,24 @@
     },
     {
       "key": {
+        "uuid": "2c8e0d20_49811f0a",
+        "filename": "configurationsnap/cmd/configcli/action/action.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:49:36Z",
+      "side": 1,
+      "message": "linter says that prompt variable was never used.\nHence as the name says, I printed it as a prompt string",
+      "parentUuid": "d9e40657_3a645d18",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37a34610_0bc63e74",
         "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
         "patchSetId": 2
@@ -76,6 +94,24 @@
       "writtenOn": "2019-03-21T21:12:17Z",
       "side": 1,
       "message": "????",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba4c1d54_0a6ac90d",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:49:36Z",
+      "side": 1,
+      "message": "linter says the following: hence created a temp variable.\nconfigurationsnap/cmd/configcli/updatecmd/updatecmd.go:234:21: Using a reference for the variable on range scope `appConfig` (scopelint)\n\t\t\tnewAppConfig :\u003d \u0026appConfig",
+      "parentUuid": "37a34610_0bc63e74",
       "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
@@ -99,6 +135,24 @@
     },
     {
       "key": {
+        "uuid": "03501cee_87167011",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:49:36Z",
+      "side": 1,
+      "message": "linters complained that metrics was never used. Hence I logged it.",
+      "parentUuid": "f1d9b54a_fb274714",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "35051b0d_d2a7151d",
         "filename": "httpsnap/cmd/config/config.go",
         "patchSetId": 2
@@ -110,6 +164,24 @@
       "writtenOn": "2019-03-21T21:12:17Z",
       "side": 1,
       "message": "????",
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a96993f_587df7c2",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:49:36Z",
+      "side": 1,
+      "message": "linter says following: Hence copied it to a local variable and then assigned its address.\nhttpsnap/cmd/config/config.go:324:31: Using a reference for the variable on range scope `sc` (scopelint)\n\t\tc.schemaConfigs[sc.Type] \u003d \u0026sc\n\t\t                            ^",
+      "parentUuid": "35051b0d_d2a7151d",
       "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
