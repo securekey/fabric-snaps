@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e98cdc40_4fd0a944",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:50:04Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "7674137a_3ddc28da",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 89
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3e3896b_be35e29e",
         "filename": "configmanager/pkg/service/configmgmtservice.go",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-21T21:12:17Z",
       "side": 1,
       "message": "change to log warning",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 107
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "898c7725_1b124c50",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T13:50:04Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "a3e3896b_be35e29e",
       "range": {
         "startLine": 68,
         "startChar": 0,
