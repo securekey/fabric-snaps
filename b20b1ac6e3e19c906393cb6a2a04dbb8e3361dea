@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6087860b_62945bfb",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T21:10:16Z",
+      "side": 1,
+      "message": "do we still need this line? \n\nas per https://github.com/kyoh86/scopelint\n\nisn\u0027t this enough? \"appConfig :\u003d appConfig\"\n\nI believe below code should be updated to reference appConfig instead of newAppConfig. I think we should minimize the variables used in the for loop.\n\nif not true, then ignore this comment..",
+      "range": {
+        "startLine": 234,
+        "startChar": 3,
+        "endLine": 234,
+        "endChar": 29
+      },
+      "revId": "b20b1ac6e3e19c906393cb6a2a04dbb8e3361dea",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24774df6_65d64731",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T21:10:16Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 274,
+        "startChar": 3,
+        "endLine": 274,
+        "endChar": 31
+      },
+      "revId": "b20b1ac6e3e19c906393cb6a2a04dbb8e3361dea",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
