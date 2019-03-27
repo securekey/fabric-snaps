@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8365df0f_d3a0e186",
+        "filename": "transactionsnap/pkg/client/chprovider/cachekey.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "simply test channelID \u003d\u003d \"\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 4,
+        "endLine": 24,
+        "endChar": 23
+      },
+      "revId": "f6909c48495329954c08c5746f63dd6a0c1b5597",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afff4847_8cb47409",
+        "filename": "transactionsnap/pkg/client/chprovider/chprovider.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "remove this comment and move line 192 right below 188\nie:\n\"if getErr !\u003d nil {\" should follow 188 right away\n\"if eventService \u003d\u003d nil {\" can be checked after\n\nwe should avoid nolint:gas comments as much as possible",
+      "range": {
+        "startLine": 188,
+        "startChar": 37,
+        "endLine": 188,
+        "endChar": 49
+      },
+      "revId": "f6909c48495329954c08c5746f63dd6a0c1b5597",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71e4c899_81a1cf0c",
+        "filename": "transactionsnap/pkg/client/chprovider/chprovider.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "probably add chConfig.ID to the string to help support team",
+      "range": {
+        "startLine": 190,
+        "startChar": 17,
+        "endLine": 190,
+        "endChar": 61
+      },
+      "revId": "f6909c48495329954c08c5746f63dd6a0c1b5597",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d102253c_5f79249d",
+        "filename": "transactionsnap/pkg/client/chprovider/chprovider.go",
+        "patchSetId": 16
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "probably add chConfig.ID to the string to help support team",
+      "range": {
+        "startLine": 193,
+        "startChar": 18,
+        "endLine": 193,
+        "endChar": 82
+      },
+      "revId": "f6909c48495329954c08c5746f63dd6a0c1b5597",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
