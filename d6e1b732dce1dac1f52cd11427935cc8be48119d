@@ -256,6 +256,30 @@
       "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97713537_e58fcf48",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-03-27T16:09:36Z",
+      "side": 1,
+      "message": "fixed.",
+      "parentUuid": "1c3d0946_32fb1fbb",
+      "range": {
+        "startLine": 125,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 16
+      },
+      "revId": "d6e1b732dce1dac1f52cd11427935cc8be48119d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
     }
   ]
 }
