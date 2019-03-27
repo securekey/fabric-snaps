@@ -542,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "db4fe596_27802806",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T21:10:16Z",
+      "side": 1,
+      "message": "you can also add this comment to the member function line:\n// nolint: (name of the failing lint here)\n\nthen you don\u0027t need the whole if condition\n\nit\u0027s ok to add nolint here because we wanna maintain args as an argument which is passed in the shim interface in all their functions (stub and args are standard shim function arguments)",
+      "parentUuid": "5baab381_b8b6f497",
+      "range": {
+        "startLine": 125,
+        "startChar": 47,
+        "endLine": 125,
+        "endChar": 51
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43d40348_b2b367c6",
         "filename": "transactionsnap/pkg/client/chprovider/cachekey.go",
         "patchSetId": 24
