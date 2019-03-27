@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bbf0d5a_436c8a1d",
+        "filename": "bddtests/compose.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed",
+      "range": {
+        "startLine": 16,
+        "startChar": 1,
+        "endLine": 16,
+        "endChar": 8
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36fea40b_d89ff0f0",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 63,
+        "startChar": 74,
+        "endLine": 63,
+        "endChar": 77
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed16b8f0_c75f34bb",
+        "filename": "configmanager/pkg/service/configmgmtservice.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 68,
+        "startChar": 74,
+        "endLine": 68,
+        "endChar": 77
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f0b76f3_e74ee676",
+        "filename": "configurationsnap/cmd/configcli/action/action.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "have you tried using logging.Infof()?\nor just like in line 294 below:\ncliconfig.Config().Logger().... \n\n? try to avoid fmt.Printf()",
+      "range": {
+        "startLine": 292,
+        "startChar": 1,
+        "endLine": 292,
+        "endChar": 11
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f8ad60c_db0fa27b",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "I don\u0027t understand the need of a temp variable here..\n\nif \u0026appConfig is causing a linter error, then use the index value from the slice directly, ie: \u0026peerConfig.App[i]",
+      "range": {
+        "startLine": 233,
+        "startChar": 3,
+        "endLine": 233,
+        "endChar": 15
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6c67473_edcd3880",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 273,
+        "startChar": 3,
+        "endLine": 273,
+        "endChar": 16
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d687e1f5_23b6df22",
+        "filename": "configurationsnap/cmd/configurationscc/configurationscc.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "again, I don\u0027t understand the need of a temp variable here..",
+      "range": {
+        "startLine": 270,
+        "startChar": 2,
+        "endLine": 270,
+        "endChar": 8
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2170f7e7_bb9f36ef",
+        "filename": "healthcheck/healthcheck.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "probably add a log statement to avoid lint error instead of commenting the args, these are supposed to be a standard signature.. (shim, args)",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 15
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e827675_fdb04ef9",
+        "filename": "healthcheck/healthcheck.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "idem",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 15
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "997b8a3a_75da8dee",
+        "filename": "healthcheck/healthcheck.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "idem",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 15
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f84d61d_41074d52",
+        "filename": "httpsnap/cmd/config/config.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "I don\u0027t understand the need of a temp variable... if absolutely necessary, try to use assign the indexed element from allSchemas?\n\nI think a temp variable is unnecessary",
+      "range": {
+        "startLine": 323,
+        "startChar": 2,
+        "endLine": 323,
+        "endChar": 7
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6802ee0_31c9f2f9",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "is empty :)\n\nGo doesn\u0027t have \u0027null\u0027 in its vocabulary :)\n\nor to be correct, this is a valid case for a // nolint:...  comment\n\nwe probably shouldn\u0027t be printing a message unnecessarily.",
+      "range": {
+        "startLine": 125,
+        "startChar": 47,
+        "endLine": 125,
+        "endChar": 51
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43d40348_b2b367c6",
+        "filename": "transactionsnap/pkg/client/chprovider/cachekey.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "use channelID \u003d\u003d \"\", it\u0027s simpler",
+      "range": {
+        "startLine": 24,
+        "startChar": 4,
+        "endLine": 24,
+        "endChar": 23
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6512227_a049c006",
+        "filename": "transactionsnap/pkg/client/chprovider/chprovider.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "remove this lint comment and move up line 193 right under 188\n\nwe should not have nolint comment here\n\nso code should be:\neventService, getErr :\u003d ref.get()\nif getErr !\u003d nil {\n\tlogger.Warnf(\"There is an error when getting the eventService from ref.get; %s\", getErr)\n}\nif eventService \u003d\u003d nil {\n\tlogger.Warn(\"The eventService returned by ref.get is empty\")\n}",
+      "range": {
+        "startLine": 188,
+        "startChar": 37,
+        "endLine": 188,
+        "endChar": 49
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05efb273_1fc123ac",
+        "filename": "transactionsnap/pkg/client/chprovider/chprovider.go",
+        "patchSetId": 24
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-27T16:16:35Z",
+      "side": 1,
+      "message": "please use empty (or nil) instead of null in Go code :)",
+      "range": {
+        "startLine": 190,
+        "startChar": 57,
+        "endLine": 190,
+        "endChar": 61
+      },
+      "revId": "23a9e1f343d0ea0b21a58c23b05996ab1284b6db",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
