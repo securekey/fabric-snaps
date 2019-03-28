@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "95f0c6a8_449eeb11",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-28T14:21:27Z",
+      "side": 1,
+      "message": "it\u0027s good time to clean it up :)",
+      "parentUuid": "55341137_ca4a5a38",
+      "range": {
+        "startLine": 234,
+        "startChar": 3,
+        "endLine": 234,
+        "endChar": 29
+      },
+      "revId": "b20b1ac6e3e19c906393cb6a2a04dbb8e3361dea",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "24774df6_65d64731",
         "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
         "patchSetId": 25
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "that\u0027s old code.",
       "parentUuid": "24774df6_65d64731",
+      "range": {
+        "startLine": 274,
+        "startChar": 3,
+        "endLine": 274,
+        "endChar": 31
+      },
+      "revId": "b20b1ac6e3e19c906393cb6a2a04dbb8e3361dea",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc04a744_5c10757a",
+        "filename": "configurationsnap/cmd/configcli/updatecmd/updatecmd.go",
+        "patchSetId": 25
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1000058
+      },
+      "writtenOn": "2019-03-28T14:21:27Z",
+      "side": 1,
+      "message": "same as above :)",
+      "parentUuid": "1a145f68_549682f8",
       "range": {
         "startLine": 274,
         "startChar": 3,
