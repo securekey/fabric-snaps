@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5c2ef26_a333f953",
+        "filename": "Makefile",
+        "patchSetId": 26
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-28T15:10:44Z",
+      "side": 1,
+      "message": "remove it",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 39
+      },
+      "revId": "71a10400d8cdb439c536a1a35bf107172062c425",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16f8fe25_edaf3b7b",
+        "filename": "scripts/check_lint.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-28T15:10:44Z",
+      "side": 1,
+      "message": "move back to dependency",
+      "range": {
+        "startLine": 15,
+        "startChar": 13,
+        "endLine": 15,
+        "endChar": 23
+      },
+      "revId": "71a10400d8cdb439c536a1a35bf107172062c425",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
