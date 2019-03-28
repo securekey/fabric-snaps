@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38385977_86fe149e",
+        "filename": "membershipsnap/cmd/membershipsnap.go",
+        "patchSetId": 28
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-03-28T16:44:18Z",
+      "side": 1,
+      "message": "switch to Debug without ln",
+      "range": {
+        "startLine": 125,
+        "startChar": 9,
+        "endLine": 125,
+        "endChar": 16
+      },
+      "revId": "7dc3d62f8b9759b15b9075e332ecfdee7f1871a3",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
