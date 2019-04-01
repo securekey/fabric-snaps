@@ -1,6 +1,6 @@
 module github.com/securekey/fabric-snaps/membershipsnap/pkg/membership
 
-replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0-20190216163058-9e08161f2597
+replace github.com/hyperledger/fabric => gerrit.securekey.com/fabric-next v0.0.0-20190329193704-1e0210cad6dd
 
 replace github.com/securekey/fabric-snaps => ../../..
 

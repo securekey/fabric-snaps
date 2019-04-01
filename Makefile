@@ -28,14 +28,14 @@ PROJECT_VERSION=$(BASE_VERSION)
 endif
 endif
 
-FABRIC_NEXT_REPO ?= https://github.com/securekey/fabric-next.git
+FABRIC_NEXT_REPO ?= https://gerrit.securekey.com/fabric-next
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION ?= 3ccc752793333eedb7023ddeeebb0ccc945cfd81
+FABRIC_NEXT_VERSION ?= 3f5b906e5034e51638a41d0581dc3ed26edc5dfb
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
 ifndef FABRIC_NEXT_IMAGE_TAG
-  export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3ccc752
+  export FABRIC_NEXT_IMAGE_TAG = 1.4.0-0.0.2-snapshot-3f5b906
 endif
 # Namespace for the fabric images used in BDD tests
 export FABRIC_NEXT_NS ?= securekey
@@ -80,6 +80,31 @@ snaps: version clean
 		$(FABRIC_BUILD_SNAPS_IMAGE_NS)/$(FABRIC_BUILD_SNAPS_IMAGE):$(FABRIC_BUILD_SNAPS_IMAGE_VERSION) \
 		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/build_plugins.sh"
 
+
+unit-test:
+	@echo "Run unit-test"
+	@docker run -i --rm \
+		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
+		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
+		-e FABRIC_NEXT_REPO=$(FABRIC_NEXT_REPO) \
+		-e GOPROXY=$(GOPROXY) \
+		-v ${HOME}/.ssh:/root/.ssh \
+		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
+		$(FABRIC_BUILD_SNAPS_IMAGE_NS)/$(FABRIC_BUILD_SNAPS_IMAGE):$(FABRIC_BUILD_SNAPS_IMAGE_VERSION) \
+		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/unit.sh"
+
+lint:
+	@echo "Executing target lint..."
+	@docker run -i --rm \
+		-e FABRIC_NEXT_VERSION=$(FABRIC_NEXT_VERSION) \
+		-e GO_BUILD_TAGS=$(GO_BUILD_TAGS) \
+		-e FABRIC_NEXT_REPO=$(FABRIC_NEXT_REPO) \
+		-e GOPROXY=$(GOPROXY) \
+		-v ${HOME}/.ssh:/root/.ssh \
+		-v $(abspath .):/opt/temp/src/github.com/securekey/fabric-snaps \
+		$(FABRIC_BUILD_SNAPS_IMAGE_NS)/$(FABRIC_BUILD_SNAPS_IMAGE):$(FABRIC_BUILD_SNAPS_IMAGE_VERSION) \
+		/bin/bash -c "/opt/temp/src/$(PACKAGE_NAME)/scripts/check_lint.sh"
+
 channel-artifacts:
 	@echo "Generating test channel .tx files"
 	@docker run -i \
@@ -102,16 +127,11 @@ checks: depend license lint spelling check-metrics-doc
 license: version
 	@scripts/check_license.sh
 
-lint:
-	@echo "Executing target lint..."
-	@scripts/check_lint.sh
 
 spelling:
 	@scripts/check_spelling.sh
 
-unit-test: depend
-	@scripts/unit.sh
-
+# same solution like unit-test
 pkcs11-unit-test: depend
 	@cd ./bddtests/fixtures && $(DOCKER_COMPOSE_CMD) -f docker-compose-pkcs11-unit-test.yml up --force-recreate --abort-on-container-exit
 
@@ -124,7 +144,7 @@ http-server:
 cliconfig:
 	@go build -o ./build/configcli ./configurationsnap/cmd/configcli
 
-all: version clean checks snaps unit-test pkcs11-unit-test integration-test http-server
+all: version clean checks snaps unit-test integration-test http-server
 
 
 check-metrics-doc:
