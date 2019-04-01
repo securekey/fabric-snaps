@@ -13,6 +13,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/hyperledger/fabric/internal/util"
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
@@ -54,6 +55,7 @@ func (txs *TxServiceImpl) GetDiscoveredPeer(url string) (fabApi.Peer, error) {
 
 //New creates new transaction snap service
 func newTxService(channelID string) (*TxServiceImpl, errors.Error) {
+	logger.Info(util.TestInternalFolder())
 	// we need to use once here to initialize metrics because newTxService is called from multiple snaps
 	once.Do(func() { metrics = txnSnapClient.NewMetrics(metricsutil.GetMetricsInstance()) })
 	client, err := txnSnapClient.GetInstance(channelID, metrics)

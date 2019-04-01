@@ -12,9 +12,11 @@ mkdir -p $GOPATH/src/github.com/hyperledger/fabric/plugins/
 
 echo "Copying snaps to subdirectory within fabric..."
 cp -r $GOPATH/src/github.com/securekey/fabric-snaps/* $GOPATH/src/github.com/hyperledger/fabric/plugins/
+cp $GOPATH/src/github.com/securekey/fabric-snaps/.golangci.yml $GOPATH/src/github.com/hyperledger/fabric/plugins/
+
 
 echo "Rewriting import paths..."
-find $GOPATH/src/github.com/hyperledger/fabric/plugins -type f -name "*.go" -print0 | xargs -0 sed -i "s/github.com\/securekey\/fabric-snaps\//github.com\/hyperledger\/fabric\/plugins\//g"
+find $GOPATH/src/github.com/hyperledger/fabric/plugins -type f -name "*.*" -print0 | xargs -0 sed -i "s/github.com\/securekey\/fabric-snaps\//github.com\/hyperledger\/fabric\/plugins\//g"
 
 rm -rf $GOPATH/src/github.com/securekey/fabric-snaps
 rm -rf $GOPATH/src/github.com/hyperledger/fabric/go.sum
