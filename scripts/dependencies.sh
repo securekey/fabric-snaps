@@ -39,7 +39,7 @@ function installGolangCi {
     echo "Installing ${GOLANGCI_LINT_CMD} ..."
 
     declare repo="github.com/golangci/golangci-lint/cmd/golangci-lint"
-    declare revision="v1.15.0"
+    declare revision="v1.16.0"
     installGoPkg "${repo}" "${revision}" "" "${GOLANGCI_LINT_CMD}"
 }
 

@@ -365,7 +365,12 @@ func (cmngr *configManagerImpl) getConfigurations(index string, fields []string)
 	if err != nil {
 		return nil, errors.Errorf(errors.SystemError, "Unexpected error retrieving message statuses with index [%s]: %s", index, err)
 	}
-	defer it.Close()
+	defer func() {
+		iteratorErr := it.Close()
+		if iteratorErr != nil {
+			logger.Fatalf("Failed to close iterator : %s", iteratorErr)
+		}
+	}()
 	configKeys := []*api.ConfigKV{}
 	for it.HasNext() {
 		compositeKey, e := it.Next()
