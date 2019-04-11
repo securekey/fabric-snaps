@@ -291,7 +291,12 @@ func (httpServiceImpl *HTTPServiceImpl) getDataFromSource(invokeReq HTTPServiceI
 		return "", nil, errObj
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		respErr := resp.Body.Close()
+		if respErr != nil {
+			logger.Fatalf("Failed to close response body : %s", respErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", nil, errors.Errorf(errors.HTTPClientError, "Http response status code: %d, status: %s, url=%s", resp.StatusCode, resp.Status, invokeReq.RequestURL)
