@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+
 	"strings"
 
 	"github.com/pkg/errors"
@@ -114,6 +116,8 @@ const examples = `
     $ ./configcli update --clientconfig ../../../bddtests/fixtures/clientconfig/config.yaml --cid mychannel --mspid Org1MSP --config '{"MspID":"general", "Apps": [{"AppName": "publickey", "Version": "1", "Components": [{"Name":"sk-td","Config":"{abc}"}] }]}'
 
 `
+
+var logger = logging.NewLogger("configsnap")
 
 // Cmd returns the Update command
 func Cmd() *cobra.Command {
@@ -292,7 +296,12 @@ func readFile(filePath string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "error opening file [%s]", filePath)
 	}
-	defer file.Close()
+	defer func() {
+		fileErr := file.Close()
+		if fileErr != nil {
+			logger.Fatalf("Failed to close file : %s", fileErr)
+		}
+	}()
 
 	configBytes, err := ioutil.ReadAll(file)
 	if err != nil {
