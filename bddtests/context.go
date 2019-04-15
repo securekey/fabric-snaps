@@ -17,6 +17,7 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
@@ -425,7 +426,7 @@ type StaticSelectionProviderFactory struct {
 }
 
 // CreateChannelProvider creates a mock ChannelProvider
-func (f *StaticSelectionProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+func (f *StaticSelectionProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig, opts ...options.Opt) (fabApi.ChannelProvider, error) {
 	provider, err := f.ProviderFactory.CreateChannelProvider(config)
 	if err != nil {
 		return nil, err
