@@ -39,7 +39,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   name = "google.golang.org/genproto"
 
 [[constraint]]
-  revision = "b490519efff9ad188f59f592483b919dbb073117"
+  version = "v1.0.0-alpha5"
   name = "github.com/hyperledger/fabric-sdk-go"
 
 [[constraint]]
@@ -89,6 +89,10 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 [[override]]
   name = "github.com/opencontainers/runc"
   revision = "2b18fe1d885ee5083ef9f0838fee39b62d653e30"
+
+[[override]]
+  name = "github.com/golang/mock"
+  revision = "c20582278a829e4b3259747a3ce0eceb1763ee13"
 
 [prune]
   go-tests = true

@@ -8,6 +8,7 @@ package mockprovider
 
 import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/staticselection"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
@@ -23,7 +24,7 @@ type Factory struct {
 }
 
 // CreateChannelProvider returns a new default implementation of channel provider
-func (f *Factory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+func (f *Factory) CreateChannelProvider(config fabApi.EndpointConfig, opts ...options.Opt) (fabApi.ChannelProvider, error) {
 	return &mockChannelProvider{
 		ChannelProvider: &mockChannelProvider{},
 	}, nil

@@ -82,7 +82,7 @@ func New(config fab.EndpointConfig, opts ...Opt) (*Provider, error) {
 	chConfigRefresh := config.Timeout(fab.ChannelConfigRefresh)
 	membershipRefresh := config.Timeout(fab.ChannelMembershipRefresh)
 	cp := Provider{
-		chCfgCache:      chconfig.NewRefCache(chConfigRefresh),
+		chCfgCache:      chconfig.NewRefCache(chconfig.WithRefreshInterval(chConfigRefresh)),
 		membershipCache: membership.NewRefCache(membershipRefresh),
 	}
 

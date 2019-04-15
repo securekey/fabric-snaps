@@ -27,7 +27,7 @@ type MockProviderFactory struct {
 }
 
 // CreateChannelProvider creates a mock ChannelProvider
-func (f *MockProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+func (f *MockProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig, opts ...options.Opt) (fabApi.ChannelProvider, error) {
 	provider, err := f.ProviderFactory.CreateChannelProvider(config)
 	if err != nil {
 		return nil, err
