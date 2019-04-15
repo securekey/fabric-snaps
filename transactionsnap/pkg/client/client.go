@@ -15,6 +15,8 @@ import (
 	"hash"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
@@ -115,7 +117,7 @@ func newServiceProvider(cfg api.Config, eventSnapshot fabApi.EventSnapshot, chan
 }
 
 // CreateChannelProvider returns a new default implementation of channel provider
-func (f *DynamicProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig) (fabApi.ChannelProvider, error) {
+func (f *DynamicProviderFactory) CreateChannelProvider(config fabApi.EndpointConfig, opts ...options.Opt) (fabApi.ChannelProvider, error) {
 	if f.chProvider != nil {
 		return f.chProvider, nil
 	}
