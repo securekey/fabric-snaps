@@ -137,7 +137,7 @@ func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, erro
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "find enrollment cert path failed")
 		}
-		enrollmentCertBytes, err = ioutil.ReadFile(enrollmentCertPath) //nolint: gas
+		enrollmentCertBytes, err = ioutil.ReadFile(filepath.Clean(enrollmentCertPath))
 		if err != nil {
 			return nil, errors.WithMessage(errors.GeneralError, err, "reading enrollment cert path failed")
 		}

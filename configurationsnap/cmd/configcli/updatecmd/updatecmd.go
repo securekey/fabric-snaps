@@ -292,7 +292,7 @@ func updateAppConfigInfo(configMsg *mgmtapi.ConfigMessage, baseFilePath string, 
 
 func readFile(filePath string) (string, error) {
 	cliconfig.Config().Logger().Debugf("Reading file [%s]\n", filePath)
-	file, err := os.Open(filePath) //nolint: gas
+	file, err := os.Open(filepath.Clean(filePath)) //nolint: gas
 	if err != nil {
 		return "", errors.Wrapf(err, "error opening file [%s]", filePath)
 	}
