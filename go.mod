@@ -8,7 +8,6 @@ require (
 	github.com/fsouza/go-dockerclient v1.3.0
 	github.com/go-kit/kit v0.7.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
-	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/google/certificate-transparency-go v0.0.0-20180219093839-391726f8973d // indirect
 	github.com/hyperledger/fabric v1.4.0
@@ -46,8 +45,6 @@ replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20180827131323-e363607
 replace github.com/spf13/afero => github.com/spf13/afero v1.2.1
 
 replace github.com/hashicorp/hcl => github.com/hashicorp/hcl v1.0.0
-
-replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.1.1
 
 replace github.com/go-logfmt/logfmt => github.com/go-logfmt/logfmt v0.3.0
 
