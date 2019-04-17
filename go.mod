@@ -12,7 +12,7 @@ require (
 	github.com/google/certificate-transparency-go v0.0.0-20180219093839-391726f8973d // indirect
 	github.com/hyperledger/fabric v1.4.0
 	github.com/hyperledger/fabric-sdk-go v0.0.0-20190125204638-b490519efff9
-	github.com/onsi/gomega v1.4.3 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.1
 	github.com/rs/xid v0.0.0-20170604230408-02dd45c33376
