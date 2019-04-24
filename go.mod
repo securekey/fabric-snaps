@@ -34,7 +34,7 @@ require (
 
 )
 
-replace github.com/hyperledger/fabric => github.com/securekey/fabric-next v0.0.0-20190216163058-9e08161f2597
+replace github.com/hyperledger/fabric => sk-git.securekey.com/gerrit/fabric-mod v0.0.0-20190416145607-61aad24ec470
 
 replace github.com/docker/libnetwork => github.com/docker/libnetwork v0.0.0-20180608203834-19279f049241
 
