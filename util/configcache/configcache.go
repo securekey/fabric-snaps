@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package configcache
 
 import (
+	"os"
 	"strings"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
@@ -33,7 +34,12 @@ func New(name, envPrefix, defaultPath string) *Cache {
 // Get returns the config for the given path.
 func (c *Cache) Get(path string) (*viper.Viper, error) {
 	if path == "" {
-		path = c.defaultPath
+		fabricCfgPath := os.Getenv("FABRIC_CFG_PATH")
+		if len(fabricCfgPath) > 0 {
+			path = fabricCfgPath
+		} else {
+			path = c.defaultPath
+		}
 	}
 	config, err := c.cache.Get(lazycache.NewStringKey(path))
 	if err != nil {
