@@ -119,6 +119,12 @@ func checkClient(channelID string, currentClient *clientImpl, configProvider Con
 		return nil, e
 	}
 
+	if newClient == nil {
+		errMsg := "newClient() should not return a nil client"
+		logger.Panic(errMsg)
+		return nil, errors.New(errors.GeneralError, errMsg)
+	}
+
 	logger.Infof("New client [%s] successfully created on channel [%s].", newClient.configHash, channelID)
 
 	if currentClient != nil {
