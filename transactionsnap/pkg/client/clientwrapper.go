@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
@@ -74,6 +76,26 @@ func (c *clientWrapper) CommitTransaction(endorseRequest *api.EndorseTxRequest, 
 	if isRetryable(err) {
 		c.clearCache()
 		resp, commit, err = commitTx(endorseRequest, registerTxEvent, callback)
+	}
+	return resp, commit, err
+}
+
+func (c *clientWrapper) CommitOnlyTransaction(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+
+	commitTx := func(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+		client, err := c.get()
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Release()
+
+		return client.commitOnlyTransaction(endorseRequest, response, registerTxEvent, callback)
+	}
+
+	resp, commit, err := commitTx(endorseRequest, response, registerTxEvent, callback)
+	if isRetryable(err) {
+		c.clearCache()
+		resp, commit, err = commitTx(endorseRequest, response, registerTxEvent, callback)
 	}
 	return resp, commit, err
 }
