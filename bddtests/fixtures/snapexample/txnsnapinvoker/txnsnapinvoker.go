@@ -63,12 +63,18 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = args[1:]
-	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" {
+	if snapFunc == "commitTransaction" || snapFunc == "commitOnlyTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" {
 		peerFilter := &api.PeerFilterOpts{
 			Type: api.MinBlockHeightPeerFilterType,
 			Args: []string{channelID, fmt.Sprintf("%d", 3)},
 		}
-		ccArgs = createTransactionSnapRequest(function, ccID, channelID, args[4:], true, peerFilter)
+		tm, err := stub.GetTransient()
+		if err != nil {
+			errStr := fmt.Sprintf("stub.GetTransient should not return an error: err=%s", err)
+			logger.Error(errStr)
+			return shim.Error(errStr)
+		}
+		ccArgs = createTransactionSnapRequest(function, ccID, channelID, tm, args[4:], true, peerFilter)
 	}
 
 	if snapFunc == "verifyTransactionProposalSignature" {
@@ -103,16 +109,28 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	}
 
+	if snapFunc == "endorseTx" {
+		var trxResponse *channel.Response
+		err := json.Unmarshal(response.Payload, &trxResponse)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
+		}
+		logger.Infof("EndorseTx response from %s: %s ", snapName, string(response.Payload))
+		return shim.Success(response.Payload)
+	}
+
 	logger.Infof("Response from %s: %s ", snapName, string(response.Payload))
 
 	return shim.Success(response.Payload)
 }
 
-func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {
-
+func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, tm map[string][]byte, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {
+	if functionName == "endorseTx" {
+		functionName = "endorseTransaction"
+	}
 	snapTxReq := api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
-		TransientMap:        nil,
+		TransientMap:        tm,
 		EndorserArgs:        clientArgs,
 		CCIDsForEndorsement: nil,
 		RegisterTxEvent:     registerTxEvent,

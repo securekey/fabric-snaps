@@ -63,6 +63,7 @@ func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUs
 	for _, responseChannel := range response.Channels {
 		if responseChannel.ChannelId == channelID {
 			foundChannel = true
+			break
 		}
 	}
 

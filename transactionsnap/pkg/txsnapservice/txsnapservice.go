@@ -9,6 +9,8 @@ package txsnapservice
 import (
 	"sync"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -141,6 +143,16 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 	}
 
 	return txs.FcClient.CommitTransaction(request, snapTxRequest.RegisterTxEvent, txs.Callback)
+}
+
+//CommitOnlyTransaction just commits the data without endorsement
+func (txs *TxServiceImpl) CommitOnlyTransaction(snapTxRequest *api.SnapTransactionRequest, response *invoke.Response, peers []fabApi.Peer) (*channel.Response, bool, errors.Error) {
+	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return txs.FcClient.CommitOnlyTransaction(request, response, snapTxRequest.RegisterTxEvent, txs.Callback)
 }
 
 //VerifyTxnProposalSignature use to verify transaction proposal signature

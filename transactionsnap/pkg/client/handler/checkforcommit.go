@@ -9,7 +9,7 @@ package handler
 import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-	rwsetutil "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
+	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/pkg/errors"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
@@ -31,11 +31,11 @@ type CheckForCommitHandler struct {
 
 //Handle for endorsing transactions
 func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
-
-	txID := string(requestContext.Response.TransactionID)
+	response := requestContext.Response
+	txID := string(response.TransactionID)
 
 	if c.callback != nil {
-		if err := c.callback(requestContext.Response); err != nil {
+		if err := c.callback(response); err != nil {
 			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
 			return
 		}
@@ -51,21 +51,20 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		c.next.Handle(requestContext, clientContext)
 		return
 	}
-
-	c.commitIfHasWriteSet(txID, requestContext, clientContext)
+	c.commitIfHasWriteSet(txID, requestContext, response, clientContext)
 }
-func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext *invoke.RequestContext, response invoke.Response, clientContext *invoke.ClientContext) {
 	var err error
 
 	// let's unmarshall one of the proposal responses to see if commit is needed
 	prp := &pb.ProposalResponsePayload{}
 
-	if requestContext.Response.Responses[0] == nil || requestContext.Response.Responses[0].ProposalResponse == nil || requestContext.Response.Responses[0].ProposalResponse.Payload == nil {
+	if response.Responses[0] == nil || response.Responses[0].ProposalResponse == nil || response.Responses[0].ProposalResponse.Payload == nil {
 		requestContext.Error = errors.New("No proposal response payload")
 		return
 	}
 
-	if err = proto.Unmarshal(requestContext.Response.Responses[0].ProposalResponse.Payload, prp); err != nil {
+	if err = proto.Unmarshal(response.Responses[0].ProposalResponse.Payload, prp); err != nil {
 		requestContext.Error = errors.WithMessage(err, "Error unmarshaling to ProposalResponsePayload")
 		return
 	}

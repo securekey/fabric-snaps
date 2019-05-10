@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
@@ -89,6 +91,8 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 		return es.invokeEndorseTransaction(stub)
 	case "commitTransaction":
 		return es.invokeCommitTransaction(stub)
+	case "commitOnlyTransaction":
+		return es.invokeCommitOnlyTransaction(stub)
 	case "verifyTransactionProposalSignature":
 		return es.invokeVerifyTransactionProposalSignature(stub)
 	case "unsafeGetState":
@@ -116,7 +120,13 @@ func (es *TxnSnap) invokeCommitTransaction(stub shim.ChaincodeStubInterface) pb.
 	} //TODO QQQ Check the response code
 	return pb.Response{Payload: nil, Status: shim.OK}
 }
-
+func (es *TxnSnap) invokeCommitOnlyTransaction(stub shim.ChaincodeStubInterface) pb.Response {
+	err := es.commitOnlyTransaction(stub.GetArgs())
+	if err != nil {
+		return util.CreateShimResponseFromError(err, logger, stub)
+	} //TODO QQQ Check the response code
+	return pb.Response{Payload: nil, Status: shim.OK}
+}
 func (es *TxnSnap) invokeVerifyTransactionProposalSignature(stub shim.ChaincodeStubInterface) pb.Response {
 	args := stub.GetArgs()
 	if len(args) < 3 {
@@ -203,6 +213,52 @@ func (es *TxnSnap) commitTransaction(args [][]byte) errors.Error {
 	}
 
 	_, _, err = srvc.CommitTransaction(snapTxRequest, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
+
+	//first arg is function name; the second one is SnapTransactionRequest
+	if len(args) < 2 {
+		return errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to commitOnly transaction")
+	}
+	//second argument is SnapTransactionRequest
+	snapTxRequest, err := getSnapTransactionRequest(args[1])
+	if err != nil {
+		return err
+	}
+	if snapTxRequest.ChannelID == "" {
+		return errors.New(errors.MissingRequiredParameterError, "ChannelID is mandatory field of the SnapTransactionRequest")
+	}
+
+	//cc code args
+	endorserArgs := snapTxRequest.EndorserArgs
+	var ccargs []string
+	for _, ccArg := range endorserArgs {
+		ccargs = append(ccargs, string(ccArg))
+
+	}
+	logger.Debugf("Endorser args: %s", ccargs)
+	srvc, e := es.getTxService(snapTxRequest.ChannelID)
+	if e != nil {
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", snapTxRequest.ChannelID))
+	}
+
+	if snapTxRequest.TransientMap == nil || snapTxRequest.TransientMap["endorsements"] == nil {
+		return errors.New(errors.MissingRequiredParameterError, "The TransientMap of SnapTransactionRequest should contain the \"endorsements\"")
+	}
+	endorsementBytes := snapTxRequest.TransientMap["endorsements"]
+	endorsementResponse := &invoke.Response{}
+	endorsementUnmarshallErr := json.Unmarshal(endorsementBytes, endorsementResponse)
+	if endorsementUnmarshallErr != nil {
+		return errors.WithMessage(errors.UnmarshalError, endorsementUnmarshallErr, "Cannot decode endorsements from transient map of Snap Transaction Request")
+	}
+
+	_, _, err = srvc.CommitOnlyTransaction(snapTxRequest, endorsementResponse, nil)
 	if err != nil {
 		return err
 	}
