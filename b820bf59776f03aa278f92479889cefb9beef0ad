@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21883f44_881dec55",
+        "filename": "transactionsnap/api/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-05-10T19:41:40Z",
+      "side": 1,
+      "message": "why you need this bool",
+      "range": {
+        "startLine": 104,
+        "startChar": 153,
+        "endLine": 104,
+        "endChar": 157
+      },
+      "revId": "b820bf59776f03aa278f92479889cefb9beef0ad",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
