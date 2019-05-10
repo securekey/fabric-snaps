@@ -22,6 +22,30 @@
       "revId": "b820bf59776f03aa278f92479889cefb9beef0ad",
       "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0f49a68_de676f72",
+        "filename": "transactionsnap/api/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000109
+      },
+      "writtenOn": "2019-05-10T20:04:26Z",
+      "side": 1,
+      "message": "Needed for NewCommitTxHandler",
+      "parentUuid": "21883f44_881dec55",
+      "range": {
+        "startLine": 104,
+        "startChar": 153,
+        "endLine": 104,
+        "endChar": 157
+      },
+      "revId": "b820bf59776f03aa278f92479889cefb9beef0ad",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
     }
   ]
 }
