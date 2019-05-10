@@ -108,6 +108,7 @@ func TestCommitTransaction(t *testing.T) {
 
 	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
+			logger.Debugf("Parasu: 1. Inside callback method; txId=%s\n", response.TransactionID)
 			time.Sleep(2 * time.Second)
 			eventProducer.Ledger().NewFilteredBlock(
 				channelID,
@@ -191,6 +192,75 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	}
 	if resp.TxValidationCode != pb.TxValidationCode_VALID {
 		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_VALID)
+	}
+}
+
+func TestCommitOnlyTransaction(t *testing.T) {
+	// first endorse transaction
+	mockEndorserServer.GetMockPeer().KVWrite = true
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nil, "")
+	txService := newMockTxService(nil)
+
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error endorsing transaction %s", err)
+	}
+	if response == nil {
+		t.Fatal("Expected proposal response")
+	}
+
+	if len(response.Responses) == 0 {
+		t.Fatal("Received an empty transaction proposal response")
+	}
+	if response.Responses[0].ProposalResponse.Response.Status != 200 {
+		t.Fatal("Expected proposal response status: SUCCESS")
+	}
+	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
+		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
+	}
+
+	// commit with kvwrite false
+	mockEndorserServer.GetMockPeer().KVWrite = false
+	snapTxReq = createTransactionSnapRequest("committransaction", "ccid", channelID, true, nil, nil, "")
+	txService = newMockTxService(nil)
+
+	invokeResponse := &invoke.Response{
+		TransactionID:    response.TransactionID,
+		Responses:        response.Responses,
+		Payload:          response.Payload,
+		ChaincodeStatus:  response.ChaincodeStatus,
+		Proposal:         response.Proposal,
+		TxValidationCode: response.TxValidationCode,
+	}
+	_, commit, err := txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if commit {
+		t.Fatalf("commit value should be false")
+	}
+
+	// commit with kvwrite true
+	mockEndorserServer.GetMockPeer().KVWrite = true
+
+	txService = newMockTxService(func(response invoke.Response) error {
+		go func() {
+			logger.Debugf("Parasu: 2. Inside callback method; txId=%s\n", response.TransactionID)
+			time.Sleep(2 * time.Second)
+			eventProducer.Ledger().NewFilteredBlock(
+				channelID,
+				servicemocks.NewFilteredTx(string(response.TransactionID), pb.TxValidationCode_VALID),
+			)
+		}()
+		return nil
+	})
+
+	_, commit, err = txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %s", err)
+	}
+	if !commit {
+		t.Fatalf("commit value should be true")
 	}
 }
 

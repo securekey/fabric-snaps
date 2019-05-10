@@ -30,21 +30,28 @@ type CommitTxHandler struct {
 
 //Handle for endorsing transactions
 func (l *CommitTxHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+	fmt.Printf("Parasu: reqContext.Response.len=%d; txId=%s\n",
+		len(requestContext.Response.Responses),
+		requestContext.Response.TransactionID)
 	txnID := requestContext.Response.TransactionID
 
 	//Register Tx event
 	reg, statusNotifier, err := clientContext.EventService.RegisterTxStatusEvent(string(txnID)) // TODO: Change func to use TransactionID instead of string
 	if err != nil {
+		fmt.Printf("Parasu: Cannot register TxStatusEvent\n")
 		requestContext.Error = errors.Wrap(err, "error registering for TxStatus event")
 		return
 	}
+	fmt.Printf("Parasu: Successfully registered TxStatusEvent\n")
 	defer clientContext.EventService.Unregister(reg)
 
 	_, err = createAndSendTransaction(clientContext.Transactor, requestContext.Response.Proposal, requestContext.Response.Responses)
 	if err != nil {
+		fmt.Printf("Parasu: failed createAndSendTransaction\n")
 		requestContext.Error = errors.Wrap(err, "CreateAndSendTransaction failed")
 		return
 	}
+	fmt.Printf("Parasu: Successfully createAndSendTransaction; registerTxEvent=%b\n", l.registerTxEvent)
 	if l.registerTxEvent {
 
 		select {
@@ -57,6 +64,7 @@ func (l *CommitTxHandler) Handle(requestContext *invoke.RequestContext, clientCo
 				return
 			}
 		case <-requestContext.Ctx.Done():
+			fmt.Printf("Parasu: time out=%b\n", l.registerTxEvent)
 			requestContext.Error = errors.New("Execute didn't receive block event")
 			return
 		}

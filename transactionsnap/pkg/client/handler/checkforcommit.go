@@ -7,6 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	rwsetutil "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
@@ -31,11 +34,11 @@ type CheckForCommitHandler struct {
 
 //Handle for endorsing transactions
 func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
-
-	txID := string(requestContext.Response.TransactionID)
+	response := requestContext.Response
+	txID := string(response.TransactionID)
 
 	if c.callback != nil {
-		if err := c.callback(requestContext.Response); err != nil {
+		if err := c.callback(response); err != nil {
 			requestContext.Error = errors.WithMessage(err, "endorsed callback error")
 			return
 		}
@@ -51,30 +54,35 @@ func (c *CheckForCommitHandler) Handle(requestContext *invoke.RequestContext, cl
 		c.next.Handle(requestContext, clientContext)
 		return
 	}
-
-	c.commitIfHasWriteSet(txID, requestContext, clientContext)
+	logger.Debugf("1.c.ShouldCommit=%b", c.ShouldCommit)
+	c.commitIfHasWriteSet(txID, requestContext, response, clientContext)
 }
-func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext *invoke.RequestContext, response invoke.Response, clientContext *invoke.ClientContext) {
 	var err error
 
 	// let's unmarshall one of the proposal responses to see if commit is needed
 	prp := &pb.ProposalResponsePayload{}
 
-	if requestContext.Response.Responses[0] == nil || requestContext.Response.Responses[0].ProposalResponse == nil || requestContext.Response.Responses[0].ProposalResponse.Payload == nil {
+	if response.Responses[0] == nil || response.Responses[0].ProposalResponse == nil || response.Responses[0].ProposalResponse.Payload == nil {
 		requestContext.Error = errors.New("No proposal response payload")
 		return
 	}
 
-	if err = proto.Unmarshal(requestContext.Response.Responses[0].ProposalResponse.Payload, prp); err != nil {
+	if err = proto.Unmarshal(response.Responses[0].ProposalResponse.Payload, prp); err != nil {
 		requestContext.Error = errors.WithMessage(err, "Error unmarshaling to ProposalResponsePayload")
 		return
 	}
+	plArr, _ := json.Marshal(prp)
+	logger.Debugf("Parasu: response.Responses[0].ProposalResponse.Payload=\n%s\n", string(plArr))
 
 	ccAction := &pb.ChaincodeAction{}
 	if err = proto.Unmarshal(prp.Extension, ccAction); err != nil {
 		requestContext.Error = errors.WithMessage(err, "Error unmarshaling to ChaincodeAction")
 		return
 	}
+
+	plArr, _ = json.Marshal(ccAction)
+	logger.Debugf("Parasu: prp.Extension=\n%s\n", string(plArr))
 
 	if len(ccAction.Events) > 0 {
 		logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and chaincode event exists in proposal response", txID, api.CommitOnWrite)
@@ -85,11 +93,14 @@ func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext 
 			requestContext.Error = errors.WithMessage(err, "Error unmarshaling to txRWSet")
 			return
 		}
+		logger.Debugf("2.c.ShouldCommit=%b", c.ShouldCommit)
 		if c.hasWriteSet(txRWSet, txID) {
 			logger.Debugf("[txID %s] Commit is necessary since commit type is [%s] and write set exists in proposal response", txID, api.CommitOnWrite)
 			c.ShouldCommit = true
 		}
 	}
+
+	logger.Debugf("c.ShouldCommit=%b", c.ShouldCommit)
 
 	if c.ShouldCommit {
 		c.next.Handle(requestContext, clientContext)
@@ -99,6 +110,11 @@ func (c *CheckForCommitHandler) commitIfHasWriteSet(txID string, requestContext 
 }
 
 func (c *CheckForCommitHandler) hasWriteSet(txRWSet *rwsetutil.TxRwSet, txID string) bool {
+	set, err := json.Marshal(*txRWSet)
+	if err != nil {
+		fmt.Println("Parasu: could not marshall the rwset.")
+	}
+	logger.Debugf("2.1.c.ShouldCommit=%b, rwSetLen=%d, txRWSet=%s", c.ShouldCommit, len(txRWSet.NsRwSets), string(set))
 	for _, nsRWSet := range txRWSet.NsRwSets {
 		if ignoreCC(c.rwSetIgnoreNameSpace, nsRWSet.NameSpace) {
 			// Ignore this writeset
@@ -122,6 +138,7 @@ func (c *CheckForCommitHandler) hasWriteSet(txRWSet *rwsetutil.TxRwSet, txID str
 			}
 		}
 	}
+	logger.Debugf("3.c.ShouldCommit=%b", c.ShouldCommit)
 	return false
 }
 
