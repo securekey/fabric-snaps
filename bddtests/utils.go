@@ -53,6 +53,22 @@ func randomString(strlen int) string {
 // or an error
 func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
 	foundChannel := false
+	var err error
+	for i := 0; i < 3; i++ {
+		foundChannel, err = joinedChannel(channelID, client, orgUser, peer)
+		if foundChannel {
+			fmt.Printf("%s : HasPrimaryPeerJoinedChannel: The Primary Peer has joined the channel. current tryCount=%d\n", Now(), (i + 1))
+			return foundChannel, nil
+		}
+		fmt.Printf("%s : HasPrimaryPeerJoinedChannel: The Primary Peer has not joined the channel yet. Trying again tryCount=%d\n", Now(), (i + 1))
+		time.Sleep(time.Duration(5*(i+1)) * time.Second)
+	}
+	fmt.Printf("%s : HasPrimaryPeerJoinedChannel: The Primary Peer has not joined the channel. foundChannel=%t\n", Now(), foundChannel)
+	return foundChannel, err
+}
+
+func joinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
+	foundChannel := false
 	response, err := client.QueryChannels(
 		resmgmt.WithTargets(peer),
 		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
@@ -63,6 +79,7 @@ func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUs
 	for _, responseChannel := range response.Channels {
 		if responseChannel.ChannelId == channelID {
 			foundChannel = true
+			break
 		}
 	}
 
@@ -131,4 +148,8 @@ func newPolicy(policyString string) (*fabricCommon.SignaturePolicyEnvelope, erro
 		return nil, errors.Errorf("invalid chaincode policy [%s]: %s", policyString, err)
 	}
 	return ccPolicy, nil
+}
+
+func Now() string {
+	return time.Now().Format(time.RFC3339)
 }

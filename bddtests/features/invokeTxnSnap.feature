@@ -22,6 +22,8 @@ Feature:  Feature Invoke Transaction Snap
 		When client queries system chaincode "txnsnapinvoker" with args "txnsnap,commitTransaction,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
 		And client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTransaction,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
         And response from "txnsnapinvoker" to client equal value "202"
+        When client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTx,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
+        And client queries system chaincode "txnsnapinvoker" with endorsement response and with args "txnsnap,commitOnlyTransaction,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
 
 	@twotxn
     Scenario: Invoke Transaction Snap verifyTransactionProposalSignature function
