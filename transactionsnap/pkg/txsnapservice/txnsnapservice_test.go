@@ -39,6 +39,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -189,6 +190,98 @@ func TestCommitTransactionWithTxID(t *testing.T) {
 	if resp.TxValidationCode != pb.TxValidationCode_VALID {
 		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_VALID)
 	}
+}
+
+func TestCommitOnlyTransaction(t *testing.T) {
+	nonce := []byte("nonce")
+	txId := createTxId(t, nonce)
+
+	// first endorse transaction
+	mockEndorserServer.GetMockPeer().KVWrite = true
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nonce, txId)
+	txService := newMockTxService(nil)
+
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
+
+	assert.Nil(t, err, fmt.Sprintf("Error endorsing transaction %s", err))
+	assert.NotNil(t, response, "Expected proposal response")
+	assert.True(t, len(response.Responses) > 0, "Received an empty transaction proposal response")
+	assert.Equal(t, int32(200), response.Responses[0].ProposalResponse.Response.Status,
+		"Expected proposal response status: SUCCESS")
+	assert.Equal(t, "value", string(response.Responses[0].ProposalResponse.Response.Payload),
+		fmt.Sprintf("Expected proposal response payload: value but got %v",
+			string(response.Responses[0].ProposalResponse.Response.Payload)))
+
+	// commit - send the endorse response in this request
+	snapTxReq = createTransactionSnapRequest("committransaction", "ccid", channelID, true, nil, nonce, txId)
+	txService = newMockTxService(func(response invoke.Response) error {
+		go func() {
+			time.Sleep(2 * time.Second)
+			eventProducer.Ledger().NewFilteredBlock(
+				channelID,
+				servicemocks.NewFilteredTx(txId, pb.TxValidationCode_VALID),
+			)
+		}()
+		return nil
+	})
+
+	invokeResponse := &invoke.Response{
+		TransactionID:    fab.TransactionID(snapTxReq.TransactionID),
+		Responses:        response.Responses,
+		Payload:          response.Payload,
+		ChaincodeStatus:  response.ChaincodeStatus,
+		Proposal:         response.Proposal,
+		TxValidationCode: response.TxValidationCode,
+	}
+	_, commit, err := txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
+	assert.True(t, commit, "commit value should be true")
+}
+
+func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
+	nonce := []byte("nonce")
+	txId := createTxId(t, nonce)
+
+	// first endorse transaction
+	mockEndorserServer.GetMockPeer().KVWrite = false
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nonce, txId)
+	txService := newMockTxService(nil)
+
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
+
+	assert.Nil(t, err, fmt.Sprintf("Error endorsing transaction %s", err))
+	assert.NotNil(t, response, "Expected proposal response")
+	assert.True(t, len(response.Responses) > 0, "Received an empty transaction proposal response")
+	assert.Equal(t, int32(200), response.Responses[0].ProposalResponse.Response.Status,
+		"Expected proposal response status: SUCCESS")
+	assert.Equal(t, "value", string(response.Responses[0].ProposalResponse.Response.Payload),
+		fmt.Sprintf("Expected proposal response payload: value but got %v",
+			string(response.Responses[0].ProposalResponse.Response.Payload)))
+
+	// commit
+	snapTxReq = createTransactionSnapRequest("committransaction", "ccid", channelID, true, nil, nonce, txId)
+	txService = newMockTxService(func(response invoke.Response) error {
+		go func() {
+			time.Sleep(2 * time.Second)
+			eventProducer.Ledger().NewFilteredBlock(
+				channelID,
+				servicemocks.NewFilteredTx(txId, pb.TxValidationCode_VALID),
+			)
+		}()
+		return nil
+	})
+
+	invokeResponse := &invoke.Response{
+		TransactionID:    fab.TransactionID(snapTxReq.TransactionID),
+		Responses:        response.Responses,
+		Payload:          response.Payload,
+		ChaincodeStatus:  response.ChaincodeStatus,
+		Proposal:         response.Proposal,
+		TxValidationCode: response.TxValidationCode,
+	}
+	_, commit, err := txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
+	assert.False(t, commit, "commit value should be false")
 }
 
 func computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {
@@ -354,6 +447,28 @@ func createTransactionSnapRequest(functionName string, chaincodeID string, chnlI
 
 	return snapTxReq
 
+}
+
+func createTxId(t *testing.T, nonce []byte) string {
+	sdk, e := fabsdk.New(sdkconfig.FromFile("../../cmd/sampleconfig/config.yaml"))
+	require.NoError(t, e)
+	defer sdk.Close()
+
+	ctx, e := sdk.Context(fabsdk.WithUser("Txn-Snap-User"), fabsdk.WithOrg("peerorg1"))()
+	require.NoError(t, e)
+
+	// test with correct txID
+	creator, err1 := ctx.Serialize()
+	assert.Nil(t, err1, fmt.Sprintf("Error fcClient.GetContext().Serialize(): %v", err1))
+
+	ho := cryptosuite.GetSHA256Opts()
+	h, err1 := ctx.CryptoSuite().GetHash(ho)
+	assert.Nil(t, err1, fmt.Sprintf("Error while computing hash: %v", err1))
+
+	txId, err := computeTxnID(nonce, creator, h)
+	assert.Nil(t, err, fmt.Sprintf("Error while computing a tranxId: %v", err))
+
+	return txId
 }
 
 func getMockStub() *mockstub.MockStub {
