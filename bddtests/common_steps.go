@@ -154,7 +154,7 @@ func (d *CommonSteps) createChannelAndJoinPeers(channelID string, orgs []string)
 		if err := d.joinPeersToChannel(channelID, orgID, peersConfig); err != nil {
 			return fmt.Errorf("error joining peer to channel: %s", err)
 		}
-
+		time.Sleep(5 * time.Second)
 	}
 
 	return nil
@@ -304,6 +304,13 @@ func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
 }
 
 func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
+	argsArray := strings.Split(args, ",")
+
+	tm := make(map[string][]byte, 0)
+	if len(argsArray) > 1 && argsArray[1] == "commitOnlyTransaction" {
+		tm["endorsements"] = []byte(queryValue)
+	}
+
 	queryValue = ""
 
 	peersConfig, ok := d.BDDContext.clientConfig.PeersConfig(orgID)
@@ -315,10 +322,9 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 	if str, ok := peersConfig[0].GRPCOptions["ssl-target-name-override"].(string); ok {
 		serverHostOverride = str
 	}
-	argsArray := strings.Split(args, ",")
 
 	var err error
-	queryValue, err = d.QueryCCWithArgs(true, ccID, channelID, argsArray, nil,
+	queryValue, err = d.QueryCCWithArgs(true, ccID, channelID, argsArray, tm,
 		[]*PeerConfig{&PeerConfig{Config: peersConfig[0], OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}}...)
 	if err != nil {
 		return fmt.Errorf("QueryCCWithArgs return error: %s", err)
@@ -724,6 +730,7 @@ func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^we wait (\d+) seconds$`, d.wait)
 	s.Step(`^client queries chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.queryCConOrg)
 	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel$`, d.querySystemCC)
+	s.Step(`response from "([^"]*)" with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel`, d.querySystemCC)
 	s.Step(`^response from "([^"]*)" to client contains value "([^"]*)"$`, d.containsInQueryValue)
 	s.Step(`^response from "([^"]*)" to client equal value "([^"]*)"$`, d.equalQueryValue)
 	s.Step(`^"([^"]*)" chaincode "([^"]*)" is installed from path "([^"]*)" to all peers$`, d.installChaincodeToAllPeers)

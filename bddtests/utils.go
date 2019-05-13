@@ -53,6 +53,20 @@ func randomString(strlen int) string {
 // or an error
 func HasPrimaryPeerJoinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
 	foundChannel := false
+	var err error
+	for i := 0; i < 3; i++ {
+		foundChannel, err = joinedChannel(channelID, client, orgUser, peer)
+		if foundChannel {
+			return foundChannel, nil
+		}
+		fmt.Printf("The Primary Peer has not joined the channel yet. Trying again tryCount=%d\n", (i + 1))
+		time.Sleep(5 * time.Second)
+	}
+	return foundChannel, err
+}
+
+func joinedChannel(channelID string, client *resmgmt.Client, orgUser mspApi.Identity, peer fabApi.Peer) (bool, error) {
+	foundChannel := false
 	response, err := client.QueryChannels(
 		resmgmt.WithTargets(peer),
 		resmgmt.WithRetry(retry.DefaultResMgmtOpts),
