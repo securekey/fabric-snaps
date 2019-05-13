@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3412c59c_47d95e41",
+        "filename": "transactionsnap/pkg/client/handler/injectresponse.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2019-05-13T16:06:53Z",
+      "side": 1,
+      "message": "Not sure about the name - maybe PreEndorsedHandler?",
+      "range": {
+        "startLine": 13,
+        "startChar": 5,
+        "endLine": 13,
+        "endChar": 26
+      },
+      "revId": "7a157b68529dd72e07a438b53f39c337220ff895",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
