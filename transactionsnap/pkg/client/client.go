@@ -449,11 +449,13 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	return &resp, checkForCommit.ShouldCommit, nil
 }
 func (c *clientImpl) endorseRequestArgs(endorseRequest *api.EndorseTxRequest) [][]byte {
+	return c.args(endorseRequest.Args)[1:]
+}
+func (c *clientImpl) args(arguments []string) [][]byte {
 	args := make([][]byte, 0)
-	if len(endorseRequest.Args) > 1 {
-		for _, value := range endorseRequest.Args[1:] {
-			args = append(args, []byte(value))
-		}
+	argsLen := len(arguments)
+	for i := 0; i < argsLen; i++ {
+		args = append(args, []byte(arguments[i]))
 	}
 	return args
 }
@@ -484,6 +486,72 @@ func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []b
 
 	return validTxnID, creator, nil
 }
+
+func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+	logger.Debugf("CommitOnlyTransaction without endorsement %+v", getDisplayableEndorseRequest(endorseRequest))
+
+	invalidResponse, validTxnID, errObj := c.validate(endorseRequest)
+	if !validTxnID {
+		return invalidResponse, false, errObj
+	}
+
+	targets := endorseRequest.Targets
+	if len(endorseRequest.Args) < 1 {
+		return nil, false, errors.New(errors.MissingRequiredParameterError, "function arg is required")
+	}
+	args := c.args(endorseRequest.Args)
+
+	checkForCommit := handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
+		handler.NewCommitTxHandler(registerTxEvent, c.channelID),
+	)
+
+	customExecuteHandler := handler.NewInjectResponseHandler(response, checkForCommit)
+
+	numRetries := 0
+	var lastErr error
+
+	resp, err := c.channelClient.InvokeHandler(
+		customExecuteHandler,
+		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
+		channel.WithTargets(targets...),
+		channel.WithRetry(c.retryOpts()),
+		channel.WithBeforeRetry(func(err error) {
+			numRetries++
+			lastErr = err
+			logger.Infof("[%s] Retry #%d on error: %s", c.channelID, numRetries, err.Error())
+			c.metrics.TransactionRetryCounter.Add(1)
+		}))
+
+	if err != nil {
+		if numRetries > 0 {
+			logger.Infof("[%s] Failed after %d retries. Last error: %s", c.channelID, numRetries, err)
+		}
+		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
+	}
+	if numRetries > 0 {
+		logger.Infof("[%s] Succeeded after %d retries. Last error: %s", c.channelID, numRetries, lastErr)
+	}
+	return &resp, checkForCommit.ShouldCommit, nil
+}
+
+func (c *clientImpl) validate(endorseRequest *api.EndorseTxRequest) (*channel.Response, bool, errors.Error) {
+	if len(endorseRequest.Nonce) == 0 && endorseRequest.TransactionID == "" {
+		return nil, true, nil
+	}
+	validTxnID, creator, errObj := c.checkTxnID(endorseRequest)
+	if errObj != nil {
+		return nil, false, errObj
+	}
+	if validTxnID {
+		return nil, true, nil
+	}
+	jsonBytes, err := json.Marshal(&api.Creator{Identity: base64.RawURLEncoding.EncodeToString(creator)})
+	if err != nil {
+		return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
+	}
+	return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
+}
+
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {
 
 	signedProposal := &peerpb.SignedProposal{}
