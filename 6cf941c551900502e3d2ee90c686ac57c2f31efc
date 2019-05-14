@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc989920_d5f0b388",
+        "filename": "bddtests/features/invokeTxnSnap.feature",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000037
+      },
+      "writtenOn": "2019-05-14T17:00:24Z",
+      "side": 1,
+      "message": "you need to verify that txn is success",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 221
+      },
+      "revId": "6cf941c551900502e3d2ee90c686ac57c2f31efc",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
