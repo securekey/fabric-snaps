@@ -118,6 +118,25 @@ func (c *clientWrapper) VerifyTxnProposalSignature(s []byte) errors.Error {
 	return err
 }
 
+func (c *clientWrapper) VerifyEndorsements(s []byte) errors.Error {
+	verifyEndorsements := func(s []byte) errors.Error {
+		client, err := c.get()
+		if err != nil {
+			return err
+		}
+		defer client.Release()
+
+		return client.verifyEndorsements(s)
+	}
+
+	err := verifyEndorsements(s)
+	if isRetryable(err) {
+		c.clearCache()
+		err = verifyEndorsements(s)
+	}
+	return err
+}
+
 func (c *clientWrapper) GetLocalPeer() (fabApi.Peer, error) {
 	getLocalPeer := func() (fabApi.Peer, error) {
 		client, err := c.get()

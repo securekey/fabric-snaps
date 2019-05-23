@@ -590,6 +590,28 @@ func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Err
 	return nil
 }
 
+func (c *clientImpl) verifyEndorsements(endorsements []byte) errors.Error {
+	var proposalResponses []*pb.ProposalResponse
+	if err := json.Unmarshal(endorsements, &proposalResponses); err != nil {
+		return errors.Wrap(errors.GeneralError, err, "Failed to unmarshal proposalResponses")
+	}
+
+	validationHandler := handler.NewValidateEndorsementHandler(proposalResponses,
+		invoke.NewEndorsementValidationHandler(
+			invoke.NewSignatureValidationHandler(),
+		),
+	)
+
+	// put dummy values for ChaincodeID and fcn because sdk require them even if not used in handlers
+	if _, err := c.channelClient.InvokeHandler(validationHandler, channel.Request{ChaincodeID: "cc", Fcn: "fcn"}); err != nil {
+		return errors.Wrap(errors.GeneralError, err, "Failed to verify endorsements")
+
+	}
+
+	return nil
+
+}
+
 func (c *clientImpl) getLocalPeer() (fabApi.Peer, error) {
 	peerCfg, codedErr := c.txnSnapConfig.GetLocalPeer()
 	if codedErr != nil {

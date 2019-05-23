@@ -228,6 +228,34 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 	}
 }
 
+func TestVerifyEndorsements(t *testing.T) {
+	snap := newMockTxnSnap(nil)
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID", args)
+
+	require.Equal(t, response.Status, int32(shim.OK))
+	require.NotEqual(t, len(response.GetPayload()), 0)
+	var chResponse *channel.Response
+	require.NoError(t, json.Unmarshal(response.GetPayload(), &chResponse))
+	require.NotEqual(t, len(chResponse.Responses), 0)
+
+	var proposalResponses []*pb.ProposalResponse
+	proposalResponses = append(proposalResponses, chResponse.Responses[0].ProposalResponse)
+	endorsements, err := json.Marshal(proposalResponses)
+	require.NoError(t, err)
+
+	args = make([][]byte, 3)
+	args[0] = []byte("verifyEndorsements")
+	args[1] = endorsements
+	args[2] = []byte("testChannel")
+	//invoke transaction snap
+	response = stub.MockInvoke("TxID", args)
+	require.Equal(t, response.Status, int32(shim.OK))
+
+}
+
 func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) {
 	snap := newMockTxnSnap(nil)
 	stub := shim.NewMockStub("transactionsnap", snap)

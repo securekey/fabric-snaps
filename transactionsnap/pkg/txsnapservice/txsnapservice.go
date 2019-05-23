@@ -173,3 +173,19 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 	}
 	return nil
 }
+
+//VerifyEndorsements use to verify endorsements
+func (txs *TxServiceImpl) VerifyEndorsements(endorsements []byte) errors.Error {
+	if endorsements == nil {
+		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
+	}
+
+	err := txs.FcClient.VerifyEndorsements(endorsements)
+	if err != nil {
+		logger.Debugf("VerifyEndorsements failed %s", err)
+		return err
+	}
+	logger.Debugf("VerifyEndorsements succeed")
+
+	return nil
+}

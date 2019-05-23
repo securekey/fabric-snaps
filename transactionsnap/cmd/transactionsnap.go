@@ -92,6 +92,8 @@ func (es *TxnSnap) Invoke(stub shim.ChaincodeStubInterface) (resp pb.Response) {
 		return es.invokeVerifyTransactionProposalSignature(stub)
 	case "unsafeGetState":
 		return es.invokeUnsafeGetState(stub)
+	case "verifyEndorsements":
+		return es.invokeVerifyEndorsements(stub)
 	default:
 		return util.CreateShimResponseFromError(errors.New(errors.InvalidFunctionError, fmt.Sprintf("Function %s is not supported", function)), logger, stub)
 	}
@@ -122,6 +124,7 @@ func (es *TxnSnap) invokeCommitOnlyTransaction(stub shim.ChaincodeStubInterface)
 	} //TODO QQQ Check the response code
 	return pb.Response{Payload: nil, Status: shim.OK}
 }
+
 func (es *TxnSnap) invokeVerifyTransactionProposalSignature(stub shim.ChaincodeStubInterface) pb.Response {
 	args := stub.GetArgs()
 	if len(args) < 3 {
@@ -132,6 +135,18 @@ func (es *TxnSnap) invokeVerifyTransactionProposalSignature(stub shim.ChaincodeS
 	}
 	return pb.Response{Payload: nil, Status: shim.OK}
 }
+
+func (es *TxnSnap) invokeVerifyEndorsements(stub shim.ChaincodeStubInterface) pb.Response {
+	_, args := stub.GetFunctionAndParameters()
+	if len(args) < 2 {
+		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify endorsement"), logger, stub)
+	}
+	if err := es.verifyEndorsements(args); err != nil {
+		return util.CreateShimResponseFromError(err, logger, stub)
+	}
+	return pb.Response{Payload: nil, Status: shim.OK}
+}
+
 func (es *TxnSnap) invokeUnsafeGetState(stub shim.ChaincodeStubInterface) pb.Response {
 	args := stub.GetArgs()
 	logger.Debugf("Function unsafeGetState invoked with args %v", args)
@@ -257,6 +272,22 @@ func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
 	}
 
 	return nil
+}
+
+func (es *TxnSnap) verifyEndorsements(args []string) errors.Error {
+	endorsements := []byte(args[0])
+	channelID := args[1]
+	srvc, e := es.getTxService(channelID)
+	if e != nil {
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", channelID))
+	}
+
+	err := srvc.VerifyEndorsements(endorsements)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) errors.Error {

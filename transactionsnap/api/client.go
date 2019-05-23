@@ -108,6 +108,11 @@ type Client interface {
 	// @returns {error} error, if any
 	VerifyTxnProposalSignature([]byte) errors.Error
 
+	// VerifyEndorsements verify endorsements
+	// @param {[]byte} array of proposal response
+	// @returns {error} error, if any
+	VerifyEndorsements(endorsements []byte) errors.Error
+
 	// GetLocalPeer gets the local fab api peer
 	// @returns {fabApi.Peer} fab api peer
 	GetLocalPeer() (fabApi.Peer, error)

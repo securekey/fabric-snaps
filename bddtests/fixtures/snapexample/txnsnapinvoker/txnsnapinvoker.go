@@ -12,8 +12,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	skdpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
@@ -60,11 +62,15 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := string(args[2])
 	ccID := string(args[3])
 
+	if snapFunc == "verifyEndorsements" {
+		function = "endorseTransaction"
+	}
+
 	// Construct Snap arguments
 	var ccArgs [][]byte
 	ccArgs = args[1:]
 
-	if snapFunc == "commitTransaction" || snapFunc == "commitOnlyTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" {
+	if snapFunc == "commitTransaction" || snapFunc == "commitOnlyTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" || snapFunc == "verifyEndorsements" {
 		peerFilter := &api.PeerFilterOpts{
 			Type: api.MinBlockHeightPeerFilterType,
 			Args: []string{channelID, fmt.Sprintf("%d", 3)},
@@ -117,6 +123,36 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		}
 		logger.Infof("EndorseTx response from %s: %s ", snapName, string(response.Payload))
 		return shim.Success(response.Payload)
+	}
+
+	if snapFunc == "verifyEndorsements" {
+		ccArgs := make([][]byte, 3)
+		var trxResponse *channel.Response
+		err := json.Unmarshal(response.Payload, &trxResponse)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
+		}
+
+		var proposalResponses []*skdpb.ProposalResponse
+
+		for _, resp := range trxResponse.Responses {
+			proposalResponses = append(proposalResponses, resp.ProposalResponse)
+		}
+		endorsements, err := json.Marshal(proposalResponses)
+		ccArgs[0] = []byte("verifyEndorsements")
+		ccArgs[1] = endorsements
+		ccArgs[2] = []byte(channelID)
+
+		logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
+
+		// Leave channel (last argument) empty since we are calling chaincode(s) on the same channel
+		response := stub.InvokeChaincode(snapName, ccArgs, "")
+		if response.Status != shim.OK {
+			errStr := fmt.Sprintf("Failed to invoke chaincode %s. Error: %s", snapName, string(response.Message))
+			logger.Warning(errStr)
+			return shim.Error(errStr)
+		}
+
 	}
 
 	logger.Infof("Response from %s: %s ", snapName, string(response.Payload))

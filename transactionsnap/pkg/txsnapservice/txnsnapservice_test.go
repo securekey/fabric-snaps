@@ -284,6 +284,79 @@ func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
 	assert.False(t, commit, "commit value should be false")
 }
 
+func TestVerifyEndorsements(t *testing.T) {
+	var tpr []*fab.TransactionProposalResponse
+	mockEndorserServer.GetMockPeer().KVWrite = true
+	txService := newMockTxService(nil)
+	for i := 1; i <= 2; i++ {
+		nonce := []byte("nonce")
+		txId := createTxId(t, nonce)
+
+		// first endorse transaction
+		snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nonce, txId)
+
+		response, endorseErr := txService.EndorseTransaction(&snapTxReq, nil)
+		require.NoError(t, endorseErr)
+		require.NotNil(t, response, "Expected proposal response")
+		require.Equal(t, len(response.Responses), 1)
+		tpr = append(tpr, response.Responses[0])
+	}
+
+	t.Run("test success", func(t *testing.T) {
+		var proposalResponses []*pb.ProposalResponse
+		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
+
+		endorsements, err := json.Marshal(proposalResponses)
+		require.NoError(t, err)
+		err = txService.VerifyEndorsements(endorsements)
+		require.NoError(t, err)
+	})
+
+	t.Run("test wrong endorsements signature", func(t *testing.T) {
+		var proposalResponses []*pb.ProposalResponse
+		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
+
+		proposalResponses[0].Endorsement.Signature = []byte("wrongSignature")
+		endorsements, err := json.Marshal(proposalResponses)
+		require.NoError(t, err)
+
+		err = txService.VerifyEndorsements(endorsements)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "signature validation failed")
+	})
+
+	t.Run("test endorsements with different response", func(t *testing.T) {
+		var proposalResponses []*pb.ProposalResponse
+		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
+		tpr[1].ProposalResponse.Response.Payload = []byte("wrongPayload")
+		proposalResponses = append(proposalResponses, tpr[1].ProposalResponse)
+
+		endorsements, err := json.Marshal(proposalResponses)
+		require.NoError(t, err)
+
+		err = txService.VerifyEndorsements(endorsements)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "ProposalResponsePayloads do not match")
+
+	})
+
+	t.Run("test endorsements with 500 status", func(t *testing.T) {
+		var proposalResponses []*pb.ProposalResponse
+		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
+		tpr[1].ProposalResponse.Response.Status = 500
+		proposalResponses = append(proposalResponses, tpr[1].ProposalResponse)
+
+		endorsements, err := json.Marshal(proposalResponses)
+		require.NoError(t, err)
+
+		err = txService.VerifyEndorsements(endorsements)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "Endorser Server Status Code: (500) INTERNAL_SERVER_ERROR")
+
+	})
+
+}
+
 func computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {
 	logger.Debugf("computeTxnID nonce %s creator %s", nonce, creator)
 	b := append(nonce, creator...)
