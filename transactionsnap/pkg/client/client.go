@@ -326,6 +326,17 @@ func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.
 func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
+	txnIDProvided := c.checkIfTxnIDIsProvided(endorseRequest)
+	if txnIDProvided {
+		resp, err := c.verifyProvidedTxnID(endorseRequest)
+		if err != nil {
+			return nil, err
+		}
+		if resp != nil {
+			return resp, nil
+		}
+	}
+
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, errors.New(errors.MissingRequiredParameterError, "function arg is required")
@@ -336,13 +347,21 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 			args = append(args, []byte(value))
 		}
 	}
+	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
+	if txnIDProvided {
+		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
+			var opts []fabApi.TxnHeaderOpt
+			opts = append(opts, fabApi.WithNonce(endorseRequest.Nonce))
+			return opts
+		}
+	}
 
 	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
-		invoke.NewEndorsementHandler(
+		invoke.NewEndorsementHandlerWithOpts(
 			invoke.NewEndorsementValidationHandler(
 				invoke.NewSignatureValidationHandler(),
 			),
-		),
+			txnHeaderOptsProvider),
 	)
 
 	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
@@ -390,22 +409,41 @@ func (c *clientImpl) computeTxnID(nonce, creator []byte, h hash.Hash) (string, e
 	return id, nil
 }
 
+func (c *clientImpl) checkIfTxnIDIsProvided(endorseRequest *api.EndorseTxRequest) bool {
+	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
+		return true
+	}
+	return false
+}
+
+func (c *clientImpl) verifyProvidedTxnID(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
+	var creator []byte
+	var err errors.Error
+	var validTxnID bool
+	validTxnID, creator, err = c.checkTxnID(endorseRequest)
+	if err != nil {
+		return nil, err
+	}
+	if !validTxnID {
+		jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
+		if err != nil {
+			return nil, errors.New(errors.SystemError, "Error marshaling creator")
+		}
+		return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, nil
+	}
+	return nil, nil
+}
+
 func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
-	validTxnID := false
-	if len(endorseRequest.Nonce) != 0 || endorseRequest.TransactionID != "" {
-		var creator []byte
-		var err errors.Error
-		validTxnID, creator, err = c.checkTxnID(endorseRequest)
+	txnIDProvided := c.checkIfTxnIDIsProvided(endorseRequest)
+	if txnIDProvided {
+		resp, err := c.verifyProvidedTxnID(endorseRequest)
 		if err != nil {
 			return nil, false, err
 		}
-		if !validTxnID {
-			jsonBytes, err := json.Marshal(&api.Creator{Identity: string(base64.RawURLEncoding.EncodeToString(creator))})
-			if err != nil {
-				return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
-			}
-			return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
+		if resp != nil {
+			return resp, false, nil
 		}
 	}
 
@@ -416,7 +454,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	args := c.endorseRequestArgs(endorseRequest)
 
 	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
-	if validTxnID {
+	if txnIDProvided {
 		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
 			var opts []fabApi.TxnHeaderOpt
 			opts = append(opts, fabApi.WithNonce(endorseRequest.Nonce))
@@ -490,11 +528,6 @@ func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []b
 func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitOnlyTransaction without endorsement %+v", getDisplayableEndorseRequest(endorseRequest))
 
-	invalidResponse, validTxnID, errObj := c.validate(endorseRequest)
-	if !validTxnID {
-		return invalidResponse, false, errObj
-	}
-
 	targets := endorseRequest.Targets
 	if len(endorseRequest.Args) < 1 {
 		return nil, false, errors.New(errors.MissingRequiredParameterError, "function arg is required")
@@ -532,24 +565,6 @@ func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest,
 		logger.Infof("[%s] Succeeded after %d retries. Last error: %s", c.channelID, numRetries, lastErr)
 	}
 	return &resp, checkForCommit.ShouldCommit, nil
-}
-
-func (c *clientImpl) validate(endorseRequest *api.EndorseTxRequest) (*channel.Response, bool, errors.Error) {
-	if len(endorseRequest.Nonce) == 0 && endorseRequest.TransactionID == "" {
-		return nil, true, nil
-	}
-	validTxnID, creator, errObj := c.checkTxnID(endorseRequest)
-	if errObj != nil {
-		return nil, false, errObj
-	}
-	if validTxnID {
-		return nil, true, nil
-	}
-	jsonBytes, err := json.Marshal(&api.Creator{Identity: base64.RawURLEncoding.EncodeToString(creator)})
-	if err != nil {
-		return nil, false, errors.New(errors.SystemError, "Error marshaling creator")
-	}
-	return &channel.Response{TxValidationCode: pb.TxValidationCode_BAD_PROPOSAL_TXID, Payload: jsonBytes}, false, nil
 }
 
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {

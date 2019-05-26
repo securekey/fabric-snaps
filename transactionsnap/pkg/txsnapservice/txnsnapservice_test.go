@@ -87,6 +87,35 @@ func TestEndorseTransaction(t *testing.T) {
 
 }
 
+func TestEndorseTransactionWithTxID(t *testing.T) {
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, []byte("nonce"), "")
+	txService := newMockTxService(nil)
+	mockEndorserServer.GetMockPeer().KVWrite = false
+
+	resp, err := txService.EndorseTransaction(&snapTxReq, nil)
+	require.NoError(t, err)
+	require.Equal(t, resp.TxValidationCode, pb.TxValidationCode_BAD_PROPOSAL_TXID)
+
+	snapTxReq.Nonce = []byte("")
+	snapTxReq.TransactionID = "test"
+	resp, err = txService.EndorseTransaction(&snapTxReq, nil)
+	require.NoError(t, err)
+	require.Equal(t, resp.TxValidationCode, pb.TxValidationCode_BAD_PROPOSAL_TXID)
+
+	// test with wrong txID
+	snapTxReq.TransactionID = "test"
+	snapTxReq.Nonce = []byte("nonce")
+
+	snapTxReq = createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nil, "")
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.NotEqual(t, len(response.Responses), 0)
+	require.Equal(t, int(response.Responses[0].ProposalResponse.Response.Status), 200)
+	require.Equal(t, string(response.Responses[0].ProposalResponse.Response.Payload), "value")
+
+}
+
 func TestCommitTransaction(t *testing.T) {
 	// commit with kvwrite false
 	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, nil, "")
