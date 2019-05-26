@@ -87,6 +87,54 @@ func TestEndorseTransaction(t *testing.T) {
 
 }
 
+func TestEndorseTransactionWithTxID(t *testing.T) {
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, []byte("nonce"), "")
+	txService := newMockTxService(nil)
+	mockEndorserServer.GetMockPeer().KVWrite = false
+
+	resp, err := txService.EndorseTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if resp.TxValidationCode != pb.TxValidationCode_BAD_PROPOSAL_TXID {
+		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_BAD_PROPOSAL_TXID)
+	}
+
+	snapTxReq.Nonce = []byte("")
+	snapTxReq.TransactionID = "test"
+	resp, err = txService.EndorseTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error commit transaction %v", err)
+	}
+	if resp.TxValidationCode != pb.TxValidationCode_BAD_PROPOSAL_TXID {
+		t.Fatalf("resp.TxValidationCode not equal to %v", pb.TxValidationCode_BAD_PROPOSAL_TXID)
+	}
+
+	// test with wrong txID
+	snapTxReq.TransactionID = "test"
+	snapTxReq.Nonce = []byte("nonce")
+
+	snapTxReq = createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nil, "")
+	response, err := txService.EndorseTransaction(&snapTxReq, nil)
+	if err != nil {
+		t.Fatalf("Error endorsing transaction %s", err)
+	}
+	if response == nil {
+		t.Fatal("Expected proposal response")
+	}
+
+	if len(response.Responses) == 0 {
+		t.Fatal("Received an empty transaction proposal response")
+	}
+	if response.Responses[0].ProposalResponse.Response.Status != 200 {
+		t.Fatal("Expected proposal response status: SUCCESS")
+	}
+	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
+		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
+	}
+
+}
+
 func TestCommitTransaction(t *testing.T) {
 	// commit with kvwrite false
 	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, true, nil, nil, "")
