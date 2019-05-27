@@ -251,7 +251,6 @@ func TestCommitOnlyTransaction(t *testing.T) {
 			string(response.Responses[0].ProposalResponse.Response.Payload)))
 
 	// commit - send the endorse response in this request
-	snapTxReq = createTransactionSnapRequest("committransaction", "ccid", channelID, true, nil, nonce, txId)
 	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
 			time.Sleep(2 * time.Second)
@@ -263,15 +262,7 @@ func TestCommitOnlyTransaction(t *testing.T) {
 		return nil
 	})
 
-	invokeResponse := &invoke.Response{
-		TransactionID:    fab.TransactionID(snapTxReq.TransactionID),
-		Responses:        response.Responses,
-		Payload:          response.Payload,
-		ChaincodeStatus:  response.ChaincodeStatus,
-		Proposal:         response.Proposal,
-		TxValidationCode: response.TxValidationCode,
-	}
-	_, commit, err := txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	_, commit, err := txService.CommitOnlyTransaction(response)
 	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
 	assert.True(t, commit, "commit value should be true")
 }
@@ -297,7 +288,6 @@ func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
 			string(response.Responses[0].ProposalResponse.Response.Payload)))
 
 	// commit
-	snapTxReq = createTransactionSnapRequest("committransaction", "ccid", channelID, true, nil, nonce, txId)
 	txService = newMockTxService(func(response invoke.Response) error {
 		go func() {
 			time.Sleep(2 * time.Second)
@@ -309,15 +299,7 @@ func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
 		return nil
 	})
 
-	invokeResponse := &invoke.Response{
-		TransactionID:    fab.TransactionID(snapTxReq.TransactionID),
-		Responses:        response.Responses,
-		Payload:          response.Payload,
-		ChaincodeStatus:  response.ChaincodeStatus,
-		Proposal:         response.Proposal,
-		TxValidationCode: response.TxValidationCode,
-	}
-	_, commit, err := txService.CommitOnlyTransaction(&snapTxReq, invokeResponse, nil)
+	_, commit, err := txService.CommitOnlyTransaction(response)
 	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
 	assert.False(t, commit, "commit value should be false")
 }

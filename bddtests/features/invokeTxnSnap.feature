@@ -22,10 +22,7 @@ Feature:  Feature Invoke Transaction Snap
 		When client queries system chaincode "txnsnapinvoker" with args "txnsnap,commitTransaction,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
 		And client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTransaction,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
         And response from "txnsnapinvoker" to client equal value "202"
-        When client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTx,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
-        And client queries system chaincode "txnsnapinvoker" with endorsement response and with args "txnsnap,commitOnlyTransaction,mychannel,example_cc,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
-        And client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTransaction,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
-        And response from "txnsnapinvoker" to client equal value "203"
+
 
 	@twotxn
     Scenario: Invoke Transaction Snap verifyTransactionProposalSignature function
@@ -53,3 +50,14 @@ Feature:  Feature Invoke Transaction Snap
     And "test" chaincode "example_cc" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
     And chaincode "example_cc" is warmed up on all peers on the "mychannel" channel
     And client queries system chaincode "txnsnapinvoker" with args "txnsnap,verifyEndorsements,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
+
+  @commitOnlyTransaction
+  Scenario: Invoke Transaction Snap commitOnlyTransaction function
+    Given the channel "mychannel" is created and all peers have joined
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
+    And "test" chaincode "example_cc2" is installed from path "github.com/example_cc" to all peers
+    And "test" chaincode "example_cc2" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
+    And chaincode "example_cc2" is warmed up on all peers on the "mychannel" channel
+    And client queries system chaincode "txnsnapinvoker" with endorsement response and with args "txnsnap,commitOnlyTransaction,mychannel,example_cc2,invoke,move,a,b,1" on org "peerorg1" peer on the "mychannel" channel
+    And client queries system chaincode "txnsnapinvoker" with args "txnsnap,endorseTransaction,mychannel,example_cc2,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
+    And response from "txnsnapinvoker" to client equal value "201"
