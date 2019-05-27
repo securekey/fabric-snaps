@@ -530,28 +530,21 @@ func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []b
 	return validTxnID, creator, nil
 }
 
-func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
-	logger.Debugf("CommitOnlyTransaction without endorsement %+v", getDisplayableEndorseRequest(endorseRequest))
+func (c *clientImpl) commitOnlyTransaction(endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+	logger.Debugf("CommitOnlyTransaction")
 
-	targets := endorseRequest.Targets
-	if len(endorseRequest.Args) < 1 {
-		return nil, false, errors.New(errors.MissingRequiredParameterError, "function arg is required")
-	}
-	args := c.args(endorseRequest.Args)
-
-	checkForCommit := handler.NewCheckForCommitHandler(endorseRequest.RWSetIgnoreNameSpace, callback, endorseRequest.CommitType,
+	checkForCommit := handler.NewCheckForCommitHandler(nil, callback, api.CommitOnWrite,
 		handler.NewCommitTxHandler(registerTxEvent, c.channelID),
 	)
 
-	customExecuteHandler := handler.NewPreEndorsedHandler(response, checkForCommit)
+	customExecuteHandler := handler.NewPreEndorsedHandler(endorserResponse, handler.NewCommitTxHandler(registerTxEvent, c.channelID))
 
 	numRetries := 0
 	var lastErr error
 
 	resp, err := c.invokeHandler(
 		customExecuteHandler,
-		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
-		channel.WithTargets(targets...),
+		channel.Request{},
 		channel.WithRetry(c.retryOpts()),
 		channel.WithBeforeRetry(func(err error) {
 			numRetries++
