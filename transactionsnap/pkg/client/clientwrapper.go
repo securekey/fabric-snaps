@@ -137,6 +137,25 @@ func (c *clientWrapper) VerifyEndorsements(s []byte) errors.Error {
 	return err
 }
 
+func (c *clientWrapper) InvokeHandler(handler invoke.Handler, request channel.Request, options ...channel.RequestOption) (*channel.Response, error) {
+	invokeHandler := func(handler invoke.Handler, request channel.Request, options ...channel.RequestOption) (*channel.Response, error) {
+		client, err := c.get()
+		if err != nil {
+			return nil, err
+		}
+		defer client.Release()
+
+		return client.invokeHandler(handler, request, options...)
+	}
+
+	resp, err := invokeHandler(handler, request, options...)
+	if isRetryable(err) {
+		c.clearCache()
+		resp, err = invokeHandler(handler, request, options...)
+	}
+	return resp, err
+}
+
 func (c *clientWrapper) GetLocalPeer() (fabApi.Peer, error) {
 	getLocalPeer := func() (fabApi.Peer, error) {
 		client, err := c.get()

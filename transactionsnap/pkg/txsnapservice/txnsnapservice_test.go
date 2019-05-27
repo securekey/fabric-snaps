@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -55,10 +57,6 @@ var testBroadcastPort = 7041
 var txSnapConfig api.Config
 var fcClient api.Client
 
-const (
-	org1 = "Org1MSP"
-)
-
 type sampleConfig struct {
 	api.Config
 }
@@ -84,6 +82,17 @@ func TestEndorseTransaction(t *testing.T) {
 	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
 		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
 	}
+
+}
+
+func TestInvokeSDKHandler(t *testing.T) {
+	txService := newMockTxService(nil)
+	response, err := txService.InvokeSDKHandler(invoke.NewQueryHandler(), channel.Request{ChaincodeID: "ccid", Fcn: "query"})
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.NotEqual(t, len(response.Responses), 0)
+	require.Equal(t, int(response.Responses[0].ProposalResponse.Response.Status), 200)
+	require.Equal(t, string(response.Responses[0].ProposalResponse.Response.Payload), "value")
 
 }
 

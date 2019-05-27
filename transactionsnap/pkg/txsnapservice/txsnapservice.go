@@ -156,6 +156,11 @@ func (txs *TxServiceImpl) CommitOnlyTransaction(snapTxRequest *api.SnapTransacti
 	return txs.FcClient.CommitOnlyTransaction(request, response, snapTxRequest.RegisterTxEvent, txs.Callback)
 }
 
+//InvokeSDKHandler invoke sdk handler
+func (txs *TxServiceImpl) InvokeSDKHandler(handler invoke.Handler, request channel.Request, options ...channel.RequestOption) (*channel.Response, error) {
+	return txs.FcClient.InvokeHandler(handler, request, options...)
+}
+
 //VerifyTxnProposalSignature use to verify transaction proposal signature
 func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedProposal) errors.Error {
 

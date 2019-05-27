@@ -113,6 +113,14 @@ type Client interface {
 	// @returns {error} error, if any
 	VerifyEndorsements(endorsements []byte) errors.Error
 
+	// InvokeSDKHandler invoke sdk handler
+	// @param {handler} invoke handler
+	// @param {request} channel request
+	// @param {options} channel request option
+	// @returns {response} channel response
+	// @returns {error} error, if any
+	InvokeHandler(handler invoke.Handler, request channel.Request, options ...channel.RequestOption) (*channel.Response, error)
+
 	// GetLocalPeer gets the local fab api peer
 	// @returns {fabApi.Peer} fab api peer
 	GetLocalPeer() (fabApi.Peer, error)

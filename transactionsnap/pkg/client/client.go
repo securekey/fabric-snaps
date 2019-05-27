@@ -323,6 +323,11 @@ func newSDK(channelID string, configProvider core.ConfigProvider, config fabApi.
 	return sdk, nil
 }
 
+func (c *clientImpl) invokeHandler(handler invoke.Handler, request channel.Request, options ...channel.RequestOption) (*channel.Response, error) {
+	resp, err := c.channelClient.InvokeHandler(handler, request, options...)
+	return &resp, err
+}
+
 func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
@@ -364,7 +369,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 			txnHeaderOptsProvider),
 	)
 
-	response, err := c.channelClient.InvokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
+	response, err := c.invokeHandler(customQueryHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
@@ -374,7 +379,7 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 	if err != nil {
 		return nil, errors.WithMessage(errors.EndorseTxError, err, "InvokeHandler Query failed")
 	}
-	return &response, nil
+	return response, nil
 }
 
 // getDisplayableEndorseRequest strips out TransientData and Args[1:] from endorseRequest for logging purposes
@@ -474,7 +479,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 			txnHeaderOptsProvider),
 	)
 
-	resp, err := c.channelClient.InvokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
+	resp, err := c.invokeHandler(customExecuteHandler, channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0],
 		Args: args, TransientMap: endorseRequest.TransientData}, channel.WithTargets(targets...), channel.WithTargetFilter(endorseRequest.PeerFilter),
 		channel.WithRetry(c.retryOpts()), channel.WithBeforeRetry(func(err error) {
 			logger.Infof("Retrying on error: %s", err.Error())
@@ -484,7 +489,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 	if err != nil {
 		return nil, false, errors.WithMessage(errors.CommitTxError, err, "InvokeHandler execute failed")
 	}
-	return &resp, checkForCommit.ShouldCommit, nil
+	return resp, checkForCommit.ShouldCommit, nil
 }
 func (c *clientImpl) endorseRequestArgs(endorseRequest *api.EndorseTxRequest) [][]byte {
 	return c.args(endorseRequest.Args)[1:]
@@ -543,7 +548,7 @@ func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest,
 	numRetries := 0
 	var lastErr error
 
-	resp, err := c.channelClient.InvokeHandler(
+	resp, err := c.invokeHandler(
 		customExecuteHandler,
 		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
 		channel.WithTargets(targets...),
@@ -564,7 +569,7 @@ func (c *clientImpl) commitOnlyTransaction(endorseRequest *api.EndorseTxRequest,
 	if numRetries > 0 {
 		logger.Infof("[%s] Succeeded after %d retries. Last error: %s", c.channelID, numRetries, lastErr)
 	}
-	return &resp, checkForCommit.ShouldCommit, nil
+	return resp, checkForCommit.ShouldCommit, nil
 }
 
 func (c *clientImpl) verifyTxnProposalSignature(proposalBytes []byte) errors.Error {
@@ -618,7 +623,7 @@ func (c *clientImpl) verifyEndorsements(endorsements []byte) errors.Error {
 	)
 
 	// put dummy values for ChaincodeID and fcn because sdk require them even if not used in handlers
-	if _, err := c.channelClient.InvokeHandler(validationHandler, channel.Request{ChaincodeID: "cc", Fcn: "fcn"}); err != nil {
+	if _, err := c.invokeHandler(validationHandler, channel.Request{ChaincodeID: "cc", Fcn: "fcn"}); err != nil {
 		return errors.Wrap(errors.GeneralError, err, "Failed to verify endorsements")
 
 	}
