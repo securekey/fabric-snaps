@@ -147,13 +147,8 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //CommitOnlyTransaction just commits the data without endorsement
-func (txs *TxServiceImpl) CommitOnlyTransaction(snapTxRequest *api.SnapTransactionRequest, response *invoke.Response, peers []fabApi.Peer) (*channel.Response, bool, errors.Error) {
-	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
-	if err != nil {
-		return nil, false, err
-	}
-
-	return txs.FcClient.CommitOnlyTransaction(request, response, snapTxRequest.RegisterTxEvent, txs.Callback)
+func (txs *TxServiceImpl) CommitOnlyTransaction(endorserResponse *channel.Response) (*channel.Response, bool, errors.Error) {
+	return txs.FcClient.CommitOnlyTransaction(endorserResponse, true, txs.Callback)
 }
 
 //InvokeSDKHandler invoke sdk handler

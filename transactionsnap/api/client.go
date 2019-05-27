@@ -95,13 +95,13 @@ type Client interface {
 	// CommitOnlyTransaction request commit from the peers on this channel
 	// This does not endorse the request. The endorsement is done before this commit happens.
 	// for a transaction with the given parameters
-	// @param {EndorseTxRequest} request identifies the chaincode to invoke
+	// @param {endorserResponse} endorser response
 	// @param {registerTxEvent} is bool to register tx event
 	// @param {EndorsedCallback} is a function that is invoked after the endorsement
-	// @returns {Response} responses from endorsers
+	// @returns {Response} response
 	// @returns {bool} commit flag
 	// @returns {error} error, if any
-	CommitOnlyTransaction(endorseRequest *EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, bool, errors.Error)
+	CommitOnlyTransaction(endorserResponse *channel.Response, registerTxEvent bool, callback EndorsedCallback) (*channel.Response, bool, errors.Error)
 
 	// VerifyTxnProposalSignature verify TxnProposalSignature against msp
 	// @param {[]byte} Txn Proposal
