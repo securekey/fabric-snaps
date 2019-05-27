@@ -62,7 +62,7 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := string(args[2])
 	ccID := string(args[3])
 
-	if snapFunc == "verifyEndorsements" {
+	if snapFunc == "verifyEndorsements" || snapFunc == "commitOnlyTransaction" {
 		function = "endorseTransaction"
 	}
 
@@ -70,18 +70,12 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	var ccArgs [][]byte
 	ccArgs = args[1:]
 
-	if snapFunc == "commitTransaction" || snapFunc == "commitOnlyTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" || snapFunc == "verifyEndorsements" {
+	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" || snapFunc == "verifyEndorsements" || snapFunc == "commitOnlyTransaction" {
 		peerFilter := &api.PeerFilterOpts{
 			Type: api.MinBlockHeightPeerFilterType,
 			Args: []string{channelID, fmt.Sprintf("%d", 3)},
 		}
-		tm, err := stub.GetTransient()
-		if err != nil {
-			errStr := fmt.Sprintf("stub.GetTransient should not return an error: err=%s", err)
-			logger.Error(errStr)
-			return shim.Error(errStr)
-		}
-		ccArgs = createTransactionSnapRequest(function, ccID, channelID, tm, args[4:], true, peerFilter)
+		ccArgs = createTransactionSnapRequest(function, ccID, channelID, args[4:], true, peerFilter)
 	}
 
 	if snapFunc == "verifyTransactionProposalSignature" {
@@ -115,16 +109,6 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Success(trxResponse.Responses[0].ProposalResponse.GetResponse().Payload)
 	}
 
-	if snapFunc == "endorseTx" {
-		var trxResponse *channel.Response
-		err := json.Unmarshal(response.Payload, &trxResponse)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
-		}
-		logger.Infof("EndorseTx response from %s: %s ", snapName, string(response.Payload))
-		return shim.Success(response.Payload)
-	}
-
 	if snapFunc == "verifyEndorsements" {
 		ccArgs := make([][]byte, 3)
 		var trxResponse *channel.Response
@@ -155,19 +139,32 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	}
 
+	if snapFunc == "commitOnlyTransaction" {
+		ccArgs := make([][]byte, 3)
+		ccArgs[0] = []byte("commitOnlyTransaction")
+		ccArgs[1] = []byte(channelID)
+		ccArgs[2] = response.Payload
+
+		logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
+
+		// Leave channel (last argument) empty since we are calling chaincode(s) on the same channel
+		response := stub.InvokeChaincode(snapName, ccArgs, "")
+		if response.Status != shim.OK {
+			errStr := fmt.Sprintf("Failed to invoke chaincode %s. Error: %s", snapName, string(response.Message))
+			logger.Warning(errStr)
+			return shim.Error(errStr)
+		}
+
+	}
+
 	logger.Infof("Response from %s: %s ", snapName, string(response.Payload))
 
 	return shim.Success(response.Payload)
 }
 
-func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, tm map[string][]byte, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {
-	if functionName == "endorseTx" {
-		functionName = "endorseTransaction"
-	}
-
+func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {
 	snapTxReq := api.SnapTransactionRequest{ChannelID: chnlID,
 		ChaincodeID:         chaincodeID,
-		TransientMap:        tm,
 		EndorserArgs:        clientArgs,
 		CCIDsForEndorsement: nil,
 		RegisterTxEvent:     registerTxEvent,

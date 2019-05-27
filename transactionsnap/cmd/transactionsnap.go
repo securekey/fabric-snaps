@@ -8,8 +8,6 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
@@ -230,47 +228,26 @@ func (es *TxnSnap) commitTransaction(args [][]byte) errors.Error {
 
 func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
 
-	//first arg is function name; the second one is SnapTransactionRequest
-	if len(args) < 2 {
+	//first arg is function name; the second one is channel id; the third one is endorsement Response
+	if len(args) < 3 {
 		return errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to commitOnly transaction")
 	}
-	//second argument is SnapTransactionRequest
-	snapTxRequest, err := getSnapTransactionRequest(args[1])
-	if err != nil {
-		return err
-	}
-	if snapTxRequest.ChannelID == "" {
-		return errors.New(errors.MissingRequiredParameterError, "ChannelID is mandatory field of the SnapTransactionRequest")
-	}
 
-	//cc code args
-	endorserArgs := snapTxRequest.EndorserArgs
-	var ccargs []string
-	for _, ccArg := range endorserArgs {
-		ccargs = append(ccargs, string(ccArg))
-
-	}
-	logger.Debugf("Endorser args: %s", ccargs)
-	srvc, e := es.getTxService(snapTxRequest.ChannelID)
+	srvc, e := es.getTxService(string(args[1]))
 	if e != nil {
-		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", snapTxRequest.ChannelID))
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", string(args[1])))
 	}
 
-	if snapTxRequest.TransientMap == nil || snapTxRequest.TransientMap["endorsements"] == nil {
-		return errors.New(errors.MissingRequiredParameterError, "The TransientMap of SnapTransactionRequest should contain the \"endorsements\"")
-	}
-	endorsementBytes := snapTxRequest.TransientMap["endorsements"]
-	endorsementResponse := &invoke.Response{}
-	endorsementUnmarshallErr := json.Unmarshal(endorsementBytes, endorsementResponse)
+	endorserRespBytes := args[2]
+	endorsementResponse := &channel.Response{}
+	endorsementUnmarshallErr := json.Unmarshal(endorserRespBytes, endorsementResponse)
 	if endorsementUnmarshallErr != nil {
 		return errors.WithMessage(errors.UnmarshalError, endorsementUnmarshallErr, "Cannot decode endorsements from transient map of Snap Transaction Request")
 	}
-
-	_, _, err = srvc.CommitOnlyTransaction(snapTxRequest, endorsementResponse, nil)
+	_, _, err := srvc.CommitOnlyTransaction(endorsementResponse)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

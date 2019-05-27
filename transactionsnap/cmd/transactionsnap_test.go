@@ -256,6 +256,25 @@ func TestVerifyEndorsements(t *testing.T) {
 
 }
 
+func TestCommitOnlyTransaction(t *testing.T) {
+	snap := newMockTxnSnap(nil)
+	stub := shim.NewMockStub("transactionsnap", snap)
+	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
+	//invoke transaction snap
+	response := stub.MockInvoke("TxID", args)
+
+	require.Equal(t, response.Status, int32(shim.OK))
+	require.NotEqual(t, len(response.GetPayload()), 0)
+	args = make([][]byte, 3)
+	args[0] = []byte("commitOnlyTransaction")
+	args[1] = []byte("testChannel")
+	args[2] = response.GetPayload()
+	//invoke transaction snap
+	response = stub.MockInvoke("TxID", args)
+	require.Equal(t, response.Status, int32(shim.OK))
+
+}
+
 func TestTransactionSnapInvokeFuncEndorseTransactionStatusSuccess(t *testing.T) {
 	snap := newMockTxnSnap(nil)
 	stub := shim.NewMockStub("transactionsnap", snap)
