@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "348fce40_92b0d130",
+        "filename": "transactionsnap/pkg/client/client.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2019-05-27T14:01:23Z",
+      "side": 1,
+      "message": "no need to declare variables - can be fixed in subsequent commit",
+      "revId": "00c908eac8d54251f6d62e570b499cf2bb86931b",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
