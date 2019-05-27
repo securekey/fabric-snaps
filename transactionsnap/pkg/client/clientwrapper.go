@@ -79,22 +79,22 @@ func (c *clientWrapper) CommitTransaction(endorseRequest *api.EndorseTxRequest, 
 	return resp, commit, err
 }
 
-func (c *clientWrapper) CommitOnlyTransaction(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+func (c *clientWrapper) CommitOnlyTransaction(endorserResponse *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 
-	commitTx := func(endorseRequest *api.EndorseTxRequest, response *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+	commitTx := func(endorserResponse *invoke.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 		client, err := c.get()
 		if err != nil {
 			return nil, false, err
 		}
 		defer client.Release()
 
-		return client.commitOnlyTransaction(endorseRequest, response, registerTxEvent, callback)
+		return client.commitOnlyTransaction(endorserResponse, registerTxEvent, callback)
 	}
 
-	resp, commit, err := commitTx(endorseRequest, response, registerTxEvent, callback)
+	resp, commit, err := commitTx(endorserResponse, registerTxEvent, callback)
 	if isRetryable(err) {
 		c.clearCache()
-		resp, commit, err = commitTx(endorseRequest, response, registerTxEvent, callback)
+		resp, commit, err = commitTx(endorserResponse, registerTxEvent, callback)
 	}
 	return resp, commit, err
 }
