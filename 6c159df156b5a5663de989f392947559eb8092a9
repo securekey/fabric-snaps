@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ce876b9_ddafb85c",
+        "filename": "transactionsnap/cmd/transactionsnap.go",
+        "patchSetId": 8
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1000038
+      },
+      "writtenOn": "2019-05-28T01:07:55Z",
+      "side": 1,
+      "message": "this comment is outdated, can you update comment about arguments - second argument is channel name.",
+      "revId": "6c159df156b5a5663de989f392947559eb8092a9",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": false
+    }
+  ]
+}
