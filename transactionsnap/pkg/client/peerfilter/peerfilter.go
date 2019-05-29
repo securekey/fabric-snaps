@@ -9,6 +9,7 @@ package peerfilter
 import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter/minblockheight"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter/mspid"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -21,6 +22,8 @@ func New(opts *api.PeerFilterOpts) (api.PeerFilter, error) {
 	switch opts.Type {
 	case api.MinBlockHeightPeerFilterType:
 		return minblockheight.New(opts.Args)
+	case api.MspIDFilterType:
+		return mspid.New(opts.Args)
 	default:
 		return nil, errors.Errorf(errors.SystemError, "invalid peer filter type [%s]", opts.Type)
 	}

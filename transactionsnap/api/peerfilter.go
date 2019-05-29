@@ -18,6 +18,8 @@ const (
 	// Required Args:
 	// - arg[0]: Channel ID
 	MinBlockHeightPeerFilterType PeerFilterType = "MinBlockHeight"
+	// MspIDFilterType is a peer filter that select peer with specific msp id
+	MspIDFilterType PeerFilterType = "MspID"
 )
 
 // PeerFilter is applied to peers selected for endorsement and removes
