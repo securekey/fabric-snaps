@@ -14,7 +14,7 @@ cp -r /opt/temp/src/github.com/securekey/fabric-snaps /opt/gopath/src/github.com
 
 echo "Cloning fabric..."
 cd /opt/gopath/src/github.com/hyperledger
-git clone https://github.com/securekey/fabric-next.git
+git clone https://gerrit.securekey.com/fabric-next
 cd fabric-next/scripts
 git checkout $FABRIC_NEXT_VERSION
 ./fabric_cherry_picks.sh >/dev/null

@@ -18,6 +18,7 @@ import (
 	gcommon "github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/gossip/discovery"
 	"github.com/hyperledger/fabric/gossip/filter"
+	"github.com/hyperledger/fabric/gossip/protoext"
 	"github.com/hyperledger/fabric/gossip/service"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/gossip"
@@ -66,7 +67,7 @@ func newMockGossipService(members ...MspNetworkMembers) *mockGossipService {
 	}}
 }
 
-func (s *mockGossipService) sendMessage(msg gossip.ReceivedMessage) {
+func (s *mockGossipService) sendMessage(msg protoext.ReceivedMessage) {
 	go func() {
 		if s.acceptor(msg) {
 			s.msgCh <- msg
@@ -98,7 +99,7 @@ func (s *mockGossipService) IdentityInfo() api.PeerIdentitySet {
 	panic("not implemented")
 }
 
-func (s *mockGossipService) SelfChannelInfo(common.ChainID) *protogossip.SignedGossipMessage {
+func (s *mockGossipService) SelfChannelInfo(common.ChainID) *protoext.SignedGossipMessage {
 	panic("not implemented")
 }
 
@@ -117,7 +118,7 @@ func (s *mockGossipService) UpdateLedgerHeight(height uint64, chainID common.Cha
 type mockGossip struct {
 	members  []MspNetworkMembers
 	acceptor gcommon.MessageAcceptor
-	msgCh    chan gossip.ReceivedMessage
+	msgCh    chan protoext.ReceivedMessage
 }
 
 func (s *mockGossip) Send(msg *gossip.GossipMessage, peers ...*comm.RemotePeer) {
@@ -148,7 +149,7 @@ func (s *mockGossip) UpdateMetadata(metadata []byte) {
 	panic("not implemented")
 }
 
-func (s *mockGossip) SendByCriteria(signedGossipMessage *gossip.SignedGossipMessage, sendCriteria gossip2.SendCriteria) error {
+func (s *mockGossip) SendByCriteria(signedGossipMessage *protoext.SignedGossipMessage, sendCriteria gossip2.SendCriteria) error {
 	panic("not implemented")
 }
 
@@ -160,9 +161,9 @@ func (s *mockGossip) Gossip(msg *gossip.GossipMessage) {
 	panic("not implemented")
 }
 
-func (s *mockGossip) Accept(acceptor gcommon.MessageAcceptor, passThrough bool) (<-chan *gossip.GossipMessage, <-chan gossip.ReceivedMessage) {
+func (s *mockGossip) Accept(acceptor gcommon.MessageAcceptor, passThrough bool) (<-chan *gossip.GossipMessage, <-chan protoext.ReceivedMessage) {
 	s.acceptor = acceptor
-	s.msgCh = make(chan gossip.ReceivedMessage)
+	s.msgCh = make(chan protoext.ReceivedMessage)
 	return nil, s.msgCh
 }
 
@@ -226,7 +227,7 @@ func NewMSPNetworkMembers(mspID []byte, networkMembers ...discovery.NetworkMembe
 	}
 }
 
-func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) gossip.ReceivedMessage { //nolint: deadcode , interfacer
+func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) protoext.ReceivedMessage { //nolint: deadcode , interfacer
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
 			Channel: []byte("testchannel"),
@@ -235,7 +236,7 @@ func newIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) goss
 		}))
 }
 
-func newAliveMsg() gossip.ReceivedMessage { //nolint: deadcode
+func newAliveMsg() protoext.ReceivedMessage { //nolint: deadcode
 	return newReceivedMessage(newSignedGossipMessage(
 		&gossip.GossipMessage{
 			Channel: []byte("testchannel"),
@@ -276,17 +277,17 @@ func newPeerIdentityMsg(pkiID gcommon.PKIidType, sID *msppb.SerializedIdentity) 
 	}
 }
 
-func newSignedGossipMessage(gossipMsg *gossip.GossipMessage) *gossip.SignedGossipMessage {
-	return &gossip.SignedGossipMessage{
+func newSignedGossipMessage(gossipMsg *gossip.GossipMessage) *protoext.SignedGossipMessage {
+	return &protoext.SignedGossipMessage{
 		GossipMessage: gossipMsg,
 	}
 }
 
 type receivedMessage struct {
-	gossipMsg *gossip.SignedGossipMessage
+	gossipMsg *protoext.SignedGossipMessage
 }
 
-func newReceivedMessage(gossipMsg *gossip.SignedGossipMessage) *receivedMessage {
+func newReceivedMessage(gossipMsg *protoext.SignedGossipMessage) *receivedMessage {
 	return &receivedMessage{
 		gossipMsg: gossipMsg,
 	}
@@ -298,7 +299,7 @@ func (m *receivedMessage) Respond(msg *gossip.GossipMessage) {
 }
 
 // GetGossipMessage returns the underlying GossipMessage
-func (m *receivedMessage) GetGossipMessage() *gossip.SignedGossipMessage {
+func (m *receivedMessage) GetGossipMessage() *protoext.SignedGossipMessage {
 	return m.gossipMsg
 }
 
@@ -310,7 +311,7 @@ func (m *receivedMessage) GetSourceEnvelope() *gossip.Envelope {
 
 // GetConnectionInfo returns information about the remote peer
 // that sent the message
-func (m *receivedMessage) GetConnectionInfo() *gossip.ConnectionInfo {
+func (m *receivedMessage) GetConnectionInfo() *protoext.ConnectionInfo {
 	panic("not implemented")
 }
 
