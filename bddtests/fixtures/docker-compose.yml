@@ -19,14 +19,6 @@ services:
     volumes:
       - ./httpserver:/opt/gopath/src/github.com/user/httpservers
 
-  metrics.example.com:
-    container_name: metrics.example.com
-    image: prom/prometheus
-    ports:
-      - 9095:9090
-    volumes:
-      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-
   orderer.example.com:
     container_name: orderer.example.com
     image: ${FABRIC_NEXT_NS}/${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}

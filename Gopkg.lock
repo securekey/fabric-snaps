@@ -73,6 +73,21 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:b870f4fc8ac5a04b3dbb6540e81a4c16da874e9f922dbe8762a90d9bcc294910"
+  name = "github.com/bluele/gcache"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "79ae3b2d8680cbc7ad3dba9db66b8a648575221c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9af5b27cadd7fefde7d20dfc72470d39679337e972460a251c129062a70f8518"
+  name = "github.com/btcsuite/btcutil"
+  packages = ["base58"]
+  pruneopts = "NUT"
+  revision = "9e5f4b9a998d263e3ce9c56664a7816001ac8000"
+
+[[projects]]
   digest = "1:de76cd93b72fad5af6718491f979547823e853f2417b45a87744783ccfbc0688"
   name = "github.com/cloudflare/cfssl"
   packages = [
@@ -237,7 +252,6 @@
   version = "v1.2.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:50e55a294ad37fd28b1648d8dffd827327f955b0f03fb97f67a946f0b4b07d83"
   name = "github.com/golang/mock"
   packages = ["gomock"]
@@ -317,11 +331,14 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  digest = "1:73c14ea03bb1b78e5cdab73a0c510e986e772e41528ac54b713cfd1e2ce6d445"
+  branch = "src-1.4.1"
+  digest = "1:2796bea5c81245a85399f91f27b5df691dcb48ee31fb01485ebf422b2c0f184e"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
     "bccsp/factory",
+    "bccsp/grep11",
+    "bccsp/grep11/protos",
     "bccsp/idemix",
     "bccsp/idemix/bridge",
     "bccsp/idemix/handlers",
@@ -337,6 +354,7 @@
     "common/configtx",
     "common/configtx/test",
     "common/crypto",
+    "common/crypto/tlsgen",
     "common/deliver",
     "common/errors",
     "common/flogging",
@@ -361,6 +379,7 @@
     "common/mocks/configtx",
     "common/mocks/policies",
     "common/policies",
+    "common/semaphore",
     "common/tools/configtxgen/configtxgentest",
     "common/tools/configtxgen/encoder",
     "common/tools/configtxgen/localconfig",
@@ -428,6 +447,17 @@
     "core/policy",
     "core/policy/mocks",
     "core/transientstore",
+    "extensions/collections/api/dissemination",
+    "extensions/collections/api/store",
+    "extensions/collections/dissemination",
+    "extensions/collections/pvtdatahandler",
+    "extensions/collections/storeprovider",
+    "extensions/gossip/api",
+    "extensions/gossip/blockpublisher",
+    "extensions/gossip/coordinator",
+    "extensions/gossip/dispatcher",
+    "extensions/mocks",
+    "extensions/roles",
     "gossip/api",
     "gossip/comm",
     "gossip/common",
@@ -441,8 +471,10 @@
     "gossip/gossip/pull",
     "gossip/identity",
     "gossip/integration",
+    "gossip/metrics",
     "gossip/privdata",
     "gossip/privdata/common",
+    "gossip/protoext",
     "gossip/service",
     "gossip/state",
     "gossip/util",
@@ -464,6 +496,7 @@
     "protos/token",
     "protos/transientstore",
     "protos/utils",
+    "protoutil",
     "token/identity",
     "token/ledger",
     "token/tms",
@@ -472,8 +505,8 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "d700b43476e803c864c48021e63a78543b60e17e"
-  version = "v1.4.0"
+  revision = "ab9d8ec7c6879619fb446ed5b2f41a163e56c328"
+  source = "github.com/securekey/fabric-next"
 
 [[projects]]
   branch = "master"
@@ -808,11 +841,12 @@
   revision = "5a004441f897722c627870a981d02b29924215fa"
 
 [[projects]]
-  digest = "1:074bc35ec6969d7603de3cffb5bb9dc3b6fb694745a9837942fa9b1670e511e6"
+  digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -823,12 +857,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:3e5fd795ebf6a9e13e67d644da76130af7a6003286531f9573f8074c228b66a3"
+  digest = "1:5bc36a2eeba6a9af90bfffaa00b05dcfbc0164952024db54e6c6b0fbc53dd859"
   name = "github.com/prometheus/client_golang"
-  packages = ["prometheus"]
+  packages = [
+    "prometheus",
+    "prometheus/internal",
+  ]
   pruneopts = "NUT"
-  revision = "c5b7fccd204277076155f10851dad72b76a49317"
-  version = "v0.8.0"
+  revision = "50c4339db732beb2165735d2cde0bff78eb3c5a5"
+  version = "v0.9.3"
 
 [[projects]]
   branch = "master"
@@ -949,6 +986,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b9a00fb37a0075071b6787ff0abc4caad3e23b8b0986ca8a0a9f5d1311de06ea"
+  name = "github.com/sykesm/zap-logfmt"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ccbdde42f96b57b635a2dfb32b342fe68df8003a"
+
+[[projects]]
+  branch = "master"
   digest = "1:b18d044774f6ba5930c3fbf9958b2a9256c21f31dc50ecfa0622fe2a46608974"
   name = "github.com/syndtr/goleveldb"
   packages = [
@@ -975,6 +1020,38 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
+
+[[projects]]
+  digest = "1:88f3869bc1cd95fcee80efcd88673e4b100c775388862df8c831c8d60da6bf8a"
+  name = "github.com/trustbloc/fabric-peer-ext"
+  packages = [
+    "pkg/collections/offledger/api",
+    "pkg/collections/offledger/dcas",
+    "pkg/collections/offledger/dissemination",
+    "pkg/collections/offledger/storeprovider",
+    "pkg/collections/offledger/storeprovider/store/api",
+    "pkg/collections/offledger/storeprovider/store/cache",
+    "pkg/collections/offledger/storeprovider/store/couchdbstore",
+    "pkg/collections/pvtdatahandler",
+    "pkg/collections/pvtdatastore",
+    "pkg/collections/storeprovider",
+    "pkg/collections/transientdata/api",
+    "pkg/collections/transientdata/dissemination",
+    "pkg/collections/transientdata/storeprovider",
+    "pkg/collections/transientdata/storeprovider/store/api",
+    "pkg/collections/transientdata/storeprovider/store/cache",
+    "pkg/collections/transientdata/storeprovider/store/dbstore",
+    "pkg/common",
+    "pkg/common/discovery",
+    "pkg/common/requestmgr",
+    "pkg/common/support",
+    "pkg/config",
+    "pkg/gossip/blockpublisher",
+    "pkg/gossip/dispatcher",
+    "pkg/roles",
+  ]
+  pruneopts = "NUT"
+  revision = "9b2d0053a5e40e93141576b7210ef021fe881852"
 
 [[projects]]
   digest = "1:3f3f2b36f76d1187ccf6640dd5bdbce43fd3c1a2cc0d747abc1e0de374d13e63"
@@ -1292,6 +1369,7 @@
     "github.com/hyperledger/fabric/gossip/discovery",
     "github.com/hyperledger/fabric/gossip/filter",
     "github.com/hyperledger/fabric/gossip/gossip",
+    "github.com/hyperledger/fabric/gossip/protoext",
     "github.com/hyperledger/fabric/gossip/service",
     "github.com/hyperledger/fabric/msp",
     "github.com/hyperledger/fabric/msp/mgmt",
