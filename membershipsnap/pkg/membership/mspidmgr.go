@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	gcommon "github.com/hyperledger/fabric/gossip/common"
+	"github.com/hyperledger/fabric/gossip/protoext"
 	"github.com/hyperledger/fabric/gossip/service"
 	"github.com/hyperledger/fabric/protos/gossip"
 	"github.com/hyperledger/fabric/protos/msp"
@@ -29,10 +30,11 @@ func newMSPIDMgr(service service.GossipService) *mspIDMgr {
 	m.mspIDMap = make(map[string]string)
 
 	_, msgch := service.Accept(func(o interface{}) bool {
-		m := o.(gossip.ReceivedMessage).GetGossipMessage()
-		if m.IsPullMsg() && m.GetPullMsgType() == gossip.PullMsgType_IDENTITY_MSG {
-			return m.IsDataUpdate()
+		m := o.(protoext.ReceivedMessage).GetGossipMessage()
+		if protoext.GetPullMsgType(m.GossipMessage) == gossip.PullMsgType_IDENTITY_MSG {
+			return protoext.IsDataUpdate(m.GossipMessage)
 		}
+
 		return false
 	}, true)
 
@@ -53,7 +55,7 @@ func (m *mspIDMgr) GetMSPID(pkiID gcommon.PKIidType) string {
 	return mspID
 }
 
-func (m *mspIDMgr) receive(msgch <-chan gossip.ReceivedMessage) {
+func (m *mspIDMgr) receive(msgch <-chan protoext.ReceivedMessage) {
 	for {
 		logger.Debug("Listening to gossip messages...\n")
 		select {
@@ -75,7 +77,7 @@ func (m *mspIDMgr) receive(msgch <-chan gossip.ReceivedMessage) {
 }
 
 func (m *mspIDMgr) handleUpdate(envelope *gossip.Envelope) {
-	msg, err := envelope.ToGossipMessage()
+	msg, err := protoext.EnvelopeToGossipMessage(envelope)
 	if err != nil {
 		logger.Error("Error occurred while getting gossip messages : %s", err)
 	}
