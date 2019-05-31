@@ -23,6 +23,10 @@
 ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 
+[[override]]
+  name = "github.com/bluele/gcache"
+  revision = "79ae3b2d8680cbc7ad3dba9db66b8a648575221c"
+
 [[constraint]]
   name = "github.com/DATA-DOG/godog"
   version = "0.7.4"
@@ -42,9 +46,11 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
   version = "v1.0.0-alpha5"
   name = "github.com/hyperledger/fabric-sdk-go"
 
-[[constraint]]
+[[override]]
   name = "github.com/hyperledger/fabric"
-  version = "1.4.0"
+  branch = "src-1.4.1"
+  source = "git@sk-git.securekey.com:gerrit/fabric-next.git"
+
 
 [[override]]
   name = "github.com/miekg/pkcs11"
@@ -80,7 +86,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[override]]
   name = "github.com/pkg/errors"
-  revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
+  version = "0.8.1"
 
 [[override]]
   name = "github.com/mitchellh/mapstructure"
