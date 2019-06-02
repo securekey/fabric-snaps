@@ -530,10 +530,10 @@ func (c *clientImpl) checkTxnID(endorseRequest *api.EndorseTxRequest) (bool, []b
 	return validTxnID, creator, nil
 }
 
-func (c *clientImpl) commitOnlyTransaction(endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+func (c *clientImpl) commitOnlyTransaction(rwSetIgnoreNameSpace []api.Namespace, commitType api.CommitType, endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 	logger.Debugf("CommitOnlyTransaction")
 
-	checkForCommit := handler.NewCheckForCommitHandler(nil, callback, api.CommitOnWrite,
+	checkForCommit := handler.NewCheckForCommitHandler(rwSetIgnoreNameSpace, callback, commitType,
 		handler.NewCommitTxHandler(registerTxEvent, c.channelID),
 	)
 

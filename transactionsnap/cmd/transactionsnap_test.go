@@ -265,10 +265,18 @@ func TestCommitOnlyTransaction(t *testing.T) {
 
 	require.Equal(t, response.Status, int32(shim.OK))
 	require.NotEqual(t, len(response.GetPayload()), 0)
-	args = make([][]byte, 3)
+	args = make([][]byte, 5)
 	args[0] = []byte("commitOnlyTransaction")
 	args[1] = []byte("testChannel")
 	args[2] = response.GetPayload()
+	var rwSetIgnoreNameSpace []api.Namespace
+	bytes, err := json.Marshal(rwSetIgnoreNameSpace)
+	require.NoError(t, err)
+	args[3] = bytes
+	bytes, err = json.Marshal(api.CommitOnWrite)
+	require.NoError(t, err)
+	args[4] = bytes
+
 	//invoke transaction snap
 	response = stub.MockInvoke("TxID", args)
 	require.Equal(t, response.Status, int32(shim.OK))

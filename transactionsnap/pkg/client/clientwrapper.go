@@ -79,7 +79,7 @@ func (c *clientWrapper) CommitTransaction(endorseRequest *api.EndorseTxRequest, 
 	return resp, commit, err
 }
 
-func (c *clientWrapper) CommitOnlyTransaction(endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
+func (c *clientWrapper) CommitOnlyTransaction(rwSetIgnoreNameSpace []api.Namespace, commitType api.CommitType, endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 
 	commitTx := func(endorserResponse *channel.Response, registerTxEvent bool, callback api.EndorsedCallback) (*channel.Response, bool, errors.Error) {
 		client, err := c.get()
@@ -88,7 +88,7 @@ func (c *clientWrapper) CommitOnlyTransaction(endorserResponse *channel.Response
 		}
 		defer client.Release()
 
-		return client.commitOnlyTransaction(endorserResponse, registerTxEvent, callback)
+		return client.commitOnlyTransaction(rwSetIgnoreNameSpace, commitType, endorserResponse, registerTxEvent, callback)
 	}
 
 	resp, commit, err := commitTx(endorserResponse, registerTxEvent, callback)
