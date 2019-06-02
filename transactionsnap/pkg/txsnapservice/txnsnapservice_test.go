@@ -262,7 +262,7 @@ func TestCommitOnlyTransaction(t *testing.T) {
 		return nil
 	})
 
-	_, commit, err := txService.CommitOnlyTransaction(response)
+	_, commit, err := txService.CommitOnlyTransaction(nil, api.CommitOnWrite, response)
 	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
 	assert.True(t, commit, "commit value should be true")
 }
@@ -299,7 +299,7 @@ func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
 		return nil
 	})
 
-	_, commit, err := txService.CommitOnlyTransaction(response)
+	_, commit, err := txService.CommitOnlyTransaction(nil, api.CommitOnWrite, response)
 	assert.Nil(t, err, fmt.Sprintf("Error commit transaction %v", err))
 	assert.False(t, commit, "commit value should be false")
 }

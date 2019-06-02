@@ -140,10 +140,21 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	if snapFunc == "commitOnlyTransaction" {
-		ccArgs := make([][]byte, 3)
+		ccArgs := make([][]byte, 5)
 		ccArgs[0] = []byte("commitOnlyTransaction")
 		ccArgs[1] = []byte(channelID)
 		ccArgs[2] = response.Payload
+		var rwSetIgnoreNameSpace []api.Namespace
+		bytes, err := json.Marshal(rwSetIgnoreNameSpace)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		args[3] = bytes
+		bytes, err = json.Marshal(api.CommitOnWrite)
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		args[4] = bytes
 
 		logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
 

@@ -229,7 +229,7 @@ func (es *TxnSnap) commitTransaction(args [][]byte) errors.Error {
 func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
 
 	//first arg is function name; the second one is channel id; the third one is endorsement Response
-	if len(args) < 3 {
+	if len(args) < 5 {
 		return errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to commitOnly transaction")
 	}
 
@@ -242,9 +242,21 @@ func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
 	endorsementResponse := &channel.Response{}
 	endorsementUnmarshallErr := json.Unmarshal(endorserRespBytes, endorsementResponse)
 	if endorsementUnmarshallErr != nil {
-		return errors.WithMessage(errors.UnmarshalError, endorsementUnmarshallErr, "Cannot decode endorsements from transient map of Snap Transaction Request")
+		return errors.WithMessage(errors.UnmarshalError, endorsementUnmarshallErr, "Cannot decode endorsements from Snap Transaction Request")
 	}
-	_, _, err := srvc.CommitOnlyTransaction(endorsementResponse)
+	var rwSetIgnoreNameSpace []api.Namespace
+	errUnmarshal := json.Unmarshal(args[3], &rwSetIgnoreNameSpace)
+	if errUnmarshal != nil {
+		return errors.WithMessage(errors.UnmarshalError, errUnmarshal, "Cannot decode rwSetIgnoreNameSpace from Snap Transaction Request")
+	}
+
+	var commitType api.CommitType
+	errUnmarshal = json.Unmarshal(args[4], &commitType)
+	if errUnmarshal != nil {
+		return errors.WithMessage(errors.UnmarshalError, errUnmarshal, "Cannot decode commitType from Snap Transaction Request")
+	}
+
+	_, _, err := srvc.CommitOnlyTransaction(rwSetIgnoreNameSpace, commitType, endorsementResponse)
 	if err != nil {
 		return err
 	}

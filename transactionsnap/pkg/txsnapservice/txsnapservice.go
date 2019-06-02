@@ -147,8 +147,8 @@ func (txs *TxServiceImpl) CommitTransaction(snapTxRequest *api.SnapTransactionRe
 }
 
 //CommitOnlyTransaction just commits the data without endorsement
-func (txs *TxServiceImpl) CommitOnlyTransaction(endorserResponse *channel.Response) (*channel.Response, bool, errors.Error) {
-	return txs.FcClient.CommitOnlyTransaction(endorserResponse, true, txs.Callback)
+func (txs *TxServiceImpl) CommitOnlyTransaction(rwSetIgnoreNameSpace []api.Namespace, commitType api.CommitType, endorserResponse *channel.Response) (*channel.Response, bool, errors.Error) {
+	return txs.FcClient.CommitOnlyTransaction(rwSetIgnoreNameSpace, commitType, endorserResponse, true, txs.Callback)
 }
 
 //InvokeSDKHandler invoke sdk handler
