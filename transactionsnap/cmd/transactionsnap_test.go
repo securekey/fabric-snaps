@@ -27,14 +27,13 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	servicemocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/events/service/mocks"
 	fcmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
-	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/msp"
-	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	pbsdk "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
-	protosUtils "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/utils"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	cb "github.com/hyperledger/fabric/protos/common"
+	pb "github.com/hyperledger/fabric/protos/peer"
+	protosUtils "github.com/hyperledger/fabric/protos/utils"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -243,7 +242,7 @@ func TestVerifyEndorsements(t *testing.T) {
 	require.NoError(t, json.Unmarshal(response.GetPayload(), &chResponse))
 	require.NotEqual(t, len(chResponse.Responses), 0)
 
-	var proposalResponses []*pb.ProposalResponse
+	var proposalResponses []*pbsdk.ProposalResponse
 	proposalResponses = append(proposalResponses, chResponse.Responses[0].ProposalResponse)
 	endorsements, err := json.Marshal(proposalResponses)
 	require.NoError(t, err)
@@ -362,7 +361,7 @@ func TestTransactionSnapInvokeFuncCommitTransactionSuccess(t *testing.T) {
 			time.Sleep(2 * time.Second)
 			eventProducer.Ledger().NewFilteredBlock(
 				channelID,
-				servicemocks.NewFilteredTx(string(response.TransactionID), pb.TxValidationCode_VALID),
+				servicemocks.NewFilteredTx(string(response.TransactionID), pbsdk.TxValidationCode_VALID),
 			)
 		}()
 		return nil
@@ -530,7 +529,7 @@ func newSignedProposal(channelID string, request fabApi.ChaincodeInvokeRequest) 
 		return nil, err
 	}
 
-	proposal, _, err := protosUtils.CreateChaincodeProposalWithTxIDNonceAndTransient(txnID, common.HeaderType_ENDORSER_TRANSACTION, channelID, ccis, nonce, creator, request.TransientMap)
+	proposal, _, err := protosUtils.CreateChaincodeProposalWithTxIDNonceAndTransient(txnID, cb.HeaderType_ENDORSER_TRANSACTION, channelID, ccis, nonce, creator, request.TransientMap)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create chaincode proposal, err %s", err)
 	}
