@@ -15,6 +15,7 @@ import (
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazyref"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -40,21 +41,21 @@ type clientWrapper struct {
 	metrics   *Metrics
 }
 
-func (c *clientWrapper) EndorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
-	endorseTransaction := func(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
+func (c *clientWrapper) EndorseTransaction(endorseRequest *api.EndorseTxRequest, options ...endorse.RequestOption) (*channel.Response, errors.Error) {
+	endorseTransaction := func(endorseRequest *api.EndorseTxRequest, options ...endorse.RequestOption) (*channel.Response, errors.Error) {
 		client, err := c.get()
 		if err != nil {
 			return nil, err
 		}
 		defer client.Release()
 
-		return client.endorseTransaction(endorseRequest)
+		return client.endorseTransaction(endorseRequest, options...)
 	}
 
-	resp, err := endorseTransaction(endorseRequest)
+	resp, err := endorseTransaction(endorseRequest, options...)
 	if isRetryable(err) {
 		c.clearCache()
-		resp, err = endorseTransaction(endorseRequest)
+		resp, err = endorseTransaction(endorseRequest, options...)
 	}
 	return resp, err
 }

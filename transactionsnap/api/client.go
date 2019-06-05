@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -78,9 +79,10 @@ type Client interface {
 	// EndorseTransaction request endorsement from the peers on this channel
 	// for a transaction with the given parameters
 	// @param {EndorseTxRequest} request identifies the chaincode to invoke
+	// @param {EndorseRequestOption} opts allows the user to specify more advanced options
 	// @returns {Response} responses from endorsers
 	// @returns {error} error, if any
-	EndorseTransaction(endorseRequest *EndorseTxRequest) (*channel.Response, errors.Error)
+	EndorseTransaction(endorseRequest *EndorseTxRequest, options ...endorse.RequestOption) (*channel.Response, errors.Error)
 
 	// CommitTransaction request commit from the peers on this channel
 	// for a transaction with the given parameters
