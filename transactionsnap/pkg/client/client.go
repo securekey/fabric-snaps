@@ -15,6 +15,8 @@ import (
 	"hash"
 	"time"
 
+	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 
 	"github.com/golang/protobuf/proto"
@@ -425,7 +427,19 @@ func (f *endorserFilter) hasEndorserRole(peer fabApi.Peer) (bool, error) {
 	return false, errors.Errorf(errors.SystemError, "Peer [%s] not found", peer.URL())
 }
 
-func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*channel.Response, errors.Error) {
+//prepareOptsFromEndorseRequestOptions Reads Opts from Option array
+func (c *clientImpl) prepareOptsFromEndorseRequestOptions(options ...endorse.RequestOption) (endorse.RequestOptions, error) {
+	txnOpts := endorse.RequestOptions{}
+	for _, option := range options {
+		err := option(&txnOpts)
+		if err != nil {
+			return txnOpts, err
+		}
+	}
+	return txnOpts, nil
+}
+
+func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest, options ...endorse.RequestOption) (*channel.Response, errors.Error) {
 	logger.Debugf("EndorseTransaction with endorseRequest %+v", getDisplayableEndorseRequest(endorseRequest))
 
 	txnIDProvided := c.checkIfTxnIDIsProvided(endorseRequest)
@@ -449,25 +463,15 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 			args = append(args, []byte(value))
 		}
 	}
-	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
-	if txnIDProvided {
-		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
-			var opts []fabApi.TxnHeaderOpt
-			opts = append(opts, fabApi.WithNonce(endorseRequest.Nonce))
-			return opts
-		}
+
+	handler, err := c.createEndorseHandler(txnIDProvided, endorseRequest, options...)
+	if err != nil {
+		return nil, errors.WithMessage(errors.SystemError, err, "Failed to create endorse handler")
+
 	}
 
-	customQueryHandler := handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
-		invoke.NewEndorsementHandlerWithOpts(
-			invoke.NewEndorsementValidationHandler(
-				invoke.NewSignatureValidationHandler(),
-			),
-			txnHeaderOptsProvider),
-	)
-
 	response, err := c.invokeHandler(
-		customQueryHandler,
+		handler,
 		channel.Request{ChaincodeID: endorseRequest.ChaincodeID, Fcn: endorseRequest.Args[0], Args: args, TransientMap: endorseRequest.TransientData},
 		channel.WithTargets(targets...),
 		channel.WithTargetFilter(newEndorserFilter(c.channelID, c.clientConfig, endorseRequest.PeerFilter)),
@@ -481,6 +485,33 @@ func (c *clientImpl) endorseTransaction(endorseRequest *api.EndorseTxRequest) (*
 		return nil, errors.WithMessage(errors.EndorseTxError, err, "InvokeHandler Query failed")
 	}
 	return response, nil
+}
+
+func (c *clientImpl) createEndorseHandler(txnIDProvided bool, endorseRequest *api.EndorseTxRequest, options ...endorse.RequestOption) (invoke.Handler, error) {
+	var txnHeaderOptsProvider invoke.TxnHeaderOptsProvider
+	if txnIDProvided {
+		txnHeaderOptsProvider = func() []fabApi.TxnHeaderOpt {
+			var opts []fabApi.TxnHeaderOpt
+			opts = append(opts, fabApi.WithNonce(endorseRequest.Nonce))
+			return opts
+		}
+	}
+
+	opts, err := c.prepareOptsFromEndorseRequestOptions(options...)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.Handler == nil {
+		opts.Handler = handler.NewPeerFilterHandler(endorseRequest.ChaincodeIDs, c.txnSnapConfig,
+			invoke.NewEndorsementHandlerWithOpts(
+				invoke.NewEndorsementValidationHandler(
+					invoke.NewSignatureValidationHandler(),
+				),
+				txnHeaderOptsProvider),
+		)
+	}
+	return opts.Handler, nil
 }
 
 // getDisplayableEndorseRequest strips out TransientData and Args[1:] from endorseRequest for logging purposes

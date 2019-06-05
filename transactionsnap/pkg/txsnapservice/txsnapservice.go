@@ -18,6 +18,7 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 	metricsutil "github.com/securekey/fabric-snaps/metrics/pkg/util"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter"
 	"github.com/securekey/fabric-snaps/util/errors"
@@ -123,12 +124,12 @@ func (txs *TxServiceImpl) createEndorseTxRequest(snapTxRequest *api.SnapTransact
 }
 
 //EndorseTransaction use to endorse the transaction
-func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer) (*channel.Response, errors.Error) {
+func (txs *TxServiceImpl) EndorseTransaction(snapTxRequest *api.SnapTransactionRequest, peers []fabApi.Peer, options ...endorse.RequestOption) (*channel.Response, errors.Error) {
 	request, err := txs.createEndorseTxRequest(snapTxRequest, peers)
 	if err != nil {
 		return nil, err
 	}
-	value, err := txs.FcClient.EndorseTransaction(request)
+	value, err := txs.FcClient.EndorseTransaction(request, options...)
 	if err != nil {
 		return nil, err
 	}

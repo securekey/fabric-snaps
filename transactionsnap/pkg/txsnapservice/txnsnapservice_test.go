@@ -41,6 +41,7 @@ import (
 	"github.com/securekey/fabric-snaps/mocks/mockmembership"
 	mockstub "github.com/securekey/fabric-snaps/mocks/mockstub"
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
+	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/config"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
@@ -85,6 +86,16 @@ func TestEndorseTransaction(t *testing.T) {
 	if string(response.Responses[0].ProposalResponse.Response.Payload) != "value" {
 		t.Fatalf("Expected proposal response payload: value but got %v", string(response.Responses[0].ProposalResponse.Response.Payload))
 	}
+
+}
+
+func TestEndorseTransactionWithOptions(t *testing.T) {
+	snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nil, "")
+	txService := newMockTxService(nil)
+
+	_, err := txService.EndorseTransaction(&snapTxReq, nil, endorse.WithHandler(newMockHandler(fmt.Errorf("error from handler"))))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "error from handler")
 
 }
 
@@ -601,4 +612,19 @@ func uplaodConfigToHL(stub *mockstub.MockStub, config []byte) error {
 	}
 	err := configManager.Save(config)
 	return err
+}
+
+func newMockHandler(err error) *mockHandler {
+	return &mockHandler{err: err}
+}
+
+type mockHandler struct {
+	err error
+}
+
+//Handle for endorsing transactions
+func (i *mockHandler) Handle(requestContext *invoke.RequestContext, clientContext *invoke.ClientContext) {
+
+	requestContext.Error = i.err
+	return
 }
