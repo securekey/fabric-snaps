@@ -244,13 +244,9 @@
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:700c0988d24fac04439828af2aab8e7d1638cea3bc91ff20d2a2befc970ff165"
+  digest = "1:38e684375ef5b55e812332266d63f9fc5b6329ab303067c4cdda051db6d29ca4"
   name = "github.com/gogo/protobuf"
-  packages = [
-    "gogoproto",
-    "proto",
-    "protoc-gen-gogo/descriptor",
-  ]
+  packages = ["proto"]
   pruneopts = "NUT"
   revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
   version = "v1.1.1"
@@ -336,7 +332,7 @@
 
 [[projects]]
   branch = "src-1.4.1"
-  digest = "1:2796bea5c81245a85399f91f27b5df691dcb48ee31fb01485ebf422b2c0f184e"
+  digest = "1:879e92316dcbfc86e3780847981585513e998dda6c9f680bc12b5372698fabcf"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -413,6 +409,7 @@
     "core/handlers/validation/api",
     "core/handlers/validation/api/capabilities",
     "core/handlers/validation/api/identities",
+    "core/handlers/validation/api/policies",
     "core/handlers/validation/api/state",
     "core/ledger",
     "core/ledger/cceventmgmt",
@@ -1311,8 +1308,10 @@
     "github.com/DATA-DOG/godog/gherkin",
     "github.com/fsouza/go-dockerclient",
     "github.com/go-kit/kit/metrics/statsd",
+    "github.com/gogo/protobuf/proto",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
+    "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke",
     "github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/fabricselection",
@@ -1372,6 +1371,9 @@
     "github.com/hyperledger/fabric/bccsp/pkcs11",
     "github.com/hyperledger/fabric/bccsp/signer",
     "github.com/hyperledger/fabric/bccsp/utils",
+    "github.com/hyperledger/fabric/common/cauthdsl",
+    "github.com/hyperledger/fabric/common/errors",
+    "github.com/hyperledger/fabric/common/ledger",
     "github.com/hyperledger/fabric/common/metrics",
     "github.com/hyperledger/fabric/common/metrics/disabled",
     "github.com/hyperledger/fabric/common/metrics/gendoc",
@@ -1382,6 +1384,11 @@
     "github.com/hyperledger/fabric/common/viperutil",
     "github.com/hyperledger/fabric/core/aclmgmt",
     "github.com/hyperledger/fabric/core/chaincode/shim",
+    "github.com/hyperledger/fabric/core/committer/txvalidator",
+    "github.com/hyperledger/fabric/core/common/ccprovider",
+    "github.com/hyperledger/fabric/core/common/sysccprovider",
+    "github.com/hyperledger/fabric/core/handlers/validation/api/policies",
+    "github.com/hyperledger/fabric/core/ledger",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil",
     "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb",
@@ -1403,6 +1410,8 @@
     "github.com/hyperledger/fabric/msp/mgmt",
     "github.com/hyperledger/fabric/protos/common",
     "github.com/hyperledger/fabric/protos/gossip",
+    "github.com/hyperledger/fabric/protos/ledger/rwset",
+    "github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset",
     "github.com/hyperledger/fabric/protos/msp",
     "github.com/hyperledger/fabric/protos/peer",
     "github.com/hyperledger/fabric/protos/transientstore",
