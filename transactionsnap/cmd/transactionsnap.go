@@ -143,11 +143,17 @@ func (es *TxnSnap) invokeVerifyTransactionProposalSignature(stub shim.ChaincodeS
 }
 
 func (es *TxnSnap) invokeVerifyEndorsements(stub shim.ChaincodeStubInterface) pb.Response {
-	_, args := stub.GetFunctionAndParameters()
+	args := stub.GetArgs()
 	if len(args) < 2 {
 		return util.CreateShimResponseFromError(errors.New(errors.MissingRequiredParameterError, "Not enough arguments in call to verify endorsement"), logger, stub)
 	}
-	if err := es.verifyEndorsements(args); err != nil {
+
+	request := &api.ValidationRequest{}
+	if err := json.Unmarshal(args[1], request); err != nil {
+		return util.CreateShimResponseFromError(errors.Wrap(errors.UnmarshalError, err, "failed to unmarshal validation request"), logger, stub)
+	}
+
+	if err := es.verifyEndorsements(request); err != nil {
 		return util.CreateShimResponseFromError(err, logger, stub)
 	}
 	return pb.Response{Payload: nil, Status: shim.OK}
@@ -271,20 +277,23 @@ func (es *TxnSnap) commitOnlyTransaction(args [][]byte) errors.Error {
 	return nil
 }
 
-func (es *TxnSnap) verifyEndorsements(args []string) errors.Error {
-	endorsements := []byte(args[0])
-	channelID := args[1]
-	srvc, e := es.getTxService(channelID)
+func (es *TxnSnap) verifyEndorsements(request *api.ValidationRequest) errors.Error {
+	signedProposal := &pb.SignedProposal{}
+	if err := json.Unmarshal(request.Proposal, signedProposal); err != nil {
+		return errors.Wrap(errors.UnmarshalError, err, "failed to unmarshal original signed proposal")
+	}
+
+	var proposalResponses []*pb.ProposalResponse
+	if err := json.Unmarshal(request.ProposalResponses, &proposalResponses); err != nil {
+		return errors.Wrap(errors.UnmarshalError, err, "failed to unmarshal proposal response")
+	}
+
+	srvc, e := es.getTxService(request.ChannelID)
 	if e != nil {
-		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", channelID))
+		return errors.WithMessage(errors.GetTxServiceError, e, fmt.Sprintf("Failed to get TxService for channelID %s", request.ChannelID))
 	}
 
-	err := srvc.VerifyEndorsements(endorsements)
-	if err != nil {
-		return err
-	}
-	return nil
-
+	return srvc.VerifyEndorsements(signedProposal, proposalResponses)
 }
 
 func (es *TxnSnap) verifyTxnProposalSignature(args [][]byte) errors.Error {

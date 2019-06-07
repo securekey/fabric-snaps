@@ -51,6 +51,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/initbcinfo"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/txsnapservice"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/validator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -230,31 +231,78 @@ func TestSupportedFunctionWithNilRequest(t *testing.T) {
 }
 
 func TestVerifyEndorsements(t *testing.T) {
+	mockValidator := mocks.NewMockValidator()
+	txsnapservice.SetValidatorProvider(func(channelID string) validator.Validator {
+		return mockValidator
+	})
+
 	snap := newMockTxnSnap(nil)
 	stub := shim.NewMockStub("transactionsnap", snap)
-	args := createTransactionSnapRequest("endorseTransaction", "ccid", "testChannel", false)
-	//invoke transaction snap
-	response := stub.MockInvoke("TxID", args)
 
-	require.Equal(t, response.Status, int32(shim.OK))
-	require.NotEqual(t, len(response.GetPayload()), 0)
-	var chResponse *channel.Response
-	require.NoError(t, json.Unmarshal(response.GetPayload(), &chResponse))
-	require.NotEqual(t, len(chResponse.Responses), 0)
-
-	var proposalResponses []*pbsdk.ProposalResponse
-	proposalResponses = append(proposalResponses, chResponse.Responses[0].ProposalResponse)
-	endorsements, err := json.Marshal(proposalResponses)
+	proposal := &pb.SignedProposal{
+		Signature:     []byte("signature"),
+		ProposalBytes: []byte("proposal"),
+	}
+	proposalBytes, err := json.Marshal(proposal)
 	require.NoError(t, err)
 
-	args = make([][]byte, 3)
-	args[0] = []byte("verifyEndorsements")
-	args[1] = endorsements
-	args[2] = []byte("testChannel")
-	//invoke transaction snap
-	response = stub.MockInvoke("TxID", args)
-	require.Equal(t, response.Status, int32(shim.OK))
+	proposalResponses := []*pb.ProposalResponse{
+		{
+			Response: &pb.Response{
+				Status: 200,
+			},
+			Endorsement: &pb.Endorsement{
+				Signature: []byte("signature"),
+				Endorser:  []byte("endorser"),
+			},
+		},
+	}
 
+	proposalResponsesBytes, err := json.Marshal(proposalResponses)
+	require.NoError(t, err)
+
+	request := &api.ValidationRequest{
+		ChannelID:         channelID,
+		Proposal:          proposalBytes,
+		ProposalResponses: proposalResponsesBytes,
+	}
+
+	reqBytes, err := json.Marshal(request)
+	require.NoError(t, err)
+
+	t.Run("Missing args", func(t *testing.T) {
+		args := [][]byte{
+			[]byte("verifyEndorsements"),
+		}
+
+		resp := stub.MockInvoke("TxID", args)
+		require.NotNil(t, resp)
+		require.Equal(t, int32(shim.ERROR), resp.Status)
+		require.Contains(t, resp.Message, "Not enough arguments in call to verify endorsement")
+	})
+
+	t.Run("Valid request", func(t *testing.T) {
+		args := [][]byte{
+			[]byte("verifyEndorsements"),
+			reqBytes,
+		}
+		resp := stub.MockInvoke("TxID", args)
+		require.NotNil(t, resp)
+		require.Empty(t, resp.Message)
+		require.Equal(t, int32(shim.OK), resp.Status)
+	})
+
+	t.Run("Failed validation", func(t *testing.T) {
+		mockValidator.Err = fmt.Errorf("validation failed")
+		args := [][]byte{
+			[]byte("verifyEndorsements"),
+			reqBytes,
+		}
+		resp := stub.MockInvoke("TxID", args)
+		require.NotNil(t, resp)
+		require.Equal(t, int32(shim.ERROR), resp.Status)
+		require.Contains(t, resp.Message, mockValidator.Err.Error())
+	})
 }
 
 func TestCommitOnlyTransaction(t *testing.T) {

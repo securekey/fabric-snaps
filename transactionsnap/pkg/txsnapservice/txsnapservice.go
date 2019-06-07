@@ -9,10 +9,9 @@ package txsnapservice
 import (
 	"sync"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -21,6 +20,7 @@ import (
 	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 	txnSnapClient "github.com/securekey/fabric-snaps/transactionsnap/pkg/client"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/peerfilter"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/validator"
 	"github.com/securekey/fabric-snaps/util/errors"
 )
 
@@ -33,7 +33,8 @@ var once sync.Once
 
 //TxServiceImpl used to create transaction service
 type TxServiceImpl struct {
-	FcClient api.Client
+	channelID string
+	FcClient  api.Client
 	// Callback is invoked after the endorsement
 	// phase of EndorseAndCommitTransaction
 	// (Used in unit tests.)
@@ -65,7 +66,8 @@ func newTxService(channelID string) (*TxServiceImpl, errors.Error) {
 		return nil, errors.WithMessage(errors.TxClientInitError, err, "Cannot initialize client")
 	}
 	return &TxServiceImpl{
-		FcClient: client,
+		channelID: channelID,
+		FcClient:  client,
 	}, nil
 }
 
@@ -176,17 +178,16 @@ func (txs *TxServiceImpl) VerifyTxnProposalSignature(signedProposal *pb.SignedPr
 }
 
 //VerifyEndorsements use to verify endorsements
-func (txs *TxServiceImpl) VerifyEndorsements(endorsements []byte) errors.Error {
-	if endorsements == nil {
-		return errors.New(errors.MissingRequiredParameterError, "Signed proposal is missing")
-	}
-
-	err := txs.FcClient.VerifyEndorsements(endorsements)
+func (txs *TxServiceImpl) VerifyEndorsements(signedProposal *pb.SignedProposal, proposalResponses []*pb.ProposalResponse) errors.Error {
+	_, err := getValidator(txs.channelID).ValidateProposalResponses(signedProposal, proposalResponses)
 	if err != nil {
-		logger.Debugf("VerifyEndorsements failed %s", err)
-		return err
+		return errors.WithMessage(errors.ValidationError, err, "endorsements failed to validate")
 	}
-	logger.Debugf("VerifyEndorsements succeed")
-
 	return nil
+}
+
+// getValidator returns the validator for the given channel.
+// This function may be overridden by unit tests.
+var getValidator = func(channelID string) validator.Validator {
+	return validator.Get().ValidatorForChannel(channelID)
 }

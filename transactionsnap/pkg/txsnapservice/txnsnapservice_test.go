@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
+	"github.com/securekey/fabric-snaps/transactionsnap/pkg/validator"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
@@ -30,6 +31,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	bccspFactory "github.com/hyperledger/fabric/bccsp/factory"
+	protopeer "github.com/hyperledger/fabric/protos/peer"
 	configmanagerApi "github.com/securekey/fabric-snaps/configmanager/api"
 	"github.com/securekey/fabric-snaps/configmanager/pkg/mgmt"
 	configmgmtService "github.com/securekey/fabric-snaps/configmanager/pkg/service"
@@ -319,76 +321,41 @@ func TestCommitOnlyTransactionForNoWriteSet(t *testing.T) {
 }
 
 func TestVerifyEndorsements(t *testing.T) {
-	var tpr []*fab.TransactionProposalResponse
-	mockEndorserServer.GetMockPeer().KVWrite = true
+	mockValidator := mocks.NewMockValidator()
+	SetValidatorProvider(func(channelID string) validator.Validator {
+		return mockValidator
+	})
+
 	txService := newMockTxService(nil)
-	for i := 1; i <= 2; i++ {
-		nonce := []byte("nonce")
-		txId := createTxId(t, nonce)
 
-		// first endorse transaction
-		snapTxReq := createTransactionSnapRequest("endorsetransaction", "ccid", channelID, false, nil, nonce, txId)
-
-		response, endorseErr := txService.EndorseTransaction(&snapTxReq, nil)
-		require.NoError(t, endorseErr)
-		require.NotNil(t, response, "Expected proposal response")
-		require.Equal(t, len(response.Responses), 1)
-		tpr = append(tpr, response.Responses[0])
+	proposal := &protopeer.SignedProposal{
+		Signature:     []byte("signature"),
+		ProposalBytes: []byte("proposal"),
 	}
 
-	t.Run("test success", func(t *testing.T) {
-		var proposalResponses []*pb.ProposalResponse
-		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
+	proposalResponses := []*protopeer.ProposalResponse{
+		{
+			Response: &protopeer.Response{
+				Status: 200,
+			},
+			Endorsement: &protopeer.Endorsement{
+				Signature: []byte("signature"),
+				Endorser:  []byte("endorser"),
+			},
+		},
+	}
 
-		endorsements, err := json.Marshal(proposalResponses)
-		require.NoError(t, err)
-		err = txService.VerifyEndorsements(endorsements)
+	t.Run("Valid request", func(t *testing.T) {
+		err := txService.VerifyEndorsements(proposal, proposalResponses)
 		require.NoError(t, err)
 	})
 
-	t.Run("test wrong endorsements signature", func(t *testing.T) {
-		var proposalResponses []*pb.ProposalResponse
-		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
-
-		proposalResponses[0].Endorsement.Signature = []byte("wrongSignature")
-		endorsements, err := json.Marshal(proposalResponses)
-		require.NoError(t, err)
-
-		err = txService.VerifyEndorsements(endorsements)
+	t.Run("Failed validation", func(t *testing.T) {
+		mockValidator.Err = fmt.Errorf("validation failed")
+		err := txService.VerifyEndorsements(proposal, proposalResponses)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "signature validation failed")
+		require.Contains(t, err.Error(), mockValidator.Err.Error())
 	})
-
-	t.Run("test endorsements with different response", func(t *testing.T) {
-		var proposalResponses []*pb.ProposalResponse
-		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
-		tpr[1].ProposalResponse.Response.Payload = []byte("wrongPayload")
-		proposalResponses = append(proposalResponses, tpr[1].ProposalResponse)
-
-		endorsements, err := json.Marshal(proposalResponses)
-		require.NoError(t, err)
-
-		err = txService.VerifyEndorsements(endorsements)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "ProposalResponsePayloads do not match")
-
-	})
-
-	t.Run("test endorsements with 500 status", func(t *testing.T) {
-		var proposalResponses []*pb.ProposalResponse
-		proposalResponses = append(proposalResponses, tpr[0].ProposalResponse)
-		tpr[1].ProposalResponse.Response.Status = 500
-		proposalResponses = append(proposalResponses, tpr[1].ProposalResponse)
-
-		endorsements, err := json.Marshal(proposalResponses)
-		require.NoError(t, err)
-
-		err = txService.VerifyEndorsements(endorsements)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "Endorser Server Status Code: (500) INTERNAL_SERVER_ERROR")
-
-	})
-
 }
 
 func computeTxnID(nonce, creator []byte, h hash.Hash) (string, error) {

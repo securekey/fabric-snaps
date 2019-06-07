@@ -41,3 +41,10 @@ type Creator struct {
 type ClientService interface {
 	GetFabricClient(channelID string) (Client, error)
 }
+
+// ValidationRequest holds the info for the validation request
+type ValidationRequest struct {
+	ChannelID         string `json:"channelID"`
+	Proposal          []byte `json:"proposal"`
+	ProposalResponses []byte `json:"proposalResponses"`
+}

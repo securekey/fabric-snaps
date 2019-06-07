@@ -123,9 +123,32 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			proposalResponses = append(proposalResponses, resp.ProposalResponse)
 		}
 		endorsements, err := json.Marshal(proposalResponses)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Error marshalling proposal responses: %s", err))
+		}
+
+		// FIXME: This doesn't work since the signed proposal should be the proposal that the TXN snap creates - not the proposal to the txnsnapinvoker
+		signedProposal, err := stub.GetSignedProposal()
+		if err != nil {
+			return shim.Error(fmt.Sprintf("GetSignedProposal returned error: %s", err))
+		}
+		signedProposalBytes, err := json.Marshal(signedProposal)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Error marshalling signed proposal: %s", err))
+		}
+
+		validationRequest := &api.ValidationRequest{
+			ChannelID:         channelID,
+			Proposal:          signedProposalBytes,
+			ProposalResponses: endorsements,
+		}
+		validationRequestBytes, err := json.Marshal(validationRequest)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("Error marshalling validation request: %s", err))
+		}
+
 		ccArgs[0] = []byte("verifyEndorsements")
-		ccArgs[1] = endorsements
-		ccArgs[2] = []byte(channelID)
+		ccArgs[1] = validationRequestBytes
 
 		logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
 
