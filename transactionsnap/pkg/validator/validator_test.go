@@ -9,8 +9,11 @@ package validator
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/ledger"
+	"github.com/hyperledger/fabric/core/peer"
 	cb "github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/mocks"
@@ -31,6 +34,9 @@ const (
 
 	org1MSP = "Org1MSP"
 	org2MSP = "Org2MSP"
+
+	lsccID       = "lscc"
+	upgradeEvent = "upgrade"
 )
 
 func TestValidator_ValidateProposalResponses_InvalidInput(t *testing.T) {
@@ -453,6 +459,50 @@ func TestValidator_ValidateProposalResponses(t *testing.T) {
 		code, err := v.ValidateProposalResponses(pBuilder.Build(), responsesBuilder.Build())
 		assert.Equal(t, pb.TxValidationCode_ILLEGAL_WRITESET, code)
 		assert.EqualError(t, err, "chaincode chaincode1 attempted to write to the namespace of LSCC")
+	})
+
+	t.Run("Reset Validator -> success", func(t *testing.T) {
+		cdBuilder := mocks.NewChaincodeDataBuilder().
+			Name(ccID1).
+			Version(ccVersion1).
+			VSCC("vscc").
+			Policy("OutOf(2,'Org1MSP.member','Org2MSP.member')")
+		qe.State(ccLSCC, ccID1, cdBuilder.BuildBytes())
+
+		id1Bytes, err := identity1.Serialize()
+		require.NoError(t, err)
+		id2Bytes, err := identity2.Serialize()
+		require.NoError(t, err)
+
+		responsesBuilder := mocks.NewProposalResponsesBuilder()
+		r1Builder := responsesBuilder.ProposalResponse()
+		r1Builder.Response().Status(int32(cb.Status_SUCCESS)).Payload([]byte("payload"))
+		r1Builder.Payload().ChaincodeAction().ChaincodeID(ccID1, "", ccVersion1)
+		r1Builder.Endorsement().Endorser(id1Bytes).Signature([]byte("id1"))
+		r2Builder := responsesBuilder.ProposalResponse()
+		r2Builder.Response().Status(int32(cb.Status_SUCCESS)).Payload([]byte("payload"))
+		r2Builder.Payload().ChaincodeAction().ChaincodeID(ccID1, "", ccVersion1)
+		r2Builder.Endorsement().Endorser(id2Bytes).Signature([]byte("id2"))
+
+		code, err := v.ValidateProposalResponses(pBuilder.Build(), responsesBuilder.Build())
+		assert.Equal(t, pb.TxValidationCode_VALID, code)
+		assert.NoError(t, err)
+
+		b := mocks.NewBlockBuilder(channelID, 1000)
+		lceBytes, err := proto.Marshal(&pb.LifecycleEvent{ChaincodeName: ccID2})
+		require.NoError(t, err)
+		require.NotNil(t, lceBytes)
+
+		b.Transaction("tx1", pb.TxValidationCode_VALID).
+			ChaincodeAction(lsccID).ChaincodeEvent(upgradeEvent, lceBytes)
+
+		peer.BlockPublisher.ForChannel(channelID).Publish(b.Build())
+
+		time.Sleep(100 * time.Millisecond)
+
+		code, err = v.ValidateProposalResponses(pBuilder.Build(), responsesBuilder.Build())
+		assert.Equal(t, pb.TxValidationCode_VALID, code)
+		assert.NoError(t, err)
 	})
 }
 

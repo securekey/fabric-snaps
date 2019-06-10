@@ -20,6 +20,7 @@ import (
 	validation "github.com/hyperledger/fabric/core/handlers/validation/api/policies"
 	"github.com/hyperledger/fabric/core/ledger"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
+	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/msp"
 	"github.com/hyperledger/fabric/protos/common"
 	mp "github.com/hyperledger/fabric/protos/msp"
@@ -47,7 +48,7 @@ type validator struct {
 }
 
 func newValidator(channelID string, qeProvider queryExecutorProvider, pe validation.PolicyEvaluator, des msp.IdentityDeserializer) *validator {
-	return &validator{
+	v := &validator{
 		channelID:             channelID,
 		queryExecutorProvider: qeProvider,
 		policyEvaluator:       pe,
@@ -58,6 +59,13 @@ func newValidator(channelID string, qeProvider queryExecutorProvider, pe validat
 			},
 		),
 	}
+	bp := peer.BlockPublisher.ForChannel(channelID)
+	bp.AddCCUpgradeHandler(func(blockNum uint64, txID string, chaincodeName string) error {
+		logger.Infof("[%s] Chaincode [%s] was upgraded. Resetting chaincode data cache", channelID, chaincodeName)
+		v.ccDataCache.DeleteAll()
+		return nil
+	})
+	return v
 }
 
 // ValidateProposalResponses executes vscc validation for proposal responses
