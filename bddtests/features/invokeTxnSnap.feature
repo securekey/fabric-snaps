@@ -45,15 +45,14 @@ Feature:  Feature Invoke Transaction Snap
         When client invokes chaincode "readtest_cc" with args "put,k4,value4_update" on all peers in the "peerorg1" org on the "mychannel" channel
         When client invokes chaincode "readtest_cc" with args "checkGetStateAndUnsafeGetState,mychannel,readtest_cc,k4" on all peers in the "peerorg1" org on the "mychannel" channel
 
-# Skip this test for now since we don't have a way of getting the original proposal
-#  @verifyEndorsements
-#  Scenario: Invoke Transaction Snap verifyEndorsements function
-#    Given the channel "mychannel" is created and all peers have joined
-#    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
-#    And "test" chaincode "example_cc" is installed from path "github.com/example_cc" to all peers
-#    And "test" chaincode "example_cc" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
-#    And chaincode "example_cc" is warmed up on all peers on the "mychannel" channel
-#    And client queries system chaincode "txnsnapinvoker" with args "txnsnap,verifyEndorsements,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
+   @verifyEndorsements
+   Scenario: Invoke Transaction Snap verifyEndorsements function
+    Given the channel "mychannel" is created and all peers have joined
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
+    And "test" chaincode "example_cc" is installed from path "github.com/example_cc" to all peers
+    And "test" chaincode "example_cc" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
+    And chaincode "example_cc" is warmed up on all peers on the "mychannel" channel
+    And client queries system chaincode "txnsnapinvoker" with args "txnsnap,verifyEndorsements,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
 
   @commitOnlyTransaction
   Scenario: Invoke Transaction Snap commitOnlyTransaction function
