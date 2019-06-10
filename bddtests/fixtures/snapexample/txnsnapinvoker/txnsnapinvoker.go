@@ -61,7 +61,7 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	channelID := string(args[2])
 	ccID := string(args[3])
 
-	if snapFunc == "verifyEndorsements" || snapFunc == "commitOnlyTransaction" {
+	if snapFunc == "verifyEndorsements" || snapFunc == "verifyEndorsementsWithError" || snapFunc == "commitOnlyTransaction" {
 		function = "endorseTransaction"
 	}
 
@@ -69,7 +69,7 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	var ccArgs [][]byte
 	ccArgs = args[1:]
 
-	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" || snapFunc == "verifyEndorsements" || snapFunc == "commitOnlyTransaction" {
+	if snapFunc == "commitTransaction" || snapFunc == "endorseTransaction" || snapFunc == "endorseTx" || snapFunc == "verifyEndorsements" || snapFunc == "verifyEndorsementsWithError" || snapFunc == "commitOnlyTransaction" {
 		peerFilter := &api.PeerFilterOpts{
 			Type: api.MinBlockHeightPeerFilterType,
 			Args: []string{channelID, fmt.Sprintf("%d", 3)},
@@ -109,56 +109,11 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	if snapFunc == "verifyEndorsements" {
-		ccArgs := make([][]byte, 3)
-		var trxResponse *channel.Response
-		err := json.Unmarshal(response.Payload, &trxResponse)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
-		}
+		return t.verifyEndorsements(stub, channelID, response, snapName, false)
+	}
 
-		var proposalResponses []*skdpb.ProposalResponse
-
-		for _, resp := range trxResponse.Responses {
-			proposalResponses = append(proposalResponses, resp.ProposalResponse)
-		}
-		endorsements, err := json.Marshal(proposalResponses)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Error marshalling proposal responses: %s", err))
-		}
-
-		proposalBytes, err := proto.Marshal(trxResponse.Proposal.Proposal)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Error marshalling  proposal: %s", err))
-		}
-
-		signedProposalBytes, err := json.Marshal(&pb.SignedProposal{ProposalBytes: proposalBytes})
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Error marshalling signed proposal: %s", err))
-		}
-
-		validationRequest := &api.ValidationRequest{
-			ChannelID:         channelID,
-			Proposal:          signedProposalBytes,
-			ProposalResponses: endorsements,
-		}
-		validationRequestBytes, err := json.Marshal(validationRequest)
-		if err != nil {
-			return shim.Error(fmt.Sprintf("Error marshalling validation request: %s", err))
-		}
-
-		ccArgs[0] = []byte("verifyEndorsements")
-		ccArgs[1] = validationRequestBytes
-
-		logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
-
-		// Leave channel (last argument) empty since we are calling chaincode(s) on the same channel
-		response := stub.InvokeChaincode(snapName, ccArgs, "")
-		if response.Status != shim.OK {
-			errStr := fmt.Sprintf("Failed to invoke chaincode %s. Error: %s", snapName, string(response.Message))
-			logger.Warning(errStr)
-			return shim.Error(errStr)
-		}
-
+	if snapFunc == "verifyEndorsementsWithError" {
+		return t.verifyEndorsements(stub, channelID, response, snapName, true)
 	}
 
 	if snapFunc == "commitOnlyTransaction" {
@@ -193,6 +148,64 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Infof("Response from %s: %s ", snapName, string(response.Payload))
 
 	return shim.Success(response.Payload)
+}
+
+func (t *TxnSnapInvoker) verifyEndorsements(stub shim.ChaincodeStubInterface, channelID string, response pb.Response, snapName string, injectError bool) pb.Response {
+	var trxResponse *channel.Response
+	err := json.Unmarshal(response.Payload, &trxResponse)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Unmarshal(%s) to TransactionProposalResponse return error: %v", response.Payload, err))
+	}
+
+	var proposalResponses []*skdpb.ProposalResponse
+
+	for i, resp := range trxResponse.Responses {
+		proposalResponses = append(proposalResponses, resp.ProposalResponse)
+		if injectError {
+			resp.ProposalResponse.Endorsement.Endorser = []byte(fmt.Sprintf("invalid endorser %d", i))
+		}
+	}
+
+	endorsements, err := json.Marshal(proposalResponses)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Error marshalling proposal responses: %s", err))
+	}
+
+	proposalBytes, err := proto.Marshal(trxResponse.Proposal.Proposal)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Error marshalling  proposal: %s", err))
+	}
+
+	signedProposalBytes, err := json.Marshal(&pb.SignedProposal{ProposalBytes: proposalBytes})
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Error marshalling signed proposal: %s", err))
+	}
+
+	validationRequest := &api.ValidationRequest{
+		ChannelID:         channelID,
+		Proposal:          signedProposalBytes,
+		ProposalResponses: endorsements,
+	}
+	validationRequestBytes, err := json.Marshal(validationRequest)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Error marshalling validation request: %s", err))
+	}
+
+	ccArgs := make([][]byte, 2)
+	ccArgs[0] = []byte("verifyEndorsements")
+	ccArgs[1] = validationRequestBytes
+
+	logger.Infof("Invoking chaincode %s with ccArgs=%s", snapName, ccArgs)
+
+	// Leave channel (last argument) empty since we are calling chaincode(s) on the same channel
+	resp := stub.InvokeChaincode(snapName, ccArgs, "")
+	if resp.Status != shim.OK {
+		errStr := fmt.Sprintf("Failed to invoke chaincode %s. Error: %s", snapName, string(resp.Message))
+		logger.Warning(errStr)
+		return shim.Error(errStr)
+	}
+
+	return shim.Success(resp.Payload)
 }
 
 func createTransactionSnapRequest(functionName string, chaincodeID string, chnlID string, clientArgs [][]byte, registerTxEvent bool, peerFilter *api.PeerFilterOpts) [][]byte {

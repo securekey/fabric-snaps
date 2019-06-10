@@ -310,6 +310,10 @@ func (d *CommonSteps) queryCConOrg(ccID, args, orgIDs, channelID string) error {
 }
 
 func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
+	return d.querySystemCCWithExpectedError(ccID, args, orgID, channelID, "")
+}
+
+func (d *CommonSteps) querySystemCCWithExpectedError(ccID, args, orgID, channelID, expectedError string) error {
 	argsArray := strings.Split(args, ",")
 
 	endorsements := ""
@@ -333,8 +337,13 @@ func (d *CommonSteps) querySystemCC(ccID, args, orgID, channelID string) error {
 
 	var err error
 	queryValue, err = d.QueryCCWithArgs(true, ccID, channelID, argsArray, tm,
-		[]*PeerConfig{&PeerConfig{Config: peersConfig[0], OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}}...)
+		[]*PeerConfig{{Config: peersConfig[0], OrgID: orgID, MspID: d.BDDContext.peersMspID[serverHostOverride], PeerID: serverHostOverride}}...)
 	if err != nil {
+		if expectedError != "" {
+			if strings.Contains(err.Error(), expectedError) {
+				return nil
+			}
+		}
 		logger.Debugf("%s : querySystemCC: args=%s; endorsements=%s; error=%s\n", time.Now().Format(time.RFC3339), args, endorsements, err)
 		return fmt.Errorf("QueryCCWithArgs return error: %s", err)
 	}
@@ -850,6 +859,7 @@ func (d *CommonSteps) RegisterSteps(s *godog.Suite) {
 	s.Step(`^we wait (\d+) seconds$`, d.wait)
 	s.Step(`^client queries chaincode "([^"]*)" with args "([^"]*)" on all peers in the "([^"]*)" org on the "([^"]*)" channel$`, d.queryCConOrg)
 	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel$`, d.querySystemCC)
+	s.Step(`^client queries system chaincode "([^"]*)" with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel then the error response should contain "([^"]*)"$`, d.querySystemCCWithExpectedError)
 	s.Step(`client queries system chaincode "([^"]*)" with endorsement response and with args "([^"]*)" on org "([^"]*)" peer on the "([^"]*)" channel`, d.querySystemCC)
 	s.Step(`^response from "([^"]*)" to client contains value "([^"]*)"$`, d.containsInQueryValue)
 	s.Step(`^response from "([^"]*)" to client equal value "([^"]*)"$`, d.equalQueryValue)

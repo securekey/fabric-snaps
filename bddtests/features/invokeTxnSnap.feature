@@ -54,6 +54,15 @@ Feature:  Feature Invoke Transaction Snap
     And chaincode "example_cc" is warmed up on all peers on the "mychannel" channel
     And client queries system chaincode "txnsnapinvoker" with args "txnsnap,verifyEndorsements,mychannel,example_cc,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel
 
+  @verifyFailedEndorsements
+  Scenario: Invoke Transaction Snap verifyEndorsements function with invalid endorsement
+    Given the channel "mychannel" is created and all peers have joined
+    And client update config "./fixtures/config/snaps/snaps.json" with mspid "Org1MSP" with orgid "peerorg1" on the "mychannel" channel
+    And "test" chaincode "example_cc3" is installed from path "github.com/example_cc" to all peers
+    And "test" chaincode "example_cc3" is instantiated from path "github.com/example_cc" on the "mychannel" channel with args "init,a,100,b,200" with endorsement policy "" with collection policy ""
+    And chaincode "example_cc3" is warmed up on all peers on the "mychannel" channel
+    And client queries system chaincode "txnsnapinvoker" with args "txnsnap,verifyEndorsementsWithError,mychannel,example_cc3,invoke,query,b" on org "peerorg1" peer on the "mychannel" channel then the error response should contain "endorsements failed to validate"
+
   @commitOnlyTransaction
   Scenario: Invoke Transaction Snap commitOnlyTransaction function
     Given the channel "mychannel" is created and all peers have joined
