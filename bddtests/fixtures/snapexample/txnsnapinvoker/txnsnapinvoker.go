@@ -15,7 +15,6 @@ import (
 	skdpb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-
 	"github.com/securekey/fabric-snaps/transactionsnap/api"
 )
 
@@ -127,12 +126,12 @@ func (t *TxnSnapInvoker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return shim.Error(fmt.Sprintf("Error marshalling proposal responses: %s", err))
 		}
 
-		// FIXME: This doesn't work since the signed proposal should be the proposal that the TXN snap creates - not the proposal to the txnsnapinvoker
-		signedProposal, err := stub.GetSignedProposal()
+		proposalBytes, err := proto.Marshal(trxResponse.Proposal.Proposal)
 		if err != nil {
-			return shim.Error(fmt.Sprintf("GetSignedProposal returned error: %s", err))
+			return shim.Error(fmt.Sprintf("Error marshalling  proposal: %s", err))
 		}
-		signedProposalBytes, err := json.Marshal(signedProposal)
+
+		signedProposalBytes, err := json.Marshal(&pb.SignedProposal{ProposalBytes: proposalBytes})
 		if err != nil {
 			return shim.Error(fmt.Sprintf("Error marshalling signed proposal: %s", err))
 		}
