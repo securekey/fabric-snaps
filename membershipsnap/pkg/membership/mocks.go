@@ -69,7 +69,7 @@ func (s *mockGossipService) NewConfigEventer() service.ConfigProcessor {
 	panic("not implemented")
 }
 
-func (s *mockGossipService) InitializeChannel(string, []string, service.Support) {
+func (s *mockGossipService) InitializeChannel(string, service.OrdererAddressConfig, service.Support) {
 	panic("not implemented")
 }
 

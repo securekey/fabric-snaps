@@ -331,8 +331,8 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "src-1.4.1"
-  digest = "1:58a0ae8c0dd53c870ec75c5f9b68e94603b8e047e2187f86df8983f808862faf"
+  branch = "src-1.4.2"
+  digest = "1:a7d73c0f1b36d5b24c40f4c1c4c0e8e70acd2217cbfc24f8a6c3886a856adb71"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -506,7 +506,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "1823f2c97eeaa18739e6a5b3d6b2cd207e8c709f"
+  revision = "ea5a05a2575cd78c6c8efba62c04ac6d927b4c16"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
