@@ -723,6 +723,7 @@ func (c *clientImpl) getLocalPeer() (fabApi.Peer, error) {
 }
 
 func (c *clientImpl) getDiscoveredPeer(url string) (fabApi.Peer, error) {
+	logger.Debugf("Finding peer through discovery for URL [%s]", url)
 	discovery, err := c.discoveryService()
 	if err != nil {
 		return nil, errors.Wrapf(errors.SystemError, err, "Failed to get discovery service for channel [%s]", c.channelID)
@@ -732,11 +733,17 @@ func (c *clientImpl) getDiscoveredPeer(url string) (fabApi.Peer, error) {
 	if err != nil {
 		return nil, errors.Wrap(errors.SystemError, err, "Failed to get peers for discovery service")
 	}
+
+	logger.Debugf("Found %d peers through discovery", len(peers))
+
 	for _, peer := range peers {
 		if peer.URL() == url {
+			logger.Debugf("Selecting discovered peer [%s]", peer.URL())
 			return peer, nil
 		}
+		logger.Debug("Discovered peer[%s] did not match selected peer [%s]", peer.URL(), url)
 	}
+	logger.Debugf("Failed to get matching discovered peer for given URL [%s]", url)
 	return nil, errors.Errorf(errors.SystemError, "Peer [%s] not found", url)
 }
 
