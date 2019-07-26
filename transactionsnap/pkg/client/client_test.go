@@ -190,6 +190,11 @@ func TestInitializer(t *testing.T) {
 	assert.False(t, oldCtx == client.context)
 	assert.False(t, oldChannelClient == client.channelClient)
 	assert.False(t, oldHash == client.configHash)
+
+	//check discovered peer logic
+	fabPeer, e := client.getDiscoveredPeer("127.0.0.1:7040")
+	assert.NoError(t, e)
+	assert.NotNil(t, fabPeer)
 }
 
 func TestRetryableErrors(t *testing.T) {

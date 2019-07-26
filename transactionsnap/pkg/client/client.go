@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -737,12 +738,20 @@ func (c *clientImpl) getDiscoveredPeer(url string) (fabApi.Peer, error) {
 	logger.Debugf("Found %d peers through discovery", len(peers))
 
 	for _, peer := range peers {
-		if peer.URL() == url {
+		peerURL := peer.URL()
+
+		if strings.EqualFold(url, peerURL) {
 			logger.Debugf("Selecting discovered peer [%s]", peer.URL())
 			return peer, nil
+		} else if strings.Contains(peerURL, "://") {
+			if strings.EqualFold(url, strings.Split(peerURL, "://")[1]) {
+				logger.Debugf("Selecting discovered peer [%s]", peer.URL())
+				return peer, nil
+			}
 		}
-		logger.Debug("Discovered peer[%s] did not match selected peer [%s]", peer.URL(), url)
+		logger.Debugf("Discovered peer[%s] did not match selected peer [%s]", peer.URL(), url)
 	}
+
 	logger.Debugf("Failed to get matching discovered peer for given URL [%s]", url)
 	return nil, errors.Errorf(errors.SystemError, "Peer [%s] not found", url)
 }
