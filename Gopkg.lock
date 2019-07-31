@@ -1155,8 +1155,7 @@
   revision = "2bcb7b5baf829ed280ed1fd7320ad473b6849d60"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3114d7b26c8309e3477e3ca49924d4753c4184f87da95062fb179394e9b541c0"
+  digest = "1:3fe1beefae9440161c6f47673e7deb10714b062cca80c9cd77a0f98be316cc22"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -1164,15 +1163,15 @@
     "html",
     "html/atom",
     "html/charset",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "lex/httplex",
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
+  revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
 [[projects]]
   branch = "master"
