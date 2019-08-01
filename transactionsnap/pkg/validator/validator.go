@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/hyperledger/fabric/extensions/gossip/api"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/lazycache"
@@ -60,7 +62,7 @@ func newValidator(channelID string, qeProvider queryExecutorProvider, pe validat
 		),
 	}
 	bp := peer.BlockPublisher.ForChannel(channelID)
-	bp.AddCCUpgradeHandler(func(blockNum uint64, txID string, chaincodeName string) error {
+	bp.AddCCUpgradeHandler(func(txMetadata api.TxMetadata, chaincodeName string) error {
 		logger.Infof("[%s] Chaincode [%s] was upgraded. Resetting chaincode data cache", channelID, chaincodeName)
 		v.ccDataCache.DeleteAll()
 		return nil

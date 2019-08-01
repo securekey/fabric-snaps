@@ -332,7 +332,7 @@
 
 [[projects]]
   branch = "src-1.4.2"
-  digest = "1:a7d73c0f1b36d5b24c40f4c1c4c0e8e70acd2217cbfc24f8a6c3886a856adb71"
+  digest = "1:196ac4dd5ebe8e85fc3d06f10f92607cfe0c0a4b8ed4d5bd955f56b3a8aedb94"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -457,6 +457,7 @@
     "extensions/gossip/blockpublisher",
     "extensions/gossip/coordinator",
     "extensions/gossip/dispatcher",
+    "extensions/gossip/state",
     "extensions/mocks",
     "extensions/roles",
     "gossip/api",
@@ -506,7 +507,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "ea5a05a2575cd78c6c8efba62c04ac6d927b4c16"
+  revision = "61b64968f4c570109d4c359cddb73b3447f915ae"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
@@ -1043,7 +1044,7 @@
   revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
 
 [[projects]]
-  digest = "1:7f667690b0d3756da52b214e49bf1db8c305a24f56ac8f7df21f4ef9af3a6d76"
+  digest = "1:625510c892e8109088a8052b6d0353f452cae3c8832dde068deafbce7ec26b13"
   name = "github.com/trustbloc/fabric-peer-ext"
   packages = [
     "pkg/collections/offledger/api",
@@ -1072,7 +1073,7 @@
     "pkg/roles",
   ]
   pruneopts = "NUT"
-  revision = "9b20d84ee0a4b89039086a3a2da103584e7ed1d8"
+  revision = "60e327262316a5654e4078c78e781a7ee743dccc"
 
 [[projects]]
   digest = "1:3f3f2b36f76d1187ccf6640dd5bdbce43fd3c1a2cc0d747abc1e0de374d13e63"
