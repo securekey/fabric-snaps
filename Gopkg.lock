@@ -507,7 +507,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "e6b584ece26e15d4bfd68de845f482672c0e8626"
+  revision = "e13dd84547fe74bd07ed4d6a0a237d8e9fe19c3a"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
@@ -1044,7 +1044,7 @@
   revision = "e89a512c3162f0e5762a0948ace8509995e9820d"
 
 [[projects]]
-  digest = "1:7ca4534a811a3cecdb87b22ae560f117e4dade4c1539d457a76b0d6e6256b248"
+  digest = "1:8875bc6124f6025cf49bfbf4977592b25439ba310b616f4ec6b321f6ef65dfcb"
   name = "github.com/trustbloc/fabric-peer-ext"
   packages = [
     "pkg/collections/offledger/api",
@@ -1073,7 +1073,7 @@
     "pkg/roles",
   ]
   pruneopts = "NUT"
-  revision = "1b77710273f1fa80f92d87ff2daa4f161ac81b7b"
+  revision = "67f4c83e5f4a9c9a99c47b22ab0d1c297a9abae5"
 
 [[projects]]
   digest = "1:3f3f2b36f76d1187ccf6640dd5bdbce43fd3c1a2cc0d747abc1e0de374d13e63"
