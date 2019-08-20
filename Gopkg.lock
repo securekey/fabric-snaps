@@ -507,7 +507,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "c306dddfa83695286fdc11854a125fb1a489c142"
+  revision = "f6a445ad203fea541e043f1f402404d7f00433e7"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
