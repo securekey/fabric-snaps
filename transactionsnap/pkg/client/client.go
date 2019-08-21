@@ -18,14 +18,13 @@ import (
 
 	"github.com/securekey/fabric-snaps/transactionsnap/api/endorse"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel/invoke"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	contextApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	fabApi "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -37,6 +36,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	apisdk "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/api"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defsvc"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/common"
 	pb "github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/protos/peer"
 	peerpb "github.com/hyperledger/fabric/protos/peer"
 	memApi "github.com/securekey/fabric-snaps/membershipsnap/api/membership"
@@ -60,6 +60,22 @@ const (
 	txnSnapUser     = "Txn-Snap-User"
 	defaultLogLevel = "info"
 )
+
+// commitOnlyRetryableCodes are the suggested codes for commit only
+var commitOnlyRetryableCodes = map[status.Group][]status.Code{
+	status.OrdererClientStatus: {
+		status.ConnectionFailed,
+	},
+	status.OrdererServerStatus: {
+		status.Code(common.Status_SERVICE_UNAVAILABLE),
+		status.Code(common.Status_INTERNAL_SERVER_ERROR),
+	},
+	// TODO: gRPC introduced retries in v1.8.0. This can be replaced with the
+	// gRPC fail fast option, once available
+	status.GRPCTransportStatus: {
+		status.Code(grpcCodes.Unavailable),
+	},
+}
 
 // ConfigProvider returns the config for the given channel
 type ConfigProvider func(channelID string) (api.Config, error)
@@ -629,7 +645,7 @@ func (c *clientImpl) commitTransaction(endorseRequest *api.EndorseTxRequest, reg
 		channel.WithBeforeRetry(func(err error) {
 			numRetries++
 			lastErr = err
-			logger.Infof("[%s] Retry #%d on error: %s", c.channelID, numRetries, err.Error())
+			logger.Infof("[%s] commitTransaction Retry #%d on error: %s", c.channelID, numRetries, err.Error())
 			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
@@ -724,7 +740,7 @@ func (c *clientImpl) commitOnlyTransaction(rwSetIgnoreNameSpace []api.Namespace,
 		channel.WithBeforeRetry(func(err error) {
 			numRetries++
 			lastErr = err
-			logger.Infof("[%s] Retry #%d on error: %s", c.channelID, numRetries, err.Error())
+			logger.Infof("[%s] commitOnlyTransaction Retry #%d on error: %s", c.channelID, numRetries, err.Error())
 			c.metrics.TransactionRetryCounter.Add(1)
 		}))
 
@@ -844,6 +860,21 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	for key, value := range retry.ChannelClientRetryableCodes {
 		opts.RetryableCodes[key] = value
 	}
+	c.ccRetryOpts(&opts)
+	return opts
+}
+
+func (c *clientImpl) commitOnlyRetryOpts() retry.Opts {
+	opts := c.txnSnapConfig.RetryOpts()
+	opts.RetryableCodes = make(map[status.Group][]status.Code)
+	for key, value := range commitOnlyRetryableCodes {
+		opts.RetryableCodes[key] = value
+	}
+	c.ccRetryOpts(&opts)
+	return opts
+}
+
+func (c *clientImpl) ccRetryOpts(opts *retry.Opts) {
 	ccCodes, err := c.txnSnapConfig.CCErrorRetryableCodes()
 	if err != nil {
 		logger.Warnf("Could not parse CC error retry args: %s", err)
@@ -853,8 +884,6 @@ func (c *clientImpl) retryOpts() retry.Opts {
 	}
 
 	addRetryCode(opts.RetryableCodes, status.ClientStatus, status.NoPeersFound)
-
-	return opts
 }
 
 func (c *clientImpl) updateLogLevel() errors.Error {
