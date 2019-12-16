@@ -49,25 +49,7 @@ client:
       key:
        path: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
       cert:
-       pem: |
-        -----BEGIN CERTIFICATE-----
-        MIIC8TCCAlOgAwIBAgIULHRP+WwIYQI+jHjFd3CS/uQqPtgwCgYIKoZIzj0EAwQw
-        gYwxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
-        bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTgwNgYDVQQDEy9s
-        aW51eGN0bCBFQ0MgUm9vdCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAoTGFiKTAe
-        Fw0xODEyMDMxNzA2MDBaFw0xOTEyMDMxNzA2MDBaMHAxCzAJBgNVBAYTAkNBMRAw
-        DgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3JvbnRvMREwDwYDVQQKEwhsaW51
-        eGN0bDEMMAoGA1UECxMDTGFiMRwwGgYDVQQDDBN0ZXN0X2ZhYnJpY19jbGllbnQx
-        MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEvW126IidzfYwGaoy1B2+MNLyJ4qO5EvO
-        J5h3FU4IaaC/mFrZFZB8Bp/7X5tIvjBjzXf90XDZ8GLFiKoGDYKEMawBSvCSyydd
-        WWvd12YtCPKBBPI/THIvlE46C/Av+M4Ro4GQMIGNMA4GA1UdDwEB/wQEAwIFoDAT
-        BgNVHSUEDDAKBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBRmt2uE
-        LYuoXqC/NL/XiWOWTaR1GTAfBgNVHSMEGDAWgBT7Ys+Fhn/eRMBjidXiaJa47KW1
-        hzAYBgNVHREEETAPgg1mYWJyaWNfY2xpZW50MAoGCCqGSM49BAMEA4GLADCBhwJC
-        AaU26y+1HiSzpFR9CLsfunRlbmLmZ+PYoQGHNMup8+IQbUCbB0kRuKuW3X4w/Wre
-        l/GDkYOgHkQCXPdNUaYnbAPXAkFdND3tLljn6L7kjFvI0kQAZYUeGx8DrZ5bLlO3
-        fsiceGKEzmKQECpvv8+1d8bbI8espgID9uJEjm9buq6yLtxVOw==
-        -----END CERTIFICATE-----
+        path: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
       # Certificate location absolute path
 #      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
 
