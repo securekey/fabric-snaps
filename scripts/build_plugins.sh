@@ -17,7 +17,7 @@ cd /opt/gopath/src/github.com/hyperledger
 git clone https://github.com/securekey/fabric-next.git
 cd fabric-next/scripts
 git checkout $FABRIC_NEXT_VERSION
-./fabric_cherry_picks.sh 1.4.3 >/dev/null
+./fabric_cherry_picks.sh 1.4.4 >/dev/null
 cd /opt/gopath/src/github.com/hyperledger/fabric
 
 
