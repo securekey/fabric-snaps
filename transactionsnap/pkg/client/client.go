@@ -425,7 +425,7 @@ func (f *endorserFilter) Accept(peer fabApi.Peer) bool {
 func (f *endorserFilter) isEndorser(peer fabApi.Peer) bool {
 	endorser, err := f.hasEndorserRole(peer)
 	if err != nil {
-		logger.Warnf("Unable to determine if peer [%s] has the endorser role. Returning true", peer.URL())
+		logger.Debugf("Unable to determine if peer [%s] has the endorser role. Returning true", peer.URL())
 		return true
 	}
 	return endorser
