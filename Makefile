@@ -31,7 +31,7 @@ endif
 FABRIC_NEXT_REPO ?= https://github.com/securekey/fabric-next.git
 
 # This can be a commit hash or a tag (or any git ref)
-FABRIC_NEXT_VERSION ?= 3ccc752793333eedb7023ddeeebb0ccc945cfd81
+FABRIC_NEXT_VERSION ?= 91859c948b15218eac536d523bf5f1622d7faf5d
 # When this tag is updated, we should also change bddtests/fixtures/.env
 # to support running tests without 'make'
 ifndef FABRIC_NEXT_IMAGE_TAG
@@ -92,7 +92,7 @@ depend: version
 
 docker: all
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/$(FABRIC_SNAPS_IMAGE_NAME):$(ARCH)-$(PROJECT_VERSION) \
-	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer-softhsm \
+	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer \
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
