@@ -1,0 +1,44 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Orderer Configuration
+#
+#   - This controls the type and configuration of the orderer.
+#
+################################################################################
+General:
+
+
+
+  # TLS: TLS settings for the GRPC server.
+  TLS:
+    PrivateKey:
+
+
+  # BCCSP configures the blockchain crypto service providers.
+  BCCSP:
+    # Default specifies the preferred blockchain crypto service provider
+    # to use. If the preferred provider is not available, the software
+    # based provider ("SW") will be used.
+    # Valid providers are:
+    #  - SW: a software based crypto provider
+    #  - PKCS11: a CA hardware security module crypto provider.
+    Default: SW
+
+    # SW configures the software based blockchain crypto provider.
+    SW:
+      # TODO: The default Hash and Security level needs refactoring to be
+      # fully configurable. Changing these defaults requires coordination
+      # SHA2 is hardcoded in several places, not only BCCSP
+      Hash: SHA2
+      Security: 256
+      # Location of key store. If this is unset, a location will be
+      # chosen using: 'LocalMSPDir'/keystore
+      FileKeyStore:
+        KeyStore:
+

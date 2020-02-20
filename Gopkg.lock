@@ -331,8 +331,8 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "src-1.4.4"
-  digest = "1:0449046d3b3466472abac5da310e9217ac9990a02cb0c89a22be69aa1f54a8a3"
+  branch = "src-1.4.5"
+  digest = "1:57931de97dd57988c023e09b1006c167812f7003b9e66019c67515d2085a2cf8"
   name = "github.com/hyperledger/fabric"
   packages = [
     "bccsp",
@@ -507,7 +507,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "9e0aaaf28f4904ee51d1387c1f1eabb0abbb50c4"
+  revision = "0f405d0c45009f16156343425e30e9a7b8370b04"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
@@ -530,7 +530,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:d792e8470f6d9611ce07e0382d8198ed77f780a20e1f6f18fb8008ae04333575"
+  digest = "1:aec5f72293d4f01920a3f9566a105e873bdf7c4771a613a7eb45de3cf791c1cf"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -705,7 +705,7 @@
     "third_party/github.com/hyperledger/fabric/protos/token",
   ]
   pruneopts = "NUT"
-  revision = "9efe4f8a8350e5b93c082607ed318ef4ffa453d0"
+  revision = "de37b8fc74feb67e625daa2fc94bbfe147ebf6e9"
   source = "github.com/securekey/fabric-sdk-go-next"
 
 [[projects]]

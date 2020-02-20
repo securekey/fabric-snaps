@@ -23,7 +23,7 @@ services:
     container_name: orderer.example.com
     image: ${FABRIC_NEXT_NS}/${FABRIC_ORDERER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
     environment:
-      - ORDERER_GENERAL_LOGLEVEL=debug
+      - FABRIC_LOGGING_SPEC=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/twoorgs.genesis.block
@@ -41,6 +41,7 @@ services:
       - 7050:7050
     volumes:
         - ./channel:/etc/hyperledger/configtx
+        - ./config/fabric/orderer.yaml:/etc/hyperledger/fabric/orderer.yaml
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/msp/orderer
         - ./channel/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/tls/orderer
         - ./config/mutual_tls/ca:/etc/hyperledger/mutual_tls/orderer
