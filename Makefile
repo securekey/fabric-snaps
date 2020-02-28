@@ -80,8 +80,14 @@ depend: version
 	@scripts/dependencies.sh
 
 docker: all
+	@echo "Building image with snaps"
 	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps:$(ARCH)-$(PROJECT_VERSION) \
 	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer \
+	--build-arg ARCH=$(ARCH) \
+	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
+	@echo "Building image with snaps and softhsm for fixtures"
+	@docker build -f ./images/fabric-snaps/Dockerfile --no-cache -t $(DOCKER_OUTPUT_NS)/fabric-snaps-softhsm:$(ARCH)-$(PROJECT_VERSION) \
+	--build-arg FABRIC_NEXT_PEER_IMAGE=$(FABRIC_NEXT_NS)/fabric-peer-softhsm \
 	--build-arg ARCH=$(ARCH) \
 	--build-arg FABRIC_NEXT_IMAGE_TAG=$(FABRIC_NEXT_IMAGE_TAG) .
 
