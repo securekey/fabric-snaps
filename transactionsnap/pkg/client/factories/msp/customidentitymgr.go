@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -150,31 +151,36 @@ func (c *CustomIdentityManager) getEnrollmentCert(userName string) ([]byte, erro
 
 // Gets the first path from the dir directory
 func getFirstPathFromDir(dir string) (string, error) {
-
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return "", errors.Wrap(errors.GeneralError, err, "read directory failed")
 	}
 
 	for _, p := range files {
-		if p.IsDir() {
-			continue
-		}
-
 		fullName := filepath.Join(dir, string(filepath.Separator), p.Name())
-		logger.Debugf("Reading file %s\n", fullName)
+		logger.Debugf("Reading file %s, Mode: %s", fullName, p.Mode())
 	}
 
 	for _, f := range files {
-		if f.IsDir() {
+		fullName := filepath.Join(dir, string(filepath.Separator), f.Name())
+		if !isRegularFile(fullName) {
 			continue
 		}
 
-		fullName := filepath.Join(dir, string(filepath.Separator), f.Name())
 		return fullName, nil
 	}
 
 	return "", errors.New(errors.GeneralError, "no paths found")
+}
+
+func isRegularFile(file string) bool {
+	info, err := os.Stat(file)
+	if err != nil {
+		logger.Warnf("Error determining if file [%s] is regular: %s", file, err)
+		return false
+	}
+
+	return info.Mode().IsRegular()
 }
 
 func getCryptoSuiteKeyFromPem(idBytes []byte, cryptoSuite coreApi.CryptoSuite) (coreApi.Key, error) {

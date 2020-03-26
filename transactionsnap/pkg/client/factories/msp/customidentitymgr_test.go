@@ -9,6 +9,7 @@ package msp
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/securekey/fabric-snaps/transactionsnap/pkg/client/factories"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -181,6 +183,12 @@ func TestGetSigningIdentity(t *testing.T) {
 		t.Fatalf("Unexpected error for credential manager GetSigningIdentity, expected '%s', got : %s", errorFindPrivateKeyfailed, err.Error())
 	}
 
+}
+
+func TestGetFirstPathFromDir(t *testing.T) {
+	path, err := getFirstPathFromDir(keyStorePath)
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(keyStorePath, "key.pem"), path)
 }
 
 func verifyBytes(t *testing.T, testBytes []byte, path string) bool {
