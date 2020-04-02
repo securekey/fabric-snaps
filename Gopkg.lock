@@ -530,7 +530,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:c61c20add9ac8b8ee8adcea17a69feeb3b7323c83fa546b23b5799560e6fa35d"
+  digest = "1:9847619a2bc876dd1b5e2f2407c95a90ee1cd62af6b750712b09e631d309e8b6"
   name = "github.com/hyperledger/fabric-sdk-go"
   packages = [
     "internal/github.com/hyperledger/fabric-ca/api",
@@ -705,7 +705,7 @@
     "third_party/github.com/hyperledger/fabric/protos/token",
   ]
   pruneopts = "NUT"
-  revision = "4eff91780450f0cf1be5b4c7979df36de1222356"
+  revision = "b6072dccacb75b3d07c7a6f458a10773d608f3a2"
   source = "github.com/securekey/fabric-sdk-go-next"
 
 [[projects]]

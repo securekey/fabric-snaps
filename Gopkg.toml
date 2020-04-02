@@ -44,7 +44,7 @@ ignored = ["github.com/milagro-crypto/amcl/version3/go/amcl/FP256BN"]
 
 [[override]]
   name = "github.com/hyperledger/fabric-sdk-go"
-  revision = "4eff91780450f0cf1be5b4c7979df36de1222356"
+  revision = "b6072dccacb75b3d07c7a6f458a10773d608f3a2"
   source = "github.com/securekey/fabric-sdk-go-next"
 
 [[override]]
