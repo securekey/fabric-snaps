@@ -114,7 +114,6 @@ services:
         # TODO remove below volume once peer HSM has all the keys available
         - ./channel/import-ec-keys.sh:/opt/ec-keys/import-ec-keys.sh
     depends_on:
-      - builder
       - orderer.example.com
 
   couchdb:
@@ -126,8 +125,3 @@ services:
       - DB_URL=http://localhost:5984/member_db
       - COUCHDB_USER=cdbadmin
       - COUCHDB_PASSWORD=secret
-
-
- # builder is only here to create a dependency on the image (not used as part of compose)
-  builder:
-    image: ${FABRIC_NEXT_NS}/${FABRIC_BUILDER_FIXTURE_IMAGE}:${ARCH}-${FABRIC_NEXT_IMAGE_TAG}
