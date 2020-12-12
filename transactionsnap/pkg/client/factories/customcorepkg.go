@@ -12,7 +12,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/factory/defcore"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/provider/fabpvdr"
 	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/securekey/fabric-snaps/util/errors"
 )
 
 // CustomCorePkg is will provide custom sdk core pkg
@@ -23,11 +22,7 @@ type CustomCorePkg struct {
 
 // CreateCryptoSuiteProvider returns a implementation of factory default bccsp cryptosuite
 func (f *CustomCorePkg) CreateCryptoSuiteProvider(config core.CryptoSuiteConfig) (core.CryptoSuite, error) {
-	bccspSuite, err := factory.GetBCCSP(f.ProviderName)
-	if err != nil {
-		return nil, errors.WithMessage(errors.CryptoConfigError, err, "Error creating new cryptosuite provider")
-	}
-	return GetSuite(bccspSuite), nil
+	return GetSuite(factory.GetDefault()), nil
 }
 
 // CreateInfraProvider returns a new custom implementation of fabric primitives

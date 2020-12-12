@@ -377,18 +377,8 @@ func (httpServiceImpl *HTTPServiceImpl) GeneratePin(c *x509.Certificate) string 
 }
 
 func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config httpsnapApi.Config, reload bool) (*tls.Config, errors.Error) {
-
-	//Get cryptosuite provider name from name from peerconfig
-	cryptoProvider, err := config.GetCryptoProvider()
-	if err != nil {
-		return nil, err
-	}
-
 	//Get cryptosuite from peer bccsp pool
-	cryptoSuite, e := factory.GetBCCSP(cryptoProvider)
-	if e != nil {
-		return nil, errors.WithMessage(errors.CryptoConfigError, e, "failed to get crypto suite for httpsnap")
-	}
+	cryptoSuite := factory.GetDefault()
 
 	clientCert, caCerts, err := httpServiceImpl.validateClientConfig(client, config)
 	if err != nil {
@@ -404,7 +394,7 @@ func (httpServiceImpl *HTTPServiceImpl) getTLSConfig(client string, config https
 	}
 
 	//Get private key using SKI
-	pk, e = getKey(key.SKI(), config, cryptoProvider, reload)
+	pk, e := getKey(key.SKI(), config, reload)
 	if e != nil {
 		return nil, errors.Wrap(errors.GetKeyError, e, "failed to get private key from SKI")
 	}
