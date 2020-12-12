@@ -277,10 +277,7 @@ func TestKeyByCache(t *testing.T) {
 	assert.NotNil(t, keyCache)
 
 	//manipulate cache to have incorrect key bytes
-	cryptoSuite, err := factory.GetBCCSP("SW")
-	assert.NoError(t, err)
-
-	badKey, err := cryptoSuite.KeyGen(&bccsp.ECDSAKeyGenOpts{true})
+	badKey, err := factory.GetDefault().KeyGen(&bccsp.ECDSAKeyGenOpts{true})
 	assert.NotNil(t, badKey)
 	assert.NoError(t, err)
 
