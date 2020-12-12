@@ -573,16 +573,8 @@ func getBCCSPAndKeyPair(channelID string, opts bccsp.KeyGenOpts) (bccsp.BCCSP, b
 		return bccspsuite, k, errors.New(errors.GeneralError, "The key gen option is required")
 	}
 
-	bccspProvider, err := config.GetBCCSPProvider(peerConfigPath)
-	if err != nil {
-		return bccspsuite, k, err
-	}
-	logger.Debugf("***Configured BCCSP provider's ID is %s", bccspProvider)
-	bccspsuite, err = factory.GetBCCSP(bccspProvider)
-	if err != nil {
-		logger.Debugf("Error getting BCCSP based on provider ID %s %s", bccspProvider, err)
-		return bccspsuite, k, errors.Wrap(errors.GeneralError, err, "BCCSP Initialize failed")
-	}
+	bccspsuite = factory.GetDefault()
+
 	logger.Debugf("***Configured BCCSP provider is %s", reflect.TypeOf(bccspsuite))
 	k, err = bccspsuite.KeyGen(opts)
 	if err != nil {
