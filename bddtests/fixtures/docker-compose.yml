@@ -9,7 +9,7 @@ services:
 
   testhttpserver:
     container_name: test01.onetap.ca
-    image: ${FABRIC_NEXT_NS}/${FABRIC_BASEIMAGE_FIXTURE_IMAGE}:${ARCH}-${FABRIC_BASEIMAGE_FIXTURE_TAG}
+    image: ${FABRIC_NEXT_NS}/${FABRIC_BASEIMAGE_FIXTURE_IMAGE}:${ARCH}-0.4.18
     environment:
       - GOPATH=/opt/gopath
     working_dir: /opt/gopath/src/github.com/user/httpservers

@@ -189,6 +189,10 @@ func (s *mockGossip) LeaveChan(chainID gcommon.ChainID) {
 	panic("not implemented")
 }
 
+func (s *mockGossip) IsInMyOrg(member discovery.NetworkMember) bool {
+	panic("not implemented")
+}
+
 func newMockIdentity() []byte { //nolint: deadcode
 	return []byte("Some Identity")
 }
