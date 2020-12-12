@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffcd2488_6df47317",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000044
+      },
+      "writtenOn": "2020-12-12T14:57:44Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be 1.4.9-0.0.1?",
+      "revId": "7dd8e81351a58e27a5438f2b40fb79d98d86459d",
+      "serverId": "391e9dfb-4ca7-4d02-9d3e-c661eec85686",
+      "unresolved": true
+    }
+  ]
+}
