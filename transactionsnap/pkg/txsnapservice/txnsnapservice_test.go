@@ -408,7 +408,6 @@ func TestMain(m *testing.M) {
 		SwOpts: &bccspFactory.SwOpts{
 			HashFamily:   "SHA2",
 			SecLevel:     256,
-			Ephemeral:    false,
 			FileKeystore: &bccspFactory.FileKeystoreOpts{KeyStorePath: "../../cmd/sampleconfig/msp/keystore"},
 		},
 	}
