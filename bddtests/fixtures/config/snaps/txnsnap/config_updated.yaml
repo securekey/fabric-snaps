@@ -52,24 +52,24 @@ client:
        path: /etc/hyperledger/mutual_tls/client/client_sdk_go-key.pem
       cert:
        pem: |
-         -----BEGIN CERTIFICATE-----
-         MIICyDCCAk6gAwIBAgIUWrBdcVNLx7uT32yEHh5owMkbxhowCgYIKoZIzj0EAwMw
-         gYcxCzAJBgNVBAYTAkNBMRAwDgYDVQQIEwdPbnRhcmlvMRAwDgYDVQQHEwdUb3Jv
-         bnRvMREwDwYDVQQKEwhsaW51eGN0bDEMMAoGA1UECxMDTGFiMTMwMQYDVQQDEyps
-         aW51eGN0bCBFQ0MgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgKExhYikwHhcNMTkx
-         MjE2MjI1NDAwWhcNMjAxMjE1MjI1NDAwWjBwMQswCQYDVQQGEwJDQTEQMA4GA1UE
-         CBMHT250YXJpbzEQMA4GA1UEBxMHVG9yb250bzERMA8GA1UEChMIbGludXhjdGwx
-         DDAKBgNVBAsTA0xhYjEcMBoGA1UEAwwTdGVzdF9mYWJyaWNfY2xpZW50MTB2MBAG
-         ByqGSM49AgEGBSuBBAAiA2IABGu8LGKjnXiz7vLHvRTBlp6/uC8cpQ0HxjmGcrib
-         MtrBK3hqx4DMgQJ/8WDgB4ww6r8cp8qojLHf/yujXSt5PWjG4YVMpUmVzsGvWt8P
-         KylqUhf1deYAEdb+9glxKqizmKOBkDCBjTAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0l
-         BAwwCgYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUfl62vIQEETQh
-         YVJDDGdu6I0zxNkwHwYDVR0jBBgwFoAU/3qCCfRqm5Q8OKWllkpiHrpoOLwwGAYD
-         VR0RBBEwD4INZmFicmljX2NsaWVudDAKBggqhkjOPQQDAwNoADBlAjAqpurJHmPo
-         OSyC0tG7LUo7P43Wo++pFbQfNXnfmo9BmsdNayCyc4vSRbibMrO/Y2ACMQDwTVyp
-         rUd99HtzBlGidwGlIexLg4VcoRtQqSk2tsm5zQY4aHyCbW7697g7aRre7I4=
-         -----END CERTIFICATE-----
-      # Certificate location absolute path
+        -----BEGIN CERTIFICATE-----
+        MIICqzCCAgygAwIBAgIUKyfJ2pqE4i9WC1okaMKFTVBiJywwCgYIKoZIzj0EAwQw
+        XDEkMCIGA1UEChMbU2VjdXJlS2V5IFRlY2hub2xvZ2llcyBJbmMuMRQwEgYDVQQL
+        EwtEZXZlbG9wbWVudDEeMBwGA1UEAxMVU2VjdXJlS2V5IERFViBSb290IENBMB4X
+        DTIxMDIxMTE2MDcwMFoXDTMxMDIwOTE2MDcwMFowWjEkMCIGA1UEChMbU2VjdXJl
+        S2V5IFRlY2hub2xvZ2llcyBJbmMuMRQwEgYDVQQLEwtEZXZlbG9wbWVudDEcMBoG
+        A1UEAwwTdGVzdF9mYWJyaWNfY2xpZW50MTB2MBAGByqGSM49AgEGBSuBBAAiA2IA
+        BPEJo/LGhCkGiki8V1AcDHzgJYyGLN6OkuhymddQG66fcinTp+4GMWR3SeEmEWed
+        Mqb15cEh8L47r0u7PeMrQD70tfTyDO7DfRDkUfC2I+qesEIpaaHkre3MRixPNoH5
+        BaOBkDCBjTAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDAYD
+        VR0TAQH/BAIwADAdBgNVHQ4EFgQUuRBfrNCsJcvPFM/Ojq1Azse+9iswHwYDVR0j
+        BBgwFoAUAyNhU2P3b1iQOmAnVAVvn0iczUcwGAYDVR0RBBEwD4INZmFicmljX2Ns
+        aWVudDAKBggqhkjOPQQDBAOBjAAwgYgCQgHU2wf4xbht0UKEO95GVqRCMHwTH9v9
+        PeNZFCT8b1HZgCdT0tRK48LlkLkOIqAfx3WAY4U+EfaJjlIMpHjxGct46wJCAJCH
+        HX8hm4pmszmlVuNMk1SYXRymwwDzX/M9+G4unddcsRMDsBRuYn2iCOz0sCxMn3jP
+        oUE/Z+cgCOM4QMLM+BqJ
+        -----END CERTIFICATE-----
+  # Certificate location absolute path
 #      certfile: /etc/hyperledger/mutual_tls/client/client_sdk_go.pem
 
   # Global configuration for peer, event service and orderer timeouts

@@ -118,7 +118,6 @@ func (bootstrapSnap *BootstrapSnap) initBCCSP() error {
 			SwOpts: &factory.SwOpts{
 				HashFamily: hashFamily,
 				SecLevel:   level,
-				Ephemeral:  true,
 			},
 		}
 	default:
