@@ -257,7 +257,6 @@ func TestMain(m *testing.M) {
 		SwOpts: &factory.SwOpts{
 			HashFamily:   "SHA2",
 			SecLevel:     256,
-			Ephemeral:    false,
 			FileKeystore: &factory.FileKeystoreOpts{KeyStorePath: keyStorePath},
 		},
 	}
