@@ -331,7 +331,7 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
-  branch = "src-1.4.10"
+  branch = "src-1.4.12"
   digest = "1:7436a3ee7aad1b97bf81f0b82ba49f8d0179a527099b13363308102fb2801156"
   name = "github.com/hyperledger/fabric"
   packages = [
@@ -507,7 +507,7 @@
     "token/transaction",
   ]
   pruneopts = "NUT"
-  revision = "231f6d97893acd400a4b1439b30ebdf0985abcf8"
+  revision = "ff69be3252696ca210960e8e55b977461a2aa193"
   source = "github.com/securekey/fabric-next"
 
 [[projects]]
