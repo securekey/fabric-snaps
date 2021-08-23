@@ -526,9 +526,9 @@ func x509KeyPair(certPEMBlock []byte, clientKey bccsp.Key, bccspSuite bccsp.BCCS
 
 	switch x509Cert.PublicKey.(type) {
 	case *rsa.PublicKey:
-		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, &rsa.PublicKey{}}
+		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, x509Cert.PublicKey}
 	case *ecdsa.PublicKey:
-		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, &ecdsa.PublicKey{}}
+		cert.PrivateKey = &PrivateKey{bccspSuite, clientKey, x509Cert.PublicKey}
 	default:
 		return fail(errors.New(errors.CryptoError, "tls: unknown public key algorithm"))
 	}
